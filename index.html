@@ -33,7 +33,7 @@
       padding: 25px;
       margin: 40px auto;
       max-width: 700px;
-      text-align: left;   /* 왼쪽 정렬 */
+      text-align: left;   /* 좌측 정렬 */
       font-size: 20px;
       line-height: 1.8;
     }
@@ -49,27 +49,30 @@
     }
     .button-group {
       display: flex;
-      justify-content: space-between; /* 버튼을 양쪽으로 배치 */
+      justify-content: flex-start; /* 왼쪽 기준으로 배치 */
       max-width: 500px;
       margin: 40px auto;
     }
-    .button-group button {
+    #sendBtn {
       flex: 1;
       font-size: 20px;
       padding: 15px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-    }
-    #sendBtn {
       background: linear-gradient(to bottom, #66bb6a, #4CAF50);
       color: white;
-      margin-right: 30px; /* 오른쪽으로 여유 */
+      margin-right: 60px; /* 해제 버튼과 간격 넉넉히 */
     }
     #stopBtn {
+      flex: 1;
+      font-size: 20px;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
       background: linear-gradient(to bottom, #ef5350, #f44336);
       color: white;
-      margin-left: 30px; /* 왼쪽으로 여유 */
     }
     /* 구글 로그인 버튼 크기 조정 */
     .g_id_signin {
@@ -80,7 +83,7 @@
 </head>
 <body>
   <header>
-    <h2>A-DOMES 위치정보시스템</h2>
+    <h2>A-DOMES | 위치정보시스템</h2>
   </header>
 
   <section class="info-box">
