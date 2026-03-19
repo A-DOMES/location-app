@@ -26,24 +26,30 @@
       font-weight: bold;
       color: #fff;
     }
-    section {
+    .info-box {
+      border: 2px solid #2196F3;
+      border-radius: 10px;
+      background-color: #e3f2fd;
+      padding: 25px;
       margin: 40px auto;
       max-width: 700px;
-      line-height: 1.8;
+      text-align: left;   /* 왼쪽 정렬 */
       font-size: 20px;
+      line-height: 1.8;
     }
-    section p {
-      margin: 20px 0;
+    .info-box h3 {
+      margin-top: 0;
+      color: #1976d2;
     }
-    section .warning {
+    .info-box .warning {
       font-weight: bold;
       color: #d32f2f;
       font-size: 22px;
-      margin-top: 40px;
+      margin-top: 20px;
     }
     .button-group {
       display: flex;
-      gap: 15px;
+      justify-content: space-between; /* 버튼을 양쪽으로 배치 */
       max-width: 400px;
       margin: 40px auto;
     }
@@ -54,6 +60,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin: 0 15px; /* 버튼 사이 간격 */
     }
     #sendBtn {
       background: linear-gradient(to bottom, #66bb6a, #4CAF50);
@@ -63,10 +70,10 @@
       background: linear-gradient(to bottom, #ef5350, #f44336);
       color: white;
     }
-    @media (max-width: 600px) {
-      section { font-size: 18px; }
-      .button-group { flex-direction: column; }
-      .button-group button { width: 100%; font-size: 18px; }
+    /* 구글 로그인 버튼 크기 조정 */
+    .g_id_signin {
+      width: 200px;   /* 버튼 너비 */
+      margin: 20px auto; /* 가운데 정렬, 위아래 여백 */
     }
   </style>
 </head>
@@ -75,13 +82,17 @@
     <h2>A-DOMES 위치정보시스템</h2>
   </header>
 
-  <section>
-    <p><strong>앱 목적</strong><br>
-       이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
-    <p><strong>사용 방법</strong><br>
-       먼저 구글 계정으로 로그인하세요.<br>
-       위치 전송 버튼을 누르면 로그인한 구글 아이디(이메일 아이디 부분)와 현재 위치가 구글 시트에 기록됩니다.<br>
-       화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.</p>
+  <section class="info-box">
+    <h3>앱 목적</h3>
+    <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
+
+    <h3>사용 방법</h3>
+    <p>
+      먼저 구글 계정으로 로그인하세요.<br>
+      위치 전송 버튼을 누르면 로그인한 구글 아이디(이메일 아이디 부분)와 현재 위치가 구글 시트에 기록됩니다.<br>
+      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+    </p>
+
     <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
   </section>
 
@@ -191,3 +202,4 @@
   </script>
 </body>
 </html>
+
