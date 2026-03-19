@@ -80,7 +80,7 @@
        이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
     <p><strong>사용 방법</strong><br>
        먼저 구글 계정으로 로그인하세요.<br>
-       위치 전송 버튼을 누르면 로그인한 구글 아이디와 현재 위치가 구글 시트에 기록됩니다.<br>
+       위치 전송 버튼을 누르면 로그인한 구글 아이디(이메일 아이디 부분)와 현재 위치가 구글 시트에 기록됩니다.<br>
        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.</p>
     <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
   </section>
@@ -107,7 +107,8 @@
 
     function handleCredentialResponse(response) {
       const data = jwt_decode(response.credential);
-      userEmail = data.email;
+      const fullEmail = data.email || "";
+      userEmail = fullEmail.split("@")[0]; // 아이디 부분만 추출
       alert("로그인 성공: " + userEmail);
     }
 
@@ -124,7 +125,7 @@
         function(position) {
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
-          params.append("email", userEmail);
+          params.append("email", userEmail); // 아이디만 기록
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
