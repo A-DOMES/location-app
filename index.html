@@ -49,7 +49,7 @@
     }
     .button-group {
       display: flex;
-      justify-content: flex-start; /* 왼쪽 기준으로 배치 */
+      justify-content: flex-start;
       max-width: 500px;
       margin: 40px auto;
     }
@@ -74,10 +74,9 @@
       background: linear-gradient(to bottom, #ef5350, #f44336);
       color: white;
     }
-    /* 구글 로그인 버튼 크기 조정 */
     .g_id_signin {
       width: 200px;   /* 버튼 너비 */
-      margin: 20px auto; /* 가운데 정렬, 위아래 여백 */
+      margin: 20px auto; /* 가운데 정렬 */
     }
   </style>
 </head>
@@ -120,6 +119,7 @@
     let intervalId;
     let userEmail = "";
 
+    // 구글 로그인 성공 시 호출
     function handleCredentialResponse(response) {
       const data = jwt_decode(response.credential);
       const fullEmail = data.email || "";
@@ -140,7 +140,7 @@
         function(position) {
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
-          params.append("email", userEmail); // 아이디만 기록
+          params.append("email", userEmail);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
