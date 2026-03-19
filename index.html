@@ -2,208 +2,99 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>A-DOMES | 위치정보시스템</title>
-  <link rel="manifest" href="manifest.json">
-  <!-- Google Identity Services -->
+  <title>위치 전송 시스템</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background-color: #f9f9f9;
-      margin: 0;
-      text-align: center;
-      color: #333;
-    }
-    header {
-      background-color: #2196F3;
-      padding: 25px;
-    }
-    header h2 {
-      font-size: 30px;
-      margin: 0;
-      font-weight: bold;
-      color: #fff;
-    }
-    .info-box {
-      border: 2px solid #2196F3;
-      border-radius: 10px;
-      background-color: #e3f2fd;
-      padding: 25px;
-      margin: 40px auto;
-      max-width: 700px;
-      text-align: left;   /* 좌측 정렬 */
-      font-size: 20px;
-      line-height: 1.8;
-    }
-    .info-box h3 {
-      margin-top: 0;
-      color: #1976d2;
-    }
-    .info-box .warning {
-      font-weight: bold;
-      color: #d32f2f;
-      font-size: 22px;
-      margin-top: 20px;
-    }
-    .button-group {
-      display: flex;
-      justify-content: flex-start;
-      max-width: 500px;
-      margin: 40px auto;
-    }
-    #sendBtn {
-      flex: 1;
-      font-size: 20px;
-      padding: 15px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: linear-gradient(to bottom, #66bb6a, #4CAF50);
-      color: white;
-      margin-right: 60px; /* 해제 버튼과 간격 넉넉히 */
-    }
-    #stopBtn {
-      flex: 1;
-      font-size: 20px;
-      padding: 15px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: linear-gradient(to bottom, #ef5350, #f44336);
-      color: white;
-    }
-    .g_id_signin {
-      width: 200px;   /* 버튼 너비 */
-      margin: 20px auto; /* 가운데 정렬 */
-    }
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    .button-group { margin-top: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+    section { margin-top: 40px; }
+    h2 { margin-bottom: 10px; }
+    ol { text-align: left; display: inline-block; }
   </style>
 </head>
 <body>
-  <header>
-    <h2>A-DOMES | 위치정보시스템</h2>
-  </header>
 
-  <section class="info-box">
-    <h3>앱 목적</h3>
-    <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
+  <!-- 안내 문구 -->
+  <p style="font-size:16px; font-weight:bold; color:#333;">
+    Google 계정으로 로그인 처리를 합니다
+  </p>
 
-    <h3>사용 방법</h3>
-    <p>
-      먼저 구글 계정으로 로그인하세요.<br>
-      위치 전송 버튼을 누르면 로그인한 구글 아이디(이메일 아이디 부분)와 현재 위치가 구글 시트에 기록됩니다.<br>
-      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
-    </p>
-
-    <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
-  </section>
-
-  <!-- 구글 로그인 버튼 -->
-  <div id="g_id_onload"
-       data-client_id="YOUR_CLIENT_ID.apps.googleusercontent.com"
-       data-callback="handleCredentialResponse">
-  </div>
-  <div class="g_id_signin" data-type="standard"></div>
-
-  <form id="locationForm"
-        action="https://script.google.com/macros/s/AKfycby5AltWUN2ziDLtSA_rI49e_0cQfK56yGUcUl5oL55PPweYtulIRQ4htO39CZQ6-1IfzQ/exec"
-        method="POST">
+  <!-- 두 개의 버튼 -->
+  <form id="locationForm" action="YOUR_GOOGLE_SCRIPT_URL" method="POST">
     <div class="button-group">
-      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+      <button type="button" onclick="sendLocation()">위치 전송</button>
+      <button type="button" onclick="stopLocation()">위치정보 해제</button>
     </div>
   </form>
 
+  <!-- 앱 목적 및 사용방법 -->
+  <section>
+    <h2>앱 목적</h2>
+    <p>
+      이 앱은 현재의 위치 정보를 WEB에 기록하고 공유하기 위해 만들어졌습니다.
+    </p>
+
+    <h2>사용 방법</h2>
+    <ol>
+      <li>위치 전송 버튼을 누르면 추출한 구글 아이디(이메일 아이디 부분)와 현재 위치가 구글 시트에 기록됩니다.</li>
+      <li>화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.</li>
+      <li><strong>📱 위치 전송을 위해 화면을 끄지 마세요!</strong></li>
+    </ol>
+  </section>
+
   <script>
-    let intervalId;
     let userEmail = "";
 
-    // 구글 로그인 성공 시 호출
-    function handleCredentialResponse(response) {
-      const data = jwt_decode(response.credential);
-      const fullEmail = data.email || "";
-      userEmail = fullEmail.split("@")[0]; // 아이디 부분만 추출
-      alert("로그인 성공: " + userEmail);
-    }
-
     function sendLocation() {
-      if (!userEmail) {
-        alert("먼저 구글 계정으로 로그인하세요.");
-        return;
-      }
-      if (!navigator.geolocation) {
-        alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          const form = document.getElementById("locationForm");
+      google.accounts.id.prompt();
+      window.handleCredentialResponse = function(response) {
+        const data = jwt_decode(response.credential);
+        const fullEmail = data.email || "";
+        userEmail = fullEmail.split("@")[0];
+
+        navigator.geolocation.getCurrentPosition(function(position) {
           const params = new URLSearchParams();
           params.append("email", userEmail);
-          params.append("status", "정상");
-          params.append("lat", position.coords.latitude || 0);
-          params.append("lng", position.coords.longitude || 0);
+          params.append("lat", position.coords.latitude);
+          params.append("lng", position.coords.longitude);
           params.append("time", new Date().toISOString());
 
-          fetch(form.action, {
+          fetch(locationForm.action, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString()
-          }).then(() => { alert("위치정보가 성공적으로 전송되었습니다."); });
-
-          if (!intervalId) {
-            intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
-          }
-        },
-        function(error) {
-          alert("위치 정보를 가져오지 못했습니다: " + error.message);
-        }
-      );
+          }).then(() => {
+            alert("아이디: " + userEmail + "\n아이디로 현재 위치를 전송하였습니다.");
+          });
+        });
+      };
     }
 
     function stopLocation() {
-      clearInterval(intervalId);
-      intervalId = null;
-      const form = document.getElementById("locationForm");
-      const params = new URLSearchParams();
-      params.append("email", userEmail);
-      params.append("status", "해제");
-      params.append("time", new Date().toISOString());
+      google.accounts.id.prompt();
+      window.handleCredentialResponse = function(response) {
+        const data = jwt_decode(response.credential);
+        const fullEmail = data.email || "";
+        userEmail = fullEmail.split("@")[0];
 
-      fetch(form.action, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString()
-      }).then(() => { alert("위치정보가 해제되었습니다."); });
-    }
+        const params = new URLSearchParams();
+        params.append("email", userEmail);
+        params.append("status", "해제");
+        params.append("time", new Date().toISOString());
 
-    function autoUpdate() {
-      if (!navigator.geolocation || !userEmail) return;
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          const form = document.getElementById("locationForm");
-          const params = new URLSearchParams();
-          params.append("email", userEmail);
-          params.append("status", "정상");
-          params.append("lat", position.coords.latitude || 0);
-          params.append("lng", position.coords.longitude || 0);
-          params.append("time", new Date().toISOString());
-          params.append("auto", "true");
-
-          fetch(form.action, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: params.toString()
-          });
-        }
-      );
-    }
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
+        fetch(locationForm.action, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params.toString()
+        }).then(() => {
+          alert("아이디: " + userEmail + "\n위치정보가 해제되었습니다.");
+        });
+      };
     }
   </script>
+
 </body>
 </html>
 
