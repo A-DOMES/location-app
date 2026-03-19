@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>A-DOMES | 위치정보시스템</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 18px; background-color: #f9f9f9; margin: 0; text-align: center; }
+    header { background-color: #2196F3; padding: 20px; }
+    header h2 { font-size: 28px; margin: 0; font-weight: bold; color: #fff; }
+    input[type="text"] { width: 100%; max-width: 400px; font-size: 18px; padding: 8px; margin: 20px auto; border: 1px solid #ccc; border-radius: 4px; display: block; }
+    .button-group { display: flex; gap: 10px; max-width: 400px; margin: 0 auto; }
+    .button-group button { flex: 1; font-size: 18px; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
+    #sendBtn { background: linear-gradient(to bottom, #66bb6a, #4CAF50); color: white; }
+    #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); color: white; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: #fff; margin: 20% auto; padding: 20px; width: 300px; border-radius: 8px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .modal-content p { font-size: 18px; margin-bottom: 20px; }
+    .modal-content button { padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    @media (max-width: 600px) { input[type="text"] { width: 90%; font-size: 16px; } .button-group { flex-direction: column; } .button-group button { width: 100%; font-size: 16px; } .modal-content { width: 90%; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>A-DOMES 위치정보시스템</h2>
+  </header>
+
+  <!-- 위치정보 전송 폼 -->
+  <form id="locationForm"
+        action="https://script.google.com/macros/s/AKfycby5AltWUN2ziDLtSA_rI49e_0cQfK56yGUcUl5oL55PPweYtulIRQ4htO39CZQ6-1IfzQ/exec"
+        method="POST">
+    <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+    <div class="button-group">
+      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+    </div>
+  </form>
+
+  <!-- 모달창 -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <button onclick="closeModal()">확인</button>
+    </div>
+  </div>
+
+  <script>
+    let intervalId;
+
+    function showModal(message) {
+      document.getElementById("modalMessage").innerText = message;
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    // ✅ 위치 전송 (버튼 클릭 시)
+    function sendLocation() {
+      if (!navigator.geolocation) {
+        showModal("이 브라우저에서는\n위치 정보를 지원하지 않습니다.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const form = document.getElementById("locationForm");
+          const params = new URLSearchParams();
+
+          params.append("phone", document.getElementById("phone").value);
+          params.append("status", "정상");
+          params.append("lat", position.coords.latitude || 0);
+          params.append("lng", position.coords.longitude || 0);
+          params.append("time", new Date().toISOString());
+          // 버튼 클릭 → auto 플래그 없음
+
+          fetch(form.action, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+          })
+          .then(() => { showModal("위치정보가 성공적으로 전송되었습니다."); })
+          .catch(err => { showModal("위치 전송 실패: " + err.message); });
+
+          // ✅ 5분마다 자동 갱신 시작
+          if (!intervalId) {
+            intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
+          }
+        },
+        function(error) {
+          showModal("위치 정보를 가져오지 못했습니다: " + error.message);
+        }
+      );
+    }
+
+    // 🚫 위치 해제
+    function stopLocation() {
+      clearInterval(intervalId);
+      intervalId = null;
+
+      const form = document.getElementById("locationForm");
+      const params = new URLSearchParams();
+
+      params.append("phone", document.getElementById("phone").value);
+      params.append("status", "해제");
+      params.append("time", new Date().toISOString());
+
+      fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      })
+      .then(() => { showModal("위치정보가 해제되었습니다."); })
+      .catch(err => { showModal("위치정보 해제 실패: " + err.message); });
+    }
+
+    // ✅ 자동갱신 (5분마다 실행)
+    function autoUpdate() {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const form = document.getElementById("locationForm");
+          const params = new URLSearchParams();
+
+          params.append("phone", document.getElementById("phone").value);
+          params.append("status", "정상");
+          params.append("lat", position.coords.latitude || 0);
+          params.append("lng", position.coords.longitude || 0);
+          params.append("time", new Date().toISOString());
+          params.append("auto", "true"); // ✅ 자동갱신 플래그 추가
+
+          fetch(form.action, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+          })
+          .then(() => { console.log("자동갱신 완료"); })
+          .catch(err => { console.error("자동갱신 실패:", err.message); });
+        }
+      );
+    }
+
+    // 📌 서비스워커 등록
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registered"));
+    }
+  </script>
+</body>
+</html>
