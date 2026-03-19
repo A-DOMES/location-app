@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>A-DOMES | 위치정보시스템</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -76,10 +79,18 @@
     <p><strong>앱 목적</strong><br>
        이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
     <p><strong>사용 방법</strong><br>
-       위치 전송 버튼을 누르면 현재 위치가 구글 시트에 기록됩니다.<br>
+       먼저 구글 계정으로 로그인하세요.<br>
+       위치 전송 버튼을 누르면 로그인한 구글 아이디와 현재 위치가 구글 시트에 기록됩니다.<br>
        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.</p>
     <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
   </section>
+
+  <!-- 구글 로그인 버튼 -->
+  <div id="g_id_onload"
+       data-client_id="YOUR_CLIENT_ID.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
 
   <form id="locationForm"
         action="https://script.google.com/macros/s/AKfycby5AltWUN2ziDLtSA_rI49e_0cQfK56yGUcUl5oL55PPweYtulIRQ4htO39CZQ6-1IfzQ/exec"
@@ -92,8 +103,19 @@
 
   <script>
     let intervalId;
+    let userEmail = "";
+
+    function handleCredentialResponse(response) {
+      const data = jwt_decode(response.credential);
+      userEmail = data.email;
+      alert("로그인 성공: " + userEmail);
+    }
 
     function sendLocation() {
+      if (!userEmail) {
+        alert("먼저 구글 계정으로 로그인하세요.");
+        return;
+      }
       if (!navigator.geolocation) {
         alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
         return;
@@ -102,6 +124,7 @@
         function(position) {
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
+          params.append("email", userEmail);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
@@ -128,6 +151,7 @@
       intervalId = null;
       const form = document.getElementById("locationForm");
       const params = new URLSearchParams();
+      params.append("email", userEmail);
       params.append("status", "해제");
       params.append("time", new Date().toISOString());
 
@@ -139,11 +163,12 @@
     }
 
     function autoUpdate() {
-      if (!navigator.geolocation) return;
+      if (!navigator.geolocation || !userEmail) return;
       navigator.geolocation.getCurrentPosition(
         function(position) {
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
+          params.append("email", userEmail);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
