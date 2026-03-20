@@ -70,8 +70,9 @@
     
     .button-group {
       display: flex;                    /* 버튼 가로 배치 */
-      justify-content: flex-start;      /* 왼쪽 정렬 */
-      max-width: 500px;                 /* 최대 폭 500px */
+      justify-content: space-between;   /* ✅ 버튼들을 좌우 끝에 배치 */
+      width: 100%;                      /* ✅ 입력창과 동일하게 폭 100% */
+      max-width: 500px;                 /* ✅ 입력창과 동일한 최대 폭 */
       margin: 40px auto;                /* 위아래 40px, 좌우 자동 중앙 정렬 */
     }
     
@@ -84,7 +85,7 @@
       cursor: pointer;                  /* 마우스 포인터 변경 */
       background: linear-gradient(to bottom, #66bb6a, #4CAF50); /* 초록색 그라데이션 */
       color: white;                     /* 글씨 색상 흰색 */
-      margin-right: 60px;               /* 오른쪽 버튼과 간격 */
+      margin-right: 20px;               /* ✅ 버튼 간격만 조정 */
     }
     
     #stopBtn {
