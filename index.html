@@ -3,22 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <title>A-DOMES | 위치정보시스템</title>
+  <link rel="manifest" href="manifest.json">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 30px; background-color: #fff; }
-    header { margin-bottom: 20px; }
-    header h2 { font-size: 28px; color: #2196F3; }
-    input[type="text"] { width: 100%; max-width: 400px; font-size: 18px; padding: 10px; margin: 20px auto; border: 1px solid #ccc; border-radius: 6px; display: block; }
-    .button-group { margin-top: 20px; }
-    button { padding: 12px 20px; margin: 10px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; }
-    #sendBtn { background-color: #4CAF50; color: white; }
-    #stopBtn { background-color: #f44336; color: white; }
-    section { margin-top: 40px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
-    section h2 { color: #2196F3; margin-bottom: 10px; }
-    ol { padding-left: 20px; }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: #fff; margin: 20% auto; padding: 20px; width: 300px; border-radius: 8px; text-align: center; }
-    .modal-content p { font-size: 18px; margin-bottom: 20px; }
-    .modal-content button { padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      background-color: #f9f9f9;
+      margin: 0;
+      text-align: center;
+      color: #333;
+    }
+    header {
+      background-color: #2196F3;
+      padding: 25px;
+    }
+    header h2 {
+      font-size: 30px;
+      margin: 0;
+      font-weight: bold;
+      color: #fff;
+    }
+    .info-box {
+      border: 2px solid #2196F3;
+      border-radius: 10px;
+      background-color: #e3f2fd;
+      padding: 25px;
+      margin: 40px auto;
+      max-width: 700px;
+      text-align: left;
+      font-size: 20px;
+      line-height: 1.8;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+    .info-box .warning {
+      font-weight: bold;
+      color: #d32f2f;
+      font-size: 22px;
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 500px;
+      font-size: 20px;
+      padding: 12px;
+      margin: 20px auto;
+      border: 2px solid #2196F3;
+      border-radius: 6px;
+      display: block;
+    }
+    .button-group {
+      display: flex;
+      justify-content: flex-start;
+      max-width: 500px;
+      margin: 40px auto;
+    }
+    #sendBtn {
+      flex: 1;
+      font-size: 20px;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #66bb6a, #4CAF50);
+      color: white;
+      margin-right: 60px;
+    }
+    #stopBtn {
+      flex: 1;
+      font-size: 20px;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #ef5350, #f44336);
+      color: white;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 20% auto;
+      padding: 25px;
+      width: 350px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .modal-content p {
+      font-size: 20px;
+      margin-bottom: 25px;
+    }
+    .modal-content button {
+      font-size: 18px;
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -26,30 +118,30 @@
     <h2>A-DOMES | 위치정보시스템</h2>
   </header>
 
-  <!-- 입력창 -->
-  <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+  <section class="info-box">
+    <h3>앱 목적</h3>
+    <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
 
-  <!-- 버튼 -->
-  <div class="button-group">
-    <button id="sendBtn" onclick="sendLocation()">위치 전송</button>
-    <button id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-  </div>
+    <h3>사용 방법</h3>
+    <p>
+      먼저 전화번호 또는 이름을 입력하세요.<br>
+      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
+      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+    </p>
 
-  <!-- 안내문 -->
-  <section>
-    <h2>앱 목적</h2>
-    <p>이 앱은 현재의 위치 정보를 WEB에 기록하고 공유하기 위해 만들어졌습니다.</p>
-
-    <h2>사용 방법</h2>
-    <ol>
-      <li>위치 전송 버튼을 누르면 입력한 아이디(전화번호/이름)와 현재 위치가 구글 시트에 기록됩니다.</li>
-      <li>화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.</li>
-      <li><strong>📱 위치 전송을 위해 화면을 끄지 마세요!</strong></li>
-      <li>위치정보 해제 버튼을 누르면 해당 아이디가 구글시트에서 “해제”로 변경되고 팝업으로 결과가 안내됩니다.</li>
-    </ol>
+    <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
   </section>
 
-  <!-- 모달창 -->
+  <form id="locationForm"
+        action="https://script.google.com/macros/s/AKfycby5AltWUN2ziDLtSA_rI49e_0cQfK56yGUcUl5oL55PPweYtulIRQ4htO39CZQ6-1IfzQ/exec"
+        method="POST">
+    <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+    <div class="button-group">
+      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+    </div>
+  </form>
+
   <div id="modal" class="modal">
     <div class="modal-content">
       <p id="modalMessage"></p>
@@ -69,7 +161,6 @@
       document.getElementById("modal").style.display = "none";
     }
 
-    // ✅ 위치 전송
     function sendLocation() {
       if (!navigator.geolocation) {
         showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
@@ -78,19 +169,21 @@
 
       navigator.geolocation.getCurrentPosition(
         function(position) {
+          const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
+
           params.append("phone", document.getElementById("phone").value);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
           params.append("time", new Date().toISOString());
 
-          fetch("YOUR_GOOGLE_SCRIPT_URL", {
+          fetch(form.action, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString()
           })
-          .then(() => { showModal("아이디: " + document.getElementById("phone").value + "\n아이디로 위치전송을 성공하였습니다."); })
+          .then(() => { showModal("위치정보가 성공적으로 전송되었습니다."); })
           .catch(err => { showModal("위치 전송 실패: " + err.message); });
 
           if (!intervalId) {
@@ -103,32 +196,34 @@
       );
     }
 
-    // 🚫 위치 해제
     function stopLocation() {
       clearInterval(intervalId);
       intervalId = null;
 
+      const form = document.getElementById("locationForm");
       const params = new URLSearchParams();
+
       params.append("phone", document.getElementById("phone").value);
       params.append("status", "해제");
       params.append("time", new Date().toISOString());
 
-      fetch("YOUR_GOOGLE_SCRIPT_URL", {
+      fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
       })
-      .then(() => { showModal("아이디: " + document.getElementById("phone").value + "\n아이디로 해제를 하였습니다."); })
+      .then(() => { showModal("위치정보가 해제되었습니다."); })
       .catch(err => { showModal("위치정보 해제 실패: " + err.message); });
     }
 
-    // ✅ 자동갱신
     function autoUpdate() {
       if (!navigator.geolocation) return;
 
       navigator.geolocation.getCurrentPosition(
         function(position) {
+          const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
+
           params.append("phone", document.getElementById("phone").value);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
@@ -136,17 +231,18 @@
           params.append("time", new Date().toISOString());
           params.append("auto", "true");
 
-          fetch("YOUR_GOOGLE_SCRIPT_URL", {
+          fetch(form.action, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString()
-          })
-          .then(() => { console.log("자동갱신 완료"); })
-          .catch(err => { console.error("자동갱신 실패:", err.message); });
+          });
         }
       );
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
     }
   </script>
 </body>
 </html>
-
