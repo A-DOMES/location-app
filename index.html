@@ -153,7 +153,7 @@
   </section>
 
   <form id="locationForm"
-        action="https://script.google.com/macros/s/AKfycbwC48zsXBpaFATu-3IYL_on2O_PP6JGtPd_Hx8vRdf-MWdE88vbLwsCqjhXmqH8zO3xIg/exec"
+        action="https://script.google.com/macros/s/AKfycbzyCWf-GHLB5eZWdeV8vdgt8vcA1Ha-thQPyqGO5ytIeyNJlrSbLryVpYC9S9m-xzonig/exec"
         method="POST">
     <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
     <div class="button-group">
@@ -182,6 +182,9 @@
     }
 
     function sendLocation() {
+      // ✅ 실행 중 표시 추가
+      showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
+
       if (!navigator.geolocation) {
         showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
         return;
@@ -196,7 +199,7 @@
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
-          params.append("time", new Date().toISOString());
+          params.append("time", new Date());
 
           fetch(form.action, {
             method: "POST",
@@ -204,43 +207,41 @@
             body: params.toString()
           })
           .then(() => { showModal("위치정보가 성공적으로 전송되었습니다."); })
-          .catch(err => { showModal("위치 전송 실패: " + err.message); });
+          .catch(err => { showModal("위치 전송 실패:\n" + err.message); });
 
           if (!intervalId) {
             intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
           }
         },
         function(error) {
-          showModal("위치 정보를 가져오지 못했습니다: " + error.message);
+          showModal("위치 정보를 가져오지 못했습니다:\n" + error.message);
         }
       );
     }
 
-      function stopLocation() {
-        clearInterval(intervalId);
-        intervalId = null;
+    function stopLocation() {
+      // ✅ 실행 중 표시 추가
+      showModal("위치정보 해제 처리 중입니다...\n잠시만 기다려주세요.");
 
-        const form = document.getElementById("locationForm");
-        const params = new URLSearchParams();
+      clearInterval(intervalId);
+      intervalId = null;
 
-        params.append("phone", document.getElementById("phone").value);
-        params.append("status", "해제");
-        params.append("time", new Date().toISOString());
+      const form = document.getElementById("locationForm");
+      const params = new URLSearchParams();
 
-        fetch(form.action, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: params.toString()
-        })
-        .then(response => response.text())
-        .then(text => {
-          // 📌 서버에서 반환한 메시지를 그대로 모달창에 표시
-          showModal(text);
-        })
-        .catch(err => {
-          showModal("처리 중 오류가 발생했습니다: " + err.message);
-        });
-      } // ✅ stopLocation 함수 닫기
+      params.append("phone", document.getElementById("phone").value);
+      params.append("status", "해제");
+      params.append("time", new Date());
+
+      fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      })
+      .then(response => response.text())
+      .then(text => { showModal(text); })
+      .catch(err => { showModal("처리 중 오류가 발생했습니다:\n" + err.message); });
+    }
 
       function autoUpdate() {
         if (!navigator.geolocation) return;
@@ -254,7 +255,7 @@
             params.append("status", "정상");
             params.append("lat", position.coords.latitude || 0);
             params.append("lng", position.coords.longitude || 0);
-            params.append("time", new Date().toISOString());
+            params.append("time", new Date());
             params.append("auto", "true");
 
             fetch(form.action, {
