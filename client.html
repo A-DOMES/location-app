@@ -13,40 +13,46 @@
       top: 120px;   /* index.html 위치전송 버튼 y좌표 기준 */
       left: 50px;   /* 위치전송 버튼 왼쪽 */
     }
+    #map { width:100%; height:100vh; }
   </style>
   <!-- Google Maps API (API 키 필요) -->
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&callback=initMap">
   </script>
 </head>
 <body>
-  <!-- 오직 버튼 하나만 -->
-  <img src="btn-current.png" alt="지도 버튼" class="map-btn" onclick="openMap()">
+  <!-- 버튼 하나 -->
+  <img src="btn-current.png" alt="지도 버튼" class="map-btn" onclick="showCurrentLocation()">
+
+  <!-- 지도 컨테이너 -->
+  <div id="map"></div>
 
   <script>
-    function openMap() {
-      // 새 창 열기
-      const mapWindow = window.open("", "mapWindow", "width=900,height=700");
-      mapWindow.document.write(`
-        <div id="map" style="width:100%;height:100vh;"></div>
-        <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"><\/script>
-        <script>
-          navigator.geolocation.getCurrentPosition(function(pos) {
-            const latlng = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-            const map = new google.maps.Map(document.getElementById("map"), {
-              center: latlng,
-              zoom: 14
-            });
-            new google.maps.Marker({
-              position: latlng,
-              map: map,
-              title: "현재 위치"
-            });
-          }, function(err) {
-            alert("위치 정보를 가져올 수 없습니다: " + err.message);
+    let map;
+
+    function initMap() {
+      // 기본 지도 초기화 (서울 좌표)
+      const latlng = {lat: 37.5665, lng: 126.9780};
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: latlng,
+        zoom: 13
+      });
+    }
+
+    function showCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          const latlng = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+          map.setCenter(latlng);
+          new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: "현재 위치"
           });
-        <\/script>
-      `);
+        }, function(err) {
+          alert("위치 정보를 가져올 수 없습니다: " + err.message);
+        });
+      }
     }
   </script>
 </body>
