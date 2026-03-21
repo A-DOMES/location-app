@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>사용자용 위치정보 시스템</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      background-color: #f9f9f9;
+      margin: 0;
+      text-align: center;
+      color: #333;
+    }
+
+    header {
+      background-color: #2196F3;
+      padding: 20px;
+    }
+
+    header h2 {
+      font-size: 26px;
+      margin: 0;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      max-width: 400px;
+      font-size: 18px;
+      padding: 10px;
+      margin: 15px auto;
+      border: 2px solid #2196F3;
+      border-radius: 6px;
+      display: block;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      max-width: 420px;
+      margin: 20px auto;
+      gap: 8px;
+    }
+
+    #mapBtn {
+      flex: 0.5;
+      font-size: 20px;
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #1976d2;
+      color: white;
+    }
+
+    #sendBtn, #stopBtn {
+      flex: 1;
+      font-size: 16px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #sendBtn {
+      background: linear-gradient(to bottom, #66bb6a, #4CAF50);
+      color: white;
+    }
+
+    #stopBtn {
+      background: linear-gradient(to bottom, #ef5350, #f44336);
+      color: white;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 20% auto;
+      padding: 20px;
+      width: 320px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .modal-content p {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .modal-content button {
+      font-size: 16px;
+      padding: 8px 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>사용자용 위치정보 시스템</h2>
+  </header>
+
+  <form id="locationForm"
+        action="YOUR_SCRIPT_WEBAPP_URL"
+        method="POST">
+    <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+    <div class="button-group">
+      <button type="button" id="mapBtn" onclick="toggleMapMode()">🗺️</button>
+      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+    </div>
+  </form>
+
+  <div id="map"></div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <button onclick="closeModal()">확인</button>
+    </div>
+
+  <script>
+    let intervalId;
+    let map;
+    let mode = "current"; // 기본 모드: 현재 위치
+
+    function showModal(message) {
+      document.getElementById("modalMessage").innerText = message;
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    // ✅ 위치 전송
+    function sendLocation() {
+      showModal("위치정보 전송 중입니다...");
+      if (!navigator.geolocation) {
+        showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const form = document.getElementById("locationForm");
+          const params = new URLSearchParams();
+
+          params.append("phone", document.getElementById("phone").value);
+          params.append("status", "정상");
+          params.append("lat", position.coords.latitude || 0);
+          params.append("lng", position.coords.longitude || 0);
+          params.append("time", new Date().toISOString());
+
+          fetch(form.action, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+          })
+          .then(() => { showModal("위치정보가 성공적으로 전송되었습니다."); })
+          .catch(err => { showModal("위치 전송 실패:\n" + err.message); });
+
+          if (!intervalId) {
+            intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
+          }
+        },
+        function(error) {
+          showModal("위치 정보를 가져오지 못했습니다:\n" + error.message);
+        }
+      );
+    }
+
+    // 🚫 위치 해제
+    function stopLocation() {
+      showModal("위치정보 해제 처리 중입니다...");
+      clearInterval(intervalId);
+      intervalId = null;
+
+      const form = document.getElementById("locationForm");
+      const params = new URLSearchParams();
+
+      params.append("phone", document.getElementById("phone").value);
+      params.append("status", "해제");
+      params.append("time", new Date().toISOString());
+
+      fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      })
+      .then(() => { showModal("위치정보가 해제되었습니다."); })
+      .catch(err => { showModal("처리 중 오류:\n" + err.message); });
+    }
+
+    // ⏱ 자동 갱신
+    function autoUpdate() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const form = document.getElementById("locationForm");
+          const params = new URLSearchParams();
+
+          params.append("phone", document.getElementById("phone").value);
+          params.append("status", "정상");
+          params.append("lat", position.coords.latitude || 0);
+          params.append("lng", position.coords.longitude || 0);
+          params.append("time", new Date().toISOString());
+          params.append("auto", "true");
+
+          fetch(form.action, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+          });
+        }
+      );
+    }
+
+    // 🗺️ 지도 모드 전환
+    function toggleMapMode() {
+      if (mode === "current") {
+        mode = "path";
+        showModal("이동 경로 보기 모드로 전환되었습니다.");
+      } else {
+        mode = "current";
+        showModal("현재 위치 보기 모드로 전환되었습니다.");
+      }
+      showMap();
+    }
+
+    // 지도 표시
+    function showMap() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: {lat: position.coords.latitude, lng: position.coords.longitude},
+            zoom: 14
+          });
+
+          if (mode === "current") {
+            new google.maps.Marker({
+              position: {lat: position.coords.latitude, lng: position.coords.longitude},
+              map: map,
+              icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+              title: "내 현재 위치"
+            });
+          } else {
+            // 이동 경로 표시 (예시)
+            const pathLine = new google.maps.Polyline({
+              path: [
+                {lat: position.coords.latitude, lng: position.coords.longitude}
+                // 실제로는 서버에서 본인 기록된 위치들을 불러와서 추가해야 함
+              ],
+              geodesic: true,
+              strokeColor: "#FF0000",
+              strokeOpacity: 1.0,
+              strokeWeight: 2
+            });
+            pathLine.setMap(map);
+          }
+        }
+      );
+    }
+  </script>
+</body>
+</html>
+
+  </div>
