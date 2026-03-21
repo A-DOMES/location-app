@@ -32,12 +32,28 @@
       border-radius: 6px;
       display: block;
     }
-    .button-group {
-      display: flex;
-      justify-content: center;
-      max-width: 420px;
-      margin: 20px auto;
-      gap: 8px;
+    .button-group button {
+      flex: 1;                    /* 버튼 크기를 균등하게 */
+      font-size: 16px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    
+    #mapBtn {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    #sendBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    #stopBtn {
+      background-color: #f44336;
+      color: white;
     }
     #sendBtn, #stopBtn {
       flex: 1;
