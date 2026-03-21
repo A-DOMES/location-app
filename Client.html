@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title>사용자용 위치정보 시스템</title>
   <link rel="manifest" href="manifest.json">
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+  <!-- ✅ 여기에 발급받은 API 키를 넣으세요 -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,19 +15,16 @@
       text-align: center;
       color: #333;
     }
-
     header {
       background-color: #2196F3;
       padding: 20px;
     }
-
     header h2 {
       font-size: 26px;
       margin: 0;
       font-weight: bold;
       color: #fff;
     }
-
     input[type="text"] {
       width: 100%;
       max-width: 400px;
@@ -37,7 +35,6 @@
       border-radius: 6px;
       display: block;
     }
-
     .button-group {
       display: flex;
       justify-content: center;
@@ -45,7 +42,6 @@
       margin: 20px auto;
       gap: 8px;
     }
-
     #mapBtn {
       flex: 0.5;
       font-size: 20px;
@@ -56,7 +52,6 @@
       background-color: #1976d2;
       color: white;
     }
-
     #sendBtn, #stopBtn {
       flex: 1;
       font-size: 16px;
@@ -65,23 +60,19 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
     #sendBtn {
       background: linear-gradient(to bottom, #66bb6a, #4CAF50);
       color: white;
     }
-
     #stopBtn {
       background: linear-gradient(to bottom, #ef5350, #f44336);
       color: white;
     }
-
     #map {
       width: 100%;
       height: 400px;
       margin-top: 20px;
     }
-
     .modal {
       display: none;
       position: fixed;
@@ -90,7 +81,6 @@
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5);
     }
-
     .modal-content {
       background-color: #fff;
       margin: 20% auto;
@@ -100,12 +90,10 @@
       text-align: center;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-
     .modal-content p {
       font-size: 18px;
       margin-bottom: 20px;
     }
-
     .modal-content button {
       font-size: 16px;
       padding: 8px 16px;
@@ -123,7 +111,7 @@
   </header>
 
   <form id="locationForm"
-        action="YOUR_SCRIPT_WEBAPP_URL"
+        action="https://script.google.com/macros/s/AKfycbzyCWf-GHLB5eZWdeV8vdgt8vcA1Ha-thQPyqGO5ytIeyNJlrSbLryVpYC9S9m-xzonig/exec"
         method="POST">
     <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
     <div class="button-group">
@@ -140,6 +128,7 @@
       <p id="modalMessage"></p>
       <button onclick="closeModal()">확인</button>
     </div>
+  </div>
 
   <script>
     let intervalId;
@@ -172,7 +161,7 @@
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
-          params.append("time", new Date().toISOString());
+          params.append("time", new Date()); // ✅ toISOString 제거
 
           fetch(form.action, {
             method: "POST",
@@ -203,7 +192,7 @@
 
       params.append("phone", document.getElementById("phone").value);
       params.append("status", "해제");
-      params.append("time", new Date().toISOString());
+      params.append("time", new Date()); // ✅ toISOString 제거
 
       fetch(form.action, {
         method: "POST",
@@ -226,7 +215,7 @@
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
-          params.append("time", new Date().toISOString());
+          params.append("time", new Date()); // ✅ toISOString 제거
           params.append("auto", "true");
 
           fetch(form.action, {
@@ -287,5 +276,3 @@
   </script>
 </body>
 </html>
-
-  </div>
