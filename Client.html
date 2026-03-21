@@ -91,16 +91,16 @@
         action="https://script.google.com/macros/s/AKfycbzX6BC6mGl1ealnB3S6HtWwDQH0CjNjXY_p49j9PT2834A4ItMDxgK1V5gDkNXi4ZD6Ww/exec"
         method="POST">
     <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-    <div class="button-group">
-      <!-- 지도 버튼 -->
-      <img src="/btn-current.png"
+    <div class="button-group" style="display:flex; justify-content:center; gap:12px; margin:20px auto; max-width:420px;">
+      <!-- 지도 버튼: 위치전송 버튼 좌측 -->
+      <img src="./btn-current.png"
            alt="지도 메뉴"
            style="cursor:pointer; width:60px; height:60px; margin:10px;"
-           onclick="toggleMapMode()">
-
+           onclick="showCurrentLocation()">
+    
       <!-- 위치 전송 버튼 -->
       <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-
+    
       <!-- 위치정보 해제 버튼 -->
       <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
     </div>
