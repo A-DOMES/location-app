@@ -18,8 +18,9 @@
     }
     #map { width:100%; height:100vh; }
   </style>
+  <!-- Google Maps API (API 키 필요) -->
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY">
   </script>
 </head>
 <body>
@@ -35,24 +36,22 @@
 
   <script>
     let map;
-    function initMap() {
-      const latlng = {lat: 37.5665, lng: 126.9780};
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: latlng,
-        zoom: 13
-      });
-    }
 
     function showCurrentLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
           const latlng = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-          map.setCenter(latlng);
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: latlng,
+            zoom: 14
+          });
           new google.maps.Marker({
             position: latlng,
             map: map,
             title: "현재 위치"
           });
+        }, function(err) {
+          alert("위치 정보를 가져올 수 없습니다: " + err.message);
         });
       }
     }
