@@ -4,22 +4,24 @@
   <meta charset="UTF-8">
   <title>지도 버튼</title>
   <style>
-    body { margin:0; text-align:center; }
     .map-btn {
       width: 60px;
       height: 60px;
       cursor: pointer;
-      margin: 20px;
+      margin: 10px;
+      position: absolute;
+      top: 120px;   /* index.html 위치전송 버튼 y좌표 기준 */
+      left: 50px;   /* 위치전송 버튼 왼쪽 */
     }
   </style>
   <!-- Google Maps API (API 키 필요) -->
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY">
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY">
   </script>
 </head>
 <body>
   <!-- 오직 버튼 하나만 -->
-  <img src="btn-current.png" alt="현재 위치 버튼" class="map-btn" onclick="openMap()">
+  <img src="btn-current.png" alt="지도 버튼" class="map-btn" onclick="openMap()">
 
   <script>
     function openMap() {
@@ -40,6 +42,8 @@
               map: map,
               title: "현재 위치"
             });
+          }, function(err) {
+            alert("위치 정보를 가져올 수 없습니다: " + err.message);
           });
         <\/script>
       `);
@@ -47,3 +51,4 @@
   </script>
 </body>
 </html>
+
