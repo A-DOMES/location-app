@@ -1,50 +1,45 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
   <html lang="ko">
   <head>
     <meta charset="UTF-8">
     <title>A-DOMES | 위치정보시스템</title>
     <link rel="manifest" href="manifest.json">
     <style>
-      /* =========================
-         전체 페이지 기본 설정
-         ========================= */
+      /* 전체 페이지 기본 설정 */
       body {
-        font-family: Arial, sans-serif;   /* 글꼴 */
-        font-size: 18px;                  /* 기본 글씨 크기 */
-        background-color: #f9f9f9;        /* 배경색 */
-        margin: 0;                        /* 여백 제거 */
-        text-align: center;               /* 텍스트 중앙 정렬 */
-        color: #333;                      /* 글씨 색상 */
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        background-color: #f9f9f9;
+        margin: 0;
+        text-align: left;              /* 전체 좌측 정렬 */
+        color: #333;
       }
   
-      /* =========================
-         상단 헤더 영역
-         ========================= */
+      /* 상단 헤더 */
       header {
-        background-color: #2196F3;        /* 파란색 배경 */
-        padding: 25px;                    /* 내부 여백 */
+        background-color: #2196F3;
+        padding: 25px;
+        text-align: center;            /* 헤더만 중앙 정렬 */
       }
   
       header h2 {
-        font-size: 30px;                  /* 제목 크기 */
-        margin: 0;                        /* 여백 제거 */
-        font-weight: bold;                /* 굵은 글씨 */
-        color: #fff;                      /* 흰색 글씨 */
+        font-size: 30px;
+        margin: 0;
+        font-weight: bold;
+        color: #fff;
       }
   
-      /* =========================
-         안내 박스 (앱 설명)
-         ========================= */
+      /* 안내 박스 */
       .info-box {
-        border: 2px solid #2196F3;        /* 테두리 */
-        border-radius: 10px;              /* 둥근 모서리 */
-        background-color: #e3f2fd;        /* 연한 파란색 배경 */
-        padding: 25px;                    /* 내부 여백 */
-        margin: 40px auto;                /* 중앙 정렬 */
-        max-width: 615px;                 /* 최대 폭 */
-        text-align: left;                 /* 좌측 정렬 */
-        font-size: 20px;                  /* 글씨 크기 */
-        line-height: 1.8;                 /* 줄 간격 */
+        border: 2px solid #2196F3;
+        border-radius: 10px;
+        background-color: #e3f2fd;
+        padding: 25px;
+        margin: 40px auto;
+        max-width: 615px;
+        text-align: left;
+        font-size: 20px;
+        line-height: 1.8;
       }
   
       .info-box h3 {
@@ -66,50 +61,46 @@
         margin-bottom: 2px;
       }
   
-      /* =========================
-         전화번호 입력창
-         ========================= */
+      /* 전화번호 입력창 */
       input[type="text"] {
-        width: 100%;              /* 폭을 줄임 (기존 100% → 80%) */
-        max-width: 450px;        /* 최대 폭 줄임 (기존 500px → 400px) */
-        font-size: 20px;         /* 글씨 크기 */
-        padding: 10px;           /* 내부 여백 */
-        margin: 20px auto;       /* 중앙 정렬 */
+        width: 80%;              /* 폭 줄임 */
+        max-width: 400px;
+        font-size: 20px;
+        padding: 10px;
+        margin: 20px 0 10px 40px; /* 좌측에서 40px 띄움, 아래쪽 간격 줄임 */
         border: 2px solid #2196F3;
         border-radius: 6px;
         display: block;
       }
   
-      /* =========================
-         버튼 그룹 (지도/전송/해제)
-         ========================= */
+      /* 버튼 그룹 */
       .button-group {
-        display: flex;           /* 가로 배치 */
-        justify-content: flex-start;
+        display: flex;
+        justify-content: flex-start;   /* 좌측 정렬 */
         align-items: center;
-        max-width: 600px;
-        margin: 30px auto;
+        margin-left: 40px;             /* 입력창과 동일한 좌측 위치 */
+        margin-top: 10px;              /* 입력창과 버튼 간격 줄임 */
+        gap: 40px;                     /* 버튼 간격 */
       }
   
       /* 지도맵 아이콘 버튼 */
       .map-btn {
-        width: 80px;             /* 아이콘 크기 */
+        width: 80px;
         height: 80px;
         cursor: pointer;
-        margin-right: 50px;     /* 위치전송 버튼과의 간격 크게 (5배 정도) */
+        margin-left: 0;                /* 좌측 기준 위치 (버튼 그룹 기준) */
       }
   
       /* 위치전송 버튼 */
       #sendBtn {
-        flex: 1;                 /* 버튼 폭 자동 분배 */
+        flex: 1;
         font-size: 20px;
-        padding: 13px;           /* 버튼 높이 */
+        padding: 13px;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         background: linear-gradient(to bottom, #66bb6a, #4CAF50);
         color: white;
-        margin-right: 50px;      /* 해제 버튼과의 간격 넓힘 */
       }
   
       /* 위치정보 해제 버튼 */
@@ -126,16 +117,12 @@
     </style>
   </head>
   <body>
-    <!-- =========================
-         상단 헤더
-         ========================= -->
+    <!-- 상단 헤더 -->
     <header>
       <h2>A-DOMES | 위치정보시스템</h2>
     </header>
   
-    <!-- =========================
-         안내 박스
-         ========================= -->
+    <!-- 안내 박스 -->
     <section class="info-box">
       <h3>앱 목적</h3>
       <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
@@ -150,32 +137,28 @@
       <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
     </section>
   
-    <!-- =========================
-         입력창과 버튼 그룹
-         ========================= -->
+    <!-- 입력창과 버튼 그룹 -->
     <form id="locationForm"
           action="https://script.google.com/macros/s/AKfycbzX6BC6mGl1ealnB3S6HtWwDQH0CjNjXY_p49j9PT2834A4ItMDxgK1V5gDkNXi4ZD6Ww/exec"
           method="POST">
-      <!-- 전화번호 입력창 -->
+      <!-- 전화번호 입력창 (좌측에서 40px 띄움, 위치전송 버튼과 동일한 위치) -->
       <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
   
-      <!-- 버튼 그룹 -->
+      <!-- 버튼 그룹 (입력창과 동일한 좌측 위치) -->
       <div class="button-group">
-        <!-- 지도맵 버튼 (왼쪽) -->
+        <!-- 지도맵 버튼 -->
         <img src="btn-current.png" alt="지도 버튼" class="map-btn"
              onclick="window.open('client.html','mapWindow','width=900,height=700')">
   
-        <!-- 위치 전송 버튼 (중앙) -->
+        <!-- 위치 전송 버튼 -->
         <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
   
-        <!-- 위치정보 해제 버튼 (오른쪽) -->
+        <!-- 위치정보 해제 버튼 -->
         <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </div>
     </form>
   
-    <!-- =========================
-         모달창 (알림 메시지)
-         ========================= -->
+    <!-- 모달창 -->
     <div id="modal" class="modal">
       <div class="modal-content">
         <p id="modalMessage"></p>
@@ -183,9 +166,6 @@
       </div>
     </div>
   
-    <!-- =========================
-         자바스크립트 로직 (위치 전송/해제/자동 갱신)
-         ========================= -->
     <script>
       // 위치 전송, 해제, 자동 갱신 관련 JS 로직은 그대로 유지
     </script>
