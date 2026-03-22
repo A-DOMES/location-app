@@ -1,167 +1,196 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>A-DOMES | 위치정보시스템</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    /* 전체 페이지 기본 설정 */
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background-color: #f9f9f9;
-      margin: 0;
-      color: #333;
-    }
-
-    /* 상단 헤더 */
-    header {
-      background-color: #2196F3;
-      padding: 20px;              /* 간격 조금 줄임 */
-      text-align: center;
-    }
-
-    header h2 {
-      font-size: 28px;
-      margin: 0;
-      font-weight: bold;
-      color: #fff;
-    }
-
-    /* 안내 박스 */
-    .info-box {
-      border: 2px solid #2196F3;
-      border-radius: 10px;
-      background-color: #e3f2fd;
-      padding: 20px;              /* 내부 간격 줄임 */
-      margin: 25px auto;          /* 헤더와의 간격 줄임 */
-      max-width: 620px;
-      text-align: left;
-      font-size: 20px;
-      line-height: 1.4;           /* 줄 간격 줄임 */
-    }
-
-    .info-box h3 {
-      margin: 10px 0 5px 0;       /* 제목과 내용 간격 줄임 */
-      color: #1976d2;
-    }
-
-    /* 경고 문구 (한 줄 공백 + 빨간색 강조) */
-    .warning {
-      display: block;
-      margin-top: 10px;           /* 위 문장과 한 칸 공백 */
-      font-size: 20px;
-      color: #d32f2f;
-      font-weight: bold;
-    }
-
-    /* 중앙정렬 컨테이너 */
-    .center-wrapper {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    /* 내부 그룹: 좌측정렬 */
-    .inner-group {
-      text-align: left;
-    }
-
-    /* 전화번호 입력창 */
-    input[type="text"] {
-      width: 400px;
-      height: 30px;
-      font-size: 20px;
-      padding: 8px;
-      margin-left: 70px;          /* 내부 좌측 위치 조정 */
-      margin-bottom: 15px;
-      border: 2px solid #2196F3;
-      border-radius: 6px;
-      display: block;
-    }
-
-    /* 버튼 그룹 */
-    .button-group {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      margin-left: 40px;          /* 내부 좌측 위치 조정 */
-      margin-top: 10px;
-      gap: 40px;
-    }
-
-    /* 지도맵 버튼 */
-    .map-btn {
-      width: 100px;
-      height: 100px;
-      cursor: pointer;
-    }
-
-    /* 위치 전송 버튼 */
-    #sendBtn {
-      width: 200px;
-      height: 50px;
-      font-size: 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: linear-gradient(to bottom, #66bb6a, #4CAF50);
-      color: white;
-    }
-
-    /* 위치정보 해제 버튼 */
-    #stopBtn {
-      width: 200px;
-      height: 50px;
-      font-size: 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: linear-gradient(to bottom, #ef5350, #f44336);
-      color: white;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- 상단 헤더 -->
-  <header>
-    <h2>A-DOMES | 위치정보시스템</h2>
-  </header>
-
-  <!-- 안내 박스 -->
-  <section class="info-box">
-    <h3>앱 목적</h3>
-    <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
-
-    <h3>사용 방법</h3>
-    <p>
-      먼저 전화번호 또는 이름을 입력하세요.<br>
-      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
-      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
-    </p>
-
-    <!-- 한 줄 공백 + 빨간색 강조 -->
-    <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
-  </section>
-
-  <!-- 중앙정렬 컨테이너 -->
-  <div class="center-wrapper">
-    <div class="inner-group">
-
-      <!-- 전화번호 입력창 -->
-      <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-
-      <!-- 버튼 그룹 -->
-      <div class="button-group">
-        <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+  <!DOCTYPE html>
+  <html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <title>A-DOMES | 위치정보시스템</title>
+    <link rel="manifest" href="manifest.json">
+  
+    <style>
+      /* ============================
+         전체 페이지 기본 설정
+         ============================ */
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        background-color: #f9f9f9;
+        margin: 0;
+        color: #333;
+      }
+  
+      /* ============================
+         상단 헤더
+         ============================ */
+      header {
+        background-color: #2196F3;
+        padding: 20px;
+        text-align: center;
+      }
+  
+      header h2 {
+        font-size: 28px;
+        margin: 0;
+        font-weight: bold;
+        color: #fff;
+      }
+  
+      /* ============================
+         안내 박스
+         ============================ */
+      .info-box {
+        border: 2px solid #2196F3;
+        border-radius: 10px;
+        background-color: #e3f2fd;
+        padding: 20px;
+        margin: 25px auto;
+        max-width: 620px;
+        text-align: left;
+        font-size: 20px;
+        line-height: 1.4;
+      }
+  
+      .info-box h3 {
+        margin: 10px 0 5px 0;
+        color: #1976d2;
+      }
+  
+      /* 경고 문구 (한 줄 공백 + 빨간색 강조) */
+      .warning {
+        display: block;
+        margin-top: 10px;
+        font-size: 20px;
+        color: #d32f2f;
+        font-weight: bold;
+      }
+  
+      /* ============================
+         중앙정렬 컨테이너
+         ============================ */
+      .center-wrapper {
+        display: flex;
+        justify-content: center; /* 전체를 중앙에 배치 */
+        margin-top: 20px;
+      }
+  
+      /* 내부 그룹은 좌측정렬 */
+      .inner-group {
+        text-align: left;
+      }
+  
+      /* ============================
+         전화번호 입력창
+         textbox만 우측 이동시키고 싶으면 margin-left만 조정하면 됨
+         ============================ */
+      input[type="text"] {
+        width: 400px;
+        height: 30px;
+        font-size: 20px;
+        padding: 8px;
+  
+        /* ★ textbox만 우측으로 이동시키는 부분 ★ */
+        margin-left: 120px;   /* ← minkoo가 원하는 만큼 조절 가능 */
+  
+        margin-bottom: 15px;
+        border: 2px solid #2196F3;
+        border-radius: 6px;
+        display: block;
+      }
+  
+      /* ============================
+         버튼 그룹
+         ============================ */
+      .button-group {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+  
+        /* 버튼들은 기존 위치 유지 (textbox와 별개로 움직임) */
+        margin-left: 40px;
+  
+        margin-top: 10px;
+        gap: 40px;
+      }
+  
+      /* 지도맵 버튼 */
+      .map-btn {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+      }
+  
+      /* 위치 전송 버튼 */
+      #sendBtn {
+        width: 200px;
+        height: 50px;
+        font-size: 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: linear-gradient(to bottom, #66bb6a, #4CAF50);
+        color: white;
+      }
+  
+      /* 위치정보 해제 버튼 */
+      #stopBtn {
+        width: 200px;
+        height: 50px;
+        font-size: 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: linear-gradient(to bottom, #ef5350, #f44336);
+        color: white;
+      }
+  
+      /* ============================
+         모달창 기본 숨김
+         “확인” 글자가 화면에 보이던 문제 해결
+         ============================ */
+      #modal {
+        display: none;
+      }
+    </style>
+  </head>
+  
+  <body>
+  
+    <!-- 상단 헤더 -->
+    <header>
+      <h2>A-DOMES | 위치정보시스템</h2>
+    </header>
+  
+    <!-- 안내 박스 -->
+    <section class="info-box">
+      <h3>앱 목적</h3>
+      <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
+  
+      <h3>사용 방법</h3>
+      <p>
+        먼저 전화번호 또는 이름을 입력하세요.<br>
+        위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
+        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+      </p>
+  
+      <!-- 한 줄 공백 + 빨간색 강조 -->
+      <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
+    </section>
+  
+    <!-- 중앙정렬 컨테이너 -->
+    <div class="center-wrapper">
+      <div class="inner-group">
+  
+        <!-- 전화번호 입력창 -->
+        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+  
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+          <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+        </div>
+  
       </div>
-
     </div>
-  </div>
-
+  
     <!-- 모달창 -->
     <div id="modal" class="modal">
       <div class="modal-content">
@@ -169,6 +198,13 @@
         <button onclick="closeModal()">확인</button>
       </div>
     </div>
+  
+    <script>
+      /* 위치 전송, 해제, 자동 갱신 관련 JS는 기존 코드 그대로 사용 */
+    </script>
+  
+  </body>
+  </html>
   
     <script>
       // 위치 전송, 해제, 자동 갱신 관련 JS 로직은 그대로 유지
