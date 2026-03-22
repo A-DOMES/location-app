@@ -74,13 +74,15 @@
       align-items: center;
       max-width: 500px;
       margin: 40px auto;
-      gap: 12px;               /* 버튼 간격 */
+      gap: 100px;   /* 버튼들 사이 간격을 크게 (기존보다 약 5배) */
     }
-
+    
     .map-btn {
-      width: 60px;             /* 버튼과 같은 크기 */
-      height: 60px;
+      width: 80px;
+      height: 80px;
       cursor: pointer;
+      margin-left: -40px;   /* 아이콘 크기의 절반만큼 왼쪽으로 이동 */
+      margin-right: 500px;   /* 버튼과의 간격 */
     }
 
     #sendBtn, #stopBtn {
