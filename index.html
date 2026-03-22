@@ -11,7 +11,7 @@
         font-size: 18px;
         background-color: #f9f9f9;
         margin: 0;
-        text-align: left;              /* 전체 좌측 정렬 */
+        text-align: left;
         color: #333;
       }
   
@@ -19,7 +19,7 @@
       header {
         background-color: #2196F3;
         padding: 25px;
-        text-align: center;            /* 헤더만 중앙 정렬 */
+        text-align: center; /* 헤더만 중앙 정렬 */
       }
   
       header h2 {
@@ -42,14 +42,32 @@
         line-height: 1.3;
       }
   
+      .warning {
+        font-size: 20px;   /* 동일한 폰트 크기 */
+        color: #d32f2f;    /* 빨간색 강조 */
+        font-weight: bold; /* 굵게 */
+      }
+  
+      /* 중앙정렬 컨테이너 */
+      .center-wrapper {
+        display: flex;
+        justify-content: center; /* 화면 중앙 배치 */
+        margin-top: 20px;
+      }
+  
+      /* 내부 그룹: 좌측정렬 */
+      .inner-group {
+        text-align: left;
+      }
+  
       /* 전화번호 입력창 */
       input[type="text"] {
-        width: 400px;          /* 폭 직접 지정 */
-        height: 30px;          /* 높이 직접 지정 */
+        width: 400px;        /* 폭 직접 지정 */
+        height: 30px;        /* 높이 직접 지정 */
         font-size: 20px;
         padding: 8px;
-        margin-left: 480px;    /* 좌측에서 띄우는 거리 (기존 40px → 7배 = 280px) */
-        margin-bottom: 15px;   /* 버튼과의 간격 */
+        margin-left: 40px;   /* 좌측에서 띄우는 거리 (조정 가능) */
+        margin-bottom: 15px; /* 버튼과의 간격 */
         border: 2px solid #2196F3;
         border-radius: 6px;
         display: block;
@@ -58,25 +76,24 @@
       /* 버튼 그룹 */
       .button-group {
         display: flex;
-        justify-content: flex-start;   /* 좌측 정렬 */
+        justify-content: flex-start; /* 좌측정렬 */
         align-items: center;
-        margin-left: 340px;            /* 입력창과 동일한 좌측 위치 (7배 이동) */
-        margin-top: 10px;              /* 입력창과 버튼 간격 줄임 */
-        gap: 40px;                     /* 버튼 간격 */
+        margin-left: 40px;           /* 좌측에서 띄우는 거리 (조정 가능) */
+        margin-top: 10px;
+        gap: 40px;                   /* 버튼 간격 */
       }
   
       /* 지도맵 아이콘 버튼 */
       .map-btn {
-        width: 100px;                   /* 아이콘 폭 */
-        height: 100px;                  /* 아이콘 높이 */
+        width: 100px;   /* 아이콘 폭 */
+        height: 100px;  /* 아이콘 높이 */
         cursor: pointer;
-        margin-left: 0;                /* 좌측 기준 위치 */
       }
   
       /* 위치전송 버튼 */
       #sendBtn {
-        width: 200px;                  /* 폭 직접 지정 */
-        height: 50px;                  /* 높이 직접 지정 */
+        width: 200px;   /* 폭 직접 지정 */
+        height: 50px;   /* 높이 직접 지정 */
         font-size: 20px;
         border: none;
         border-radius: 8px;
@@ -87,8 +104,8 @@
   
       /* 위치정보 해제 버튼 */
       #stopBtn {
-        width: 200px;                  /* 폭 직접 지정 */
-        height: 50px;                  /* 높이 직접 지정 */
+        width: 200px;   /* 폭 직접 지정 */
+        height: 50px;   /* 높이 직접 지정 */
         font-size: 20px;
         border: none;
         border-radius: 8px;
@@ -113,31 +130,31 @@
       <p>
         먼저 전화번호 또는 이름을 입력하세요.<br>
         위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
-        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.<br>
+        <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
       </p>
-  
-      <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
     </section>
   
-    <!-- 입력창과 버튼 그룹 -->
-    <form id="locationForm"
-          action="https://script.google.com/macros/s/AKfycbzX6BC6mGl1ealnB3S6HtWwDQH0CjNjXY_p49j9PT2834A4ItMDxgK1V5gDkNXi4ZD6Ww/exec"
-          method="POST">
-      <!-- 전화번호 입력창 (좌측에서 280px 띄움 → 7배 이동) -->
-      <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+    <!-- 중앙정렬 컨테이너 -->
+    <div class="center-wrapper">
+      <!-- 내부 좌측정렬 그룹 -->
+      <div class="inner-group">
+        <!-- 전화번호 입력창 -->
+        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
   
-      <!-- 버튼 그룹 (입력창과 동일한 좌측 위치) -->
-      <div class="button-group">
-        <!-- 지도맵 버튼 -->
-        <img src="btn-current.png" alt="지도 버튼" class="map-btn"
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+          <!-- 지도맵 버튼 -->
+          <img src="btn-current.png" alt="지도 버튼" class="map-btn">
   
-        <!-- 위치 전송 버튼 -->
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+          <!-- 위치 전송 버튼 -->
+          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
   
-        <!-- 위치정보 해제 버튼 -->
-        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+          <!-- 위치정보 해제 버튼 -->
+          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+        </div>
       </div>
-    </form>
+    </div>
   
     <!-- 모달창 -->
     <div id="modal" class="modal">
@@ -152,8 +169,6 @@
     </script>
   </body>
   </html>
-  
-
 
   <script>
     let intervalId;
