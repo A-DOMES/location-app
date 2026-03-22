@@ -48,8 +48,8 @@
         height: 40px;          /* 높이 직접 지정 */
         font-size: 20px;
         padding: 8px;
-        margin-left: 60px;     /* 좌측에서 띄우는 거리 (조정 가능) */
-        margin-bottom: 20px;   /* 버튼과의 간격 15 */
+        margin-left: 280px;    /* 좌측에서 띄우는 거리 (기존 40px → 7배 = 280px) */
+        margin-bottom: 15px;   /* 버튼과의 간격 */
         border: 2px solid #2196F3;
         border-radius: 6px;
         display: block;
@@ -60,7 +60,8 @@
         display: flex;
         justify-content: flex-start;   /* 좌측 정렬 */
         align-items: center;
-        margin-left: 60px;             /* 입력창과 동일한 좌측 위치 */
+        margin-left: 280px;            /* 입력창과 동일한 좌측 위치 (7배 이동) */
+        margin-top: 10px;              /* 입력창과 버튼 간격 줄임 */
         gap: 40px;                     /* 버튼 간격 */
       }
   
@@ -122,10 +123,10 @@
     <form id="locationForm"
           action="https://script.google.com/macros/s/AKfycbzX6BC6mGl1ealnB3S6HtWwDQH0CjNjXY_p49j9PT2834A4ItMDxgK1V5gDkNXi4ZD6Ww/exec"
           method="POST">
-      <!-- 전화번호 입력창 (좌측에서 60px 띄움, 버튼과 동일한 위치) -->
+      <!-- 전화번호 입력창 (좌측에서 280px 띄움 → 7배 이동) -->
       <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
   
-      <!-- 버튼 그룹 -->
+      <!-- 버튼 그룹 (입력창과 동일한 좌측 위치) -->
       <div class="button-group">
         <!-- 지도맵 버튼 -->
         <img src="btn-current.png" alt="지도 버튼" class="map-btn"
@@ -152,6 +153,8 @@
     </script>
   </body>
   </html>
+  
+
 
   <script>
     let intervalId;
