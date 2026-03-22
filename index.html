@@ -183,16 +183,21 @@
         <!-- 전화번호 입력창 -->
         <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
   
-        <!-- 버튼 그룹 -->
-        <div class="button-group">
-          <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-        </div>
-  
-      </div>
+    <!-- 버튼 그룹 -->
+    <div class="button-group">
+    
+      <!-- 지도 버튼: 클릭 즉시 client.html 새 탭 실행 -->
+      <a href="client.html" target="_blank">
+        <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+      </a>
+    
+      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
     </div>
-  
+    
+    </div>
+    </div>
+    
     <!-- 모달창 -->
     <div id="modal" class="modal">
       <div class="modal-content">
