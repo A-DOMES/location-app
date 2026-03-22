@@ -1,196 +1,93 @@
-  <!DOCTYPE html>
-  <html lang="ko">
-  <head>
-    <meta charset="UTF-8">
-    <title>A-DOMES | 위치정보시스템</title>
-    <link rel="manifest" href="manifest.json">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        font-size: 18px;
-        background-color: #f9f9f9;
-        margin: 0;
-        text-align: center;
-        color: #333;
-      }
-  
-      header {
-        background-color: #2196F3;
-        padding: 25px;
-      }
-  
-      header h2 {
-        font-size: 30px;
-        margin: 0;
-        font-weight: bold;
-        color: #fff;
-      }
-  
-      .info-box {
-        border: 2px solid #2196F3;
-        border-radius: 10px;
-        background-color: #e3f2fd;
-        padding: 25px;
-        margin: 40px auto;
-        max-width: 615px;
-        text-align: left;
-        font-size: 20px;
-        line-height: 1.8;
-      }
-  
-      .info-box h3 {
-        margin-top: 0;
-        margin-bottom: 6px;
-        color: #1976d2;
-      }
-  
-      .info-box p {
-        margin-top: 4px;
-        margin-bottom: 10px;
-      }
-  
-      .info-box .warning {
-        font-weight: bold;
-        color: #d32f2f;
-        font-size: 22px;
-        margin-top: 20px;
-        margin-bottom: 2px;
-      }
-  
-      input[type="text"] {
-        width: 85%;              /* 폭을 더 줄임 */
-        max-width: 420px;
-        font-size: 20px;
-        padding: 10px;
-        margin: 20px auto;
-        border: 2px solid #2196F3;
-        border-radius: 6px;
-        display: block;
-      }
-  
-      .button-group {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        max-width: 500px;
-        margin: 40px auto;
-        gap: 100px;               /* 버튼 간격 */
-      }
-  
-      .map-btn {
-        width: 120px;             /* 아이콘 크기: 버튼보다 약간 크게 */
-        height: 120px;
-        cursor: pointer;
-        margin-right: 40px;     /* 아이콘을 버튼 크기의 2배 정도 왼쪽으로 띄움 */
-      }
-  
-      #sendBtn, #stopBtn {
-        flex: 1;
-        font-size: 20px;
-        padding: 13px;           /* 기존보다 10% 줄임 */
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        color: white;
-      }
-  
-      #sendBtn {
-        background: linear-gradient(to bottom, #66bb6a, #4CAF50);
-      }
-  
-      #stopBtn {
-        background: linear-gradient(to bottom, #ef5350, #f44336);
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h2>A-DOMES | 위치정보시스템</h2>
-    </header>
-  
-    <section class="info-box">
-      <h3>앱 목적</h3>
-      <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
-  
-      <h3>사용 방법</h3>
-      <p>
-        먼저 전화번호 또는 이름을 입력하세요.<br>
-        위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
-        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
-      </p>
-  
-      <p class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</p>
-    </section>
-  
-    <form id="locationForm"
-          action="https://script.google.com/macros/s/AKfycbzX6BC6mGl1ealnB3S6HtWwDQH0CjNjXY_p49j9PT2834A4ItMDxgK1V5gDkNXi4ZD6Ww/exec"
-          method="POST">
-      <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-      <div class="button-group">
-        <!-- 지도 버튼: 왼쪽으로 이동 -->
-        <img src="btn-current.png" alt="지도 버튼" class="map-btn"
-             onclick="window.open('client.html','mapWindow','width=900,height=700')">
-  
-        <!-- 위치 전송 버튼: 아이콘 자리로 이동 -->
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-  
-        <!-- 위치정보 해제 버튼: 그대로 유지 -->
-        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-      </div>
-    </form>
-  
-    <!-- 모달창 -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <p id="modalMessage"></p>
-        <button onclick="closeModal()">확인</button>
-      </div>
-    </div>
-  
-    <script>
-      // 기존 JS 로직 그대로 유지
-    </script>
-  </body>
-  </html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>현재 위치 지도</title>
+
+  <!-- 구글 지도 API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+    }
+
+    /* 제목 */
+    h2 {
+      margin-top: 20px;
+      font-size: 30px;
+      color: #333;
+    }
+
+    /* 현재 위치 텍스트 */
+    #locationText {
+      font-size: 28px;      /* 크게 표시 */
+      font-weight: bold;
+      color: #d32f2f;       /* 빨간색 */
+      margin: 15px 0;
+      line-height: 1.5;
+    }
+
+    /* 지도 영역 */
+    #map {
+      width: 100%;
+      height: 80vh;         /* 화면의 80% 높이 */
+      border-top: 2px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>📍 현재 위치</h2>
+
+  <!-- 현재 위치 텍스트 -->
+  <div id="locationText">위치 정보를 가져오는 중...</div>
+
+  <!-- 지도 -->
+  <div id="map"></div>
 
   <script>
-    function openMap() {
-      // 새 창 열기
-      const mapWindow = window.open("", "mapWindow", "width=900,height=700");
-      mapWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>지도</title>
-          <style>
-            #map { width:100%; height:100vh; margin:0; }
-          </style>
-          <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"><\/script>
-        </head>
-        <body>
-          <div id="map"></div>
-          <script>
-            navigator.geolocation.getCurrentPosition(function(pos) {
-              const latlng = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-              const map = new google.maps.Map(document.getElementById("map"), {
-                center: latlng,
-                zoom: 14
-              });
-              new google.maps.Marker({
-                position: latlng,
-                map: map,
-                title: "현재 위치"
-              });
-            }, function(err) {
-              alert("위치 정보를 가져올 수 없습니다: " + err.message);
-            });
-          <\/script>
-        </body>
-        </html>
-      `);
-    }
+    /* 현재 위치 가져오기 */
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        /* 텍스트 표시 */
+        document.getElementById("locationText").innerHTML =
+          `현재 위치:<br><span style="font-size:32px;">${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`;
+
+        /* 지도 표시 */
+        const latlng = { lat, lng };
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: latlng,
+          zoom: 16
+        });
+
+        /* 현재 위치 마커 */
+        new google.maps.Marker({
+          position: latlng,
+          map: map,
+          title: "현재 위치",
+          icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+            scaledSize: new google.maps.Size(50, 50)  /* 마커 크기 키움 */
+          }
+        });
+
+      },
+      function(err) {
+        document.getElementById("locationText").innerHTML =
+          "위치 정보를 가져올 수 없습니다: " + err.message;
+      }
+    );
   </script>
+
 </body>
 </html>
-
