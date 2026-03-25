@@ -226,6 +226,9 @@
     </div>
   </div>
 
+
+
+    
   <!-- ============================
        기능 JS (사용자용 수정 버전)
        ============================ -->
@@ -265,16 +268,16 @@
     function login() {
       const id = document.getElementById("userId").value;
       const pw = document.getElementById("userPw").value;
-
+  
       google.script.run.withSuccessHandler(function(auth) {
-        if (auth.result === "success" && auth.role === "user") {
+        if (auth.result === "success" && auth.role === "RU") {   // ✅ 여기 수정
           showModal("로그인 성공!", true);
-
+  
           document.getElementById("userInfo").innerHTML =
-            auth.name + "님<br>" +
-            "상태: " + auth.status + "<br>" +
-            "마지막 로그인: " + auth.lastLogin;
-
+            (auth.name || "") + "님<br>" +
+            "상태: " + (auth.status || "active") + "<br>" +
+            "마지막 로그인: " + (auth.lastLogin || new Date().toLocaleString());
+  
           document.getElementById("sendBtn").disabled = false;
           document.getElementById("stopBtn").disabled = false;
         } else if (auth.result === "blocked") {
