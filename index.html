@@ -182,96 +182,99 @@
       <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
     </section>
   
-    <!-- ★★★ 핵심: form 복구 ★★★ -->
-    <form id="locationForm"
-          action="https://script.google.com/macros/s/AKfycby6ywh3eMyL33dEHgkp9Hja0_-KWi78Xxdcz2oP-ZejN1W2iSpWzMJZlQyxpXH0sDvMlA/exec"
-          method="POST">
+  <!-- ★★★ 핵심: form 복구 ★★★ -->
+  <form id="locationForm"
+        action="https://script.google.com/macros/s/AKfycby6ywh3eMyL33dEHgkp9Hja0_-KWi78Xxdcz2oP-ZejN1W2iSpWzMJZlQyxpXH0sDvMlA/exec"
+        method="POST">
   
-      <div class="center-wrapper">
-        <div class="inner-group">
+    <div class="center-wrapper">
+      <div class="inner-group">
   
-          <!-- 전화번호 입력창 -->
-          <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+        <!-- 전화번호 입력창 -->
+        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+        <input type="text" id="userId" placeholder="아이디 입력">
+        <input type="password" id="userPw" placeholder="비밀번호 입력">
   
-          <!-- 버튼 그룹 -->
-          <div class="button-group">
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+          <!-- 지도 버튼 -->
+          <a href="client.html" target="_blank">
+            <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+          </a>
   
-            <!-- 지도 버튼 -->
-            <a href="client.html" target="_blank">
-              <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-            </a>
-  
-            <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-            <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-          </div>
-  
+          <button type="button" id="sendBtn" onclick="sendLocation()" disabled>위치 전송</button>
+          <button type="button" id="stopBtn" onclick="stopLocation()" disabled>위치정보 해제</button>
+          <button type="button" onclick="login()">로그인</button>
         </div>
-      </div>
-    </form>
   
-    <!-- 모달창 -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <p id="modalMessage"></p>
-        <button onclick="closeModal()">확인</button>
       </div>
     </div>
+  </form>
 
-
+  <!-- 사용자정보 표시 -->
+  <div id="userInfo"></div>
+  <!-- 현재 위치 표시 (중복 제거) -->
+  <div id="currentLocation"></div>
+  <!-- 지도 전체화면 -->
+  <div id="map"></div>
   
+  <!-- 모달창 -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <button onclick="closeModal()">확인</button>
+    </div>
+  </div>
+
   <!-- ============================
        기능 JS (사용자용 수정 버전)
        ============================ -->
   <script>
     let intervalId;
-  
+
     /* ============================
        📌 모달창 표시 함수 (autoClose 옵션 추가)
        ============================ */
     function showModal(message, autoClose = false) {
       document.querySelectorAll(".modal").forEach(m => m.remove());
-  
+
       const modal = document.createElement("div");
       modal.className = "modal";
-  
+
       const content = document.createElement("div");
       content.className = "modal-content";
       content.innerText = message;
-  
+
       modal.appendChild(content);
       document.body.appendChild(modal);
-  
+
       modal.style.display = "block";
-  
+
       if (autoClose) {
         setTimeout(() => { modal.remove(); }, 2000);
       }
     }
-  
-    /* ============================
-       📌 모달창 닫기 함수
-       ============================ */
+
     function closeModal() {
       document.querySelectorAll(".modal").forEach(m => m.remove());
     }
-  
+
     /* ============================
        📌 로그인 처리 함수
        ============================ */
     function login() {
       const id = document.getElementById("userId").value;
       const pw = document.getElementById("userPw").value;
-  
+
       google.script.run.withSuccessHandler(function(auth) {
         if (auth.result === "success" && auth.role === "user") {
           showModal("로그인 성공!", true);
-  
-          // ✅ 사용자정보 표시
+
           document.getElementById("userInfo").innerHTML =
             auth.name + "님<br>" +
             "상태: " + auth.status + "<br>" +
             "마지막 로그인: " + auth.lastLogin;
-  
+
           document.getElementById("sendBtn").disabled = false;
           document.getElementById("stopBtn").disabled = false;
         } else if (auth.result === "blocked") {
@@ -281,35 +284,35 @@
         }
       }).checkPassword(id, pw);
     }
-  
+
     /* ============================
        📌 위치 전송 함수
        ============================ */
     function sendLocation() {
       showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.", false);
-  
+
       if (!navigator.geolocation) {
         showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.", true);
         return;
       }
-  
+
       navigator.geolocation.getCurrentPosition(
         function(position) {
           // ✅ 현재 위치 표시 (중복 제거 + 디자인 개선)
           document.getElementById("currentLocation").innerHTML =
             "<strong>위도:</strong> " + position.coords.latitude.toFixed(6) +
             " / <strong>경도:</strong> " + position.coords.longitude.toFixed(6);
-  
+
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
-  
+
           params.append("phone", document.getElementById("phone").value);
           params.append("password", document.getElementById("userPw").value);
           params.append("status", "정상");
           params.append("lat", position.coords.latitude || 0);
           params.append("lng", position.coords.longitude || 0);
           params.append("time", new Date().toISOString());
-  
+
           fetch(form.action, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -323,9 +326,9 @@
             closeModal();
             showModal("위치 전송 실패:\n" + err.message, true);
           });
-  
+
           if (!intervalId) {
-            intervalId = setInterval(autoUpdate, 5 * 60 * 1000); // ✅ 5분마다 갱신
+            intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
           }
         },
         function(error) {
@@ -333,24 +336,24 @@
         }
       );
     }
-  
+
     /* ============================
        📌 위치 해제 함수
        ============================ */
     function stopLocation() {
       showModal("위치정보 해제 처리 중입니다...\n잠시만 기다려주세요.", false);
-  
+
       clearInterval(intervalId);
       intervalId = null;
-  
+
       const form = document.getElementById("locationForm");
       const params = new URLSearchParams();
-  
+
       params.append("phone", document.getElementById("phone").value);
       params.append("password", document.getElementById("userPw").value);
       params.append("status", "해제");
       params.append("time", new Date().toISOString());
-  
+
       fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -371,12 +374,17 @@
        ============================ */
     function autoUpdate() {
       if (!navigator.geolocation) return;
-  
+
       navigator.geolocation.getCurrentPosition(
         function(position) {
+          // ✅ 현재 위치 표시 갱신
+          document.getElementById("currentLocation").innerHTML =
+            "<strong>위도:</strong> " + position.coords.latitude.toFixed(6) +
+            " / <strong>경도:</strong> " + position.coords.longitude.toFixed(6);
+
           const form = document.getElementById("locationForm");
           const params = new URLSearchParams();
-  
+
           params.append("phone", document.getElementById("phone").value);
           params.append("password", document.getElementById("userPw").value);
           params.append("status", "정상");
@@ -384,22 +392,48 @@
           params.append("lng", position.coords.longitude || 0);
           params.append("time", new Date().toISOString());
           params.append("auto", "true");
-  
+
           fetch(form.action, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: params.toString()
           });
+        },
+        function(error) {
+          console.log("자동 갱신 실패:", error.message);
         }
       );
     }
-  
+
     /* ============================
        📌 서비스워커 등록
        ============================ */
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js");
     }
+
+    /* ============================
+       📌 지도 초기화 (전체화면)
+       ============================ */
+    function initMap() {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: position.coords.latitude, lng: position.coords.longitude },
+          zoom: 15
+        });
+
+        new google.maps.Marker({
+          position: { lat: position.coords.latitude, lng: position.coords.longitude },
+          map: map,
+          title: "현재 위치"
+        });
+      });
+    }
+
+    // 페이지 로드 시 지도 초기화
+    window.onload = initMap;
   </script>
 </body>
 </html>
