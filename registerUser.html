@@ -18,7 +18,7 @@
       padding: 40px 30px;
       border-radius: 20px;
       box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-      width: 380px;
+      width: 400px;
       text-align: center;
       animation: fadeIn 1s ease-in-out;
     }
@@ -27,10 +27,45 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .register-box h2 {
-      margin-bottom: 25px;
+      margin-bottom: 15px;
       color: #2c3e50;
       font-size: 26px;
-      font-weight: 600;
+      font-weight: 700;
+    }
+    .register-box p {
+      color:#7f8c8d;
+      font-size:14px;
+      margin-bottom:20px;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 14px;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 10px 0 0 10px;
+      font-size: 15px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .input-group input:focus {
+      border-color: #2980b9;
+      box-shadow: 0 0 8px rgba(41, 128, 185, 0.3);
+      outline: none;
+    }
+    .check-btn {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 0 10px 10px 0;
+      background: linear-gradient(to right, #3498db, #2980b9);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .check-btn:hover {
+      background: linear-gradient(to right, #2980b9, #1f6391);
     }
     .register-box input {
       width: 100%;
@@ -40,11 +75,6 @@
       border-radius: 10px;
       font-size: 15px;
       transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .register-box input:focus {
-      border-color: #2980b9;
-      box-shadow: 0 0 8px rgba(41, 128, 185, 0.3);
-      outline: none;
     }
     .btn-group {
       display: flex;
@@ -78,10 +108,10 @@
       background: #95a5a6;
       transform: scale(1.03);
     }
-    #message {
-      margin-top: 20px;
+    #idMessage, #message {
+      margin-top: 10px;
+      font-size: 14px;
       font-weight: bold;
-      color: #27ae60;
     }
     #message button {
       margin-top: 15px;
@@ -102,18 +132,57 @@
 </head>
 <body>
   <div class="register-box">
-    <h2>회원가입</h2>
-    <input type="text" id="id" placeholder="아이디">
-    <input type="password" id="pw" placeholder="비밀번호">
-    <input type="text" id="name" placeholder="표시 이름">
+    <h2>📍 A-DOMES | 위치정보시스템</h2>
+    <p>사용자의 현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
+       아래 정보를 입력하여 계정을 생성하세요.</p>
+
+    <!-- 아이디 입력 + 확인 버튼 -->
+    <div class="input-group">
+      <input type="text" id="id" placeholder="아이디 (중복 불가)">
+      <button class="check-btn" onclick="checkId()">확인</button>
+    </div>
+    <div id="idMessage"></div>
+
+    <!-- 비밀번호 / 표시 이름 -->
+    <input type="password" id="pw" placeholder="비밀번호 (8자 이상 권장)">
+    <input type="text" id="name" placeholder="표시 이름 (다른 사용자에게 보여질 이름)">
+
+    <!-- 회원가입 완료 / 취소 -->
     <div class="btn-group">
       <button class="primary-btn" onclick="register()">회원가입 완료</button>
       <button class="secondary-btn" onclick="cancelRegister()">취소</button>
     </div>
+
     <div id="message"></div>
+
+    <!-- 하단 앱 설명 -->
+    <p style="color:#2c3e50; font-size:13px; margin-top:25px; line-height:1.6;">
+      A-DOMES | 위치정보시스템은 사용자의 현재 위치를 확인하고<br>
+      이동 경로를 기록·분석할 수 있는 서비스입니다.<br>
+      안전한 이동과 생활 편의를 위해 회원가입 후 이용해 주세요.
+    </p>
   </div>
 
   <script>
+    function checkId() {
+      var id = document.getElementById("id").value.trim();
+      if (!id) {
+        document.getElementById("idMessage").style.color = "red";
+        document.getElementById("idMessage").innerText = "아이디를 입력하세요.";
+        return;
+      }
+
+      google.script.run.withSuccessHandler(function(result) {
+        if (result.result === "exists") {
+          document.getElementById("idMessage").style.color = "red";
+          document.getElementById("idMessage").innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+        } else {
+          document.getElementById("idMessage").style.color = "green";
+          document.getElementById("idMessage").innerText = "✅ 사용 가능한 아이디입니다.";
+        }
+      }).checkUserId(id);
+    }
+
     function register() {
       var id = document.getElementById("id").value.trim();
       var pw = document.getElementById("pw").value.trim();
@@ -146,6 +215,7 @@
       document.getElementById("id").value = "";
       document.getElementById("pw").value = "";
       document.getElementById("name").value = "";
+      document.getElementById("idMessage").innerHTML = "";
       document.getElementById("message").innerHTML = "";
     }
   </script>
