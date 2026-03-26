@@ -1,1 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>회원가입</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .register-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 320px;
+    }
+    .register-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .register-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .register-box button {
+      width: 100%;
+      padding: 12px;
+      background: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .register-box button:hover {
+      background: #2980b9;
+    }
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h2>회원가입</h2>
+    <input type="text" id="id" placeholder="아이디">
+    <input type="password" id="pw" placeholder="비밀번호">
+    <input type="text" id="name" placeholder="표시 이름">
+    <button onclick="register()">회원가입 완료</button>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    function register() {
+      var id = document.getElementById("id").value.trim();
+      var pw = document.getElementById("pw").value.trim();
+      var name = document.getElementById("name").value.trim();
+
+      google.script.run.withSuccessHandler(function(result) {
+        if (result.result === "success") {
+          document.getElementById("message").innerHTML = 
+            "✅ 회원가입 성공! " + result.name + "님 환영합니다.";
+        } else if (result.result === "exists") {
+          document.getElementById("message").innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+        } else if (result.result === "missing") {
+          document.getElementById("message").innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+        } else {
+          document.getElementById("message").innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+        }
+      }).registerUser(id, pw, name);
+    }
+  </script>
+</body>
+</html>
 
