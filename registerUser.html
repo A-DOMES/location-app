@@ -235,30 +235,31 @@
     // 📌 3. 서버와 통신 (Google Apps Script)
     //     checkUserId(id) 함수 호출
     // ============================
-    google.script.run.withSuccessHandler(function(result) {
-      
-      // ============================
-      // 📌 4. 검사 결과 처리
-      // ============================
-      if (result.result === "exists") {
-        // 이미 존재하는 아이디
+    google.script.run
+      .withSuccessHandler(function(result) {
+        // ============================
+        // 📌 4. 검사 결과 처리
+        // ============================
+        if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+        } else if (result.result === "available") {
+          msg.style.color = "green";
+          msg.innerText = "✅ 사용 가능한 아이디입니다.";
+        } else if (result.result === "missing") {
+          msg.style.color = "orange";
+          msg.innerText = "⚠️ 아이디를 입력하세요.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 아이디 검사 실패. 다시 시도하세요.";
+        }
+      })
+      .withFailureHandler(function(error) {
+        // 서버 오류 처리
         msg.style.color = "red";
-        msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-      } else if (result.result === "available") {
-        // 사용 가능한 아이디
-        msg.style.color = "green";
-        msg.innerText = "✅ 사용 가능한 아이디입니다.";
-      } else if (result.result === "missing") {
-        // 입력값 없음
-        msg.style.color = "orange";
-        msg.innerText = "⚠️ 아이디를 입력하세요.";
-      } else {
-        // 검사 실패 (예외 처리)
-        msg.style.color = "red";
-        msg.innerText = "❌ 아이디 검사 실패. 다시 시도하세요.";
-      }
-
-    }).checkUserId(id); // ✅ 서버측 함수 호출
+        msg.innerText = "❌ 서버 오류: " + error.message;
+      })
+      .checkUserId(id); // ✅ 서버측 함수 호출
   }
 
   function register() {
@@ -320,26 +321,30 @@
     // ============================
     // 📌 서버와 통신 (회원가입 처리)
     // ============================
-    google.script.run.withSuccessHandler(function(result) {
-      if (result.result === "success") {
-        msg.style.color = "#27ae60";
-        msg.innerHTML = 
-          "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
-          "<button onclick='goLogin()'>확인</button>";
-      } else if (result.result === "exists") {
-        // 이미 존재하는 아이디
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.result === "success") {
+          msg.style.color = "#27ae60";
+          msg.innerHTML = 
+            "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
+            "<button onclick='goLogin()'>확인</button>";
+        } else if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+        } else if (result.result === "missing") {
+          msg.style.color = "red";
+          msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+        } else {
+          msg.style.color = "red";
+          msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+        }
+      })
+      .withFailureHandler(function(error) {
+        // 서버 오류 처리
         msg.style.color = "red";
-        msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
-      } else if (result.result === "missing") {
-        // 입력값 누락
-        msg.style.color = "red";
-        msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
-      } else {
-        // 예외 처리
-        msg.style.color = "red";
-        msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
-      }
-    }).registerUser(id, pw, name);
+        msg.innerHTML = "❌ 서버 오류: " + error.message;
+      })
+      .registerUser(id, pw, name);
   }
 
   function goLogin() {
