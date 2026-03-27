@@ -119,6 +119,35 @@
     .close-btn:hover {
       color: #e74c3c;
     }
+
+    /* ✅ 체크박스 그룹 스타일 */
+    .checkbox-group {
+      margin-left: 15px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      margin-bottom: 12px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 5px; /* 체크박스와 문구 사이 5px 간격 */
+    }
+
+    /* ✅ 반응형 처리 */
+    @media (max-width: 600px) {
+      .register-box {
+        width: 95%;
+        padding: 20px;
+      }
+      .register-box h2 {
+        font-size: 22px;
+      }
+      .register-box p {
+        font-size: 13px;
+      }
+      .checkbox-group span {
+        font-size: 0.95rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -127,7 +156,7 @@
     <button class="close-btn" onclick="closeRegister()">✖</button>
 
     <h2>📍 A-DOMES | 위치정보시스템</h2>
-    <p>사용자의 현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
+    <p>현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
        아래 정보를 입력하여 계정을 생성하세요.</p>
 
     <!-- 아이디 입력 -->
@@ -150,23 +179,20 @@
     <label for="name">표시 이름 입력</label>
     <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
 
-<!-- 약관 동의 -->
-<div class="terms" style="text-align:left; margin-top:15px;">
-  <label style="margin-bottom:6px;">이용약관 동의</label>
-  <div style="margin-left:15px; display:inline-flex; align-items:center; white-space:nowrap; margin-bottom:12px;">
-    <input type="checkbox" id="agree1" style="margin-right:5px;">
-    <span>이용약관에 동의합니다</span>
-  </div>
+    <!-- 약관 동의 -->
+    <div class="terms" style="text-align:left; margin-top:15px;">
+      <label style="margin-bottom:6px;">이용약관 동의</label>
+      <div class="checkbox-group">
+        <input type="checkbox" id="agree1">
+        <span>이용약관에 동의합니다</span>
+      </div>
 
-  <label style="margin-bottom:6px; margin-top:15px;">개인정보 수집 및 이용 동의</label>
-  <div style="margin-left:15px; display:inline-flex; align-items:center; white-space:nowrap;">
-    <input type="checkbox" id="agree2" style="margin-right:5px;">
-    <span>개인정보 수집 및 이용동의에 수락합니다</span>
-  </div>
-</div>
-
-
-
+      <label style="margin-bottom:6px; margin-top:15px;">개인정보 수집 및 이용 동의</label>
+      <div class="checkbox-group">
+        <input type="checkbox" id="agree2">
+        <span>개인정보 수집 및 이용동의에 수락합니다</span>
+      </div>
+    </div>
 
     <!-- 회원가입 등록 / 취소 -->
     <div class="btn-group">
@@ -178,7 +204,7 @@
     
     <!-- ✅ 하단 앱 설명 -->
     <p style="color:#2c3e50; font-size:13px; margin-top:25px; line-height:1.6; text-align:left;">
-      A-DOMES | 위치정보시스템은 사용자의 현재 위치를 확인하고<br>
+      A-DOMES | 위치정보시스템은 현재 위치를 확인하고<br>
       이동 경로를 기록·분석할 수 있는 서비스입니다.<br>
       안전한 이동과 생활 편의를 위해 회원가입 후 이용해 주세요.
     </p>
