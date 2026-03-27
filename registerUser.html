@@ -211,6 +211,9 @@
   </div>
 
 <script>
+  /* ============================
+     📌 아이디 중복검사
+     ============================ */
   function checkId() {
     var id = document.getElementById("id").value.trim();
     var msg = document.getElementById("idMessage");
@@ -220,9 +223,7 @@
       return;
     }
 
-    // ============================
-    // 📌 1. 아이디 규칙 검사 (정규식)
-    // ============================
+    // 1. 아이디 규칙 검사
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
@@ -230,15 +231,11 @@
       return;
     }
 
-    // ============================
-    // 📌 2. 중복검사 진행 안내 메시지
-    // ============================
+    // 2. 중복검사 진행 안내 메시지
     msg.style.color = "#2980b9";
     msg.innerText = "⏳ 아이디 중복 검사 중...";
 
-    // ============================
-    // 📌 3. 서버와 통신 (Google Apps Script)
-    // ============================
+    // 3. 서버와 통신 (Google Apps Script → checkUserId 호출)
     google.script.run
       .withSuccessHandler(function(result) {
         console.log("서버 응답:", result); // 디버깅용 로그
@@ -249,6 +246,7 @@
           return;
         }
 
+        // 4. 검사 결과 처리
         if (result.result === "exists") {
           msg.style.color = "red";
           msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
@@ -267,9 +265,12 @@
         msg.style.color = "red";
         msg.innerText = "❌ 서버 오류: " + error.message;
       })
-      .checkUserId(id);
+      .checkUserId(id); // 서버측 함수 호출
   }
 
+  /* ============================
+     📌 회원가입 처리
+     ============================ */
   function register() {
     var id = document.getElementById("id").value.trim();
     var pw = document.getElementById("pw").value.trim();
@@ -284,9 +285,7 @@
       return;
     }
 
-    // ============================
-    // 📌 아이디 규칙 검사
-    // ============================
+    // 1. 아이디 규칙 검사
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
@@ -294,9 +293,7 @@
       return;
     }
 
-    // ============================
-    // 📌 비밀번호 규칙 검사
-    // ============================
+    // 2. 비밀번호 규칙 검사
     const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{8,16}$/;
     if (!pwRegex.test(pw)) {
       msg.style.color = "red";
@@ -304,36 +301,28 @@
       return;
     }
 
-    // ============================
-    // 📌 비밀번호 확인
-    // ============================
+    // 3. 비밀번호 확인
     if (pw !== pwConfirm) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
       return;
     }
 
-    // ============================
-    // 📌 필수 항목 확인
-    // ============================
+    // 4. 필수 항목 확인
     if (!id || !pw || !name) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
       return;
     }
 
-    // ============================
-    // 📌 약관 동의 확인
-    // ============================
+    // 5. 약관 동의 확인
     if (!agree1 || !agree2) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 약관에 모두 동의해야 회원가입이 가능합니다.";
       return;
     }
 
-    // ============================
-    // 📌 서버와 통신 (회원가입 처리)
-    // ============================
+    // 6. 서버와 통신 (Google Apps Script → registerUser 호출)
     google.script.run
       .withSuccessHandler(function(result) {
         console.log("회원가입 응답:", result); // 디버깅용 로그
@@ -358,9 +347,12 @@
         msg.style.color = "red";
         msg.innerHTML = "❌ 서버 오류: " + error.message;
       })
-      .registerUser(id, pw, name);
+      .registerUser(id, pw, name); // 서버측 함수 호출
   }
 
+  /* ============================
+     📌 화면 이동 함수
+     ============================ */
   function goLogin() {
     window.location.href = "index.html"; // 로그인 화면으로 이동
   }
@@ -369,6 +361,5 @@
     window.location.href = "index.html"; // 회원가입 창 닫기 → 로그인 화면으로 이동
   }
 </script>
-
 </body>
 </html>
