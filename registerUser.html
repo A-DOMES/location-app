@@ -215,6 +215,11 @@
     var id = document.getElementById("id").value.trim();
     var msg = document.getElementById("idMessage");
 
+    if (!msg) {
+      alert("⚠️ idMessage 요소가 HTML에 없습니다. <div id='idMessage'></div> 추가하세요.");
+      return;
+    }
+
     // ============================
     // 📌 1. 아이디 규칙 검사 (정규식)
     // ============================
@@ -233,13 +238,17 @@
 
     // ============================
     // 📌 3. 서버와 통신 (Google Apps Script)
-    //     checkUserId(id) 함수 호출
     // ============================
     google.script.run
       .withSuccessHandler(function(result) {
-        // ============================
-        // 📌 4. 검사 결과 처리
-        // ============================
+        console.log("서버 응답:", result); // 디버깅용 로그
+
+        if (!result || !result.result) {
+          msg.style.color = "red";
+          msg.innerText = "❌ 서버에서 올바른 응답이 오지 않았습니다.";
+          return;
+        }
+
         if (result.result === "exists") {
           msg.style.color = "red";
           msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
@@ -255,11 +264,10 @@
         }
       })
       .withFailureHandler(function(error) {
-        // 서버 오류 처리
         msg.style.color = "red";
         msg.innerText = "❌ 서버 오류: " + error.message;
       })
-      .checkUserId(id); // ✅ 서버측 함수 호출
+      .checkUserId(id);
   }
 
   function register() {
@@ -270,6 +278,11 @@
     var agree1 = document.getElementById("agree1").checked;
     var agree2 = document.getElementById("agree2").checked;
     var msg = document.getElementById("message");
+
+    if (!msg) {
+      alert("⚠️ message 요소가 HTML에 없습니다. <div id='message'></div> 추가하세요.");
+      return;
+    }
 
     // ============================
     // 📌 아이디 규칙 검사
@@ -323,6 +336,8 @@
     // ============================
     google.script.run
       .withSuccessHandler(function(result) {
+        console.log("회원가입 응답:", result); // 디버깅용 로그
+
         if (result.result === "success") {
           msg.style.color = "#27ae60";
           msg.innerHTML = 
@@ -340,7 +355,6 @@
         }
       })
       .withFailureHandler(function(error) {
-        // 서버 오류 처리
         msg.style.color = "red";
         msg.innerHTML = "❌ 서버 오류: " + error.message;
       })
@@ -355,5 +369,6 @@
     window.location.href = "index.html"; // 회원가입 창 닫기 → 로그인 화면으로 이동
   }
 </script>
+
 </body>
 </html>
