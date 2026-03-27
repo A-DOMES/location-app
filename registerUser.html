@@ -133,18 +133,28 @@
     <!-- 아이디 입력 -->
     <label for="id">회원 ID 입력</label>
     <div class="input-group">
-      <input type="text" id="id" placeholder="아이디 (중복 불가)">
+      <input type="text" id="id" placeholder="아이디 (5~20자, 영문 소문자/숫자/-,_)">
       <button class="check-btn" onclick="checkId()">확인</button>
     </div>
     <div id="idMessage"></div>
 
     <!-- 비밀번호 입력 -->
     <label for="pw">비밀번호 입력</label>
-    <input type="password" id="pw" placeholder="비밀번호 (8자 이상 권장)">
+    <input type="password" id="pw" placeholder="비밀번호 (8~16자, 영문/숫자/특수문자)">
+    
+    <!-- 비밀번호 확인 -->
+    <label for="pwConfirm">비밀번호 확인</label>
+    <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
 
     <!-- 표시 이름 입력 -->
     <label for="name">표시 이름 입력</label>
     <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
+
+    <!-- 약관 동의 -->
+    <div class="terms" style="text-align:left; margin-top:15px;">
+      <label><input type="checkbox" id="agree1"> 이용약관 동의</label><br>
+      <label><input type="checkbox" id="agree2"> 개인정보 수집 및 이용 동의</label>
+    </div>
 
     <!-- 회원가입 등록 / 취소 -->
     <div class="btn-group">
@@ -154,7 +164,7 @@
 
     <div id="message"></div>
     
-    <!-- ✅ 하단 앱 설명 (빠지지 않게 유지) -->
+    <!-- ✅ 하단 앱 설명 -->
     <p style="color:#2c3e50; font-size:13px; margin-top:25px; line-height:1.6; text-align:left;">
       A-DOMES | 위치정보시스템은 사용자의 현재 위치를 확인하고<br>
       이동 경로를 기록·분석할 수 있는 서비스입니다.<br>
@@ -162,20 +172,15 @@
     </p>
   </div>
 
-  
   <script>
     function checkId() {
       var id = document.getElementById("id").value.trim();
       var msg = document.getElementById("idMessage");
 
-      if (!id) {
+      const idRegex = /^[a-z0-9-_]{5,20}$/;
+      if (!idRegex.test(id)) {
         msg.style.color = "red";
-        msg.innerText = "⚠️ 아이디를 입력하세요.";
-        return;
-      }
-      if (id.length < 3) {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 아이디는 최소 3자 이상이어야 합니다.";
+        msg.innerText = "⚠️ 아이디는 5~20자, 영문 소문자/숫자/-,_만 가능합니다.";
         return;
       }
 
@@ -199,23 +204,65 @@
     function register() {
       var id = document.getElementById("id").value.trim();
       var pw = document.getElementById("pw").value.trim();
+      var pwConfirm = document.getElementById("pwConfirm").value.trim();
       var name = document.getElementById("name").value.trim();
+      var agree1 = document.getElementById("agree1").checked;
+      var agree2 = document.getElementById("agree2").checked;
+      var msg = document.getElementById("message");
 
+      // 아이디 규칙 검사
+      const idRegex = /^[a-z0-9-_]{5,20}$/;
+      if (!idRegex.test(id)) {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 아이디는 5~20자, 영문 소문자/숫자/-,_만 가능합니다.";
+        return;
+      }
+
+      // 비밀번호 규칙 검사
+      const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{8,16}$/;
+      if (!pwRegex.test(pw)) {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 비밀번호는 8~16자, 영문/숫자/특수문자 조합이어야 합니다.";
+        return;
+      }
+
+      // 비밀번호 확인
+      if (pw !== pwConfirm) {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
+        return;
+      }
+
+      // 필수 항목 확인
+      if (!id || !pw || !name) {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
+        return;
+      }
+
+      // 약관 동의 확인
+      if (!agree1 || !agree2) {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 약관에 동의해야 회원가입이 가능합니다.";
+        return;
+      }
+
+      // 서버와 통신 (Google Apps Script 예시)
       google.script.run.withSuccessHandler(function(result) {
         if (result.result === "success") {
-          document.getElementById("message").style.color = "#27ae60";
-          document.getElementById("message").innerHTML = 
+          msg.style.color = "#27ae60";
+          msg.innerHTML = 
             "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
             "<button onclick='goLogin()'>확인</button>";
         } else if (result.result === "exists") {
-          document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+          msg.style.color = "red";
+          msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
         } else if (result.result === "missing") {
-          document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+          msg.style.color = "red";
+          msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
         } else {
-          document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+          msg.style.color = "red";
+          msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
         }
       }).registerUser(id, pw, name);
     }
