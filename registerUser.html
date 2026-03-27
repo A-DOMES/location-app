@@ -248,6 +248,10 @@
         // 사용 가능한 아이디
         msg.style.color = "green";
         msg.innerText = "✅ 사용 가능한 아이디입니다.";
+      } else if (result.result === "missing") {
+        // 입력값 없음
+        msg.style.color = "orange";
+        msg.innerText = "⚠️ 아이디를 입력하세요.";
       } else {
         // 검사 실패 (예외 처리)
         msg.style.color = "red";
@@ -323,12 +327,15 @@
           "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
           "<button onclick='goLogin()'>확인</button>";
       } else if (result.result === "exists") {
+        // 이미 존재하는 아이디
         msg.style.color = "red";
         msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
       } else if (result.result === "missing") {
+        // 입력값 누락
         msg.style.color = "red";
         msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
       } else {
+        // 예외 처리
         msg.style.color = "red";
         msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
       }
