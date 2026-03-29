@@ -37,43 +37,48 @@
         .then(response => response.json())
         .then(data => {
           // ✅ 해당 사용자 데이터만 필터링
-          const records = data.filter(item => item.phone === phone);
-          if (records.length === 0) {
+          const record = data.find(item => item.phone === phone);
+          if (!record) {
             alert("해당 사용자의 데이터가 없습니다.");
             return;
           }
 
-          // 시간순 정렬
-          records.sort((a, b) => new Date(a.time) - new Date(b.time));
+          // ✅ 기본 위치 (D, E열)
+          const baseLat = parseFloat(record.lat);
+          const baseLng = parseFloat(record.lng);
 
-          // 지도 초기화 (첫 위치 기준)
+          // ✅ 누적 좌표 (path 배열)
+          const pathCoords = [];
+          if (record.path && record.path.length > 0) {
+            record.path.forEach(p => {
+              pathCoords.push({lat: parseFloat(p[0]), lng: parseFloat(p[1])});
+            });
+          }
+
+          // ✅ 지도 초기화 (첫 위치 기준)
           map = new google.maps.Map(document.getElementById("map"), {
-            center: {lat: parseFloat(records[0].lat), lng: parseFloat(records[0].lng)},
+            center: {lat: baseLat, lng: baseLng},
             zoom: 13
           });
 
-          // ✅ 경로 표시
-          const pathCoords = records.map(item => ({
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lng)
-          }));
-
-          new google.maps.Polyline({
-            path: pathCoords,
-            geodesic: true,
-            strokeColor: "#2196F3",
-            strokeOpacity: 1.0,
-            strokeWeight: 3,
-            map: map
-          });
+          // ✅ 경로 표시 (누적 좌표 + 현재 위치)
+          if (pathCoords.length > 0) {
+            new google.maps.Polyline({
+              path: pathCoords,
+              geodesic: true,
+              strokeColor: "#2196F3",
+              strokeOpacity: 1.0,
+              strokeWeight: 3,
+              map: map
+            });
+          }
 
           // ✅ 최신 위치 마커 표시
-          const latest = records[records.length - 1];
           new google.maps.Marker({
-            position: {lat: parseFloat(latest.lat), lng: parseFloat(latest.lng)},
+            position: {lat: baseLat, lng: baseLng},
             map: map,
             icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            title: "현재 위치 (" + latest.time + ")"
+            title: "현재 위치 (" + record.time + ")"
           });
         })
         .catch(err => { alert("데이터 불러오기 실패: " + err.message); });
