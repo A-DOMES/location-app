@@ -271,6 +271,9 @@
   /* ============================
      📌 회원가입 처리
      ============================ */
+  /* ============================
+  📌 회원가입 처리 함수
+  ============================ */
   function register() {
     var id = document.getElementById("id").value.trim();
     var pw = document.getElementById("pw").value.trim();
@@ -279,85 +282,97 @@
     var agree1 = document.getElementById("agree1").checked;
     var agree2 = document.getElementById("agree2").checked;
     var msg = document.getElementById("message");
-
+  
     if (!msg) {
       alert("⚠️ message 요소가 HTML에 없습니다. <div id='message'></div> 추가하세요.");
       return;
     }
-
-    // 아이디 규칙 검사
+  
+    // ✅ 진행 안내 메시지 (복원)
+    msg.style.color = "#2980b9";
+    msg.innerText = "⏳ 회원가입 처리 중...";
+  
+    // 1. 아이디 규칙 검사
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 아이디는 5~20자, 영문 소문자/숫자/-,_만 가능합니다.";
       return;
     }
-
-    // 비밀번호 규칙 검사
+  
+    // 2. 비밀번호 규칙 검사
     const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{8,16}$/;
     if (!pwRegex.test(pw)) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 비밀번호는 8~16자, 영문/숫자/특수문자 조합이어야 합니다.";
       return;
     }
-
-    // 비밀번호 확인
+  
+    // 3. 비밀번호 확인
     if (pw !== pwConfirm) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
       return;
     }
-
-    // 필수 항목 확인
+  
+    // 4. 필수 항목 확인
     if (!id || !pw || !name) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
       return;
     }
-
-    // 약관 동의 확인
+  
+    // 5. 약관 동의 확인
     if (!agree1 || !agree2) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 약관에 모두 동의해야 회원가입이 가능합니다.";
       return;
     }
 
-    // 서버와 통신
-    google.script.run.withSuccessHandler(function(result) {
-      console.log("회원가입 응답:", result);
-
-      if (typeof result === "object" && result.result) {
-        if (result.result === "success") {
-          msg.style.color = "#27ae60";
-          msg.innerHTML = 
-            "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
-            "<button onclick='goLogin()'>확인</button>";
-        } else if (result.result === "exists") {
-          msg.style.color = "red";
-          msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
-        } else if (result.result === "missing") {
-          msg.style.color = "red";
-          msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
-        } else {
-          msg.style.color = "red";
-          msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+    // 6. 서버와 통신
+    google.script.run
+      .withSuccessHandler(function(result) {
+        console.log("회원가입 응답:", result);
+  
+        if (typeof result === "object" && result.result) {
+          if (result.result === "success") {
+            msg.style.color = "#27ae60";
+            msg.innerHTML = 
+              "✅ " + result.name + "님, 회원가입을 축하드립니다 🎉<br><br>" +
+              "<button onclick='goLogin()'>확인</button>";
+          } else if (result.result === "exists") {
+            msg.style.color = "red";
+            msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+          } else if (result.result === "missing") {
+            msg.style.color = "red";
+            msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+          } else {
+            msg.style.color = "red";
+            msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+          }
+        } else if (typeof result === "string") {
+          if (result === "success") {
+            msg.style.color = "#27ae60";
+            msg.innerHTML = 
+              "✅ 회원가입 완료 🎉<br><br>" +
+              "<button onclick='goLogin()'>확인</button>";
+          } else if (result === "exists") {
+            msg.style.color = "red";
+            msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+          } else {
+            msg.style.color = "red";
+            msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+          }
         }
-      } else if (typeof result === "string") {
-        if (result === "success") {
-          msg.style.color = "#27ae60";
-          msg.innerHTML = 
-            "✅ 회원가입 완료 🎉<br><br>" +
-            "<button onclick='goLogin()'>확인</button>";
-        } else if (result === "exists") {
-          msg.style.color = "red";
-          msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
-        } else {
-          msg.style.color = "red";
-          msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
-        }
-      }
-    }).registerUser(id, pw, name);
+      })
+      // ✅ 서버 오류 처리 (복원)
+      .withFailureHandler(function(error) {
+        msg.style.color = "red";
+        msg.innerHTML = "❌ 서버 오류: " + error.message;
+      })
+      .registerUser(id, pw, name);
   }
+
 
   /* ============================
      📌 화면 이동 함수
