@@ -2,87 +2,140 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>사용자용 내 경로 보기</title>
+  <title>내 이동 경로</title>
   <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: #fafafa;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #2196F3;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 16px;
+    }
+    #coords {
+      font-weight: bold;
+    }
+    #showPathBtn {
+      background: #fff;
+      color: #2196F3;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #showPathBtn:hover {
+      background: #e3f2fd;
+    }
     #map {
       width: 100%;
       height: 500px;
-      margin-top: 20px;
-      border: 2px solid #ccc;
+      margin-top: 10px;
       border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    #info {
+      margin: 15px;
+      font-size: 16px;
+      color: #333;
     }
   </style>
-  <!-- ✅ 구글 지도 API 키 교체 -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"></script>
 </head>
 <body>
   <header>
-    <h2>내 이동 경로</h2>
+    <div id="coords">위도: -- , 경도: --</div>
+    <button id="showPathBtn">경로 보기</button>
   </header>
 
   <div id="map"></div>
+  <div id="info"></div>
 
   <script>
-    let map;
+    let map, record, pathCoords = [];
+    let polyline = null; // 경로 객체 저장
 
     function initMap() {
-      // ✅ URL 파라미터에서 phone 값 읽기
       const phone = new URLSearchParams(location.search).get("phone");
       if (!phone) {
         alert("전화번호가 필요합니다. 예: user-map.html?phone=01012345678");
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbxp-bLvA6F3tyXyDcMH_5F8MQ9Zx1KvkDlABcl5nulf1dTSzZI07GR4n7S9MdZY19_1fQ/exec")
-        .then(response => response.json())
+      fetch("YOUR_SCRIPT_URL")
+        .then(res => res.json())
         .then(data => {
-          // ✅ 해당 사용자 데이터만 필터링
-          const record = data.find(item => item.phone === phone);
+          record = data.find(item => item.phone === phone);
           if (!record) {
             alert("해당 사용자의 데이터가 없습니다.");
             return;
           }
 
-          // ✅ 기본 위치 (D, E열)
           const baseLat = parseFloat(record.lat);
           const baseLng = parseFloat(record.lng);
 
-          // ✅ 누적 좌표 (path 배열)
-          const pathCoords = [];
-          if (record.path && record.path.length > 0) {
-            record.path.forEach(p => {
-              pathCoords.push({lat: parseFloat(p[0]), lng: parseFloat(p[1])});
-            });
-          }
+          // ✅ 상단 좌표 표시
+          document.getElementById("coords").innerText =
+            "위도: " + baseLat + " , 경도: " + baseLng;
 
-          // ✅ 지도 초기화 (첫 위치 기준)
+          // 지도 초기화
           map = new google.maps.Map(document.getElementById("map"), {
             center: {lat: baseLat, lng: baseLng},
             zoom: 13
           });
 
-          // ✅ 경로 표시 (누적 좌표 + 현재 위치)
-          if (pathCoords.length > 0) {
-            new google.maps.Polyline({
-              path: pathCoords,
-              geodesic: true,
-              strokeColor: "#2196F3",
-              strokeOpacity: 1.0,
-              strokeWeight: 3,
-              map: map
-            });
-          }
-
-          // ✅ 최신 위치 마커 표시
+          // 현재 위치 마커
           new google.maps.Marker({
             position: {lat: baseLat, lng: baseLng},
             map: map,
             icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
             title: "현재 위치 (" + record.time + ")"
           });
+
+          // 경로 좌표 준비
+          if (record.path) {
+            record.path.forEach(p => {
+              pathCoords.push({lat: parseFloat(p[0]), lng: parseFloat(p[1])});
+            });
+          }
         })
         .catch(err => { alert("데이터 불러오기 실패: " + err.message); });
     }
+
+    // 버튼 클릭 시 경로 토글
+    document.getElementById("showPathBtn").addEventListener("click", () => {
+      if (polyline) {
+        // ✅ 경로 숨기기
+        polyline.setMap(null);
+        polyline = null;
+        document.getElementById("showPathBtn").innerText = "경로 보기";
+        document.getElementById("info").innerText = "";
+      } else {
+        // ✅ 경로 표시
+        if (pathCoords.length > 0) {
+          polyline = new google.maps.Polyline({
+            path: pathCoords,
+            geodesic: true,
+            strokeColor: "#FF5722",
+            strokeOpacity: 1.0,
+            strokeWeight: 3,
+            map: map
+          });
+        }
+        const start = new Date(record.connectTime);
+        const end = new Date(record.time);
+        const diffMin = Math.floor((end - start) / 60000);
+        document.getElementById("info").innerText = "총 이동시간: " + diffMin + "분";
+        document.getElementById("showPathBtn").innerText = "경로 숨기기";
+      }
+    });
 
     window.onload = initMap;
   </script>
