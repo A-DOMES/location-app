@@ -218,33 +218,33 @@
 
 
 <script>
+  /* ============================
+     📌 아이디 중복검사
+     ============================ */
   function checkId() {
     var id = document.getElementById("id").value.trim();
     var msg = document.getElementById("idMessage");
-  
+
     if (!msg) {
-      alert("⚠️ idMessage 요소가 HTML에 없습니다. <div id='idMessage'></div> 추가하세요.");
+      alert("⚠️ idMessage 요소가 없습니다. <div id='idMessage'></div> 추가하세요.");
       return;
     }
-  
-    // 1. 아이디 규칙 검사
+
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 아이디는 5~20자, 영문 소문자/숫자/-,_만 가능합니다.";
       return;
     }
-  
-    // 2. 검사 진행 안내
+
     msg.style.color = "#2980b9";
     msg.innerText = "⏳ 아이디 중복 검사 중...";
-  
-    // 3. 서버와 통신
+
     if (typeof google !== "undefined" && google.script) {
       google.script.run
         .withSuccessHandler(function(result) {
           console.log("서버 응답:", result);
-  
+
           if (result.result === "exists") {
             msg.style.color = "red";
             msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
@@ -265,16 +265,14 @@
         })
         .checkUserId(id);
     } else {
-      // 서버 없는 환경 테스트용
       msg.style.color = "green";
-      msg.innerText = "✅ 사용 가능한 아이디입니다.";
+      msg.innerText = "✅ 사용 가능한 아이디입니다. (테스트용)";
     }
   }
-  
-    
-    /* ============================
-       📌 회원가입 처리
-       ============================ */
+
+  /* ============================
+     📌 회원가입 처리
+     ============================ */
   function register() {
     var id = document.getElementById("id").value.trim();
     var pw = document.getElementById("pw").value.trim();
@@ -283,13 +281,12 @@
     var agree1 = document.getElementById("agree1").checked;
     var agree2 = document.getElementById("agree2").checked;
     var msg = document.getElementById("message");
-  
+
     if (!msg) {
-      alert("⚠️ message 요소가 HTML에 없습니다. <div id='message'></div> 추가하세요.");
+      alert("⚠️ message 요소가 없습니다. <div id='message'></div> 추가하세요.");
       return;
     }
-  
-    // 기본 유효성 검사 (아이디/비밀번호/약관 등)
+
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
@@ -317,67 +314,60 @@
       msg.innerText = "⚠️ 약관에 모두 동의해야 회원가입이 가능합니다.";
       return;
     }
-  
-// 서버와 통신
-if (typeof google !== "undefined" && google.script) {
-  google.script.run
-    .withSuccessHandler(function(result) {
-      console.log("회원가입 응답:", result);
 
-      // 응답 객체가 없거나 result 속성이 없을 때
-      if (!result || !result.result) {
-        msg.style.color = "red";
-        msg.innerHTML = "❌ 서버에서 올바른 응답이 오지 않았습니다.";
-        return;
-      }
+    if (typeof google !== "undefined" && google.script) {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          console.log("회원가입 응답:", result);
 
-      // 상황별 처리
-      switch (result.result) {
-        case "success":
-          msg.style.color = "#27ae60";
-          msg.innerHTML =
-            "✅ " + (result.name || "") + "님, 회원가입을 축하드립니다 🎉<br><br>" +
-            "<button onclick='goLogin()'>확인</button>";
-          break;
+          if (!result || !result.result) {
+            msg.style.color = "red";
+            msg.innerHTML = "❌ 서버에서 올바른 응답이 오지 않았습니다.";
+            return;
+          }
 
-        case "exists":
+          switch (result.result) {
+            case "success":
+              msg.style.color = "#27ae60";
+              msg.innerHTML =
+                "✅ " + (result.name || "") + "님, 회원가입을 축하드립니다 🎉<br><br>" +
+                "<button onclick='goLogin()'>확인</button>";
+              break;
+            case "exists":
+              msg.style.color = "red";
+              msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
+              break;
+            case "missing":
+              msg.style.color = "red";
+              msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+              break;
+            default:
+              msg.style.color = "red";
+              msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+              break;
+          }
+        })
+        .withFailureHandler(function(error) {
           msg.style.color = "red";
-          msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
-          break;
+          msg.innerHTML = "❌ 서버 오류: " + error.message;
+        })
+        .registerUser(id, pw, name);
+    } else {
+      msg.style.color = "green";
+      msg.innerHTML = "✅ 회원가입 처리 완료 (테스트용)";
+    }
+  }
 
-        case "missing":
-          msg.style.color = "red";
-          msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
-          break;
-
-        default:
-          msg.style.color = "red";
-          msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
-          break;
-      }
-    })
-    .withFailureHandler(function(error) {
-      msg.style.color = "red";
-      msg.innerHTML = "❌ 서버 오류: " + error.message;
-    })
-    .registerUser(id, pw, name);
-} else {
-  // 서버 없는 환경 테스트용 메시지
-  msg.style.color = "green";
-  msg.innerHTML = "✅ 회원가입 처리 완료";
-}
-
-
-  
-  // 화면 이동 함수
+  /* ============================
+     📌 화면 이동 함수
+     ============================ */
   function goLogin() {
-    window.location.href = "index.html"; // 로그인 화면으로 이동
+    window.location.href = "index.html";
   }
   function closeRegister() {
-    window.location.href = "index.html"; // 회원가입 창 닫기 → 로그인 화면으로 이동
+    window.location.href = "index.html";
   }
 
-  
   /* ============================
      📌 비밀번호 보이기 기능
      ============================ */
