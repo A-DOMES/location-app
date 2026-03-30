@@ -250,7 +250,6 @@ function login() {
     return;
   }
 
-  // 서버 호출 (checkPassword)
   fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
     .then(response => response.json())
     .then(result => {
@@ -259,8 +258,6 @@ function login() {
       if (result.result === "success") {
         msg.style.color = "green";
         msg.innerText = "✅ 로그인 성공! " + result.name + "님 환영합니다.";
-
-        // 권한에 따라 페이지 이동
         if (result.role === "ADMIN") {
           window.location.href = "admin_index.html";
         } else {
