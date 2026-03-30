@@ -225,55 +225,44 @@
     </div>
   </div>
 
-
-    
-<!-- ============================
-       기능 JS (로그인 + 위치 전송)
+  <!-- ============================
+       📌 로그인 함수 (성공 시 바로 이동)
        ============================ -->
   <script>
-    // 📌 Google Apps Script 웹앱 URL (배포 후 얻은 URL로 교체)
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwfzXuLOOFZl5QsuPDN-dPRCPAXKwwZAnG2hjcjLKhZpD7_S0AQtOJZA7SY-HE1Eg57Yw/exec";
-    let intervalId;
+    const WEBAPP_URL = "https://script.google.com/macros/s/웹앱-배포-URL/exec";
 
+    function login() {
+      const id = document.getElementById("userId").value.trim();
+      const pw = document.getElementById("userPw").value.trim();
+      const msg = document.getElementById("loginMessage");
 
-/* ============================
-   📌 로그인 함수 (userId / userPw 사용)
-   ============================ */
-function login() {
-  const id = document.getElementById("userId").value.trim();
-  const pw = document.getElementById("userPw").value.trim();
-  const msg = document.getElementById("loginMessage");
-
-  if (!id || !pw) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
-    return;
-  }
-
-  fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-    .then(response => response.json())
-    .then(result => {
-      console.log("로그인 응답:", result);
-
-      if (result.result === "success") {
-        msg.style.color = "green";
-        msg.innerText = "✅ 로그인 성공! " + result.name + "님 환영합니다.";
-        if (result.role === "ADMIN") {
-          window.location.href = "admin_index.html";
-        } else {
-          window.location.href = "user_index.html";
-        }
-      } else {
+      if (!id || !pw) {
         msg.style.color = "red";
-        msg.innerText = "❌ 로그인 실패. 아이디/비밀번호를 확인하세요.";
+        msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
+        return;
       }
-    })
-    .catch(error => {
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + error.message;
-    });
-}
 
+      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.result === "success") {
+            // 로그인 성공 → 바로 화면 이동
+            if (result.role === "ADMIN") {
+              window.location.href = "admin_index.html";
+            } else {
+              window.location.href = "user_index.html";
+            }
+          } else {
+            // 로그인 실패 → 메시지 표시
+            msg.style.color = "red";
+            msg.innerText = "❌ 로그인 실패: 아이디가 없거나 비밀번호가 잘못되었습니다.";
+          }
+        })
+        .catch(error => {
+          msg.style.color = "red";
+          msg.innerText = "❌ 서버 오류: " + error.message;
+        });
+    }
 
 
     /* ============================
