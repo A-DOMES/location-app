@@ -231,43 +231,43 @@
            📌 로그인 함수 (성공 시 바로 이동)
            ============================ -->
       <script>
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwyiZ6XKrSsdA-2J7YQ_4MxLh_FGpACqjn8qpJEVUfH1S_MFgLuhM8T-sHimFYE7R9DJQ/exec";
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxzUmUkR6-7UwDR6ZgYz9Ctl_IhXP2TTz4aiXavfh7GrPJ_SI8iww2BCd7wUc6ygRt_6Q/exec";
     
-function login() {
-  const id = document.getElementById("userId").value.trim();
-  const pw = document.getElementById("userPw").value.trim();
-  const msg = document.getElementById("loginMessage");
-
-  if (!id || !pw) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
-    return;
-  }
-
-  fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-    .then(response => response.json())
-    .then(result => {
-      if (result.result === "success") {
-        if (result.role === "AD") {
-          // 관리자 계정 → 관리자 페이지로 이동
-          window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
-        } else if (result.role === "RU") {
-          // 사용자 계정 → 사용자 페이지로 이동
-          window.location.href = "https://a-domes.github.io/location-app/user.html";
-        }
-      } else if (result.result === "blocked") {
+    function login() {
+      const id = document.getElementById("userId").value.trim();
+      const pw = document.getElementById("userPw").value.trim();
+      const msg = document.getElementById("loginMessage");
+    
+      if (!id || !pw) {
         msg.style.color = "red";
-        msg.innerText = "🚫 계정이 차단(blocked) 상태입니다. 관리자에게 문의하세요.";
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.";
+        msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
+        return;
       }
-    })
-    .catch(error => {
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + error.message;
-    });
-}
+    
+      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.result === "success") {
+            if (result.role === "AD") {
+              // 관리자 계정 → 관리자 페이지로 이동
+              window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
+            } else if (result.role === "RU") {
+              // 사용자 계정 → 사용자 페이지로 이동
+              window.location.href = "https://a-domes.github.io/location-app/user.html";
+            }
+          } else if (result.result === "blocked") {
+            msg.style.color = "red";
+            msg.innerText = "🚫 계정이 차단(blocked) 상태입니다. 관리자에게 문의하세요.";
+          } else {
+            msg.style.color = "red";
+            msg.innerText = "❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.";
+          }
+        })
+        .catch(error => {
+          msg.style.color = "red";
+          msg.innerText = "❌ 서버 오류: " + error.message;
+        });
+    }
 
 
 
