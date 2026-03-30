@@ -227,46 +227,46 @@
 
 
   
-  <!-- ============================
-       📌 로그인 함수 (성공 시 바로 이동)
-       ============================ -->
-  <script>
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwfzXuLOOFZl5QsuPDN-dPRCPAXKwwZAnG2hjcjLKhZpD7_S0AQtOJZA7SY-HE1Eg57Yw/exec";
-
-function login() {
-  const id = document.getElementById("userId").value.trim();
-  const pw = document.getElementById("userPw").value.trim();
-  const msg = document.getElementById("loginMessage");
-
-  if (!id || !pw) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
-    return;
-  }
-
-  fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-    .then(response => response.json())
-    .then(result => {
-      if (result.result === "success") {
-        // 📌 site 값에 따라 분기
-        if (result.site === "github1") {
-          window.location.href = "https://minkoo.github.io/site1/";
-        } else if (result.site === "github2") {
-          window.location.href = "https://minkoo.github.io/site2/";
-        } else {
-          msg.style.color = "red";
-          msg.innerText = "❌ 로그인 성공했지만 사이트 정보가 없습니다.";
-        }
-      } else {
+      <!-- ============================
+           📌 로그인 함수 (성공 시 바로 이동)
+           ============================ -->
+      <script>
+        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwyiZ6XKrSsdA-2J7YQ_4MxLh_FGpACqjn8qpJEVUfH1S_MFgLuhM8T-sHimFYE7R9DJQ/exec";
+    
+    function login() {
+      const id = document.getElementById("userId").value.trim();
+      const pw = document.getElementById("userPw").value.trim();
+      const msg = document.getElementById("loginMessage");
+    
+      if (!id || !pw) {
         msg.style.color = "red";
-        msg.innerText = "❌ 로그인 실패: 아이디가 없거나 비밀번호가 잘못되었습니다.";
+        msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
+        return;
       }
-    })
-    .catch(error => {
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + error.message;
-    });
-}
+    
+      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.result === "success") {
+            // 📌 site 값에 따라 분기
+            if (result.site === "github1") {
+              window.location.href = "https://minkoo.github.io/site1/";
+            } else if (result.site === "github2") {
+              window.location.href = "https://minkoo.github.io/site2/";
+            } else {
+              msg.style.color = "red";
+              msg.innerText = "❌ 로그인 성공했지만 사이트 정보가 없습니다.";
+            }
+          } else {
+            msg.style.color = "red";
+            msg.innerText = "❌ 로그인 실패: 아이디가 없거나 비밀번호가 잘못되었습니다.";
+          }
+        })
+        .catch(error => {
+          msg.style.color = "red";
+          msg.innerText = "❌ 서버 오류: " + error.message;
+        });
+    }
 
 
 
