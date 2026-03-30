@@ -249,11 +249,11 @@ function login() {
     .then(result => {
       if (result.result === "success") {
         if (result.role === "AD") {
-          // 관리자 권한 → admin.html 이동
-          window.location.href = "admin.html";
+          // 관리자 계정 → 관리자 페이지로 이동
+          window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
         } else if (result.role === "RU") {
-          // 사용자 권한 → user.html 이동
-          window.location.href = "user.html";
+          // 사용자 계정 → 사용자 페이지로 이동
+          window.location.href = "https://a-domes.github.io/location-app/user.html";
         }
       } else if (result.result === "blocked") {
         msg.style.color = "red";
