@@ -50,29 +50,30 @@
       text-align:left;
     }
     
-    .input-group {
-      display: flex;
-      align-items: center;
-      margin: 15px; /* ✅ 입력창과 버튼 사이 여백 */
-    }
+.input-group {
+  display: flex;          /* 입력창과 버튼을 가로로 배치 */
+  align-items: center;
+}
 
-    .input-group input {
-      width: 60%;   /* ✅ 입력창을 전체의 70%만 차지하도록 */
-      padding: 14px;
-      border: 1.5px solid #bdc3c7;
-      border-radius: 10px;
-      font-size: 15px;
-    }
+.input-group input {
+  width: 70%;             /* ✅ 입력창 너비를 줄임 (예: 70%) */
+  padding: 14px;
+  border: 1.5px solid #bdc3c7;
+  border-radius: 10px;    /* 입력창만 독립적으로 둥글게 */
+  font-size: 15px;
+  text-align: left;       /* ✅ 입력 텍스트를 좌측 정렬 */
+}
 
-    .check-btn {
-      padding: 14px 20px;
-      border: none;
-      border-radius: 0 10px 10px 0; /* 오른쪽 모서리 둥글게 */
-      background: linear-gradient(to right, #3498db, #2980b9); /* 파란색 버튼 */
-      color: #fff;
-      cursor: pointer;
-      font-weight: 500;
-    }
+.check-btn {
+  padding: 14px 20px;     /* 버튼은 기존 상태 유지 */
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(to right, #3498db, #2980b9);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
     .register-box input {
       width: 90%; /* 입력창 너비 */
       padding: 14px;
