@@ -230,7 +230,6 @@
       return;
     }
   
-    // 1. 아이디 규칙 검사
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
@@ -238,17 +237,13 @@
       return;
     }
   
-    // 2. 중복검사 진행 안내 메시지
     msg.style.color = "#2980b9";
     msg.innerText = "⏳ 아이디 중복 검사 중...";
   
-    // 3. 서버와 통신 (Google Apps Script → checkUserId 호출)
     if (typeof google !== "undefined" && google.script) {
       google.script.run
         .withSuccessHandler(function(result) {
           console.log("서버 응답:", result);
-
-          // 서버가 배열을 반환하는 경우 처리
           if (Array.isArray(result) && result.length > 0) {
             msg.style.color = "red";
             msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
@@ -263,7 +258,6 @@
         })
         .checkUserId(id);
     } else {
-      // ✅ 테스트용 메시지 (서버 없는 환경)
       msg.style.color = "green";
       msg.innerText = "✅ 사용 가능한 아이디입니다.";
     }
@@ -286,7 +280,6 @@
       return;
     }
   
-    // 1. 아이디 규칙 검사
     const idRegex = /^[a-z0-9-_]{5,20}$/;
     if (!idRegex.test(id)) {
       msg.style.color = "red";
@@ -294,7 +287,6 @@
       return;
     }
     
-    // 2. 비밀번호 규칙 검사 (6~16자, 한글 제외, 특수문자 허용)
     const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
     if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
       msg.style.color = "red";
@@ -302,40 +294,33 @@
       return;
     }
     
-    // 3. 비밀번호 확인
     if (pw !== pwConfirm) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
       return;
     }
     
-    // 4. 필수 항목 확인
     if (!id || !pw || !name) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
       return;
     }
     
-    // 5. 약관 동의 확인
     if (!agree1 || !agree2) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 약관에 모두 동의해야 회원가입이 가능합니다.";
       return;
     }
     
-    // 6. 서버와 통신 (Google Apps Script → registerUser 호출)
     if (typeof google !== "undefined" && google.script) {
       google.script.run
         .withSuccessHandler(function(result) {
           console.log("회원가입 응답:", result);
-    
-          // 응답 객체가 없거나 result 속성이 없을 때
           if (!result || !result.result) {
             msg.style.color = "red";
             msg.innerHTML = "❌ 서버에서 올바른 응답이 오지 않았습니다.";
             return;
           }
-    
           switch (result.result) {
             case "success":
               msg.style.color = "#27ae60";
@@ -343,17 +328,14 @@
                 "✅ " + (result.name || "") + "님, 회원가입을 축하드립니다 🎉<br><br>" +
                 "<button onclick='goLogin()'>확인</button>";
               break;
-    
             case "exists":
               msg.style.color = "red";
               msg.innerHTML = "⚠️ 이미 존재하는 아이디입니다.";
               break;
-    
             case "missing":
               msg.style.color = "red";
               msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
               break;
-    
             default:
               msg.style.color = "red";
               msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
@@ -366,10 +348,10 @@
         })
         .registerUser(id, pw, name);
     } else {
-      // ✅ 테스트용 메시지 (서버 없는 환경)
       msg.style.color = "green";
       msg.innerHTML = "✅ 회원가입 처리 완료";
     }
+  } // ← 여기서 register 함수 닫기
 
   /* ============================
      📌 화면 이동 함수
