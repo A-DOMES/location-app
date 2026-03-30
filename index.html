@@ -69,7 +69,6 @@
       font-weight: bold; 
       color: #e74c3c; 
     }
-    /* 회원가입 버튼 스타일 */
     .signup-btn {
       background: linear-gradient(to right, #2ecc71, #27ae60);
       margin-top: 10px;
@@ -108,27 +107,29 @@
           // ✅ 로그인 상태 저장
           sessionStorage.setItem("loggedIn", "true");
           sessionStorage.setItem("role", result.role);
+          sessionStorage.setItem("userId", id);
+          sessionStorage.setItem("userPw", pw);
 
           setTimeout(() => {
-            if (result.role === "RA") {
-              window.location.href = "https://a-domes.github.io/location-app/admin.html";
+            if (result.role === "AD") {
+              window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
             } else if (result.role === "RU") {
-              window.location.href = "https://a-domes.github.io/location-pwa/user.html";
+              window.location.href = "https://a-domes.github.io/location-app/user.html";
             }
           }, 1000);
 
         } else if (result.result === "blocked") {
           document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerText = "계정이 비활성화되었습니다.";
+          document.getElementById("message").innerText = "🚫 계정이 비활성화되었습니다.";
         } else {
           document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerText = "로그인 실패. 아이디/비밀번호 확인하세요.";
+          document.getElementById("message").innerText = "❌ 로그인 실패. 아이디/비밀번호 확인하세요.";
         }
       }).checkPassword(id, pw);
     }
 
-    // ✅ 회원가입 화면으로 이동
     function goRegister() {
+      // ✅ 회원가입은 사용자가 직접 선택할 때만 이동
       window.location.href = "registerUser.html";
     }
   </script>
