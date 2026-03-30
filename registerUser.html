@@ -217,7 +217,7 @@
   </div>
 
 
- <script>
+<script>
   /* ============================
      📌 아이디 중복검사
      ============================ */
@@ -247,23 +247,14 @@
       google.script.run
         .withSuccessHandler(function(result) {
           console.log("서버 응답:", result);
-          if (!result || !result.result) {
-            msg.style.color = "red";
-            msg.innerText = "❌ 서버에서 올바른 응답이 오지 않았습니다.";
-            return;
-          }
-          if (result.result === "exists") {
+
+          // 서버가 배열을 반환하는 경우 처리
+          if (Array.isArray(result) && result.length > 0) {
             msg.style.color = "red";
             msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-          } else if (result.result === "available") {
+          } else {
             msg.style.color = "green";
             msg.innerText = "✅ 사용 가능한 아이디입니다.";
-          } else if (result.result === "missing") {
-            msg.style.color = "orange";
-            msg.innerText = "⚠️ 아이디를 입력하세요.";
-          } else {
-            msg.style.color = "red";
-            msg.innerText = "❌ 아이디 검사 실패. 다시 시도하세요.";
           }
         })
         .withFailureHandler(function(error) {
@@ -274,7 +265,7 @@
     } else {
       // ✅ 테스트용 메시지 (서버 없는 환경)
       msg.style.color = "green";
-      msg.innerText = "✅ 사용 가능한 아이디입니다. (테스트용)";
+      msg.innerText = "✅ 사용 가능한 아이디입니다.";
     }
   }
   
@@ -361,7 +352,7 @@
     } else {
       // ✅ 테스트용 메시지 (서버 없는 환경)
       msg.style.color = "green";
-      msg.innerHTML = "✅ 회원가입 처리 완료 (테스트용)";
+      msg.innerHTML = "✅ 회원가입 처리 완료";
     }
   }
   
