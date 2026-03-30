@@ -41,7 +41,7 @@
       border: 1.5px solid #bdc3c7;
       border-radius: 10px;
       transition: border-color 0.3s, box-shadow 0.3s;
-      box-sizing: border-box; /* ✅ 버튼과 동일한 폭으로 맞춤 */
+      box-sizing: border-box;
     }
     .login-box input:focus {
       border-color: #2980b9;
@@ -78,6 +78,35 @@
       background: linear-gradient(to right, #27ae60, #1e8449);
       transform: scale(1.03);
     }
+
+    /* 로그인 성공 모달 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.3);
+    }
+    .modal-content {
+      background: #fff;
+      margin: 12% auto;   /* 중앙보다 살짝 위 */
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .modal-content h2 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+    .modal-content p {
+      font-size: 18px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -90,8 +119,16 @@
     <div id="message"></div>
   </div>
 
+  <!-- 로그인 성공 모달 -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <h2>✅ 로그인 성공!</h2>
+      <p>잠시 후 이동합니다...</p>
+    </div>
+  </div>
+
   <script>
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxzUmUkR6-7UwDR6ZgYz9Ctl_IhXP2TTz4aiXavfh7GrPJ_SI8iww2BCd7wUc6ygRt_6Q/exec"; // GAS 웹앱 URL로 교체
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxzUmUkR6-7UwDR6ZgYz9Ctl_IhXP2TTz4aiXavfh7GrPJ_SI8iww2BCd7wUc6ygRt_6Q/exec";
 
     function login() {
       const id = document.getElementById("id").value.trim();
@@ -106,20 +143,21 @@
         .then(response => response.json())
         .then(result => {
           if (result.result === "success") {
-            alert("✅ 로그인 성공! 잠시 후 이동합니다...");
-    
+            // ✅ alert 대신 모달 띄우기
+            document.getElementById("loginModal").style.display = "block";
+
             sessionStorage.setItem("loggedIn", "true");
             sessionStorage.setItem("role", result.role);
             sessionStorage.setItem("userId", id);
             sessionStorage.setItem("userPw", pw);
-    
+
             setTimeout(() => {
               if (result.role === "AD") {
                 window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
               } else if (result.role === "RU") {
                 window.location.href = "https://a-domes.github.io/location-app/user.html";
               }
-            }, 1000);
+            }, 1500); // 1.5초 후 자동 이동
     
           } else if (result.result === "blocked") {
             alert("🚫 계정이 비활성화되었습니다. 관리자에게 문의하세요.");
@@ -132,9 +170,7 @@
         });
     }
 
-
     function goRegister() {
-      // 회원가입은 사용자가 직접 선택할 때만 이동
       window.location.href = "registerUser.html";
     }
   </script>
