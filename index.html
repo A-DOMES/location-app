@@ -90,46 +90,56 @@
   </div>
 
   <script>
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxzUmUkR6-7UwDR6ZgYz9Ctl_IhXP2TTz4aiXavfh7GrPJ_SI8iww2BCd7wUc6ygRt_6Q/exec"; // GAS 웹앱 URL로 교체
+
     function login() {
-      var id = document.getElementById("id").value.trim();
-      var pw = document.getElementById("pw").value.trim();
+      const id = document.getElementById("id").value.trim();
+      const pw = document.getElementById("pw").value.trim();
+      const msg = document.getElementById("message");
+
       if (!id || !pw) {
-        document.getElementById("message").style.color = "red";
-        document.getElementById("message").innerText = "아이디와 비밀번호를 입력하세요.";
+        msg.style.color = "red";
+        msg.innerText = "아이디와 비밀번호를 입력하세요.";
         return;
       }
 
-      google.script.run.withSuccessHandler(function(result) {
-        if (result.result === "success") {
-          document.getElementById("message").style.color = "green";
-          document.getElementById("message").innerText = "로그인 성공! 잠시 후 이동합니다...";
+      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.result === "success") {
+            msg.style.color = "green";
+            msg.innerText = "로그인 성공! 잠시 후 이동합니다...";
 
-          // ✅ 로그인 상태 저장
-          sessionStorage.setItem("loggedIn", "true");
-          sessionStorage.setItem("role", result.role);
-          sessionStorage.setItem("userId", id);
-          sessionStorage.setItem("userPw", pw);
+            // ✅ 로그인 상태 저장
+            sessionStorage.setItem("loggedIn", "true");
+            sessionStorage.setItem("role", result.role);
+            sessionStorage.setItem("userId", id);
+            sessionStorage.setItem("userPw", pw);
 
-          setTimeout(() => {
-            if (result.role === "AD") {
-              window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
-            } else if (result.role === "RU") {
-              window.location.href = "https://a-domes.github.io/location-app/user.html";
-            }
-          }, 1000);
+            setTimeout(() => {
+              if (result.role === "AD") {
+                window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
+              } else if (result.role === "RU") {
+                window.location.href = "https://a-domes.github.io/location-app/user.html";
+              }
+            }, 1000);
 
-        } else if (result.result === "blocked") {
-          document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerText = "🚫 계정이 비활성화되었습니다.";
-        } else {
-          document.getElementById("message").style.color = "red";
-          document.getElementById("message").innerText = "❌ 로그인 실패. 아이디/비밀번호 확인하세요.";
-        }
-      }).checkPassword(id, pw);
+          } else if (result.result === "blocked") {
+            msg.style.color = "red";
+            msg.innerText = "🚫 계정이 비활성화되었습니다.";
+          } else {
+            msg.style.color = "red";
+            msg.innerText = "❌ 로그인 실패. 아이디/비밀번호 확인하세요.";
+          }
+        })
+        .catch(error => {
+          msg.style.color = "red";
+          msg.innerText = "❌ 서버 오류: " + error.message;
+        });
     }
 
     function goRegister() {
-      // ✅ 회원가입은 사용자가 직접 선택할 때만 이동
+      // 회원가입은 사용자가 직접 선택할 때만 이동
       window.location.href = "registerUser.html";
     }
   </script>
