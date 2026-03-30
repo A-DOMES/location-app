@@ -49,18 +49,21 @@
       color:#2c3e50;
       text-align:left;
     }
+    
     .input-group {
-      display: flex; /* 입력창과 버튼을 가로로 배치 */
+      display: flex;
       align-items: center;
-      margin: 12px 0;
+      gap: 10px; /* ✅ 입력창과 버튼 사이 여백 */
     }
+
     .input-group input {
-      flex: 1; /* 입력창이 넓게 차지 */
+      width: 70%;   /* ✅ 입력창을 전체의 70%만 차지하도록 */
       padding: 14px;
       border: 1.5px solid #bdc3c7;
-      border-radius: 10px 0 0 10px; /* 왼쪽 모서리 둥글게 */
+      border-radius: 10px;
       font-size: 15px;
     }
+
     .check-btn {
       padding: 14px 20px;
       border: none;
