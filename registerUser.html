@@ -218,6 +218,9 @@
 
 
 <script>
+  // Google Apps Script 웹앱 URL (배포 후 얻은 URL로 교체하세요)
+  const WEBAPP_URL = "https://script.google.com/macros/s/웹앱-배포-URL/exec";
+
   /* ============================
      📌 아이디 중복검사 (존재 여부만 확인)
      ============================ */
@@ -241,37 +244,30 @@
     msg.style.color = "#2980b9";
     msg.innerText = "⏳ 아이디 중복 검사 중...";
 
-    // 서버와 연결된 경우
-    if (typeof google !== "undefined" && google.script) {
-      google.script.run
-        .withSuccessHandler(function(result) {
-          console.log("서버 응답:", result);
+    // fetch()로 서버 호출
+    fetch(`${WEBAPP_URL}?mode=checkUserId&id=${encodeURIComponent(id)}`)
+      .then(response => response.json())
+      .then(result => {
+        console.log("서버 응답:", result);
 
-          // 서버는 객체 { result: "exists" } 형태를 반환함
-          if (result.result === "exists") {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 이미 사용 중인 아이디입니다. 다른 아이디를 입력하세요.";
-          } else if (result.result === "available") {
-            msg.style.color = "green";
-            msg.innerText = "✅ 사용 가능한 아이디입니다.";
-          } else if (result.result === "missing") {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 아이디를 입력하세요.";
-          } else {
-            msg.style.color = "red";
-            msg.innerText = "❌ 알 수 없는 응답: " + result.result;
-          }
-        })
-        .withFailureHandler(function(error) {
+        if (result.result === "exists") {
           msg.style.color = "red";
-          msg.innerText = "❌ 서버 오류: " + error.message;
-        })
-        .checkUserId(id);
-    } else {
-      // 테스트 모드 (서버 연결 없음)
-      msg.style.color = "green";
-      msg.innerText = "✅ 사용 가능한 아이디입니다. (테스트용)";
-    }
+          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다. 다른 아이디를 입력하세요.";
+        } else if (result.result === "available") {
+          msg.style.color = "green";
+          msg.innerText = "✅ 사용 가능한 아이디입니다.";
+        } else if (result.result === "missing") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 아이디를 입력하세요.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 알 수 없는 응답: " + result.result;
+        }
+      })
+      .catch(error => {
+        msg.style.color = "red";
+        msg.innerText = "❌ 서버 오류: " + error.message;
+      });
   }
 
   /* ============================
@@ -325,44 +321,37 @@
       return;
     }
 
-    // 서버와 연결된 경우
-    if (typeof google !== "undefined" && google.script) {
-      google.script.run
-        .withSuccessHandler(function(result) {
-          console.log("회원가입 응답:", result);
+    // fetch()로 서버 호출
+    fetch(`${WEBAPP_URL}?mode=registerUser&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&name=${encodeURIComponent(name)}`)
+      .then(response => response.json())
+      .then(result => {
+        console.log("회원가입 응답:", result);
 
-          // 서버는 객체 { result: "success" } 형태를 반환함
-          switch (result.result) {
-            case "success":
-              msg.style.color = "#27ae60";
-              msg.innerHTML =
-                "✅ " + (result.name || "") + "님, 회원가입을 축하드립니다 🎉<br><br>" +
-                "<button onclick='goLogin()'>확인</button>";
-              break;
-            case "exists":
-              msg.style.color = "red";
-              msg.innerHTML = "⚠️ 이미 사용 중인 아이디입니다. 다른 아이디를 입력하세요.";
-              break;
-            case "missing":
-              msg.style.color = "red";
-              msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
-              break;
-            default:
-              msg.style.color = "red";
-              msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
-              break;
-          }
-        })
-        .withFailureHandler(function(error) {
-          msg.style.color = "red";
-          msg.innerHTML = "❌ 서버 오류: " + error.message;
-        })
-        .registerUser(id, pw, name);
-    } else {
-      // 테스트 모드 (서버 연결 없음)
-      msg.style.color = "green";
-      msg.innerHTML = "✅ 회원가입 처리 완료 (테스트용)";
-    }
+        switch (result.result) {
+          case "success":
+            msg.style.color = "#27ae60";
+            msg.innerHTML =
+              "✅ " + (result.name || "") + "님, 회원가입을 축하드립니다 🎉<br><br>" +
+              "<button onclick='goLogin()'>확인</button>";
+            break;
+          case "exists":
+            msg.style.color = "red";
+            msg.innerHTML = "⚠️ 이미 사용 중인 아이디입니다. 다른 아이디를 입력하세요.";
+            break;
+          case "missing":
+            msg.style.color = "red";
+            msg.innerHTML = "⚠️ 모든 항목을 입력해야 합니다.";
+            break;
+          default:
+            msg.style.color = "red";
+            msg.innerHTML = "❌ 회원가입 실패. 다시 시도하세요.";
+            break;
+        }
+      })
+      .catch(error => {
+        msg.style.color = "red";
+        msg.innerHTML = "❌ 서버 오류: " + error.message;
+      });
   }
 
   /* ============================
@@ -389,5 +378,3 @@
 
 </body>
 </html>
-
-
