@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>로그인</title>
+  <!-- 📌 폰트 로딩 -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
+    /* 📌 전체 화면 스타일 */
     body {
       display: flex;
       justify-content: center;
@@ -13,6 +15,7 @@
       background: linear-gradient(135deg, #74ebd5, #ACB6E5);
       font-family: 'Noto Sans KR', 'Roboto', sans-serif;
     }
+    /* 📌 로그인 박스 스타일 */
     .login-box {
       background: #fff;
       padding: 50px 40px;
@@ -79,7 +82,7 @@
       transform: scale(1.03);
     }
 
-    /* 로그인 성공 모달 */
+    /* 📌 로그인 성공 모달 */
     .modal {
       display: none;
       position: fixed;
@@ -90,7 +93,7 @@
     }
     .modal-content {
       background: #fff;
-      margin: 12% auto;   /* 중앙보다 살짝 위 */
+      margin: 12% auto;
       padding: 30px;
       border-radius: 12px;
       width: 90%;
@@ -112,14 +115,18 @@
 <body>
   <div class="login-box">
     <h2>📍 A-DOMES | 위치정보시스템</h2>
+    <!-- 📌 아이디 입력 -->
     <input type="text" id="id" placeholder="아이디">
+    <!-- 📌 비밀번호 입력 -->
     <input type="password" id="pw" placeholder="비밀번호">
+    <!-- 📌 로그인 버튼 -->
     <button onclick="login()">로그인</button>
+    <!-- 📌 회원가입 버튼 -->
     <button class="signup-btn" onclick="goRegister()">회원가입</button>
     <div id="message"></div>
   </div>
 
-  <!-- 로그인 성공 모달 -->
+  <!-- 📌 로그인 성공 모달 -->
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <h2>✅ 로그인 성공!</h2>
@@ -128,8 +135,10 @@
   </div>
 
   <script>
+    // 📌 사용자 서버 웹앱 URL
     const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwbJspq4ylZXD8M7Zs5KDkGV4JxYiXuQcjyCbIidEZrWlq12W0aIeVl-CnBjlckPfipww/exec";
 
+    // 📌 로그인 함수
     function login() {
       const id = document.getElementById("id").value.trim();
       const pw = document.getElementById("pw").value.trim();
@@ -139,37 +148,40 @@
         return;
       }
     
-    fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-      .then(response => response.json())
-      .then(result => {
-        if (result.result === "success") {
-          document.getElementById("loginModal").style.display = "block";
+      // 📌 사용자 서버에 로그인 요청 (토큰 발급 포함)
+      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.result === "success") {
+            // 로그인 성공 모달 표시
+            document.getElementById("loginModal").style.display = "block";
     
-          sessionStorage.setItem("loggedIn", "true");
-          sessionStorage.setItem("role", result.role);
-          sessionStorage.setItem("userId", id);
-          sessionStorage.setItem("userPw", pw);
-    
-          setTimeout(() => {
-            if (result.role === "AD") {
-              // 관리자 계정 → 관리자 페이지
-              window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
-            } else if (result.role === "RU") {
-              // 사용자 계정 → 사용자 페이지
-              window.location.href = "https://a-domes.github.io/location-app/user.html";
-            }
-          }, 1500);
-        } else if (result.result === "blocked") {
-          alert("🚫 계정이 비활성화되었습니다. 관리자에게 문의하세요.");
-        } else {
-          alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
-        }
-      })
-      .catch(error => {
-        alert("❌ 서버 오류: " + error.message);
-      });
+            // 📌 세션에 로그인 정보 저장
+            sessionStorage.setItem("loggedIn", "true");
+            sessionStorage.setItem("role", result.role);
+            sessionStorage.setItem("userId", id);
+            sessionStorage.setItem("token", result.token); // 📌 토큰 저장 (중요!)
+
+            // 📌 역할에 따라 페이지 이동
+            setTimeout(() => {
+              if (result.role === "AD") {
+                window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
+              } else if (result.role === "RU") {
+                window.location.href = "https://a-domes.github.io/location-app/user.html";
+              }
+            }, 1500);
+          } else if (result.result === "blocked") {
+            alert("🚫 계정이 비활성화되었습니다. 관리자에게 문의하세요.");
+          } else {
+            alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+          }
+        })
+        .catch(error => {
+          alert("❌ 서버 오류: " + error.message);
+        });
     }
 
+    // 📌 회원가입 페이지 이동
     function goRegister() {
       window.location.href = "registerUser.html";
     }
