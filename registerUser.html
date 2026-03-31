@@ -205,20 +205,25 @@
     </div>
     <div id="idMessage"></div>
 
-    <!-- 비밀번호 입력 -->
-    <label for="pw">비밀번호 입력</label>
-    <div class="input-group">
-      <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
-      <!-- ✅ 비밀번호 보이기 버튼 (우측) -->
-      <button type="button" onclick="togglePassword()" 
-              style="padding: 10px; border-radius: 8px; background:#bdc3c7; cursor:pointer;">
-        👁
-      </button>
-    </div>
-    
-    <!-- 비밀번호 확인 -->
-    <label for="pwConfirm">비밀번호 확인</label>
-    <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
+<!-- 비밀번호 입력 라벨 + 버튼 -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+  <label for="pw" style="margin:0;">비밀번호 입력</label>
+  <!-- ✅ 비밀번호 보이기 버튼 (라벨 우측) -->
+  <button type="button" onclick="togglePassword()" 
+          style="padding:6px 12px; font-size:13px; border:none; border-radius:6px; background:#bdc3c7; cursor:pointer;">
+    👁 보이기
+  </button>
+</div>
+
+<!-- 비밀번호 입력 텍스트박스 (라벨보다 살짝 아래로) -->
+<div style="margin-top:10px;">
+  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+</div>
+
+<!-- 비밀번호 확인 (그대로 유지) -->
+<label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
+<input type="password" id="pwConfirm" placeholder="비밀번호 확인">
+
 
     <!-- 표시 이름 입력 -->
     <label for="name">표시 이름 입력</label>
