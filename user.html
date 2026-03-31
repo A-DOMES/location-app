@@ -171,8 +171,7 @@
 
     <h3>사용 방법</h3>
     <p>
-      먼저 전화번호 또는 이름을 입력하세요.<br>
-      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
+      위치 전송 버튼을 누르면 현재 위치가 구글 시트에 기록됩니다.<br>
       화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
     </p>
 
@@ -186,13 +185,13 @@
 
     <div class="center-wrapper">
       <div class="inner-group">
-        <!-- 사용자 입력 -->
-        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-        <input type="text" name="id" id="userId" placeholder="아이디 입력">
-        <input type="password" name="pw" id="userPw" placeholder="비밀번호 입력">
-
         <!-- 버튼 그룹 -->
         <div class="button-group">
+          <!-- 지도 버튼 -->
+          <a href="client.html" target="_blank">
+            <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+          </a>
+
           <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
         </div>
@@ -200,6 +199,7 @@
     </div>
   </form>
 
+  <!-- 지도 표시 영역 -->
   <div id="map"></div>
 
   <script>
@@ -207,11 +207,8 @@
 
     /* ---------------------- 위치 전송 함수 ---------------------- */
     async function sendLocation() {
-      const id = document.getElementById("userId").value;
-      const pw = document.getElementById("userPw").value;
-
       // 1️⃣ 사용자 서버 호출 (로그인/인증)
-      const loginRes = await fetch(`${document.getElementById("locationForm").action}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`);
+      const loginRes = await fetch(`${document.getElementById("locationForm").action}?mode=checkPassword`);
       const loginResult = await loginRes.json();
 
       if (loginResult.result !== "success") {
@@ -222,7 +219,6 @@
       // 2️⃣ 위치 정보 가져오기
       navigator.geolocation.getCurrentPosition(async function(position) {
         const locationParams = new URLSearchParams();
-        locationParams.append("phone", document.getElementById("phone").value);
         locationParams.append("status", "정상");
         locationParams.append("lat", position.coords.latitude || 0);
         locationParams.append("lng", position.coords.longitude || 0);
@@ -250,7 +246,6 @@
       intervalId = null;
 
       const params = new URLSearchParams();
-      params.append("phone", document.getElementById("phone").value);
       params.append("status", "해제");
       params.append("time", new Date().toISOString());
       params.append("token", sessionStorage.getItem("token"));
@@ -269,7 +264,6 @@
       if (!navigator.geolocation) return;
       navigator.geolocation.getCurrentPosition(async function(position) {
         const params = new URLSearchParams();
-        params.append("phone", document.getElementById("phone").value);
         params.append("status", "정상");
         params.append("lat", position.coords.latitude || 0);
         params.append("lng", position.coords.longitude || 0);
