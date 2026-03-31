@@ -181,7 +181,7 @@
 
   <!-- ★★★ 핵심: form ★★★  사용자 서버 URL 입력 -->
   <form id="locationForm"
-        action="https://script.google.com/macros/s/사용자서버ID/exec"
+        action="https://script.google.com/macros/s/AKfycbzysQqG0sCmLFA6HmTooqsxcmBqYT-b_JyQ8-xNXefqS0qAgT1aR1W5pph4N-HLY3vLeg/exec"
         method="POST">
 
     <div class="center-wrapper">
@@ -230,7 +230,7 @@
         locationParams.append("token", loginResult.token);
 
         // 3️⃣ 관리자 서버 호출 (위치 기록)
-        await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+        await fetch("https://script.google.com/macros/s/AKfycbxqhIJwTwfkAdzYF6P0ZY_T9XprfVqu8FIjEHapYuh-dk4qD-t8VtpuX8xKidDntz9n_A/exec", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: locationParams.toString()
