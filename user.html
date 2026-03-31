@@ -149,6 +149,9 @@
         return;
       }
 
+      // ✅ 토큰을 세션에 저장 (중요!)
+      sessionStorage.setItem("token", loginResult.token);
+
       /* ============================
          📌 관리자 서버 호출 (위치 전송)
          ============================ */
@@ -208,7 +211,7 @@
     params.append("phone", document.getElementById("phone").value);
     params.append("status", "해제");
     params.append("time", new Date().toISOString());
-    params.append("token", sessionStorage.getItem("token"));
+    params.append("token", sessionStorage.getItem("token")); // ✅ 세션에서 토큰 꺼내오기
 
     try {
       const res = await fetch("https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec", {
@@ -243,10 +246,10 @@
       params.append("lng", position.coords.longitude || 0);
       params.append("time", new Date().toISOString());
       params.append("auto", "true");
-      params.append("token", sessionStorage.getItem("token"));
+      params.append("token", sessionStorage.getItem("token")); // ✅ 세션에서 토큰 꺼내오기
 
       try {
-        await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+        await fetch("https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params.toString()
