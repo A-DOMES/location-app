@@ -171,7 +171,8 @@
 
     <h3>사용 방법</h3>
     <p>
-      위치 전송 버튼을 누르면 현재 위치가 구글 시트에 기록됩니다.<br>
+      전화번호 또는 이름을 입력하세요.<br>
+      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
       화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
     </p>
 
@@ -185,6 +186,9 @@
 
     <div class="center-wrapper">
       <div class="inner-group">
+        <!-- 전화번호/이름 입력창 -->
+        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+
         <!-- 버튼 그룹 -->
         <div class="button-group">
           <!-- 지도 버튼 -->
@@ -219,6 +223,7 @@
       // 2️⃣ 위치 정보 가져오기
       navigator.geolocation.getCurrentPosition(async function(position) {
         const locationParams = new URLSearchParams();
+        locationParams.append("phone", document.getElementById("phone").value);
         locationParams.append("status", "정상");
         locationParams.append("lat", position.coords.latitude || 0);
         locationParams.append("lng", position.coords.longitude || 0);
@@ -246,6 +251,7 @@
       intervalId = null;
 
       const params = new URLSearchParams();
+      params.append("phone", document.getElementById("phone").value);
       params.append("status", "해제");
       params.append("time", new Date().toISOString());
       params.append("token", sessionStorage.getItem("token"));
@@ -264,6 +270,7 @@
       if (!navigator.geolocation) return;
       navigator.geolocation.getCurrentPosition(async function(position) {
         const params = new URLSearchParams();
+        params.append("phone", document.getElementById("phone").value);
         params.append("status", "정상");
         params.append("lat", position.coords.latitude || 0);
         params.append("lng", position.coords.longitude || 0);
