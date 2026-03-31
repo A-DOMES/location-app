@@ -130,14 +130,15 @@
     document.querySelectorAll(".modal").forEach(m => m.remove());
   }
 
-  async function sendLocation() {
+  function sendLocation() {
     showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.", false);
     console.log("[DEBUG] sendLocation 시작");
 
-    try {
-      const loginRes = await fetch(`${document.getElementById("locationForm").action}?mode=checkPassword`);
-      console.log("[DEBUG] 사용자 서버 응답 상태:", loginRes.status);
-      const loginResult = await loginRes.json();
+    const userUrl = document.getElementById("locationForm").action;
+    const callbackName = "jsonpCallback_" + Date.now();
+
+    // JSONP 콜백 함수 정의
+    window[callbackName] = function(loginResult) {
       console.log("[DEBUG] 사용자 서버 응답 JSON:", loginResult);
 
       if (loginResult.result !== "success") {
@@ -159,7 +160,7 @@
         locationParams.append("token", loginResult.token);
 
         try {
-          const res = await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+          const res = await fetch("https://script.google.com/macros/s/AKfycbxqhIJwTwfkAdzYF6P0ZY_T9XprfVqu8FIjEHapYuh-dk4qD-t8VtpuX8xKidDntz9n_A/exec", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: locationParams.toString()
@@ -189,11 +190,12 @@
         showModal("위치 정보를 가져오지 못했습니다:\n" + error.message, true);
         console.error("[ERROR] 위치 권한/좌표 오류:", error);
       });
-    } catch (err) {
-      closeModal();
-      showModal("사용자 서버 호출 오류 발생", true);
-      console.error("[ERROR] 사용자 서버 호출 실패:", err);
-    }
+    };
+
+    // JSONP 호출
+    const script = document.createElement("script");
+    script.src = `${userUrl}?mode=checkPassword&id=${document.getElementById("phone").value}&pw=${document.getElementById("pw").value}&callback=${callbackName}`;
+    document.body.appendChild(script);
   }
 
   async function stopLocation() {
@@ -210,7 +212,7 @@
     params.append("token", sessionStorage.getItem("token"));
 
     try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbzysQqG0sCmLFA6HmTooqsxcmBqYT-b_JyQ8-xNXefqS0qAgT1aR1W5pph4N-HLY3vLeg/exec", {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbxqhIJwTwfkAdzYF6P0ZY_T9XprfVqu8FIjEHapYuh-dk4qD-t8VtpuX8xKidDntz9n_A/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
@@ -282,5 +284,6 @@
 
   window.onload = initMap;
 </script>
+
 </body>
 </html>
