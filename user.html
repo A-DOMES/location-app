@@ -158,157 +158,68 @@
     </style>
   </head>
   
-  <body>
-  
-    <!-- 상단 헤더 -->
-    <header>
-      <h2>A-DOMES | 위치정보시스템</h2>
-    </header>
-  
-    <!-- 안내 박스 -->
-    <section class="info-box">
-      <h3>앱 목적</h3>
-      <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
-  
-      <h3>사용 방법</h3>
-      <p>
-        먼저 전화번호 또는 이름을 입력하세요.<br>
-        위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
-        화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
-      </p>
-  
-      <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
-    </section>
-  
-    <!-- ★★★ 핵심: form ★★★ -->
-    <form id="locationForm"
-          action="https://script.google.com/macros/s/AKfycbwsuVenZeWsYs3oaQJbGf8rramiwG1l4OKXqBw_eqP949iOqXvbjG-fniGjZbet-h-HsA/exec"
-          method="POST">
-  
-      <div class="center-wrapper">
-        <div class="inner-group">
-  
-          <!-- 전화번호 입력창 -->
-          <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-  
-          <!-- ============================
-               로그인 관련 입력창 (삭제/주석 처리)
-               ============================ -->
-          <!--
-          <input type="text" id="userId" placeholder="아이디 입력">
-          <input type="password" id="userPw" placeholder="비밀번호 입력">
-          -->
-  
-          <!-- 버튼 그룹 -->
-          <div class="button-group">
-            <!-- 지도 버튼 -->
-            <a href="client.html" target="_blank">
-              <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-            </a>
-  
-            <button type="button" id="sendBtn" onclick="sendLocation()" disabled>위치 전송</button>
-            <button type="button" id="stopBtn" onclick="stopLocation()" disabled>위치정보 해제</button>
-  
-            <!-- ============================
-                 로그인 버튼 (삭제/주석 처리)
-                 ============================ -->
-            <!-- <button type="button" onclick="login()">로그인</button> -->
-          </div>
-  
+<body>
+  <!-- 상단 헤더 -->
+  <header>
+    <h2>A-DOMES | 위치정보시스템</h2>
+  </header>
+
+  <!-- 안내 박스 -->
+  <section class="info-box">
+    <h3>앱 목적</h3>
+    <p>이 앱은 현장의 위치 정보를 기록하고 공유하기 위해 만들어졌습니다.</p>
+
+    <h3>사용 방법</h3>
+    <p>
+      먼저 전화번호 또는 이름을 입력하세요.<br>
+      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 구글 시트에 기록됩니다.<br>
+      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+    </p>
+
+    <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
+  </section>
+
+  <!-- ★★★ 핵심: form ★★★  사용자 서버 URL 입력 -->
+  <form id="locationForm"
+        action="https://script.google.com/macros/s/사용자서버ID/exec"
+        method="POST">
+
+    <div class="center-wrapper">
+      <div class="inner-group">
+        <!-- 사용자 입력 -->
+        <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
+        <input type="text" name="id" id="userId" placeholder="아이디 입력">
+        <input type="password" name="pw" id="userPw" placeholder="비밀번호 입력">
+
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
         </div>
       </div>
-    </form>
-  
-    <!-- 사용자정보 표시 -->
-    <div id="userInfo"></div>
-    <!-- 현재 위치 표시 -->
-    <div id="currentLocation"></div>
-    <!-- 지도 전체화면 -->
-    <div id="map"></div>
-  
-    <!-- 모달창 -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <p id="modalMessage"></p>
-        <button onclick="closeModal()">확인</button>
-      </div>
     </div>
+  </form>
 
+  <div id="map"></div>
 
-  
-<!-- ============================
-     위치 전송 폼 영역
-     ============================ -->
-<form id="locationForm"
-      action="https://script.google.com/macros/s/AKfycbwbJspq4ylZXD8M7Zs5KDkGV4JxYiXuQcjyCbIidEZrWlq12W0aIeVl-CnBjlckPfipww/exec"
-      method="POST">
+  <script>
+    let intervalId;
 
-  <div class="center-wrapper">
-    <div class="inner-group">
-      <!-- 사용자 입력 -->
-      <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
-      <input type="text" name="id" id="userId" placeholder="아이디 입력">
-      <input type="password" name="pw" id="userPw" placeholder="비밀번호 입력">
+    /* ---------------------- 위치 전송 함수 ---------------------- */
+    async function sendLocation() {
+      const id = document.getElementById("userId").value;
+      const pw = document.getElementById("userPw").value;
 
-      <!-- 버튼 그룹 -->
-      <div class="button-group">
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-      </div>
-    </div>
-  </div>
-</form>
-
-<!-- ============================
-     기능 JS (사용자용 수정 버전)
-     ============================ -->
-<script>
-  let intervalId;
-
-  function showModal(message, autoClose = false) {
-    document.querySelectorAll(".modal").forEach(m => m.remove());
-    const modal = document.createElement("div");
-    modal.className = "modal";
-    const content = document.createElement("div");
-    content.className = "modal-content";
-    content.innerText = message;
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-    modal.style.display = "block";
-    if (autoClose) {
-      setTimeout(() => { modal.remove(); }, 2000);
-    }
-  }
-
-  function closeModal() {
-    document.querySelectorAll(".modal").forEach(m => m.remove());
-  }
-
-  /* ---------------------- 위치 전송 함수 ---------------------- */
-  async function sendLocation() {
-    showModal("로그인 및 위치정보 전송 중입니다...\n잠시만 기다려주세요.", false);
-
-    const id = document.getElementById("userId").value;
-    const pw = document.getElementById("userPw").value;
-
-    try {
       // 1️⃣ 사용자 서버 호출 (로그인/인증)
       const loginRes = await fetch(`${document.getElementById("locationForm").action}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`);
       const loginResult = await loginRes.json();
 
       if (loginResult.result !== "success") {
-        closeModal();
-        showModal("로그인 실패: " + (loginResult.message || ""), true);
+        alert("로그인 실패: " + (loginResult.message || ""));
         return;
       }
 
       // 2️⃣ 위치 정보 가져오기
-      if (!navigator.geolocation) {
-        closeModal();
-        showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.", true);
-        return;
-      }
-
       navigator.geolocation.getCurrentPosition(async function(position) {
         const locationParams = new URLSearchParams();
         locationParams.append("phone", document.getElementById("phone").value);
@@ -316,7 +227,7 @@
         locationParams.append("lat", position.coords.latitude || 0);
         locationParams.append("lng", position.coords.longitude || 0);
         locationParams.append("time", new Date().toISOString());
-        locationParams.append("token", loginResult.token); // 📌 사용자 서버에서 받은 토큰 전달
+        locationParams.append("token", loginResult.token);
 
         // 3️⃣ 관리자 서버 호출 (위치 기록)
         await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
@@ -325,85 +236,77 @@
           body: locationParams.toString()
         });
 
-        closeModal();
-        showModal("위치정보가 성공적으로 전송되었습니다.", true);
+        alert("위치정보가 성공적으로 전송되었습니다.");
 
         if (!intervalId) {
           intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
         }
       });
-    } catch (err) {
-      closeModal();
-      showModal("처리 중 오류 발생:\n" + err.message, true);
     }
-  }
 
-  /* ---------------------- 위치 해제 함수 ---------------------- */
-  async function stopLocation() {
-    showModal("위치정보 해제 처리 중입니다...\n잠시만 기다려주세요.", false);
+    /* ---------------------- 위치 해제 함수 ---------------------- */
+    async function stopLocation() {
+      clearInterval(intervalId);
+      intervalId = null;
 
-    clearInterval(intervalId);
-    intervalId = null;
-
-    const params = new URLSearchParams();
-    params.append("phone", document.getElementById("phone").value);
-    params.append("status", "해제");
-    params.append("time", new Date().toISOString());
-    params.append("token", sessionStorage.getItem("token")); // 📌 토큰 추가
-
-    await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString()
-    });
-
-    closeModal();
-    showModal("위치정보가 해제되었습니다.", true);
-  }
-
-  /* ---------------------- 자동 갱신 함수 ---------------------- */
-  function autoUpdate() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(async function(position) {
       const params = new URLSearchParams();
       params.append("phone", document.getElementById("phone").value);
-      params.append("status", "정상");
-      params.append("lat", position.coords.latitude || 0);
-      params.append("lng", position.coords.longitude || 0);
+      params.append("status", "해제");
       params.append("time", new Date().toISOString());
-      params.append("auto", "true");
-      params.append("token", sessionStorage.getItem("token")); // 📌 토큰 추가
+      params.append("token", sessionStorage.getItem("token"));
 
       await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
       });
-    });
-  }
 
-  /* ---------------------- 서비스워커 등록 ---------------------- */
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
+      alert("위치정보가 해제되었습니다.");
+    }
 
-  /* ---------------------- 지도 초기화 ---------------------- */
-  function initMap() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: position.coords.latitude, lng: position.coords.longitude },
-        zoom: 15
+    /* ---------------------- 자동 갱신 함수 ---------------------- */
+    function autoUpdate() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(async function(position) {
+        const params = new URLSearchParams();
+        params.append("phone", document.getElementById("phone").value);
+        params.append("status", "정상");
+        params.append("lat", position.coords.latitude || 0);
+        params.append("lng", position.coords.longitude || 0);
+        params.append("time", new Date().toISOString());
+        params.append("auto", "true");
+        params.append("token", sessionStorage.getItem("token"));
+
+        await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params.toString()
+        });
       });
-      new google.maps.Marker({
-        position: { lat: position.coords.latitude, lng: position.coords.longitude },
-        map: map,
-        title: "현재 위치"
-      });
-    });
-  }
+    }
 
-  window.onload = initMap;
-</script>
+    /* ---------------------- 서비스워커 등록 ---------------------- */
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+
+    /* ---------------------- 지도 초기화 ---------------------- */
+    function initMap() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: position.coords.latitude, lng: position.coords.longitude },
+          zoom: 15
+        });
+        new google.maps.Marker({
+          position: { lat: position.coords.latitude, lng: position.coords.longitude },
+          map: map,
+          title: "현재 위치"
+        });
+      });
+    }
+
+    window.onload = initMap;
+  </script>
 </body>
 </html>
