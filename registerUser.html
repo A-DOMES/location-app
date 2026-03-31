@@ -207,7 +207,11 @@
 
     <!-- 비밀번호 입력 -->
     <label for="pw">비밀번호 입력</label>
-    <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+    <div class="input-group">
+      <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+      <!-- ✅ 비밀번호 보이기 버튼 -->
+      <button type="button" onclick="togglePassword()">👁</button>
+    </div>
     
     <!-- 비밀번호 확인 -->
     <label for="pwConfirm">비밀번호 확인</label>
