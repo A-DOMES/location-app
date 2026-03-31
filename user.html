@@ -91,7 +91,7 @@
 
   <!-- 사용자 서버 URL -->
   <form id="locationForm"
-        action="https://script.google.com/macros/s/사용자서버ID/exec"
+        action="https://script.google.com/macros/s/AKfycbykXE_6XKWKH3x2Z7OY0aB7JwWdyGsJFGa4vqUMlPe5MXMTeJw9e1f8uMq-vYH5FiUVZw/exec"
         method="POST">
     <div class="center-wrapper">
       <div class="inner-group">
@@ -165,7 +165,7 @@
         locationParams.append("token", loginResult.token);
 
         try {
-          const res = await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+          const res = await fetch("https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: locationParams.toString()
@@ -220,7 +220,7 @@
     params.append("token", sessionStorage.getItem("token"));
 
     try {
-      const res = await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
