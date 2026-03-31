@@ -288,22 +288,17 @@
   async function sendLocation() {
     showModal("로그인 및 위치정보 전송 중입니다...\n잠시만 기다려주세요.", false);
 
-    const form = document.getElementById("locationForm");
-    const loginParams = new URLSearchParams();
-    loginParams.append("id", document.getElementById("userId").value);
-    loginParams.append("pw", document.getElementById("userPw").value);
+    const id = document.getElementById("userId").value;
+    const pw = document.getElementById("userPw").value;
 
     try {
       // 1️⃣ 사용자 서버 호출 (로그인/인증)
-      const loginRes = await fetch(form.action, {
-        method: "POST",
-        body: loginParams
-      });
+      const loginRes = await fetch(`${document.getElementById("locationForm").action}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`);
       const loginResult = await loginRes.json();
 
       if (loginResult.result !== "success") {
         closeModal();
-        showModal("로그인 실패: " + loginResult.message, true);
+        showModal("로그인 실패: " + (loginResult.message || ""), true);
         return;
       }
 
@@ -315,20 +310,16 @@
       }
 
       navigator.geolocation.getCurrentPosition(async function(position) {
-        document.getElementById("currentLocation").innerHTML =
-          "<strong>위도:</strong> " + position.coords.latitude.toFixed(6) +
-          " / <strong>경도:</strong> " + position.coords.longitude.toFixed(6);
-
         const locationParams = new URLSearchParams();
         locationParams.append("phone", document.getElementById("phone").value);
         locationParams.append("status", "정상");
         locationParams.append("lat", position.coords.latitude || 0);
         locationParams.append("lng", position.coords.longitude || 0);
         locationParams.append("time", new Date().toISOString());
-        locationParams.append("token", loginResult.token); // 사용자 서버에서 받은 토큰 전달
+        locationParams.append("token", loginResult.token); // 📌 사용자 서버에서 받은 토큰 전달
 
         // 3️⃣ 관리자 서버 호출 (위치 기록)
-        await fetch("https://관리자서버URL/api/location", {
+        await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: locationParams.toString()
@@ -358,8 +349,9 @@
     params.append("phone", document.getElementById("phone").value);
     params.append("status", "해제");
     params.append("time", new Date().toISOString());
+    params.append("token", sessionStorage.getItem("token")); // 📌 토큰 추가
 
-    await fetch("https://관리자서버URL/api/location", {
+    await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString()
@@ -380,8 +372,9 @@
       params.append("lng", position.coords.longitude || 0);
       params.append("time", new Date().toISOString());
       params.append("auto", "true");
+      params.append("token", sessionStorage.getItem("token")); // 📌 토큰 추가
 
-      await fetch("https://관리자서버URL/api/location", {
+      await fetch("https://script.google.com/macros/s/관리자서버ID/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
