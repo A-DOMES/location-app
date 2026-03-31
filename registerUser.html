@@ -365,8 +365,8 @@
         switch (result.result) {
           case "success":
             // ✅ 모달창 띄우기
-            document.getElementById("modalMessage").innerText =
-              `${result.name || ""}님, 회원가입을 축하드립니다 🎉 잠시 후 로그인 화면으로 이동합니다...`;
+            document.getElementById("modalMessage").innerHTML =
+              `${result.name || ""}님, 회원가입을 축하드립니다 🎉<br>잠시 후 로그인 화면으로 이동합니다...`;
             document.getElementById("registerModal").style.display = "block";
 
             // ✅ 자동 이동 (1.5초 후)
