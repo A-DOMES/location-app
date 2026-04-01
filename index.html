@@ -144,42 +144,50 @@
   <script>
     const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec";
 
-    function login() {
-      const id = document.getElementById("id").value.trim();
-      const pw = document.getElementById("pw").value.trim();
-    
-      if (!id || !pw) {
-        alert("⚠️ 아이디와 비밀번호를 입력하세요.");
-        return;
-      }
-    
-      fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-        .then(response => response.json())
-        .then(result => {
-          if (result.result === "success") {
-            document.getElementById("loginModal").style.display = "block";
-            sessionStorage.setItem("loggedIn", "true");
-            sessionStorage.setItem("role", result.role);
-            sessionStorage.setItem("userId", id);
-            sessionStorage.setItem("token", result.token);
-
-            setTimeout(() => {
-              if (result.role === "AD") {
-                window.location.href = "https://a-domes.github.io/location-pwa/admin.html";
-              } else if (result.role === "RU") {
-                window.location.href = "https://a-domes.github.io/location-app/user.html";
-              }
-            }, 1500);
-          } else if (result.result === "blocked") {
-            alert("🚫 계정이 비활성화되었습니다. 관리자에게 문의하세요.");
-          } else {
-            alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
-          }
-        })
-        .catch(error => {
-          alert("❌ 서버 오류: " + error.message);
-        });
+  function login() {
+    const id = document.getElementById("id").value.trim();
+    const pw = document.getElementById("pw").value.trim();
+  
+    if (!id || !pw) {
+      alert("⚠️ 아이디와 비밀번호를 입력하세요.");
+      return;
     }
+  
+    // ✅ 로그인 대기 모달창 띄우기
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "block";
+    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+  
+    fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+      .then(response => response.json())
+      .then(result => {
+        if (result.result === "success") {
+          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+          sessionStorage.setItem("loggedIn", "true");
+          sessionStorage.setItem("role", result.role);
+          sessionStorage.setItem("userId", id);
+          sessionStorage.setItem("token", result.token);
+  
+          setTimeout(() => {
+            if (result.role === "AD") {
+              window.location.href = "admin.html";
+            } else if (result.role === "RU") {
+              window.location.href = "user.html";
+            }
+          }, 1500);
+        } else {
+          modal.style.display = "none";
+          alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+        }
+      })
+      .catch(error => {
+        modal.style.display = "none";
+        alert("❌ 서버 오류: " + error.message);
+      });
+  }
+
 
     function goRegister() {
       window.location.href = "registerUser.html";
