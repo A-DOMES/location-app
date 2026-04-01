@@ -23,6 +23,7 @@
       font-weight: bold;
     }
 
+    /* ✅ 현재 좌표 모달창 (드래그 가능) */
     #locationBox {
       position: absolute;
       top: 80px;
@@ -35,7 +36,8 @@
       color: #333;
       text-align: right;
       min-width: 220px;
-      z-index: 9999;   /* ✅ 지도보다 항상 위에 보이도록 */
+      z-index: 9999;
+      cursor: move; /* 드래그 가능 표시 */
     }
 
     #locationBox span {
@@ -73,6 +75,25 @@
       width: 100%;
       height: 100vh;
     }
+
+    /* ✅ 현재 위치 공유 안내 팝업 */
+    #popupMessage {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(25, 118, 210, 0.95);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.5s ease, top 2s ease; /* 페이드인/아웃 + 위로 이동 */
+    }
   </style>
 </head>
 
@@ -87,8 +108,40 @@
 
   <div id="map"></div>
 
+  <!-- ✅ 안내 팝업 -->
+  <div id="popupMessage">
+    📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.
+  </div>
+
+  <!-- ✅ 효과음 -->
+  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+
+
 <script>
   let map, marker, currentLat, currentLng;
+
+  // ✅ 좌표 모달창 드래그 가능하게
+  function makeDraggable(element) {
+    let offsetX = 0, offsetY = 0, isDown = false;
+
+    element.addEventListener('mousedown', (e) => {
+      isDown = true;
+      offsetX = e.clientX - element.offsetLeft;
+      offsetY = e.clientY - element.offsetTop;
+    });
+
+    document.addEventListener('mouseup', () => isDown = false);
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDown) {
+        element.style.left = (e.clientX - offsetX) + 'px';
+        element.style.top = (e.clientY - offsetY) + 'px';
+        element.style.right = ''; // 기본 우측정렬 해제
+      }
+    });
+  }
+
+  makeDraggable(document.getElementById("locationBox"));
 
   function updateLocation() {
     if (!navigator.geolocation) {
@@ -105,7 +158,6 @@
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 
-        // ✅ 우측 상단 박스에 좌표와 시간 표시
         document.getElementById("locationBox").innerHTML =
           `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span>
            <small>갱신 시간: ${timeString}</small>
@@ -117,7 +169,7 @@
           map = new google.maps.Map(document.getElementById("map"), {
             center: latlng,
             zoom: 13,
-            gestureHandling: "greedy"   // ✅ Ctrl 없이 마우스 휠 확대/축소 가능
+            gestureHandling: "greedy"
           });
         }
 
@@ -134,7 +186,6 @@
 
         map.setCenter(latlng);
 
-        // ✅ 모달창 대신 locationBox만 갱신
         document.getElementById("shareBtn").onclick = sendLocation;
       },
       function(err) {
@@ -150,6 +201,7 @@
       return;
     }
 
+    // 서버 공유 처리
     await fetch("https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec", {
       method: "POST",
       body: JSON.stringify({
@@ -161,28 +213,33 @@
       })
     });
 
-    const btn = document.getElementById("shareBtn");
-    btn.style.background = "#2e7d32";
-    btn.innerText = "공유 완료 ✅";
+    // ✅ 안내 팝업 표시
+    const popup = document.getElementById("popupMessage");
+    popup.style.display = "block";
+    popup.style.opacity = "0";
+    popup.style.top = "20px";
 
-    const box = document.getElementById("locationBox");
-    const msg = document.createElement("small");
-    msg.style.color = "#2e7d32";
-    msg.innerText = "서버에 위치가 공유되었습니다!";
-    box.appendChild(msg);
+    document.getElementById("notifySound").play();
 
     setTimeout(() => {
-      msg.remove();
-      btn.style.background = "#1976d2";
-      btn.innerText = "현재 위치 공유";
-    }, 5000);
+      popup.style.opacity = "1"; // 페이드인
+    }, 10);
+
+    // ✅ 3초 후 페이드아웃 시작 → 5초에 완전히 사라짐
+    setTimeout(() => {
+      popup.style.opacity = "0";
+      popup.style.top = "0px";
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 2000);
+    }, 3000);
   }
 
   window.onload = () => {
     updateLocation();
-    setInterval(updateLocation, 300000); // ✅ 5분마다 위치 갱신
+    setInterval(updateLocation, 300000);
   };
 </script>
-
 </body>
 </html>
+  
