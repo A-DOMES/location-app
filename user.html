@@ -100,6 +100,10 @@
       <div class="inner-group">
         <input type="text" name="phone" id="phone" placeholder="전화번호 또는 이름 입력">
         <div class="button-group">
+          <!-- ✅ 지도 버튼 추가 -->
+          <a href="client.html" target="_blank">
+            <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+          </a>
           <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
         </div>
@@ -111,6 +115,7 @@
   
   <!-- config.js 불러오기 -->
   <script src="config.js"></script>
+
 
   
 <script>
@@ -135,7 +140,7 @@
   function sendLocation() {
     showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
 
-    const userUrl = CONFIG.USER_URL;   // ✅ 사용자 서버 URL (config.js에서 불러옴)
+    const userUrl = CONFIG.USER_URL;   // ✅ 사용자 서버 URL
     const callbackName = "jsonpCallback_" + Date.now();
 
     window[callbackName] = function(result) {
@@ -198,17 +203,9 @@
     navigator.geolocation.getCurrentPosition(function(position) {
       const newPos = { lat: position.coords.latitude, lng: position.coords.longitude };
 
-      // ✅ 마커 위치 갱신
-      if (window.carMarker) {
-        window.carMarker.position = newPos;
-      }
+      if (window.carMarker) window.carMarker.position = newPos;
+      if (window.map) window.map.setCenter(newPos);
 
-      // ✅ 지도 중심 이동
-      if (window.map) {
-        window.map.setCenter(newPos);
-      }
-
-      // ✅ 서버 자동 전송
       const callbackName = "jsonpAuto_" + Date.now();
       window[callbackName] = function(result) {
         console.log("[DEBUG] autoUpdate 응답:", result);
@@ -244,16 +241,13 @@
 
   function initMap() {
     if (!navigator.geolocation) return;
-
     navigator.geolocation.getCurrentPosition(function(position) {
       const mapId = getPlatformMapId();
-
       window.map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: position.coords.latitude, lng: position.coords.longitude },
         zoom: 15,
         mapId: mapId
       });
-
       window.carMarker = new google.maps.marker.AdvancedMarkerElement({
         position: { lat: position.coords.latitude, lng: position.coords.longitude },
         map: window.map,
@@ -265,9 +259,7 @@
   window.onload = function() {
     initMap();
     const savedId = sessionStorage.getItem("userId");
-    if (savedId) {
-      document.getElementById("phone").value = savedId;
-    }
+    if (savedId) document.getElementById("phone").value = savedId;
   };
 </script>
 </body>
