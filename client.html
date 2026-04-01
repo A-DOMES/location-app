@@ -80,7 +80,7 @@
     /* ✅ 현재 위치 공유 안내 팝업 */
     #popupMessage {
       position: absolute;
-      top: 20px;
+      top: 50px;                 /* ✅ 상단에서 50% 내려옴 */
       left: 50%;
       transform: translateX(-50%);
       background: rgba(25, 118, 210, 0.95);
@@ -204,13 +204,13 @@
       return;
     }
 
-    const shareUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+    const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
     await navigator.clipboard.writeText(shareUrl);
 
     const popup = document.getElementById("popupMessage");
     popup.style.display = "block";
     popup.style.opacity = "0";
-    popup.style.top = "20px";
+    popup.style.top = "50px";          /* ✅ 상단에서 50% 내려옴 */
 
     document.getElementById("notifySound").play();
 
