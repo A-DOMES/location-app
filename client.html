@@ -77,7 +77,7 @@
 
 <body>
 
-  <header>📍 내 현재 위치</header>
+  <header>📍 A-DOMES | 위치정보시스템</header>
 
   <div id="locationBox">
     위치 정보를 가져오는 중...
@@ -93,12 +93,32 @@
     document.querySelectorAll(".modal").forEach(m => m.remove());
     const modal = document.createElement("div");
     modal.className = "modal";
+    // ✅ 지도 위에 항상 보이도록 z-index 추가
+    modal.style.position = "fixed";
+    modal.style.zIndex = "9999";
+    modal.style.left = "0";
+    modal.style.top = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.backgroundColor = "rgba(0,0,0,0.3)";
+
     const content = document.createElement("div");
     content.className = "modal-content";
+    content.style.background = "#fff";
+    content.style.margin = "20% auto";
+    content.style.padding = "20px";
+    content.style.borderRadius = "12px";
+    content.style.width = "90%";
+    content.style.maxWidth = "400px";
+    content.style.textAlign = "center";
+    content.style.boxShadow = "0 4px 15px rgba(0,0,0,0.3)";
+    content.style.fontSize = "18px";
     content.innerText = message;
+
     modal.appendChild(content);
     document.body.appendChild(modal);
     modal.style.display = "block";
+
     if (autoClose) setTimeout(() => { modal.remove(); }, 2000);
   }
 
@@ -200,6 +220,7 @@
     setInterval(updateLocation, 60000); // 1분마다 위치 갱신
   };
 </script>
+
 
 </body>
 </html>
