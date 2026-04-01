@@ -240,7 +240,9 @@
         center: { lat: position.coords.latitude, lng: position.coords.longitude },
         zoom: 15
       });
-      new google.maps.Marker({
+
+      // ✅ 최신 권장 방식: AdvancedMarkerElement 사용
+      const marker = new google.maps.marker.AdvancedMarkerElement({
         position: { lat: position.coords.latitude, lng: position.coords.longitude },
         map: map,
         title: "현재 위치"
