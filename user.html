@@ -111,7 +111,11 @@
   </form>
 
   <div id="map"></div>
+  
+  <!-- config.js 불러오기 -->
+  <script src="config.js"></script>
 
+  
 <script>
   let intervalId;
 
@@ -207,50 +211,76 @@
     document.body.appendChild(script);
   }
 
-  function autoUpdate() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const callbackName = "jsonpAuto_" + Date.now();
-      window[callbackName] = function(result) {
-        console.log("[DEBUG] autoUpdate 응답:", result);
-      };
-
-      const params = new URLSearchParams();
-      params.append("phone", document.getElementById("phone").value);
-      params.append("status", "정상");
-      params.append("lat", position.coords.latitude || 0);
-      params.append("lng", position.coords.longitude || 0);
-      params.append("time", new Date().toISOString());
-      params.append("auto", "true");
-      params.append("token", sessionStorage.getItem("token"));
-      params.append("callback", callbackName);
-
-      const script = document.createElement("script");
-      script.src = "https://script.google.com/macros/s/AKfycby5VaIp1jOdxVjt1ZJKH31I-Dg8pK5URUIAHaKgbGDAEa6_IO5vCiosjMnpxcd943ekMQ/exec?" + params.toString();
-      document.body.appendChild(script);
-    });
-  }
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
-
-  function initMap() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: position.coords.latitude, lng: position.coords.longitude },
-        zoom: 15
+    function autoUpdate() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const newPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+  
+        // ✅ 마커 위치 갱신
+        if (window.carMarker) {
+          window.carMarker.position = newPos;
+        }
+  
+        // ✅ 지도 중심도 차량 위치로 이동
+        if (window.map) {
+          window.map.setCenter(newPos);
+        }
+  
+        // ✅ 서버 전송 로직 (기존 유지)
+        const callbackName = "jsonpAuto_" + Date.now();
+        window[callbackName] = function(result) {
+          console.log("[DEBUG] autoUpdate 응답:", result);
+        };
+  
+        const params = new URLSearchParams();
+        params.append("phone", document.getElementById("phone").value);
+        params.append("status", "정상");
+        params.append("lat", position.coords.latitude || 0);
+        params.append("lng", position.coords.longitude || 0);
+        params.append("time", new Date().toISOString());
+        params.append("auto", "true");
+        params.append("token", sessionStorage.getItem("token"));
+        params.append("callback", callbackName);
+  
+        const script = document.createElement("script");
+        script.src = "https://script.google.com/macros/s/AKfycby5VaIp1jOdxVjt1ZJKH31I-Dg8pK5URUIAHaKgbGDAEa6_IO5vCiosjMnpxcd943ekMQ/exec?" + params.toString();
+        document.body.appendChild(script);
       });
+    }
+    
+    
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
+      }
 
-      // ✅ 최신 권장 방식: AdvancedMarkerElement 사용
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        position: { lat: position.coords.latitude, lng: position.coords.longitude },
-        map: map,
-        title: "현재 위치"
+    function getPlatformMapId() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes("android")) return CONFIG.mapIds.android;
+      if (ua.includes("iphone") || ua.includes("ipad")) return CONFIG.mapIds.ios;
+      if (ua.includes("chrome") || ua.includes("firefox") || ua.includes("safari")) return CONFIG.mapIds.javascript;
+      return CONFIG.mapIds.fixed;
+    }
+
+    function initMap() {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const mapId = getPlatformMapId();
+
+        window.map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: position.coords.latitude, lng: position.coords.longitude },
+          zoom: 15,
+          mapId: mapId   // ✅ 환경에 맞는 Map ID 적용
+        });
+
+        // ✅ 최신 권장 방식: AdvancedMarkerElement 사용
+        window.carMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat: position.coords.latitude, lng: position.coords.longitude },
+          map: window.map,
+          title: "현재 위치"
+        });
       });
-    });
-  }
+    }
 
   window.onload = function() {
     // ✅ 지도 초기화
