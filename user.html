@@ -91,7 +91,7 @@
 
   <!-- 사용자 서버 URL -->
   <form id="locationForm"
-        action="https://script.google.com/macros/s/AKfycbykXE_6XKWKH3x2Z7OY0aB7JwWdyGsJFGa4vqUMlPe5MXMTeJw9e1f8uMq-vYH5FiUVZw/exec"
+        action="https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec"
         method="POST">
     <div class="center-wrapper">
       <div class="inner-group">
@@ -174,8 +174,8 @@
         params.append("token", loginResult.token);
         params.append("callback", adminCallback);
 
-        const script = document.createElement("script");
-        script.src = "https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec?" + params.toString();
+        const script = document.createElement("script");          /* 관리자 Url */
+        script.src = "https://script.google.com/macros/s/AKfycby5VaIp1jOdxVjt1ZJKH31I-Dg8pK5URUIAHaKgbGDAEa6_IO5vCiosjMnpxcd943ekMQ/exec?" + params.toString();
         document.body.appendChild(script);
       }, function(error) {
         closeModal();
@@ -213,8 +213,8 @@
     params.append("token", sessionStorage.getItem("token"));
     params.append("callback", callbackName);
 
-    const script = document.createElement("script");
-    script.src = "https://script.google.com/macros/s/AKfycbxgZzy49PraiQBvZrYgpCdbdZzo9W12E2SInsRon4GbrcA0kMn6_abl_kO0xbiCAY2jCw/exec?" + params.toString();
+    const script = document.createElement("script");     /* 관리자 Url */
+    script.src = "https://script.google.com/macros/s/AKfycby5VaIp1jOdxVjt1ZJKH31I-Dg8pK5URUIAHaKgbGDAEa6_IO5vCiosjMnpxcd943ekMQ/exec?" + params.toString();
     document.body.appendChild(script);
   }
 
