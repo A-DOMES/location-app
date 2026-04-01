@@ -23,7 +23,7 @@
       font-weight: bold;
     }
 
-    /* ✅ 현재 좌표 모달창 (드래그 가능) */
+    /* ✅ 현재 좌표 모달창 (드래그 가능, 사이즈 고정) */
     #locationBox {
       position: absolute;
       top: 80px;
@@ -37,7 +37,8 @@
       text-align: right;
       min-width: 220px;
       z-index: 9999;
-      cursor: move; /* 드래그 가능 표시 */
+      cursor: move;
+      width: fit-content; /* ✅ 사이즈 고정 */
     }
 
     #locationBox span {
@@ -92,7 +93,7 @@
       display: none;
       z-index: 9999;
       opacity: 0;
-      transition: opacity 0.5s ease, top 2s ease; /* 페이드인/아웃 + 위로 이동 */
+      transition: opacity 0.5s ease, top 2s ease;
     }
   </style>
 </head>
@@ -117,10 +118,11 @@
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
 
+
 <script>
   let map, marker, currentLat, currentLng;
 
-  // ✅ 좌표 모달창 드래그 가능하게
+  // ✅ 좌표 모달창 드래그 가능하게 (사이즈 고정)
   function makeDraggable(element) {
     let offsetX = 0, offsetY = 0, isDown = false;
 
@@ -128,6 +130,7 @@
       isDown = true;
       offsetX = e.clientX - element.offsetLeft;
       offsetY = e.clientY - element.offsetTop;
+      element.style.right = ""; // 우측 고정 해제
     });
 
     document.addEventListener('mouseup', () => isDown = false);
@@ -136,7 +139,6 @@
       if (isDown) {
         element.style.left = (e.clientX - offsetX) + 'px';
         element.style.top = (e.clientY - offsetY) + 'px';
-        element.style.right = ''; // 기본 우측정렬 해제
       }
     });
   }
@@ -186,7 +188,7 @@
 
         map.setCenter(latlng);
 
-        document.getElementById("shareBtn").onclick = sendLocation;
+        document.getElementById("shareBtn").onclick = showPopup;
       },
       function(err) {
         document.getElementById("locationBox").innerHTML =
@@ -195,25 +197,16 @@
     );
   }
 
-  async function sendLocation() {
+  // ✅ 현재 위치 공유 버튼 → 클립보드 복사 + 안내 팝업
+  async function showPopup() {
     if (!currentLat || !currentLng) {
       alert("위치 정보를 먼저 가져와야 합니다.");
       return;
     }
 
-    // 서버 공유 처리
-    await fetch("https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "익명사용자",
-        lat: currentLat,
-        lng: currentLng,
-        status: "정상",
-        time: new Date().toISOString()
-      })
-    });
+    const shareUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+    await navigator.clipboard.writeText(shareUrl);
 
-    // ✅ 안내 팝업 표시
     const popup = document.getElementById("popupMessage");
     popup.style.display = "block";
     popup.style.opacity = "0";
@@ -225,7 +218,7 @@
       popup.style.opacity = "1"; // 페이드인
     }, 10);
 
-    // ✅ 3초 후 페이드아웃 시작 → 5초에 완전히 사라짐
+    // 3초 후 페이드아웃 시작 → 5초에 완전히 사라짐
     setTimeout(() => {
       popup.style.opacity = "0";
       popup.style.top = "0px";
