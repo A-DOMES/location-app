@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>현재 위치 지도</title>
+  <title>내 위치 지도</title>
 
   <!-- 구글 지도 API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"></script>
@@ -10,83 +10,177 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+    }
+
+    header {
+      padding: 15px;
       text-align: center;
-      background: #f9f9f9;
-    }
-
-    /* 제목 */
-    h2 {
-      margin-top: 20px;
-      font-size: 30px;
-      color: #333;
-    }
-
-    /* 현재 위치 텍스트 */
-    #locationText {
-      font-size: 28px;      /* 크게 표시 */
+      background: #1976d2;
+      color: white;
+      font-size: 26px;
       font-weight: bold;
-      color: #d32f2f;       /* 빨간색 */
-      margin: 15px 0;
-      line-height: 1.5;
     }
 
-    /* 지도 영역 */
+    #locationBox {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-size: 18px;
+      color: #333;
+      text-align: right;
+      min-width: 220px;
+    }
+
+    #locationBox span {
+      display: block;
+      font-size: 22px;
+      font-weight: bold;
+      color: #d32f2f;
+      margin-top: 5px;
+    }
+
+    #locationBox small {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    #shareBtn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    #shareBtn:hover {
+      background: #1565c0;
+    }
+
     #map {
       width: 100%;
-      height: 80vh;         /* 화면의 80% 높이 */
-      border-top: 2px solid #ccc;
+      height: 100vh;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>📍 현재 위치</h2>
+  <header>📍 내 현재 위치</header>
 
-  <!-- 현재 위치 텍스트 -->
-  <div id="locationText">위치 정보를 가져오는 중...</div>
+  <div id="locationBox">
+    위치 정보를 가져오는 중...
+    <button id="shareBtn">현재 위치 공유</button>
+  </div>
 
-  <!-- 지도 -->
   <div id="map"></div>
 
   <script>
-    /* 현재 위치 가져오기 */
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {
+    let map, marker, currentLat, currentLng;
 
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        /* 텍스트 표시 */
-        document.getElementById("locationText").innerHTML =
-          `현재 위치:<br><span style="font-size:32px;">${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`;
-
-        /* 지도 표시 */
-        const latlng = { lat, lng };
-
-        const map = new google.maps.Map(document.getElementById("map"), {
-          center: latlng,
-          zoom: 16
-        });
-
-        /* 현재 위치 마커 */
-        new google.maps.Marker({
-          position: latlng,
-          map: map,
-          title: "현재 위치",
-          icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            scaledSize: new google.maps.Size(70, 70)  /* 마커 크기 키움 */
-          }
-        });
-
-      },
-      function(err) {
-        document.getElementById("locationText").innerHTML =
-          "위치 정보를 가져올 수 없습니다: " + err.message;
+    function updateLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById("locationBox").innerHTML =
+          "이 브라우저에서는 위치 정보를 지원하지 않습니다.";
+        return;
       }
-    );
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+
+          const now = new Date();
+          const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+
+          document.getElementById("locationBox").innerHTML =
+            `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span>
+             <small>갱신 시간: ${timeString}</small>
+             <button id="shareBtn">현재 위치 공유</button>`;
+
+          const latlng = { lat: currentLat, lng: currentLng };
+
+          if (!map) {
+            map = new google.maps.Map(document.getElementById("map"), {
+              center: latlng,
+              zoom: 13
+            });
+          }
+
+          if (marker) marker.setMap(null);
+          marker = new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: "내 위치",
+            icon: {
+              url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // ✅ 구글 기본 아이콘
+              scaledSize: new google.maps.Size(70, 70) // ✅ 크기 크게 설정
+            }
+          });
+
+          map.setCenter(latlng);
+
+          // 버튼 이벤트 다시 연결
+          document.getElementById("shareBtn").onclick = sendLocation;
+        },
+        function(err) {
+          document.getElementById("locationBox").innerHTML =
+            "위치 정보를 가져올 수 없습니다: " + err.message;
+        }
+      );
+    }
+
+    async function sendLocation() {
+      if (!currentLat || !currentLng) {
+        alert("위치 정보를 먼저 가져와야 합니다.");
+        return;
+      }
+
+      await fetch("https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "익명사용자",
+          lat: currentLat,
+          lng: currentLng,
+          status: "정상",
+          time: new Date().toISOString()
+        })
+      });
+
+      // 버튼 색상 변경 + 메시지 표시
+      const btn = document.getElementById("shareBtn");
+      btn.style.background = "#2e7d32"; // 초록색
+      btn.innerText = "공유 완료 ✅";
+
+      const box = document.getElementById("locationBox");
+      const msg = document.createElement("small");
+      msg.style.color = "#2e7d32";
+      msg.innerText = "서버에 위치가 공유되었습니다!";
+      box.appendChild(msg);
+
+      // 5초 후 메시지와 버튼 원래 상태로 복원
+      setTimeout(() => {
+        msg.remove();
+        btn.style.background = "#1976d2"; // 원래 파란색 복원
+        btn.innerText = "현재 위치 공유";
+      }, 5000);
+    }
+
+    window.onload = () => {
+      updateLocation();
+      setInterval(updateLocation, 60000); // 1분마다 위치 갱신
+    };
   </script>
 
 </body>
