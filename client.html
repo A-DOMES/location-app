@@ -89,39 +89,6 @@
 <script>
   let map, marker, currentLat, currentLng;
 
-  function showModal(message, autoClose = false) {
-    document.querySelectorAll(".modal").forEach(m => m.remove());
-    const modal = document.createElement("div");
-    modal.className = "modal";
-    // ✅ 지도 위에 항상 보이도록 z-index 추가
-    modal.style.position = "fixed";
-    modal.style.zIndex = "9999";
-    modal.style.left = "0";
-    modal.style.top = "0";
-    modal.style.width = "100%";
-    modal.style.height = "100%";
-    modal.style.backgroundColor = "rgba(0,0,0,0.3)";
-
-    const content = document.createElement("div");
-    content.className = "modal-content";
-    content.style.background = "#fff";
-    content.style.margin = "20% auto";
-    content.style.padding = "20px";
-    content.style.borderRadius = "12px";
-    content.style.width = "90%";
-    content.style.maxWidth = "400px";
-    content.style.textAlign = "center";
-    content.style.boxShadow = "0 4px 15px rgba(0,0,0,0.3)";
-    content.style.fontSize = "18px";
-    content.innerText = message;
-
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-    modal.style.display = "block";
-
-    if (autoClose) setTimeout(() => { modal.remove(); }, 2000);
-  }
-
   function updateLocation() {
     if (!navigator.geolocation) {
       document.getElementById("locationBox").innerHTML =
@@ -137,6 +104,7 @@
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 
+        // ✅ 우측 상단 박스에 좌표와 시간 표시
         document.getElementById("locationBox").innerHTML =
           `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span>
            <small>갱신 시간: ${timeString}</small>
@@ -165,13 +133,7 @@
 
         map.setCenter(latlng);
 
-        // ✅ 지도 로드 후 위도·경도 모달창 띄우기
-        showModal(
-          "현재 위치\n위도: " + currentLat.toFixed(6) +
-          "\n경도: " + currentLng.toFixed(6),
-          true
-        );
-
+        // ✅ 모달창 대신 locationBox만 갱신
         document.getElementById("shareBtn").onclick = sendLocation;
       },
       function(err) {
@@ -217,10 +179,9 @@
 
   window.onload = () => {
     updateLocation();
-    setInterval(updateLocation, 60000); // 1분마다 위치 갱신
+    setInterval(updateLocation, 300000); // ✅ 5분마다 위치 갱신
   };
 </script>
-
 
 </body>
 </html>
