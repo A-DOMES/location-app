@@ -80,8 +80,9 @@
     /* ✅ 현재 위치 공유 안내 팝업 */
     #popupMessage {
       position: absolute;
-      top: 50px;                 /* ✅ 상단에서 50% 내려옴 */
+      top: 80px;                 /* ✅ 상단에서 80% 내려옴 */
       left: 50%;
+      text-align: center;        /* ✅ 텍스트 가운데 정렬 */
       transform: translateX(-50%);
       background: rgba(25, 118, 210, 0.95);
       color: white;
@@ -111,7 +112,7 @@
 
   <!-- ✅ 안내 팝업 -->
   <div id="popupMessage">
-    📍 현재 위치 링크가 복사되었습니다.<br>  원하는 앱에 붙여넣어 공유하세요.
+    📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.
   </div>
 
   <!-- ✅ 효과음 -->
@@ -182,7 +183,7 @@
           title: "내 위치",
           icon: {
             url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            scaledSize: new google.maps.Size(70, 70)
+            scaledSize: new google.maps.Size(100, 100)     // ✅ 크기 확대
           }
         });
 
@@ -210,7 +211,7 @@
     const popup = document.getElementById("popupMessage");
     popup.style.display = "block";
     popup.style.opacity = "0";
-    popup.style.top = "50px";          /* ✅ 상단에서 50% 내려옴 */
+    popup.style.top = "80px";          /* ✅ 상단에서 50% 내려옴 */
 
     document.getElementById("notifySound").play();
 
