@@ -180,13 +180,23 @@ function handleVerifyToken(result) {
   }
 }
 
-// ✅ 배열 응답을 객체로 변환하는 헬퍼
-function parseArrayResponse(arr) {
+// ✅ 배열 응답을 내 phone 기준으로 변환
+function parseArrayResponse(arr, phone) {
   if (!Array.isArray(arr) || arr.length < 2) return null;
   const headers = arr[0];
-  const dataRow = arr[arr.length - 1]; // 최신 행
+  let targetRow = null;
+
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i][0] === phone) { // 첫 번째 열이 phone이라고 가정
+      targetRow = arr[i];
+      break;
+    }
+  }
+
+  if (!targetRow) return null;
+
   const obj = {};
-  headers.forEach((h, i) => { obj[h] = dataRow[i]; });
+  headers.forEach((h, i) => { obj[h] = targetRow[i]; });
   return obj;
 }
 
@@ -219,7 +229,8 @@ function sendLocation() {
 
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답:", result);
-  const dataObj = parseArrayResponse(result);
+  const phone = document.getElementById("phone").value;
+  const dataObj = parseArrayResponse(result, phone);
   closeModal();
   if (dataObj && dataObj.status === "정상") {
     showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
@@ -251,7 +262,8 @@ function stopLocation() {
 
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
-  const dataObj = parseArrayResponse(result);
+  const phone = document.getElementById("phone").value;
+  const dataObj = parseArrayResponse(result, phone);
   closeModal();
   if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
@@ -285,7 +297,8 @@ function autoUpdate() {
 
 function handleAutoUpdate(result) {
   console.log("[DEBUG] autoUpdate 응답:", result);
-  const dataObj = parseArrayResponse(result);
+  const phone = document.getElementById("phone").value;
+  const dataObj = parseArrayResponse(result, phone);
   if (dataObj) {
     console.log("[DEBUG] 최신 데이터:", dataObj);
   }
