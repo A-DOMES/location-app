@@ -144,8 +144,8 @@ window.onload = async function() {
 
   const token = sessionStorage.getItem("token");
   if (!token) {
-    alert("로그인이 필요합니다.");
-    window.location.href = "index.html";
+    showModal("로그인이 필요합니다.\n로그인 페이지로 이동합니다...", true);
+    setTimeout(() => { window.location.href = "index.html"; }, 2000);
     return;
   }
 
@@ -153,12 +153,12 @@ window.onload = async function() {
     const res = await fetch(`${CONFIG.USER_URL}?mode=verifyToken&token=${encodeURIComponent(token)}`);
     const result = await res.json();
     if (result.result !== "success") {
-      alert("토큰이 유효하지 않습니다. 다시 로그인하세요.");
-      window.location.href = "index.html";
+      showModal("토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
+      setTimeout(() => { window.location.href = "index.html"; }, 2000);
     }
   } catch (err) {
-    alert("서버 오류: " + err.message);
-    window.location.href = "index.html";
+    showModal("서버 오류:\n" + err.message, true);
+    setTimeout(() => { window.location.href = "index.html"; }, 2000);
   }
 };
 
