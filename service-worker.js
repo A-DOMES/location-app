@@ -1,7 +1,6 @@
 const CACHE_NAME = "adomes-cache-v1"; 
 // ✅ 캐시 이름을 v4로 바꿔서 새 버전 적용
 
-const CACHE_NAME = "adomes-cache-v1";
 const urlsToCache = [
   "index.html",
   "manifest.json",
