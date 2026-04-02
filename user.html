@@ -139,6 +139,7 @@ function closeModal() {
 
 // ✅ JSONP 호출 헬퍼
 function callJSONP(url, callbackName) {
+  console.log("[DEBUG] JSONP 호출 URL:", url); // URL 전체 확인
   const script = document.createElement("script");
   script.src = url + "&callback=" + callbackName;
   document.body.appendChild(script);
@@ -151,6 +152,8 @@ window.onload = function() {
   document.getElementById("mapBtn").style.display = "none";
 
   const token = sessionStorage.getItem("token");
+  console.log("[DEBUG] 초기 토큰:", token);
+
   if (!token) {
     showModal("로그인이 필요합니다.\n로그인 페이지로 이동합니다...", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
@@ -162,6 +165,7 @@ window.onload = function() {
 };
 
 function handleVerifyToken(result) {
+  console.log("[DEBUG] verifyToken 응답:", result);
   if (result.result !== "success") {
     showModal("토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
@@ -174,8 +178,12 @@ function sendLocation() {
 
   const token = sessionStorage.getItem("token");
   const phone = document.getElementById("phone").value;
+  console.log("[DEBUG] sendLocation phone:", phone);
+  console.log("[DEBUG] sendLocation token:", token);
 
   navigator.geolocation.getCurrentPosition(function(position) {
+    console.log("[DEBUG] 위치 좌표:", position.coords.latitude, position.coords.longitude);
+
     const url = CONFIG.ADMIN_URL +
       "?phone=" + encodeURIComponent(phone) +
       "&status=정상" +
@@ -192,6 +200,7 @@ function sendLocation() {
 }
 
 function handleSendLocation(result) {
+  console.log("[DEBUG] handleSendLocation 응답:", result);
   closeModal();
   if (result.result === "success") {
     showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
@@ -209,6 +218,8 @@ function stopLocation() {
 
   const token = sessionStorage.getItem("token");
   const phone = document.getElementById("phone").value;
+  console.log("[DEBUG] stopLocation phone:", phone);
+  console.log("[DEBUG] stopLocation token:", token);
 
   const url = CONFIG.ADMIN_URL +
     "?phone=" + encodeURIComponent(phone) +
@@ -220,6 +231,7 @@ function stopLocation() {
 }
 
 function handleStopLocation(result) {
+  console.log("[DEBUG] handleStopLocation 응답:", result);
   closeModal();
   if (result.result === "success") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
@@ -233,6 +245,8 @@ function handleStopLocation(result) {
 function autoUpdate() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function(position) {
+    console.log("[DEBUG] autoUpdate 좌표:", position.coords.latitude, position.coords.longitude);
+
     const token = sessionStorage.getItem("token");
     const phone = document.getElementById("phone").value;
 
