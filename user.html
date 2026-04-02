@@ -174,6 +174,9 @@ window.onload = function() {
 
 function handleVerifyToken(result) {
   console.log("[DEBUG] verifyToken 응답:", result);
+  console.log("[DEBUG] verifyToken 응답:", JSON.stringify(result, null, 2));
+console.log("[DEBUG] handleSendLocation 응답:", JSON.stringify(result, null, 2));
+
   if (result.result !== "success") {
     showModal("토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
@@ -184,10 +187,9 @@ function handleVerifyToken(result) {
   
 function parseArrayResponse(arr, phone) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
-  
-  let targetRow = arr.find(row => row["이름/핸드폰번호"] === phone);
-  return targetRow || null;
+  return arr.find(row => row["이름/핸드폰번호"] === phone) || null;
 }
+
 
 
 
@@ -223,15 +225,18 @@ function sendLocation() {
 
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답:", result);
+  console.log("[DEBUG] handleSendLocation 응답(JSON):", JSON.stringify(result, null, 2));
+
   const phone = document.getElementById("phone").value;
   const dataObj = parseArrayResponse(result, phone);
+
   closeModal();
-  if (dataObj && dataObj.status === "정상") {
+  if (dataObj && dataObj["상태"] === "정상") {
     showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
     document.getElementById("mapBtn").style.display = "inline-block";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
-    showModal("위치 전송 실패:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
+    showModal("위치 전송 실패:\n" + (dataObj ? dataObj["상태"] : "응답 오류"), true);
   }
 }
 
