@@ -154,8 +154,7 @@
     };
 
     navigator.geolocation.getCurrentPosition(function(position) {
-      updateCoords(position);  // 좌표 표시 갱신
-
+    
       const params = new URLSearchParams();
       params.append("phone", document.getElementById("phone").value);
       params.append("status", "정상");
