@@ -182,19 +182,13 @@ console.log("[DEBUG] handleSendLocation 응답:", JSON.stringify(result, null, 2
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
   }
 }
-
-
   
 function parseArrayResponse(arr, phone) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
-  return arr.find(row => row["이름/핸드폰번호"] === phone) || null;
+  return arr.find(row => row.phone === phone) || null;
 }
 
-
-
-
-
-
+  
   
 // ✅ 위치 전송
 function sendLocation() {
@@ -224,21 +218,21 @@ function sendLocation() {
 }
 
 function handleSendLocation(result) {
-  console.log("[DEBUG] handleSendLocation 응답:", result);
   console.log("[DEBUG] handleSendLocation 응답(JSON):", JSON.stringify(result, null, 2));
 
   const phone = document.getElementById("phone").value;
   const dataObj = parseArrayResponse(result, phone);
 
   closeModal();
-  if (dataObj && dataObj["상태"] === "정상") {
+  if (dataObj && dataObj.status === "정상") {
     showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
     document.getElementById("mapBtn").style.display = "inline-block";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
-    showModal("위치 전송 실패:\n" + (dataObj ? dataObj["상태"] : "응답 오류"), true);
+    showModal("위치 전송 실패:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
+
 
 // ✅ 위치 해제
 function stopLocation() {
