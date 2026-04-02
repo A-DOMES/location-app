@@ -180,26 +180,26 @@ function handleVerifyToken(result) {
   }
 }
 
+
+  
 // ✅ 배열 응답을 내 phone 기준으로 변환
 function parseArrayResponse(arr, phone) {
-  if (!Array.isArray(arr) || arr.length < 2) return null;
-  const headers = arr[0];
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  
   let targetRow = null;
-
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i][0] === phone) { // 첫 번째 열이 phone이라고 가정
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i]["이름/핸드폰번호"] === phone) {
       targetRow = arr[i];
       break;
     }
   }
-
-  if (!targetRow) return null;
-
-  const obj = {};
-  headers.forEach((h, i) => { obj[h] = targetRow[i]; });
-  return obj;
+  
+  return targetRow; // 객체 그대로 반환
 }
 
+
+
+  
 // ✅ 위치 전송
 function sendLocation() {
   showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
