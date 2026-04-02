@@ -137,21 +137,19 @@ function closeModal() {
   document.querySelectorAll(".modal").forEach(m => m.remove());
 }
 
-// ✅ JSONP 호출 헬퍼 (강화 버전)
+// ✅ JSONP 호출 헬퍼
 function callJSONP(url, callbackName) {
   const finalUrl = url + "&callback=" + callbackName;
   console.log("[DEBUG] JSONP 호출 URL:", finalUrl);
 
   const script = document.createElement("script");
   script.src = finalUrl;
-
   script.onload = function() {
     console.log("[DEBUG] JSONP 스크립트 로드 성공:", finalUrl);
   };
   script.onerror = function() {
     console.error("[DEBUG] JSONP 스크립트 로드 실패:", finalUrl);
   };
-
   document.body.appendChild(script);
 }
 
@@ -180,6 +178,16 @@ function handleVerifyToken(result) {
     showModal("토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
   }
+}
+
+// ✅ 배열 응답을 객체로 변환하는 헬퍼
+function parseArrayResponse(arr) {
+  if (!Array.isArray(arr) || arr.length < 2) return null;
+  const headers = arr[0];
+  const dataRow = arr[arr.length - 1]; // 최신 행
+  const obj = {};
+  headers.forEach((h, i) => { obj[h] = dataRow[i]; });
+  return obj;
 }
 
 // ✅ 위치 전송
@@ -211,13 +219,14 @@ function sendLocation() {
 
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답:", result);
+  const dataObj = parseArrayResponse(result);
   closeModal();
-  if (result.result === "success") {
+  if (dataObj && dataObj.status === "정상") {
     showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
     document.getElementById("mapBtn").style.display = "inline-block";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
-    showModal("위치 전송 실패:\n" + (result.message || ""), true);
+    showModal("위치 전송 실패:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
 
@@ -242,12 +251,13 @@ function stopLocation() {
 
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
+  const dataObj = parseArrayResponse(result);
   closeModal();
-  if (result.result === "success") {
+  if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
     document.getElementById("mapBtn").style.display = "none";
   } else {
-    showModal("처리 중 오류 발생:\n" + result.message, true);
+    showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
 
@@ -275,6 +285,10 @@ function autoUpdate() {
 
 function handleAutoUpdate(result) {
   console.log("[DEBUG] autoUpdate 응답:", result);
+  const dataObj = parseArrayResponse(result);
+  if (dataObj) {
+    console.log("[DEBUG] 최신 데이터:", dataObj);
+  }
 }
 
 // ✅ 서비스워커 등록
