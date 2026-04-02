@@ -137,11 +137,21 @@ function closeModal() {
   document.querySelectorAll(".modal").forEach(m => m.remove());
 }
 
-// ✅ JSONP 호출 헬퍼
+// ✅ JSONP 호출 헬퍼 (강화 버전)
 function callJSONP(url, callbackName) {
-  console.log("[DEBUG] JSONP 호출 URL:", url); // URL 전체 확인
+  const finalUrl = url + "&callback=" + callbackName;
+  console.log("[DEBUG] JSONP 호출 URL:", finalUrl);
+
   const script = document.createElement("script");
-  script.src = url + "&callback=" + callbackName;
+  script.src = finalUrl;
+
+  script.onload = function() {
+    console.log("[DEBUG] JSONP 스크립트 로드 성공:", finalUrl);
+  };
+  script.onerror = function() {
+    console.error("[DEBUG] JSONP 스크립트 로드 실패:", finalUrl);
+  };
+
   document.body.appendChild(script);
 }
 
