@@ -136,42 +136,62 @@
     document.querySelectorAll(".modal").forEach(m => m.remove());
   }
 
-  // ✅ 위치 전송 (관리자 서버 호출)
+  // ✅ 위치 전송 (사용자 서버 → 관리자 서버)
   function sendLocation() {
     showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
 
+    const userUrl = CONFIG.USER_URL;
     const adminUrl = CONFIG.ADMIN_URL;
-    const callbackName = "jsonpAdmin_" + Date.now();
+    const verifyCallback = "jsonpVerify_" + Date.now();
 
-    window[callbackName] = function(result) {
-      closeModal();
-      if (result.result === "success") {
-        showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
-        document.getElementById("mapBtn").style.display = "inline-block"; // 지도 버튼 표시
-        if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
-      } else {
-        showModal("위치 전송 실패:\n" + (result.message || ""), true);
+    // 1️⃣ 사용자 서버에서 토큰 검증
+    window[verifyCallback] = function(verifyResult) {
+      if (verifyResult.result !== "success") {
+        closeModal();
+        showModal("사용자 인증 실패:\n" + (verifyResult.message || ""), true);
+        delete window[verifyCallback];
+        return;
       }
-      delete window[callbackName];
+
+      const token = sessionStorage.getItem("token");
+
+      // 2️⃣ 관리자 서버 호출
+      const adminCallback = "jsonpAdmin_" + Date.now();
+      window[adminCallback] = function(result) {
+        closeModal();
+        if (result.result === "success") {
+          showModal("✅ 위치정보가 성공적으로 기록되었습니다.", true);
+          document.getElementById("mapBtn").style.display = "inline-block";
+          if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
+        } else {
+          showModal("위치 전송 실패:\n" + (result.message || ""), true);
+        }
+        delete window[adminCallback];
+      };
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const params = new URLSearchParams();
+        params.append("phone", document.getElementById("phone").value);
+        params.append("status", "정상");
+        params.append("lat", position.coords.latitude || 0);
+        params.append("lng", position.coords.longitude || 0);
+        params.append("time", new Date().toISOString());
+        params.append("token", token);
+        params.append("callback", adminCallback);
+
+        const script = document.createElement("script");
+        script.src = adminUrl + "?" + params.toString();
+        document.body.appendChild(script);
+      }, function(error) {
+        closeModal();
+        showModal("위치 정보를 가져오지 못했습니다:\n" + error.message, true);
+      });
     };
 
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const params = new URLSearchParams();
-      params.append("phone", document.getElementById("phone").value);
-      params.append("status", "정상");
-      params.append("lat", position.coords.latitude || 0);
-      params.append("lng", position.coords.longitude || 0);
-      params.append("time", new Date().toISOString());
-      params.append("token", sessionStorage.getItem("token"));
-      params.append("callback", callbackName);
-
-      const script = document.createElement("script");
-      script.src = adminUrl + "?" + params.toString();
-      document.body.appendChild(script);
-    }, function(error) {
-      closeModal();
-      showModal("위치 정보를 가져오지 못했습니다:\n" + error.message, true);
-    });
+    // 사용자 서버에 토큰 검증 요청
+    const script = document.createElement("script");
+    script.src = `${userUrl}?mode=verifyToken&token=${sessionStorage.getItem("token")}&callback=${verifyCallback}`;
+    document.body.appendChild(script);
   }
 
   // ✅ 위치 해제 (관리자 서버 호출)
@@ -184,7 +204,7 @@
       closeModal();
       if (result.result === "success") {
         showModal("🛑 위치정보가 해제되었습니다.", true);
-        document.getElementById("mapBtn").style.display = "none"; // 지도 버튼 숨김
+        document.getElementById("mapBtn").style.display = "none";
       } else {
         showModal("처리 중 오류 발생:\n" + result.message, true);
       }
@@ -236,8 +256,9 @@
   window.onload = function() {
     const savedId = sessionStorage.getItem("userId");
     if (savedId) document.getElementById("phone").value = savedId;
-    document.getElementById("mapBtn").style.display = "none"; // 로그인 직후 버튼 숨김
+    document.getElementById("mapBtn").style.display = "none";
   };
 </script>
 </body>
 </html>
+
