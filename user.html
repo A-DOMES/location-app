@@ -182,23 +182,13 @@ function handleVerifyToken(result) {
 
 
   
-function parseArrayResponse(arr, phone, headers) {
+function parseArrayResponse(arr, phone) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
   
-  let targetRow = null;
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i][1] === phone) { // B열(phone) 기준
-      targetRow = arr[i];
-      break;
-    }
-  }
-  
-  if (!targetRow) return null;
-  
-  const obj = {};
-  headers.forEach((h, i) => { obj[h] = targetRow[i]; });
-  return obj;
+  let targetRow = arr.find(row => row["이름/핸드폰번호"] === phone);
+  return targetRow || null;
 }
+
 
 
 
