@@ -52,7 +52,13 @@
     }
     .login-box label i {
       margin-right: 8px;
-      color: #2c3e50; /* 아이콘 색상: 라벨 글자색과 동일 */
+      vertical-align: middle;
+    }
+    .user-icon {
+      color: #3498db; /* 파란색 사용자 아이콘 */
+    }
+    .lock-icon {
+      color: #27ae60; /* 초록색 자물쇠 아이콘 */
     }
     .login-box input {
       width: 100%;
@@ -142,10 +148,10 @@
 
     <!-- 입력 그룹 -->
     <div class="form-section input-group">
-      <label for="id"><i class="fa fa-user"></i> 아이디</label>
+      <label for="id"><i class="fa fa-user user-icon"></i> 아이디</label>
       <input type="text" id="id" placeholder="아이디를 입력하세요">
 
-      <label for="pw"><i class="fa fa-lock"></i> 비밀번호</label>
+      <label for="pw"><i class="fa fa-lock lock-icon"></i> 비밀번호</label>
       <input type="password" id="pw" placeholder="비밀번호를 입력하세요">
     </div>
 
@@ -165,6 +171,8 @@
       <p>잠시 후 이동합니다...</p>
     </div>
   </div>
+</body>
+</html>
 
 
   <script>
