@@ -149,6 +149,20 @@ function callJSONP(url, callbackName) {
   document.body.appendChild(script);
 }
 
+function handleLogin(result) {
+  if (result.result === "success") {
+    // ✅ 닉네임(F열 값)을 세션에 저장
+    sessionStorage.setItem("nickname", result.name);
+    sessionStorage.setItem("userId", result.id);     // 아이디도 저장
+    sessionStorage.setItem("token", result.token);   // 토큰 저장
+
+    // 이후 페이지 이동
+    window.location.href = "user.html";
+  } else {
+    showModal("로그인 실패: " + result.result, true);
+  }
+}
+  
 // ✅ 페이지 로드 시 토큰 검증
 window.onload = function() {
   const savedId = sessionStorage.getItem("userId");    // 사용자 ID
