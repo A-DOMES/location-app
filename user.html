@@ -153,7 +153,9 @@ function callJSONP(url, callbackName) {
 window.onload = function() {
   const savedId = sessionStorage.getItem("userId");
   if (savedId) document.getElementById("phone").value = savedId;
-  document.getElementById("mapBtn").style.display = "none";
+  // 기존: document.getElementById("mapBtn").style.display = "none";
+  // 수정: 자리 유지하면서 숨기기
+  document.getElementById("mapBtn").style.visibility = "hidden";
 
   const token = sessionStorage.getItem("token");
   console.log("[DEBUG] 초기 토큰:", token);
@@ -230,7 +232,9 @@ function handleSendLocation(result) {
   } else {
     // 새 행 추가
     showModal("✅ 위치정보를 서버에 저장하였습니다.", true);
-    document.getElementById("mapBtn").style.display = "inline-block";
+    // 기존: document.getElementById("mapBtn").style.display = "inline-block";
+    // 수정: 숨김 해제
+    document.getElementById("mapBtn").style.visibility = "visible";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   }
 }
