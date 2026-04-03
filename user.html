@@ -151,8 +151,24 @@ function callJSONP(url, callbackName) {
 
 // ✅ 페이지 로드 시 토큰 검증
 window.onload = function() {
-  const savedId = sessionStorage.getItem("userId");
-  if (savedId) document.getElementById("phone").value = savedId;
+  const savedId = sessionStorage.getItem("userId");    // 사용자 ID
+  const nickname = sessionStorage.getItem("nickname"); // 닉네임(F열 값)
+  // ============================
+  // 표시 방법 선택
+  // ============================
+
+  // ① 아이디만 표시
+  // if (savedId) {document.getElementById("phone").value = savedId;
+  // }
+
+  // ② 닉네임만 표시 (현재 활성화)
+  if (nickname) {document.getElementById("phone").value = nickname;
+  }
+
+  // ③ 닉네임 + 아이디 같이 표시
+  // if (nickname && savedId) {document.getElementById("phone").value = nickname + " (" + savedId + ")";
+  // }
+  
   // 기존: document.getElementById("mapBtn").style.display = "none";
   // 수정: 자리 유지하면서 숨기기
   document.getElementById("mapBtn").style.visibility = "hidden";
