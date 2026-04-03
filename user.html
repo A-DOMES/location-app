@@ -187,26 +187,33 @@ function sendLocation() {
 
   const token = sessionStorage.getItem("token");
   const phone = document.getElementById("phone").value;
-  console.log("[DEBUG] sendLocation phone:", phone);
-  console.log("[DEBUG] sendLocation token:", token);
 
   navigator.geolocation.getCurrentPosition(function(position) {
-    console.log("[DEBUG] 위치 좌표:", position.coords.latitude, position.coords.longitude);
+    const params = new URLSearchParams({
+      phone: phone,
+      status: "정상",
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      time: new Date().toISOString(),
+      token: token
+    });
 
-    const url = CONFIG.ADMIN_URL +
-      "?phone=" + encodeURIComponent(phone) +
-      "&status=정상" +
-      "&lat=" + encodeURIComponent(position.coords.latitude) +
-      "&lng=" + encodeURIComponent(position.coords.longitude) +
-      "&time=" + encodeURIComponent(new Date().toISOString()) +
-      "&token=" + encodeURIComponent(token);
-
-    callJSONP(url, "handleSendLocation");
+    fetch(CONFIG.ADMIN_URL, {
+      method: "POST",
+      body: params
+    })
+    .then(res => res.json())
+    .then(result => handleSendLocation(result))
+    .catch(err => {
+      closeModal();
+      showModal("전송 오류: " + err.message, true);
+    });
   }, function(error) {
     closeModal();
     showModal("위치 정보를 가져오지 못했습니다:\n" + error.message, true);
   });
 }
+
 
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답(JSON):", JSON.stringify(result, null, 2));
