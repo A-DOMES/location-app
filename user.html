@@ -229,7 +229,7 @@ function handleSendLocation(result) {
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
     // 새 행 추가
-    showModal("✅ 입력자료를 서버에 저장하였습니다.", true);
+    showModal("✅ 위치정보를 서버에 저장하였습니다.", true);
     document.getElementById("mapBtn").style.display = "inline-block";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   }
