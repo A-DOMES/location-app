@@ -175,6 +175,9 @@
   </html>
 
 
+<!-- config.js 불러오기 -->
+<script src="config.js"></script>
+
 <script>
   // ✅ config.js에서 사용자 서버 URL 가져오기
   const USER_API_URL = CONFIG.USER_URL;
@@ -188,13 +191,11 @@
       return;
     }
 
-    // 📌 로그인 대기 모달창 띄우기
     const modal = document.getElementById("loginModal");
     modal.style.display = "block";
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ 사용자 서버로 로그인 요청 (POST)
     fetch(USER_API_URL, {
       method: "POST",
       body: new URLSearchParams({ mode: "checkPassword", id, pw })
@@ -231,12 +232,10 @@
       });
   }
 
-  // 📌 회원가입 페이지 이동
   function goRegister() {
     window.location.href = "registerUser.html";
   }
 
-  // ✅ 전역 바인딩
   window.login = login;
   window.goRegister = goRegister;
 </script>
