@@ -18,3 +18,12 @@ const CONFIG = {
     fixed: "5bd2daaa37ebfc3f466d5e4c"
   },
 };
+
+  // ✅ 개별 export (index.html, client.js 등에서 import 가능)
+  export const ADMIN_API_URL = CONFIG.ADMIN_URL;   // 클라이언트가 호출할 관리자 서버 URL
+  export const USER_API_URL = CONFIG.USER_URL;     // 관리자 서버 내부에서 호출할 사용자 서버 URL
+  export const DEFAULT_CENTER = { lat: 36.5, lng: 127.5 }; // 대한민국 중앙 좌표
+  export const DEFAULT_INTERVAL = 300000; // 5분 (밀리초)
+
+  // ✅ 필요하다면 CONFIG 전체도 export 가능
+  export default CONFIG;
