@@ -164,68 +164,82 @@
     <div id="message"></div>
   </div>
 
-  <!-- 로그인 성공 모달 -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h2>✅ 로그인 성공!</h2>
-      <p>잠시 후 이동합니다...</p>
+    <!-- 로그인 성공 모달 -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <h2>✅ 로그인 성공!</h2>
+        <p>잠시 후 이동합니다...</p>
+      </div>
     </div>
-  </div>
-</body>
-</html>
+  </body>
+  </html>
 
 
-  <script>
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyZLHG8TJYXdlvFacENYfFgW5tPPJ9XK0NznDQSxT9tTWAFPcmJshp2Ap8OQyNTf3zDLA/exec";
-
-  function login() {
-    const id = document.getElementById("id").value.trim();
-    const pw = document.getElementById("pw").value.trim();
-  
-    if (!id || !pw) {
-      alert("⚠️ 아이디와 비밀번호를 입력하세요.");
-      return;
-    }
-  
-    // ✅ 로그인 대기 모달창 띄우기
-    const modal = document.getElementById("loginModal");
-    modal.style.display = "block";
-    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
-    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
-  
-    fetch(`${WEBAPP_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-      .then(response => response.json())
-      .then(result => {
-        if (result.result === "success") {
-          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-          sessionStorage.setItem("loggedIn", "true");
-          sessionStorage.setItem("role", result.role);
-          sessionStorage.setItem("userId", id);
-          sessionStorage.setItem("token", result.token);
-  
-          setTimeout(() => {
-            if (result.role === "AD") {
-              window.location.href = "admin.html";
-            } else if (result.role === "RU") {
-              window.location.href = "user.html";
-            }
-          }, 1500);
-        } else {
-          modal.style.display = "none";
-          alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+    <script type="module">
+      // ✅ config.js에서 사용자 서버 URL 가져오기
+      import { USER_API_URL } from "./config.js";
+    
+      function login() {
+        const id = document.getElementById("id").value.trim();
+        const pw = document.getElementById("pw").value.trim();
+      
+        if (!id || !pw) {
+          alert("⚠️ 아이디와 비밀번호를 입력하세요.");
+          return;
         }
-      })
-      .catch(error => {
-        modal.style.display = "none";
-        alert("❌ 서버 오류: " + error.message);
-      });
-  }
+      
+        // 📌 로그인 대기 모달창 띄우기
+        const modal = document.getElementById("loginModal");
+        modal.style.display = "block";
+        modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+        modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+      
+        // ✅ 사용자 서버로 로그인 요청
+        fetch(USER_API_URL, {
+          method: "POST",
+          body: new URLSearchParams({ mode: "checkPassword", id, pw })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.result === "success" && result.status === "active") {
+              modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+              modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+              
+              sessionStorage.setItem("loggedIn", "true");
+              sessionStorage.setItem("role", result.role);
+              sessionStorage.setItem("userId", id);
+              sessionStorage.setItem("token", result.token);
+      
+              setTimeout(() => {
+                if (result.role === "AD") {
+                  window.location.href = "admin.html";
+                } else if (result.role === "RU") {
+                  window.location.href = "user.html";
+                }
+              }, 1500);
+            } else if (result.status === "blocked") {
+              modal.style.display = "none";
+              alert("🚫 계정이 비활성화되었습니다.");
+            } else {
+              modal.style.display = "none";
+              alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+            }
+          })
+          .catch(error => {
+            modal.style.display = "none";
+            alert("❌ 서버 오류: " + error.message);
+          });
+      }
+    
+      // 📌 회원가입 페이지 이동
+      function goRegister() {
+        window.location.href = "registerUser.html";
+      }
+    
+      // ✅ 전역 바인딩
+      window.login = login;
+      window.goRegister = goRegister;
+    </script>
 
-
-    function goRegister() {
-      window.location.href = "registerUser.html";
-    }
-  </script>
 </body>
 </html>
