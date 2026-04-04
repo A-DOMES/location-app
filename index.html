@@ -175,9 +175,9 @@
   </html>
 
 
-<script type="module">
+<script>
   // ✅ config.js에서 사용자 서버 URL 가져오기
-  import { USER_API_URL } from "./config.js";
+  const USER_API_URL = CONFIG.USER_URL;
 
   function login() {
     const id = document.getElementById("id").value.trim();
@@ -242,4 +242,3 @@
 </script>
 </body>
 </html>
-
