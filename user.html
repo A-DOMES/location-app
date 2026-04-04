@@ -87,35 +87,31 @@
     <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
   </section>
 
-  <!-- ✅ 사용자 입력창 -->
-  <form id="locationForm"
-        action="https://script.google.com/macros/s/AKfycbwvx9cEQUrcSmMBzRAZpXScv0bs5cSDRnTZNEPTCPniV7v_sPG2hfG6mpy4ZyiztAM_5g/exec"
-        method="POST">
-    <div class="center-wrapper">
-      <div class="inner-group">
-        <input type="text" name="phone" id="phone" placeholder=" 회원가입 닉네임 또는 아이디를 입력하세요">
-        <div class="button-group">
-          <!-- ✅ 지도 버튼: 기본은 숨김 상태, id="mapBtn"으로 스크립트에서 제어 -->
-          <!-- 위치정보 전송 성공 시에만 나타나고, 해제 시 다시 사라지도록 처리 -->
-          <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
-            <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-          </a>
-        
-          <!-- ✅ 위치 전송 버튼 -->
-          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-        
-          <!-- ✅ 위치정보 해제 버튼 -->
-          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-        </div>
+<!-- ✅ 사용자 입력창 -->
+<form id="locationForm"
+      action="https://script.google.com/macros/s/AKfycbwvx9cEQUrcSmMBzRAZpXScv0bs5cSDRnTZNEPTCPniV7v_sPG2hfG6mpy4ZyiztAM_5g/exec"
+      method="POST">
+  <div class="center-wrapper">
+    <div class="inner-group">
+      <input type="text" name="phone" id="phone" placeholder=" 회원가입 닉네임 또는 아이디를 입력하세요">
+      <div class="button-group">
+        <!-- ✅ 지도 버튼 -->
+        <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
+          <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+        </a>
+        <!-- ✅ 위치 전송 버튼 -->
+        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+        <!-- ✅ 위치정보 해제 버튼 -->
+        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </div>
     </div>
-  </form>
+  </div>
+</form>
 
-  <div id="map"></div>
-  
-  <!-- config.js 불러오기 -->
-  <script src="config.js"></script>
+<div id="map"></div>
 
+<!-- config.js 불러오기 -->
+<script src="config.js"></script>
 
 <script>
 let intervalId;
@@ -304,3 +300,4 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
+
