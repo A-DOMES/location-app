@@ -137,24 +137,10 @@ function closeModal() {
   document.querySelectorAll(".modal").forEach(m => m.remove());
 }
 
-// ✅ JSONP 호출 헬퍼
-function callJSONP(url, callbackName) {
-  const finalUrl = url + "&callback=" + callbackName;
-  console.log("[DEBUG] JSONP 호출 URL:", finalUrl);
-
-  const script = document.createElement("script");
-  script.src = finalUrl;
-  script.onload = () => console.log("[DEBUG] JSONP 스크립트 로드 성공:", finalUrl);
-  script.onerror = () => console.error("[DEBUG] JSONP 스크립트 로드 실패:", finalUrl);
-  document.body.appendChild(script);
-}
-
 // ✅ 페이지 로드 시 토큰 검증
 window.onload = function() {
-  // const savedId = sessionStorage.getItem("userId");
+  const savedId = sessionStorage.getItem("userId");
   if (savedId) document.getElementById("phone").value = savedId;
-  // 기존: document.getElementById("mapBtn").style.display = "none";
-  // 수정: 자리 유지하면서 숨기기
   document.getElementById("mapBtn").style.visibility = "hidden";
 
   const token = sessionStorage.getItem("token");
@@ -167,7 +153,13 @@ window.onload = function() {
   }
 
   const verifyUrl = CONFIG.USER_URL + "?mode=verifyToken&token=" + encodeURIComponent(token);
-  callJSONP(verifyUrl, "handleVerifyToken");
+  fetch(verifyUrl)
+    .then(res => res.json())
+    .then(handleVerifyToken)
+    .catch(err => {
+      showModal("토큰 검증 오류: " + err.message, true);
+      setTimeout(() => { window.location.href = "index.html"; }, 2000);
+    });
 };
 
 function handleVerifyToken(result) {
@@ -216,7 +208,6 @@ function sendLocation() {
   });
 }
 
-
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답(JSON):", JSON.stringify(result, null, 2));
 
@@ -225,15 +216,11 @@ function handleSendLocation(result) {
 
   closeModal();
   if (dataObj && dataObj.status === "정상") {
-    // 기존 행 갱신
     showModal("✅ 위치정보가 성공적으로 재갱신되었습니다.", true);
     document.getElementById("mapBtn").style.display = "inline-block";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
-    // 새 행 추가
     showModal("✅ 위치정보를 서버에 저장하였습니다.", true);
-    // 기존: document.getElementById("mapBtn").style.display = "inline-block";
-    // 수정: 숨김 해제
     document.getElementById("mapBtn").style.visibility = "visible";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   }
@@ -246,8 +233,6 @@ function stopLocation() {
 
   const token = sessionStorage.getItem("token");
   const phone = document.getElementById("phone").value;
-  console.log("[DEBUG] stopLocation phone:", phone);
-  console.log("[DEBUG] stopLocation token:", token);
 
   const url = CONFIG.ADMIN_URL +
     "?phone=" + encodeURIComponent(phone) +
@@ -255,7 +240,13 @@ function stopLocation() {
     "&time=" + encodeURIComponent(new Date().toISOString()) +
     "&token=" + encodeURIComponent(token);
 
-  callJSONP(url, "handleStopLocation");
+  fetch(url)
+    .then(res => res.json())
+    .then(handleStopLocation)
+    .catch(err => {
+      closeModal();
+      showModal("전송 오류: " + err.message, true);
+    });
 }
 
 function handleStopLocation(result) {
@@ -289,7 +280,10 @@ function autoUpdate() {
       "&auto=true" +
       "&token=" + encodeURIComponent(token);
 
-    callJSONP(url, "handleAutoUpdate");
+    fetch(url)
+      .then(res => res.json())
+      .then(handleAutoUpdate)
+      .catch(err => console.error("자동 갱신 오류:", err));
   });
 }
 
