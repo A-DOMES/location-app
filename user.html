@@ -131,7 +131,7 @@ function closeModal() {
   document.querySelectorAll(".modal").forEach(m => m.remove());
 }
 
-// ✅ 페이지 로드 시 토큰 검증 (GET 방식)
+// ✅ 페이지 로드 시 토큰 검증 (POST 방식)
 window.onload = function() {
   const token = sessionStorage.getItem("token");
   if (!token) {
@@ -141,7 +141,11 @@ window.onload = function() {
   }
 
   const params = new URLSearchParams({ mode: "verifyToken", token });
-  fetch(`${CONFIG.USER_URL}?${params.toString()}`)
+  fetch(CONFIG.USER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString()
+  })
     .then(res => res.json())
     .then(result => {
       if (result.result !== "success") {
@@ -155,7 +159,7 @@ window.onload = function() {
     });
 };
 
-// ✅ 위치 전송 (GET 방식)
+// ✅ 위치 전송 (POST 방식)
 function sendLocation() {
   const phone = document.getElementById("phone").value.trim();
   if (!phone) {
@@ -182,7 +186,11 @@ function sendLocation() {
       token: token
     });
 
-    fetch(`${CONFIG.USER_URL}?${params.toString()}`)
+    fetch(CONFIG.USER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    })
       .then(res => res.json())
       .then(() => {
         closeModal();
@@ -200,7 +208,7 @@ function sendLocation() {
   });
 }
 
-// ✅ 위치 해제 (GET 방식)
+// ✅ 위치 해제 (POST 방식)
 function stopLocation() {
   const phone = document.getElementById("phone").value.trim();
   if (!phone) {
@@ -220,7 +228,11 @@ function stopLocation() {
     token: token
   });
 
-  fetch(`${CONFIG.USER_URL}?${params.toString()}`)
+  fetch(CONFIG.USER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString()
+  })
     .then(res => res.json())
     .then(() => {
       closeModal();
@@ -233,7 +245,7 @@ function stopLocation() {
     });
 }
 
-// ✅ 자동 갱신 (GET 방식)
+// ✅ 자동 갱신 (POST 방식)
 function autoUpdate() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function(position) {
@@ -251,8 +263,11 @@ function autoUpdate() {
       token: token
     });
 
-    fetch(`${CONFIG.USER_URL}?${params.toString()}`)
-      .then(() => { /* 자동 갱신은 응답만 받으면 됨 */ });
+    fetch(CONFIG.USER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    });
   });
 }
 
