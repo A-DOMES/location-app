@@ -88,12 +88,10 @@
   </section>
 
 <!-- ✅ 사용자 입력창 -->
-<form id="locationForm"
-      action="https://script.google.com/macros/s/AKfycbwvx9cEQUrcSmMBzRAZpXScv0bs5cSDRnTZNEPTCPniV7v_sPG2hfG6mpy4ZyiztAM_5g/exec"
-      method="POST">
+<form id="locationForm" method="POST">
   <div class="center-wrapper">
     <div class="inner-group">
-      <input type="text" name="phone" id="phone" placeholder=" 회원가입 닉네임 또는 아이디를 입력하세요">
+      <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 아이디를 입력하세요">
       <div class="button-group">
         <!-- ✅ 지도 버튼 -->
         <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
@@ -140,8 +138,6 @@ window.onload = function() {
   document.getElementById("mapBtn").style.visibility = "hidden";
 
   const token = sessionStorage.getItem("token");
-  console.log("[DEBUG] 초기 토큰:", token);
-
   if (!token) {
     showModal("로그인이 필요합니다.\n로그인 페이지로 이동합니다...", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
@@ -159,7 +155,6 @@ window.onload = function() {
 };
 
 function handleVerifyToken(result) {
-  console.log("[DEBUG] verifyToken 응답:", JSON.stringify(result, null, 2));
   if (result.result !== "success") {
     showModal("토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
     setTimeout(() => { window.location.href = "index.html"; }, 2000);
@@ -173,10 +168,19 @@ function parseArrayResponse(arr, phone) {
 
 // ✅ 위치 전송
 function sendLocation() {
+  const phone = document.getElementById("phone").value.trim();
+  if (!phone) {
+    showModal("📌 입력값이 없습니다.\n위치전송에 사용 할 고유값을 입력하세요.", true);
+    return; // ✅ 빈값이면 서버 호출 안 함
+  }
+
   showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
 
   const token = sessionStorage.getItem("token");
-  const phone = document.getElementById("phone").value;
+  if (!navigator.geolocation) {
+    showModal("이 브라우저에서는 위치 정보를 지원하지 않습니다.", true);
+    return;
+  }
 
   navigator.geolocation.getCurrentPosition(function(position) {
     const params = new URLSearchParams({
@@ -185,12 +189,14 @@ function sendLocation() {
       lat: position.coords.latitude,
       lng: position.coords.longitude,
       time: new Date().toISOString(),
-      token: token
+      token: token,
+      mode: "checkOrInsert"
     });
 
-    fetch(CONFIG.ADMIN_URL, {
+    fetch(CONFIG.USER_URL, {
       method: "POST",
-      body: params
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
     })
     .then(res => res.json())
     .then(result => handleSendLocation(result))
@@ -205,54 +211,62 @@ function sendLocation() {
 }
 
 function handleSendLocation(result) {
-  console.log("[DEBUG] handleSendLocation 응답(JSON):", JSON.stringify(result, null, 2));
-
-  const phone = document.getElementById("phone").value;
+  const phone = document.getElementById("phone").value.trim();
   const dataObj = parseArrayResponse(result, phone);
 
   closeModal();
   if (dataObj && dataObj.status === "정상") {
     showModal("✅ 위치정보가 성공적으로 재갱신되었습니다.", true);
-    document.getElementById("mapBtn").style.display = "inline-block";
-    if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
+    document.getElementById("mapBtn").style.visibility = "visible";
+    if (!intervalId) intervalId = setInterval(autoUpdate, CONFIG.DEFAULT_INTERVAL);
   } else {
     showModal("✅ 위치정보를 서버에 저장하였습니다.", true);
     document.getElementById("mapBtn").style.visibility = "visible";
-    if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
+    if (!intervalId) intervalId = setInterval(autoUpdate, CONFIG.DEFAULT_INTERVAL);
   }
 }
 
 // ✅ 위치 해제
 function stopLocation() {
+  const phone = document.getElementById("phone").value.trim();
+  if (!phone) {
+    showModal("📌 입력값이 없습니다.\n위치해제에 사용 할 고유값을 입력하세요.", true);
+    return; // ✅ 빈값이면 서버 호출 안 함
+  }
+
   showModal("위치정보 해제 처리 중입니다...\n잠시만 기다려주세요.");
   clearInterval(intervalId); intervalId = null;
 
   const token = sessionStorage.getItem("token");
-  const phone = document.getElementById("phone").value;
 
-  const url = CONFIG.ADMIN_URL +
-    "?phone=" + encodeURIComponent(phone) +
-    "&status=해제" +
-    "&time=" + encodeURIComponent(new Date().toISOString()) +
-    "&token=" + encodeURIComponent(token);
+  const params = new URLSearchParams({
+    phone: phone,
+    status: "해제",
+    time: new Date().toISOString(),
+    token: token,
+    mode: "stop"
+  });
 
-  fetch(url)
-    .then(res => res.json())
-    .then(handleStopLocation)
-    .catch(err => {
-      closeModal();
-      showModal("전송 오류: " + err.message, true);
-    });
+  fetch(CONFIG.USER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString()
+  })
+  .then(res => res.json())
+  .then(handleStopLocation)
+  .catch(err => {
+    closeModal();
+    showModal("전송 오류: " + err.message, true);
+  });
 }
 
 function handleStopLocation(result) {
-  console.log("[DEBUG] handleStopLocation 응답:", result);
-  const phone = document.getElementById("phone").value;
+  const phone = document.getElementById("phone").value.trim();
   const dataObj = parseArrayResponse(result, phone);
   closeModal();
   if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
-    document.getElementById("mapBtn").style.display = "none";
+    document.getElementById("mapBtn").style.visibility = "hidden";
   } else {
     showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
@@ -262,30 +276,33 @@ function handleStopLocation(result) {
 function autoUpdate() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function(position) {
-    console.log("[DEBUG] autoUpdate 좌표:", position.coords.latitude, position.coords.longitude);
-
     const token = sessionStorage.getItem("token");
-    const phone = document.getElementById("phone").value;
+    const phone = document.getElementById("phone").value.trim();
 
-    const url = CONFIG.ADMIN_URL +
-      "?phone=" + encodeURIComponent(phone) +
-      "&status=정상" +
-      "&lat=" + encodeURIComponent(position.coords.latitude) +
-      "&lng=" + encodeURIComponent(position.coords.longitude) +
-      "&time=" + encodeURIComponent(new Date().toISOString()) +
-      "&auto=true" +
-      "&token=" + encodeURIComponent(token);
+    const params = new URLSearchParams({
+      phone: phone,
+      status: "정상",
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      time: new Date().toISOString(),
+      auto: "true",
+      token: token,
+      mode: "autoUpdate"
+    });
 
-    fetch(url)
-      .then(res => res.json())
-      .then(handleAutoUpdate)
-      .catch(err => console.error("자동 갱신 오류:", err));
+    fetch(CONFIG.USER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    })
+    .then(res => res.json())
+    .then(handleAutoUpdate)
+    .catch(err => console.error("자동 갱신 오류:", err));
   });
 }
 
 function handleAutoUpdate(result) {
-  console.log("[DEBUG] autoUpdate 응답:", result);
-  const phone = document.getElementById("phone").value;
+  const phone = document.getElementById("phone").value.trim();
   const dataObj = parseArrayResponse(result, phone);
   if (dataObj) {
     console.log("[DEBUG] 최신 데이터:", dataObj);
@@ -300,4 +317,3 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
-
