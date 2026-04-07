@@ -133,6 +133,13 @@ function closeModal() {
 
 // ✅ 페이지 로드 시 토큰 검증 (GET 방식)
 window.onload = function() {
+  // 저장된 사용자 ID 자동 입력
+  const savedId = sessionStorage.getItem("userId");
+  if (savedId) document.getElementById("phone").value = savedId;
+
+  // map 버튼은 기본 숨김
+  document.getElementById("mapBtn").style.visibility = "hidden";
+
   const token = sessionStorage.getItem("token");
   if (!token) {
     showModal("로그인이 필요합니다.\n로그인 페이지로 이동합니다...", true);
@@ -184,11 +191,15 @@ function sendLocation() {
 
     fetch(`${CONFIG.USER_URL}?${params.toString()}`)
       .then(res => res.json())
-      .then(() => {
+      .then(result => {
         closeModal();
-        showModal("✅ 위치정보가 성공적으로 전송되었습니다.", true);
-        document.getElementById("mapBtn").style.visibility = "visible";
-        if (!intervalId) intervalId = setInterval(autoUpdate, CONFIG.DEFAULT_INTERVAL);
+        if (result.result === "success") {
+          showModal("✅ 위치정보가 성공적으로 전송되었습니다.", true);
+          document.getElementById("mapBtn").style.visibility = "visible";
+          if (!intervalId) intervalId = setInterval(autoUpdate, CONFIG.DEFAULT_INTERVAL);
+        } else {
+          showModal("❌ 전송 실패: " + (result.message || "알 수 없는 오류"), true);
+        }
       })
       .catch(err => {
         closeModal();
@@ -222,10 +233,14 @@ function stopLocation() {
 
   fetch(`${CONFIG.USER_URL}?${params.toString()}`)
     .then(res => res.json())
-    .then(() => {
+    .then(result => {
       closeModal();
-      showModal("🛑 위치정보가 해제되었습니다.", true);
-      document.getElementById("mapBtn").style.visibility = "hidden";
+      if (result.result === "stopped" || result.result === "success") {
+        showModal("🛑 위치정보가 해제되었습니다.", true);
+        document.getElementById("mapBtn").style.visibility = "hidden";
+      } else {
+        showModal("❌ 해제 실패: " + (result.message || "알 수 없는 오류"), true);
+      }
     })
     .catch(err => {
       closeModal();
@@ -252,7 +267,15 @@ function autoUpdate() {
     });
 
     fetch(`${CONFIG.USER_URL}?${params.toString()}`)
-      .then(() => { /* 자동 갱신은 응답만 받으면 됨 */ });
+      .then(res => res.json())
+      .then(result => {
+        if (result.result !== "updated" && result.result !== "success") {
+          console.warn("자동 갱신 실패:", result.message);
+        } else {
+          console.log("자동 갱신 성공:", result);
+        }
+      })
+      .catch(err => console.error("자동 갱신 오류:", err));
   });
 }
 
