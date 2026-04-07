@@ -1,4 +1,4 @@
-const CACHE_NAME = "adomes-cache-v1"; 
+const CACHE_NAME = "adomes-cache-v4"; 
 // ✅ 캐시 이름을 v4로 바꿔서 새 버전 적용
 
 const urlsToCache = [
