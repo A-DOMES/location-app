@@ -205,12 +205,15 @@
         if (result.result === "success") {
           modal.querySelector("h2").innerText = "✅ 로그인 성공!";
           modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-
+      
           sessionStorage.setItem("loggedIn", "true");
           sessionStorage.setItem("role", result.role);
           sessionStorage.setItem("userId", id);
           sessionStorage.setItem("token", result.token);
-
+      
+          // ✅ 닉네임 저장 추가
+          localStorage.setItem("nickname", result.nickname);
+      
           setTimeout(() => {
             if (result.role === "AD") {
               window.location.href = "admin.html";
