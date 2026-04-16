@@ -145,13 +145,10 @@ function callJSONP(url, callbackName) {
 
 // ✅ 페이지 로드 시 토큰 검증
 window.onload = function() {
-  // ✅ 닉네임을 phone 입력란에 우선적으로 표시
+  // ✅ 닉네임을 phone 입력란에 표시
   const nickname = localStorage.getItem("nickname");
-  if (nickname) {
+  if (nickname && nickname !== "undefined") {
     document.getElementById("phone").value = nickname;
-  } else {
-    const savedId = sessionStorage.getItem("userId");
-    if (savedId) document.getElementById("phone").value = savedId;
   }
 
   document.getElementById("mapBtn").style.visibility = "hidden";
