@@ -145,14 +145,13 @@ function callJSONP(url, callbackName) {
 
 // ✅ 페이지 로드 시 토큰 검증
 window.onload = function() {
-  const savedId = sessionStorage.getItem("userId");
-  if (savedId) document.getElementById("phone").value = savedId;
-
-  // ✅ 닉네임 자동 입력
+  // ✅ 닉네임을 phone 입력란에 우선적으로 표시
   const nickname = localStorage.getItem("nickname");
   if (nickname) {
-    const nicknameBox = document.getElementById("nicknameBox");
-    if (nicknameBox) nicknameBox.value = nickname;
+    document.getElementById("phone").value = nickname;
+  } else {
+    const savedId = sessionStorage.getItem("userId");
+    if (savedId) document.getElementById("phone").value = savedId;
   }
 
   document.getElementById("mapBtn").style.visibility = "hidden";
