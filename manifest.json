@@ -1,7 +1,7 @@
 {
   "name": "A-DOMES 사용자 위치정보시스템",
   "short_name": "A-DOMES-User",
-  "start_url": "https://a-domes.github.io/location-app/Client.html",
+  "start_url": "https://a-domes.github.io/location-app/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2196F3",
