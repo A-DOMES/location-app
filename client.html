@@ -146,16 +146,13 @@
   // ✅ 좌표 모달창 드래그 가능하게 (사이즈 고정)
   function makeDraggable(element) {
     let offsetX = 0, offsetY = 0, isDown = false;
-
     element.addEventListener('mousedown', (e) => {
       isDown = true;
       offsetX = e.clientX - element.offsetLeft;
       offsetY = e.clientY - element.offsetTop;
       element.style.right = ""; // 우측 고정 해제
     });
-
     document.addEventListener('mouseup', () => isDown = false);
-
     document.addEventListener('mousemove', (e) => {
       if (isDown) {
         element.style.left = (e.clientX - offsetX) + 'px';
@@ -163,7 +160,6 @@
       }
     });
   }
-
   makeDraggable(document.getElementById("locationBox"));
 
   function updateLocation() {
@@ -177,7 +173,7 @@
       function(pos) {
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
-        const heading = pos.coords.heading || 0; // ✅ 방향 값
+        const heading = pos.coords.heading || 0;
 
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
@@ -211,9 +207,8 @@
 
         // ✅ 방향 레이더 (부채꼴)
         const radius = 0.05; // 반경 (약 50m)
-        const angle = 90;    // 부채꼴 각도
+        const angle = 90;
         const points = [];
-
         for (let a = -angle/2; a <= angle/2; a += 5) {
           const rad = (heading + a) * Math.PI / 180;
           const latOffset = radius * Math.cos(rad);
@@ -232,9 +227,7 @@
           });
         }
 
-        // ✅ 사용자 모드: 지도 중심을 항상 내 위치로 이동
         map.setCenter(latlng);
-
         document.getElementById("shareBtn").onclick = showPopup;
       },
       function(err) {
@@ -245,13 +238,11 @@
     );
   }
 
-  // ✅ 현재 위치 공유 버튼 → 클립보드 복사 + 안내 팝업
   async function showPopup() {
     if (!currentLat || !currentLng) {
       alert("위치 정보를 먼저 가져와야 합니다.");
       return;
     }
-
     const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
     await navigator.clipboard.writeText(shareUrl);
 
@@ -259,11 +250,9 @@
     popup.style.display = "block";
     popup.style.opacity = "0";
     popup.style.top = "80px";
-
     document.getElementById("notifySound").play();
 
     setTimeout(() => { popup.style.opacity = "1"; }, 10);
-
     setTimeout(() => {
       popup.style.opacity = "0";
       popup.style.top = "0px";
