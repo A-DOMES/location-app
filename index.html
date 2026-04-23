@@ -141,6 +141,10 @@
       color: #555;
     }
   </style>
+
+  <!-- 📌 PWA 매니페스트 연결 -->
+  <link rel="manifest" href="/location-app/manifest.json">
+  <meta name="theme-color" content="#2196F3">    
 </head>
 <body>
   <div class="login-box">
@@ -243,5 +247,13 @@
   window.goRegister = goRegister;
 </script>
 
+  <!-- ✅ 서비스 워커 등록 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/location-app/serviceWorker.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    }
+  </script>
 </body>
 </html>
