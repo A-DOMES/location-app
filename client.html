@@ -178,27 +178,21 @@
           });
         }
 
+        // ✅ 마커 디자인을 config.js에서 불러오기
         if (!marker) {
           marker = new google.maps.Marker({
             position: latlng,
             map: map,
             title: "내 위치",
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              fillColor: "#0000FF",   // 사용자용은 파랑
-              fillOpacity: 1,
-              strokeColor: "#FFFFFF",
-              strokeWeight: 2,
-              scale: 10
-            }
+            icon: CONFIG.USER_MARKER_ICON   // 🔴 적색 마커 (config.js 설정)
           });
         } else {
           marker.setPosition(latlng);
         }
 
         // ✅ 방향 레이더 (부채꼴)
-        const radius = 0.05; // // 반경 (약 50m 정도, 기존 0.2 → 200m에서 줄임)
-        const angle = 90;   // 부채꼴 각도
+        const radius = 0.05; // 반경 (약 50m 정도, 기존 0.2 → 200m에서 줄임)
+        const angle = 90;    // 부채꼴 각도
         const points = [];
 
         for (let a = -angle/2; a <= angle/2; a += 5) {
@@ -214,11 +208,7 @@
         } else {
           radarPolygon = new google.maps.Polygon({
             paths: points,
-            strokeColor: "#32CD32",   // 초록색 레이더
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#32CD32",
-            fillOpacity: 0.25,
+            ...CONFIG.USER_RADAR_STYLE,   // 🔴 레이더 스타일 (config.js 설정)
             map: map
           });
         }
@@ -266,6 +256,7 @@
     updateLocation();
   };
 </script>
+
 
 </body>
 </html>
