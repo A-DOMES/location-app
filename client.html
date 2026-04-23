@@ -124,6 +124,25 @@
   let map, marker, currentLat, currentLng;
   let radarPolygon = null; // ✅ 방향 레이더용
 
+  // ✅ 사용자용 마커 디자인 (적색, 눈에 잘 띄게)
+  const USER_MARKER_ICON = {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: "#FF0000",   // 빨강
+    fillOpacity: 1,
+    strokeColor: "#FFFFFF", // 흰색 테두리
+    strokeWeight: 2,
+    scale: 10               // 현재 크기 유지
+  };
+
+  // ✅ 사용자용 레이더 스타일
+  const USER_RADAR_STYLE = {
+    strokeColor: "#FF4500",   // 주황빛 레드
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: "#FF6347",     // 토마토 레드
+    fillOpacity: 0.25
+  };
+
   // ✅ 좌표 모달창 드래그 가능하게 (사이즈 고정)
   function makeDraggable(element) {
     let offsetX = 0, offsetY = 0, isDown = false;
@@ -178,20 +197,20 @@
           });
         }
 
-        // ✅ 마커 디자인을 config.js에서 불러오기
+        // ✅ 사용자용 마커 적용
         if (!marker) {
           marker = new google.maps.Marker({
             position: latlng,
             map: map,
             title: "내 위치",
-            icon: CONFIG.USER_MARKER_ICON   // 🔴 적색 마커 (config.js 설정)
+            icon: USER_MARKER_ICON
           });
         } else {
           marker.setPosition(latlng);
         }
 
         // ✅ 방향 레이더 (부채꼴)
-        const radius = 0.05; // 반경 (약 50m 정도, 기존 0.2 → 200m에서 줄임)
+        const radius = 0.05; // 반경 (약 50m)
         const angle = 90;    // 부채꼴 각도
         const points = [];
 
@@ -208,7 +227,7 @@
         } else {
           radarPolygon = new google.maps.Polygon({
             paths: points,
-            ...CONFIG.USER_RADAR_STYLE,   // 🔴 레이더 스타일 (config.js 설정)
+            ...USER_RADAR_STYLE,
             map: map
           });
         }
