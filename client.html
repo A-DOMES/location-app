@@ -4,113 +4,295 @@
   <meta charset="UTF-8">
   <title>내 위치 지도</title>
 
-  <!-- 구글 지도 API (geometry 라이브러리 포함) -->
+  <!-- ✅ 구글 지도 API (geometry 라이브러리 포함) -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry"></script>
 
   <style>
-    body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; }
-    header { padding:15px; text-align:center; background:#1976d2; color:white; font-size:26px; font-weight:bold; }
-    #locationBox {
-      position:absolute; top:80px; right:20px; background:rgba(255,255,255,0.95);
-      padding:15px 20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
-      font-size:18px; color:#333; text-align:right; min-width:220px; z-index:9999;
-      cursor:move; width:fit-content;
+    /* ✅ 기본 스타일 */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
     }
-    #locationBox span { display:block; font-size:22px; font-weight:bold; color:#d32f2f; margin-top:5px; }
-    #locationBox small { display:block; margin-top:8px; font-size:14px; color:#555; }
-    #shareBtn { margin-top:10px; padding:8px 14px; background:#1976d2; color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px; }
-    #shareBtn:hover { background:#1565c0; }
-    #map { width:100%; height:100vh; }
+
+    header {
+      padding: 15px;
+      text-align: center;
+      background: #1976d2;
+      color: white;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    /* ✅ 위치 정보 박스 */
+    #locationBox {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-size: 18px;
+      color: #333;
+      text-align: right;
+      min-width: 220px;
+      z-index: 9999;
+      cursor: move;
+      width: fit-content;
+    }
+
+    #locationBox span {
+      display: block;
+      font-size: 22px;
+      font-weight: bold;
+      color: #d32f2f;
+      margin-top: 5px;
+    }
+
+    #locationBox small {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    #shareBtn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    #shareBtn:hover {
+      background: #1565c0;
+    }
+
+    /* ✅ 지도 영역 */
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* ✅ 공유 팝업 메시지 */
     #popupMessage {
-      position:absolute; top:80px; left:50%; text-align:center; transform:translateX(-50%);
-      background:rgba(25,118,210,0.95); color:white; padding:12px 20px; border-radius:8px;
-      font-size:16px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);
-      display:none; z-index:9999; opacity:0; transition:opacity 0.5s ease, top 2s ease;
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      text-align: center;
+      transform: translateX(-50%);
+      background: rgba(25, 118, 210, 0.95);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.5s ease, top 2s ease;
     }
   </style>
 </head>
 
 <body>
+  <!-- ✅ 헤더 -->
   <header>📍 A-DOMES | 위치정보시스템</header>
-  <div id="locationBox">위치 정보를 가져오는 중...<button id="shareBtn">현재 위치 공유</button></div>
+
+  <!-- ✅ 위치 정보 박스 -->
+  <div id="locationBox">
+    위치 정보를 가져오는 중...
+    <button id="shareBtn">현재 위치 공유</button>
+  </div>
+
+  <!-- ✅ 지도 -->
   <div id="map"></div>
-  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
+
+  <!-- ✅ 공유 팝업 -->
+  <div id="popupMessage">
+    📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.
+  </div>
+
+  <!-- ✅ 효과음 -->
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
 <script>
   let map, marker, currentLat, currentLng;
   let radarPolygon = null;
 
-  // ✅ 사용자용 마커 (빨간 핀 모양, 크게)
+  // ✅ 사용자 마커 (세련된 원형 스타일)
   const USER_MARKER_ICON = {
-    url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-    scaledSize: new google.maps.Size(50, 50), // 크기 크게
-    anchor: new google.maps.Point(25, 50)     // 핀 하단이 좌표에 맞도록
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: "#FF3B30",       // iOS 스타일 레드
+    fillOpacity: 0.9,
+    strokeColor: "#FFFFFF",     // 흰색 테두리
+    strokeWeight: 3,
+    scale: 16                   // 크기 크게 (기존 10 → 16)
   };
 
+  // ✅ 레이더 스타일
   const USER_RADAR_STYLE = {
-    strokeColor: "#FF4500", strokeOpacity: 0.8, strokeWeight: 2,
-    fillColor: "#FF6347", fillOpacity: 0.25
+    strokeColor: "#FF4500",
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: "#FF6347",
+    fillOpacity: 0.25
   };
 
+  // ✅ 위치 박스 드래그 가능
   function makeDraggable(element) {
-    let offsetX=0, offsetY=0, isDown=false;
-    element.addEventListener('mousedown',(e)=>{isDown=true; offsetX=e.clientX-element.offsetLeft; offsetY=e.clientY-element.offsetTop; element.style.right="";});
-    document.addEventListener('mouseup',()=>isDown=false);
-    document.addEventListener('mousemove',(e)=>{if(isDown){element.style.left=(e.clientX-offsetX)+'px'; element.style.top=(e.clientY-offsetY)+'px';}});
+    let offsetX = 0, offsetY = 0, isDown = false;
+
+    element.addEventListener('mousedown', (e) => {
+      isDown = true;
+      offsetX = e.clientX - element.offsetLeft;
+      offsetY = e.clientY - element.offsetTop;
+      element.style.right = "";
+    });
+
+    document.addEventListener('mouseup', () => isDown = false);
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDown) {
+        element.style.left = (e.clientX - offsetX) + 'px';
+        element.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
   }
   makeDraggable(document.getElementById("locationBox"));
 
+  // ✅ 위치 갱신
   function updateLocation() {
     if (!navigator.geolocation) {
-      document.getElementById("locationBox").innerHTML="이 브라우저에서는 위치 정보를 지원하지 않습니다."; return;
+      document.getElementById("locationBox").innerHTML =
+        "이 브라우저에서는 위치 정보를 지원하지 않습니다.";
+      return;
     }
+
     navigator.geolocation.watchPosition(
       function(pos) {
-        currentLat=pos.coords.latitude; currentLng=pos.coords.longitude;
-        const heading=pos.coords.heading||0;
-        const now=new Date(); const timeString=now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-        document.getElementById("locationBox").innerHTML=`현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><small>갱신 시간: ${timeString}</small><button id="shareBtn">현재 위치 공유</button>`;
-        const latlng={lat:currentLat,lng:currentLng};
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+        const heading = pos.coords.heading || 0;
 
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        document.getElementById("locationBox").innerHTML =
+          `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span>
+           <small>갱신 시간: ${timeString}</small>
+           <button id="shareBtn">현재 위치 공유</button>`;
+
+        const latlng = { lat: currentLat, lng: currentLng };
+
+        // ✅ 지도 초기화
         if (!map) {
-          map=new google.maps.Map(document.getElementById("map"),{center:latlng,zoom:18,gestureHandling:"greedy"});
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: latlng,
+            zoom: 18, // 확대해서 50m 반경이 잘 보이도록
+            gestureHandling: "greedy"
+          });
         }
 
+        // ✅ 마커 표시
         if (!marker) {
-          marker=new google.maps.Marker({position:latlng,map:map,title:"내 위치",icon:USER_MARKER_ICON});
-        } else { marker.setPosition(latlng); }
+          marker = new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: "내 위치",
+            icon: USER_MARKER_ICON
+          });
+        } else {
+          marker.setPosition(latlng);
+        }
 
         // ✅ 정확한 50m 반경 레이더
-        const radius=50; const angle=45; const points=[];
-        for (let a=-angle/2; a<=angle/2; a+=5) {
-          const offsetPoint=google.maps.geometry.spherical.computeOffset(latlng,radius,heading+a);
+        const radius = 50; // 미터 단위
+        const angle = 45;  // 부채꼴 각도
+        const points = [];
+
+        for (let a = -angle/2; a <= angle/2; a += 5) {
+          const offsetPoint = google.maps.geometry.spherical.computeOffset(
+            latlng,
+            radius,
+            heading + a
+          );
           points.push(offsetPoint);
         }
         points.unshift(latlng);
 
-        if (radarPolygon) { radarPolygon.setPath(points); }
-        else { radarPolygon=new google.maps.Polygon({paths:points,...USER_RADAR_STYLE,map:map}); }
+        if (radarPolygon) {
+          radarPolygon.setPath(points);
+        } else {
+          radarPolygon = new google.maps.Polygon({
+            paths: points,
+            ...USER_RADAR_STYLE,
+            map: map
+          });
+        }
 
+        // ✅ 지도 중심을 항상 내 위치로
         map.setCenter(latlng);
-        document.getElementById("shareBtn").onclick=showPopup;
+
+        // ✅ 공유 버튼 이벤트
+        document.getElementById("shareBtn").onclick = showPopup;
       },
-      function(err){document.getElementById("locationBox").innerHTML="위치 정보를 가져올 수 없습니다: "+err.message;},
-      {enableHighAccuracy:true}
+      function(err) {
+        document.getElementById("locationBox").innerHTML =
+          "위치 정보를 가져올 수 없습니다: " + err.message;
+      },
+      { enableHighAccuracy: true }
     );
   }
 
+  // ✅ 공유 팝업 표시
   async function showPopup() {
-    if (!currentLat||!currentLng){alert("위치 정보를 먼저 가져와야 합니다.");return;}
-    const shareUrl=`https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+    if (!currentLat || !currentLng) {
+      alert("위치 정보를 먼저 가져와야 합니다.");
+      return;
+    }
+
+    const shareUrl =
+      `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
     await navigator.clipboard.writeText(shareUrl);
-    const popup=document.getElementById("popupMessage");
-    popup.style.display="block"; popup.style.opacity="0"; popup.style.top="80px"; document.getElementById("notifySound").play();
-    setTimeout(()=>{popup.style.opacity="1";},10);
-    setTimeout(()=>{popup.style.opacity="0"; popup.style.top="0px"; setTimeout(()=>{popup.style.display="none";},2000);},3000);
+
+    const popup = document.getElementById("popupMessage");
+    popup.style.display = "block";
+    popup.style.opacity = "0";
+    popup.style.top = "80px";
+
+    // ✅ 효과음 재생
+    document.getElementById("notifySound").play();
+
+    // ✅ 팝업 애니메이션 (서서히 나타났다 사라지도록)
+    setTimeout(() => {
+      popup.style.opacity = "1";
+    }, 10);
+
+    setTimeout(() => {
+      popup.style.opacity = "0";
+      popup.style.top = "0px";
+
+      // ✅ 팝업 완전히 숨기기
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 2000);
+    }, 3000);
   }
 
-  window.onload=()=>{updateLocation();};
+  // ✅ 페이지 로드 시 위치 갱신 시작
+  window.onload = () => {
+    updateLocation();
+  };
 </script>
 </body>
 </html>
