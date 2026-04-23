@@ -124,21 +124,15 @@
   let map, marker, currentLat, currentLng;
   let radarPolygon = null; // ✅ 방향 레이더용
 
-    // ✅ 사용자용 마커 적용 (빨간 핀 모양, 크게)
-    if (!marker) {
-      marker = new google.maps.Marker({
-        position: latlng,
-        map: map,
-        title: "내 위치",
-        icon: {
-          url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // 구글 기본 빨간 핀 아이콘
-          scaledSize: new google.maps.Size(50, 50), // 크기 크게 (50x50)
-          anchor: new google.maps.Point(25, 50)     // 핀 하단이 좌표에 맞도록 조정
-        }
-      });
-    } else {
-      marker.setPosition(latlng);
-    }
+  // ✅ 사용자용 마커 디자인 (적색, 눈에 잘 띄게)
+  const USER_MARKER_ICON = {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: "#FF0000",   // 빨강
+    fillOpacity: 1,
+    strokeColor: "#FFFFFF", // 흰색 테두리
+    strokeWeight: 2,
+    scale: 10               // 현재 크기 유지
+  };
 
   // ✅ 사용자용 레이더 스타일
   const USER_RADAR_STYLE = {
