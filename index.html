@@ -250,7 +250,7 @@
   <!-- ✅ 서비스 워커 등록 -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/location-app/sw.js')
+      navigator.serviceWorker.register('/location-app/service-worker.js')
         .then(reg => console.log('Service Worker registered:', reg))
         .catch(err => console.error('Service Worker registration failed:', err));
     }
