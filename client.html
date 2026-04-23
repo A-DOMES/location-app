@@ -205,18 +205,18 @@
           marker.setPosition(latlng);
         }
 
-        // ✅ 방향 레이더 (부채꼴)
-        const radius = 0.05; // 반경 (약 50m)
-        const angle = 90;
+        // ✅ 방향 레이더 (부채꼴, 정확히 50m 반경)
+        const radius = 50; // 미터 단위
+        const angle = 45;  // 부채꼴 각도 (좁게)
         const points = [];
+        
         for (let a = -angle/2; a <= angle/2; a += 5) {
-          const rad = (heading + a) * Math.PI / 180;
-          const latOffset = radius * Math.cos(rad);
-          const lngOffset = radius * Math.sin(rad);
-          points.push({ lat: currentLat + latOffset, lng: currentLng + lngOffset });
+          const rad = heading + a;
+          const offsetPoint = google.maps.geometry.spherical.computeOffset(latlng, radius, rad);
+          points.push(offsetPoint);
         }
         points.unshift(latlng);
-
+        
         if (radarPolygon) {
           radarPolygon.setPath(points);
         } else {
@@ -226,6 +226,7 @@
             map: map
           });
         }
+
 
         map.setCenter(latlng);
         document.getElementById("shareBtn").onclick = showPopup;
