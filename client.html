@@ -122,6 +122,7 @@
 
 <script>
   let map, marker, currentLat, currentLng;
+  let radarPolygon = null; // ✅ 방향 레이더용
 
   // ✅ 좌표 모달창 드래그 가능하게 (사이즈 고정)
   function makeDraggable(element) {
@@ -153,10 +154,11 @@
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.watchPosition(
       function(pos) {
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
+        const heading = pos.coords.heading || 0; // ✅ 방향 값
 
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
@@ -171,22 +173,57 @@
         if (!map) {
           map = new google.maps.Map(document.getElementById("map"), {
             center: latlng,
-            zoom: 13,
+            zoom: 15,
             gestureHandling: "greedy"
           });
         }
 
-        if (marker) marker.setMap(null);
-        marker = new google.maps.Marker({
-          position: latlng,
-          map: map,
-          title: "내 위치",
-          icon: {
-            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            scaledSize: new google.maps.Size(90, 90)     // ✅ 크기 확대
-          }
-        });
+        if (!marker) {
+          marker = new google.maps.Marker({
+            position: latlng,
+            map: map,
+            title: "내 위치",
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: "#0000FF",   // 사용자용은 파랑
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2,
+              scale: 10
+            }
+          });
+        } else {
+          marker.setPosition(latlng);
+        }
 
+        // ✅ 방향 레이더 (부채꼴)
+        const radius = 0.05; // // 반경 (약 50m 정도, 기존 0.2 → 200m에서 줄임)
+        const angle = 90;   // 부채꼴 각도
+        const points = [];
+
+        for (let a = -angle/2; a <= angle/2; a += 5) {
+          const rad = (heading + a) * Math.PI / 180;
+          const latOffset = radius * Math.cos(rad);
+          const lngOffset = radius * Math.sin(rad);
+          points.push({ lat: currentLat + latOffset, lng: currentLng + lngOffset });
+        }
+        points.unshift(latlng);
+
+        if (radarPolygon) {
+          radarPolygon.setPath(points);
+        } else {
+          radarPolygon = new google.maps.Polygon({
+            paths: points,
+            strokeColor: "#32CD32",   // 초록색 레이더
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#32CD32",
+            fillOpacity: 0.25,
+            map: map
+          });
+        }
+
+        // ✅ 사용자 모드: 지도 중심을 항상 내 위치로 이동
         map.setCenter(latlng);
 
         document.getElementById("shareBtn").onclick = showPopup;
@@ -194,7 +231,8 @@
       function(err) {
         document.getElementById("locationBox").innerHTML =
           "위치 정보를 가져올 수 없습니다: " + err.message;
-      }
+      },
+      { enableHighAccuracy: true }
     );
   }
 
@@ -211,29 +249,24 @@
     const popup = document.getElementById("popupMessage");
     popup.style.display = "block";
     popup.style.opacity = "0";
-    popup.style.top = "80px";          /* ✅ 상단에서 50% 내려옴 */
+    popup.style.top = "80px";
 
     document.getElementById("notifySound").play();
 
-    setTimeout(() => {
-      popup.style.opacity = "1"; // 페이드인
-    }, 10);
+    setTimeout(() => { popup.style.opacity = "1"; }, 10);
 
-    // 3초 후 페이드아웃 시작 → 5초에 완전히 사라짐
     setTimeout(() => {
       popup.style.opacity = "0";
       popup.style.top = "0px";
-      setTimeout(() => {
-        popup.style.display = "none";
-      }, 2000);
+      setTimeout(() => { popup.style.display = "none"; }, 2000);
     }, 3000);
   }
 
   window.onload = () => {
     updateLocation();
-    setInterval(updateLocation, 300000);
   };
 </script>
+
 </body>
 </html>
   
