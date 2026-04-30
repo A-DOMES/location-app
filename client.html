@@ -141,42 +141,36 @@
   }
   makeDraggable(document.getElementById("locationBox"));
 
-// ---------------------- 와이파이형 레이더 ----------------------
-function updateRadarPolygon(myPos, heading) {
-  if (!radarEnabled) {
-    if (radarPolygon) radarPolygon.setMap(null);
-    return;
-  }
-
-  // 기존 Polygon 제거
-  if (radarPolygon) {
-    radarPolygon.setMap(null);
-    radarPolygon = null;
-  }
-
-  const angle = 90; // 반원 각도 범위
-  const radii = [50, 100, 150]; // 와이파이 곡선 반경 (m 단위)
-
-  radii.forEach(radius => {
+// ---------------------- 부채꼴 레이더 ----------------------
+  function updateRadarPolygon(myPos, heading) {
+    if (!radarEnabled) {
+      if (radarPolygon) radarPolygon.setMap(null);
+      return;
+    }
+    const angle = 90;
     const points = [];
-    const radiusInDegrees = radius / 111000; // m → 위도/경도 변환
+    const radiusInDegrees = radarRadiusMeters / 111000;
     for (let a = -angle/2; a <= angle/2; a += 5) {
       const rad = (heading + a) * Math.PI / 180;
       const latOffset = radiusInDegrees * Math.cos(rad);
       const lngOffset = radiusInDegrees * Math.sin(rad);
       points.push({ lat: myPos.lat + latOffset, lng: myPos.lng + lngOffset });
     }
-
-    // 반원 호 그리기 (Polyline)
-    new google.maps.Polyline({
-      path: points,
-      strokeColor: "#00BFFF",
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
-      map: map
-    });
-  });
-}
+    points.unshift(myPos);
+    if (radarPolygon) {
+      radarPolygon.setPath(points);
+    } else {
+      radarPolygon = new google.maps.Polygon({
+        paths: points,
+        strokeColor: "#00BFFF",  // 투명한 청색
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: "#00BFFF",
+        fillOpacity: 0.25,
+        map: map
+      });
+    }
+  }
 
 
   // ---------------------- 방향 라벨 계산 ----------------------
