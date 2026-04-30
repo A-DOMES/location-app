@@ -246,7 +246,7 @@ function startTracking() {
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
         document.getElementById("locationBox").innerHTML =
           `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
-           방향: <span>${directionLabel}</span><br>
+           현재 방향:<span>${directionLabel}</span><br>
            <small>갱신 시간: ${timeString}</small>
            <button id="shareBtn">현재 위치 공유</button>`;
         document.getElementById("shareBtn").onclick = showPopup;
