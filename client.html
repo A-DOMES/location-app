@@ -155,10 +155,10 @@
     } else {
       radarPolygon = new google.maps.Polygon({
         paths: points,
-        strokeColor: "#00BFFF",
+        strokeColor: "#FF9999",   // 연한 적색
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillColor: "#00BFFF",
+        fillColor: "#FFCCCC",     // 아주 연한 적색
         fillOpacity: 0.25,
         map: map
       });
@@ -257,14 +257,20 @@
 
   // ---------------------- 원형 표시 ----------------------
   function drawMultipleCircles(myPos) {
-    [100, 500, 1000].forEach(r => {
+    const circleStyles = [
+      { radius: 100, strokeColor: "#00BFFF", fillColor: "#00BFFF" },   // 진한 청색
+      { radius: 500, strokeColor: "#66CCFF", fillColor: "#66CCFF" },   // 중간 청색
+      { radius: 1000, strokeColor: "#CCEEFF", fillColor: "#CCEEFF" }   // 가장 연한 청색
+    ];
+  
+    circleStyles.forEach(style => {
       new google.maps.Circle({
         center: myPos,
-        radius: r,
-        strokeColor: "#FF0000",
+        radius: style.radius,
+        strokeColor: style.strokeColor,
         strokeOpacity: 0.5,
         strokeWeight: 1,
-        fillColor: "#FF0000",
+        fillColor: style.fillColor,
         fillOpacity: 0.05,
         map: map
       });
@@ -347,11 +353,16 @@
       const marker = new google.maps.Marker({
         position: d.pos,
         map: map,
-        label: d.label
+        label: {
+          text: d.label,
+          color: "#66BB6A",   // 연한 녹색
+          fontWeight: "bold"
+        }
       });
       compassMarkers.push(marker);
     });
   }
+
 
   // ---------------------- 공유 팝업 ----------------------
   async function showPopup() {
