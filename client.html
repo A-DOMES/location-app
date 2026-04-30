@@ -230,16 +230,55 @@ function updateRadarPolygon(myPos, heading) {
     // 실제 구현에서는 서버/소켓을 통해 상대방에게 전달
   } 
   
- // ---------------------- 지도 초기화 ----------------------
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 15,
-        center: { lat: 37.5665, lng: 126.9780 } // 초기 위치 (서울 예시)
-      });
+// ---------------------- 지도 초기화 ----------------------
+function initMap() {
+  // 기본 지도 객체 생성 (임시 중심)
+  map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 15,
+    center: { lat: 37.5665, lng: 126.9780 } // 초기값 (서울) → 실제 위치로 곧 바뀜
+  });
 
-      startTracking();
-    }
-    window.onload = initMap;
+  // ✅ 브라우저에서 내 위치 가져오기
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const myPos = { lat: lat, lng: lng };
+
+        // 지도 중심을 내 위치로 이동
+        map.setCenter(myPos);
+
+        // 내 위치 마커 표시
+        myMarker = new google.maps.Marker({
+          position: myPos,
+          map: map,
+          title: "내 위치",
+          icon: {
+            url: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // 예쁜 핀 아이콘
+            scaledSize: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(20, 40)
+          }
+        });
+
+        // 위치 추적 시작
+        startTracking();
+      },
+      (err) => {
+        console.error("내 위치를 가져올 수 없습니다:", err.message);
+        // 위치 권한 거부 시 기본 서울 좌표 유지
+        startTracking();
+      },
+      { enableHighAccuracy: true }
+    );
+  } else {
+    // Geolocation 지원 안 될 경우 기본 서울 좌표
+    startTracking();
+  }
+}
+
+window.onload = initMap;
+
   
   
   // ---------------------- 위치 추적 ----------------------
@@ -282,6 +321,9 @@ function startTracking() {
             title: "내 위치",
             icon: {
               url: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // ✅ 예쁜 핀 아이콘
+              // 심플한 원형 아이콘: "https://cdn-icons-png.flaticon.com/512/64/64113.png"
+              // 세련된 핀 아이콘: "https://cdn-icons-png.flaticon.com/512/684/684908.png"
+              // GPS 스타일 아이콘: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
               scaledSize: new google.maps.Size(40, 40), // 크기 조정
               anchor: new google.maps.Point(20, 40)     // 아이콘 기준점 맞추기
             }
