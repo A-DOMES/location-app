@@ -99,7 +99,7 @@
   // ---------------------- 전역 변수 ----------------------
   let map, myMarker;
   let radarPolygon = null;
-  let radarRadiusMeters = 150;   // 레이더 반경
+  let radarRadiusMeters = 100;   // 레이더 반경
   let radarEnabled = true;
   let pathCoords = [];
   let pathPolyline;
@@ -335,8 +335,8 @@ function startTracking() {
   function drawMultipleCircles(myPos) {
     const circleStyles = [
       { radius: 100, strokeColor: "#FF6666" },   // 100m → 비교적 진한 연한 적색
-      { radius: 500, strokeColor: "#FF9999" },   // 500m → 중간 정도 연한 적색
-      { radius: 1000, strokeColor: "#FFCCCC" }   // 1000m → 가장 옅은 적색
+      { radius: 200, strokeColor: "#FF9999" }   // 200m → 중간 정도 연한 적색
+    //  { radius: 1000, strokeColor: "#FFCCCC" }   // 1000m → 가장 옅은 적색
     ];
   
     circleStyles.forEach(style => {
