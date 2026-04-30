@@ -155,10 +155,10 @@
     } else {
       radarPolygon = new google.maps.Polygon({
         paths: points,
-        strokeColor: "#FF9999",   // 연한 적색
+        strokeColor: "#00BFFF",  // 투명한 청색
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillColor: "#FFCCCC",     // 아주 연한 적색
+        fillColor: "#00BFFF",
         fillOpacity: 0.25,
         map: map
       });
@@ -355,14 +355,15 @@
         map: map,
         label: {
           text: d.label,
-          color: "#228B22",   // 진한 녹색 (모바일에서도 잘 보임)
+          color: "#00FFFF",   // 청록색 (Cyan)
           fontWeight: "bold",
-          fontSize: "16px"    // 글씨 크기를 키워서 가독성 확보
+          fontSize: "16px"    // 글씨 크기를 키워서 모바일에서도 잘 보이게
         }
       });
       compassMarkers.push(marker);
     });
   }
+
 
 
   // ---------------------- 공유 팝업 ----------------------
