@@ -399,32 +399,30 @@ function startTracking() {
     compassMarkers = [];
   }
 
-  function addCompass() {
-    clearCompass();
-    const bounds = map.getBounds();
-    if (!bounds) return;
-    const center = bounds.getCenter();
-    const offset = 0.001;
-    const directions = [
-      { label: "N", pos: { lat: center.lat() + offset, lng: center.lng() } },
-      { label: "S", pos: { lat: center.lat() - offset, lng: center.lng() } },
-      { label: "E", pos: { lat: center.lat(), lng: center.lng() + offset } },
-      { label: "W", pos: { lat: center.lat(), lng: center.lng() - offset } }
-    ];
-    directions.forEach(d => {
-      const marker = new google.maps.Marker({
-        position: d.pos,
-        map: map,
-        label: {
-          text: d.label,
-          color: "#00FFFF",   // 청록색 (Cyan)
-          fontWeight: "bold",
-          fontSize: "16px"    // 글씨 크기를 키워서 모바일에서도 잘 보이게
-        }
-      });
-      compassMarkers.push(marker);
+function addCompass(myPos) {
+  clearCompass();
+  const offset = 0.001; // 대략 100m 정도
+  const directions = [
+    { label: "N", pos: { lat: myPos.lat + offset, lng: myPos.lng } },
+    { label: "S", pos: { lat: myPos.lat - offset, lng: myPos.lng } },
+    { label: "E", pos: { lat: myPos.lat, lng: myPos.lng + offset } },
+    { label: "W", pos: { lat: myPos.lat, lng: myPos.lng - offset } }
+  ];
+  directions.forEach(d => {
+    const marker = new google.maps.Marker({
+      position: d.pos,
+      map: map,
+      label: {
+        text: d.label,
+        color: "#00FFFF",
+        fontWeight: "bold",
+        fontSize: "16px"
+      }
     });
-  }
+    compassMarkers.push(marker);
+  });
+}
+
 
   // ---------------------- 공유 팝업 ----------------------
   async function showPopup() {
