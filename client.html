@@ -394,34 +394,34 @@ function startTracking() {
   }
 
   // ---------------------- 나침반 ----------------------
-  function clearCompass() {
-    compassMarkers.forEach(m => m.setMap(null));
-    compassMarkers = [];
-  }
+ // function  clearCompass() {
+ //   compassMarkers.forEach(m => m.setMap(null));
+ //   compassMarkers = [];
+//  }
 
-function addCompass(myPos) {
-  clearCompass();
-  const offset = 0.001; // 대략 100m 정도
-  const directions = [
-    { label: "N", pos: { lat: myPos.lat + offset, lng: myPos.lng } },
-    { label: "S", pos: { lat: myPos.lat - offset, lng: myPos.lng } },
-    { label: "E", pos: { lat: myPos.lat, lng: myPos.lng + offset } },
-    { label: "W", pos: { lat: myPos.lat, lng: myPos.lng - offset } }
-  ];
-  directions.forEach(d => {
-    const marker = new google.maps.Marker({
-      position: d.pos,
-      map: map,
-      label: {
-        text: d.label,
-        color: "#00FFFF",
-        fontWeight: "bold",
-        fontSize: "16px"
-      }
-    });
-    compassMarkers.push(marker);
-  });
-}
+ // function  addCompass(myPos) {
+ //   clearCompass();
+//    const offset = 0.001; // 대략 100m 정도
+//    const directions = [
+//      { label: "N", pos: { lat: myPos.lat + offset, lng: myPos.lng } },
+//      { label: "S", pos: { lat: myPos.lat - offset, lng: myPos.lng } },
+//      { label: "E", pos: { lat: myPos.lat, lng: myPos.lng + offset } },
+//      { label: "W", pos: { lat: myPos.lat, lng: myPos.lng - offset } }
+//    ];
+//    directions.forEach(d => {
+//      const marker = new google.maps.Marker({
+//        position: d.pos,
+//        map: map,
+//        label: {
+//          text: d.label,
+//          color: "#00FFFF",
+//          fontWeight: "bold",
+//          fontSize: "16px"
+//        }
+//      });
+//      compassMarkers.push(marker);
+//    });
+//  }
 
 
   // ---------------------- 공유 팝업 ----------------------
