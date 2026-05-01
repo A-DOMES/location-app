@@ -356,6 +356,17 @@ let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
     // 실제 구현에서는 서버/소켓을 통해 상대방에게 전달
   }
 
+  // ---------------------- 지도 초기화 ----------------------
+  function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 15,
+    center: { lat: 34.954691, lng: 127.512740 }, // 초기 위치
+    gestureHandling: "greedy"
+  });
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
+}
+  
   // ---------------------- 위치 추적 ----------------------
   function startTracking() {
     if (navigator.geolocation) {
@@ -561,14 +572,6 @@ window.onload = () => {
       popup.style.top = "0px";
       setTimeout(() => { popup.style.display = "none"; }, 2000);
     }, 3000);
-  }
-
-  // ---------------------- 지도 초기화 ----------------------
-  function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 15,
-      center: { lat: 34.954691, lng: 127.512740 } // 초기 위치 (순천 예시)
-    });
   }
 
   // ---------------------- 페이지 로드 시 실행 ----------------------
