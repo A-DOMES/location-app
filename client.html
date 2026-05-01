@@ -354,11 +354,10 @@ function makeDraggableAndResizable(element) {
     // 실제 구현에서는 서버/소켓을 통해 상대방에게 전달
   } 
 
-  // ---------------------- 지도 초기화 ----------------------
+// ---------------------- 지도 초기화 ----------------------
 function initMap() {
-  // 기본 지도 객체 생성
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 18 // 너무 큰 값(35)은 화면이 위쪽만 보이는 느낌을 줍니다. 15~18이 적당합니다.
+    zoom: 18 // 15~18이 적당, 너무 크면 화면이 위쪽만 보이는 느낌
   });
 
   // 내 위치를 가져와서 지도 중심으로 설정
@@ -399,97 +398,104 @@ function initMap() {
 window.onload = initMap;
 
 
-  // ---------------------- 위치 추적 ----------------------
-  function startTracking() {
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (pos) => {
-          currentLat = pos.coords.latitude;
-          currentLng = pos.coords.longitude;
-          const myPos = { lat: currentLat, lng: currentLng };
-          const heading = pos.coords.heading || 0;
-          const directionLabel = getDirectionLabel(heading);
+// ---------------------- 위치 추적 ----------------------
+function startTracking() {
+  const geocoder = new google.maps.Geocoder();
 
-          const now = new Date();
-          const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
-          document.getElementById("locationBox").innerHTML =
-            `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
-             현재 방향: ${directionLabel}<br>
-             <small>갱신 시간: ${timeString}</small>
-             <button id="shareBtn">현재 위치 공유</button>
-             <button id="closeBtn">×</button>`;
-          document.getElementById("shareBtn").onclick = showPopup;
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+        const myPos = { lat: currentLat, lng: currentLng };
+        const heading = pos.coords.heading || 0;
+        const directionLabel = getDirectionLabel(heading);
 
-          // ✅ 하단 표시창 업데이트
-          updateLocationDisplay(currentLat, currentLng, heading);
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-          if (!map) {
-            map = new google.maps.Map(document.getElementById("map"), {
-              center: myPos,
-              zoom: 18,
-              gestureHandling: "greedy"
-            });
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
+        // 좌표값 + 방향 + 시간 먼저 표시
+        document.getElementById("locationBox").innerHTML =
+          `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
+           현재 방향: ${directionLabel}<br>
+           <small>갱신 시간: ${timeString}</small><br>
+           <button id="shareBtn">현재 위치 공유</button>
+           <button id="closeBtn">×</button>`;
+
+        document.getElementById("shareBtn").onclick = showPopup;
+
+        // ✅ 주소 변환 추가
+        geocoder.geocode({ location: myPos }, (results, status) => {
+          if (status === "OK" && results[0]) {
+            const address = results[0].formatted_address;
+            // 주소를 좌표창에 추가
+            document.getElementById("locationBox").innerHTML +=
+              `<br><small>주소: ${address}</small>`;
           }
+        });
 
-          if (!myMarker) {
-            myMarker = new google.maps.Marker({
-              position: myPos,
-              map: map,
-              title: "내 위치",
-              icon: {
-                url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-                scaledSize: new google.maps.Size(40, 40),
-                anchor: new google.maps.Point(20, 40)
-              }
-            });
-          } else {
-            myMarker.setPosition(myPos);
-          }
+        // ✅ 하단 표시창 업데이트
+        updateLocationDisplay(currentLat, currentLng, heading);
 
-          pathCoords.push(myPos);
-          if (pathPolyline) {
-            pathPolyline.setPath(pathCoords);
-          } else {
-            pathPolyline = new google.maps.Polyline({
-              path: pathCoords,
-              geodesic: true,
-              strokeColor: "#FF0000",
-              strokeOpacity: 1.0,
-              strokeWeight: 2,
-              map: map
-            });
-          }
-
-          if (pathCoords.length > 1) {
-            const prev = pathCoords[pathCoords.length - 2];
-            const dist = google.maps.geometry.spherical.computeDistanceBetween(
-              new google.maps.LatLng(prev.lat, prev.lng),
-              new google.maps.LatLng(myPos.lat, myPos.lng)
-            );
-            if (dist > 2) {
-              updateRadarPolygon(myPos, heading);
-            } else {
-              if (radarPolygon) radarPolygon.setMap(null);
+        // 지도/마커/폴리라인/부채꼴 등 기존 로직 유지
+        if (!myMarker) {
+          myMarker = new google.maps.Marker({
+            position: myPos,
+            map: map,
+            title: "내 위치",
+            icon: {
+              url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40)
             }
+          });
+        } else {
+          myMarker.setPosition(myPos);
+        }
+
+        pathCoords.push(myPos);
+        if (pathPolyline) {
+          pathPolyline.setPath(pathCoords);
+        } else {
+          pathPolyline = new google.maps.Polyline({
+            path: pathCoords,
+            geodesic: true,
+            strokeColor: "#FF0000",
+            strokeOpacity: 1.0,
+            strokeWeight: 2,
+            map: map
+          });
+        }
+
+        if (pathCoords.length > 1) {
+          const prev = pathCoords[pathCoords.length - 2];
+          const dist = google.maps.geometry.spherical.computeDistanceBetween(
+            new google.maps.LatLng(prev.lat, prev.lng),
+            new google.maps.LatLng(myPos.lat, myPos.lng)
+          );
+          if (dist > 2) {
+            updateRadarPolygon(myPos, heading);
+          } else {
+            if (radarPolygon) radarPolygon.setMap(null);
           }
+        }
 
-          // ✅ 원형 표시 + 주변 장소
-          drawMultipleCircles(myPos);
-          showNearbyPlaces(myPos, radarRadiusMeters);
+        // ✅ 원형 표시 + 주변 장소
+        drawMultipleCircles(myPos);
+        showNearbyPlaces(myPos, radarRadiusMeters);
 
-          // ✅ 지도 중심을 항상 내 위치로
-          map.setCenter(myPos);
-        },
-        (err) => {
-          document.getElementById("locationBox").innerHTML =
-            "위치 정보를 가져올 수 없습니다: " + err.message;
-        },
-        { enableHighAccuracy: true }
-      );
-    }
+        // ✅ 지도 중심을 항상 내 위치로
+        map.setCenter(myPos);
+      },
+      (err) => {
+        document.getElementById("locationBox").innerHTML =
+          "위치 정보를 가져올 수 없습니다: " + err.message;
+      },
+      { enableHighAccuracy: true }
+    );
   }
+}
+
 
   // ---------------------- 원형 표시 ----------------------
   function drawMultipleCircles(myPos) {
