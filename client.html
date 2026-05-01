@@ -435,9 +435,19 @@ function updateCircleData(myPos) {
     { center: myPos, radius: 100 },
     { center: myPos, radius: 200 }
   ];
-  // ❌ 지도에는 그리지 않고, 계산용 데이터만 유지
+  circles.forEach(c => {
+    new google.maps.Circle({
+      strokeColor: "#0000FF",
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: "#0000FF",
+      fillOpacity: 0.05,
+      map: map,
+      center: c.center,
+      radius: c.radius
+    });
+  });
 }
-
 // ---------------------- 대상 검색 (장소 입력) ----------------------
 function searchTarget() {
   const placeName = document.getElementById("targetPlace").value;
@@ -537,21 +547,10 @@ window.onload = () => {
   startTracking();
   makeDraggable(document.getElementById("locationBox"));
   makeDraggable(document.getElementById("targetBox"));
-
-  // ---------------------- 닫기 버튼 동작 ----------------------
   const closeBtn = document.getElementById("closeBtn");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      document.getElementById("locationBox").style.display = "none";
-    };
-  }
-
+  if (closeBtn) closeBtn.onclick = () => { document.getElementById("locationBox").style.display = "none"; };
   const targetCloseBtn = document.getElementById("targetCloseBtn");
-  if (targetCloseBtn) {
-    targetCloseBtn.onclick = () => {
-      document.getElementById("targetBox").style.display = "none";
-    };
-  }
+  if (targetCloseBtn) targetCloseBtn.onclick = () => { document.getElementById("targetBox").style.display = "none"; };
 };
 </script>
 
