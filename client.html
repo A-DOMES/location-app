@@ -25,8 +25,9 @@ header {
 /* 현재좌표 창 */
 #locationBox {
   position: fixed;
-  left: 20px;
-  bottom: 20px;          /* 좌측 하단 기본 위치 */
+  top: 20px;             /* 기본 위치를 위쪽으로 */
+  left: 20px;            /* 좌측 */
+  /* bottom: 20px; → 삭제 */
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -81,8 +82,9 @@ header {
 /* 목적지 찾기 창 */
 #targetBox {
   position: fixed;
+  top: 120px;            /* 현재좌표 창 아래쪽 기본 위치 */
   left: 20px;
-  bottom: 120px;         /* 현재좌표 창 위쪽에 배치 */
+  /* bottom: 120px; → 삭제 */
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -158,6 +160,7 @@ header {
   font-size: 14px;
   font-weight: bold;
 }
+
   </style>
 </head>
 <body>
@@ -254,26 +257,7 @@ let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
     });
   }
 
-// 닫기 버튼 동작
-document.addEventListener("DOMContentLoaded", () => {
-  const closeBtn = document.getElementById("closeBtn");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      document.getElementById("locationBox").style.display = "none";
-    };
-  }
-
-  const targetCloseBtn = document.getElementById("targetCloseBtn");
-  if (targetCloseBtn) {
-    targetCloseBtn.onclick = () => {
-      document.getElementById("targetBox").style.display = "none";
-    };
-  }
-});
-
-
-
-  
+ 
   // ---------------------- 부채꼴 레이더 ----------------------
   function updateRadarPolygon(myPos, heading) {
     if (!radarEnabled) {
@@ -608,6 +592,22 @@ window.onload = () => {
     makeDraggable(document.getElementById("locationBox"));
   };
 
+ // ---------------------- 닫기 버튼 동작 ----------------------  
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("closeBtn");
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      document.getElementById("locationBox").style.display = "none";
+    };
+  }
+
+  const targetCloseBtn = document.getElementById("targetCloseBtn");
+  if (targetCloseBtn) {
+    targetCloseBtn.onclick = () => {
+      document.getElementById("targetBox").style.display = "none";
+    };
+});
+  
 </script>
 </body>
 </html>
