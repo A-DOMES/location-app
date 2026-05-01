@@ -41,50 +41,82 @@
     width: fit-content;
     border: 1px solid rgba(255,255,255,0.3);  /* 테두리도 은은하게 */
   }
-    #locationBox span {
-      display: block;
-      font-size: 22px;
-      font-weight: bold;
-      color: #d32f2f;
-      margin-top: 5px;
-    }
-    #locationBox small {
-      display: block;
-      margin-top: 8px;
-      font-size: 14px;
-      color: #555;
-    }
-    #shareBtn {
-      margin-top: 10px;
-      padding: 8px 14px;
-      background: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-    }
-    #shareBtn:hover { background: #1565c0; }
-    #map { width: 100%; height: 500vh; }
-    #popupMessage {
-      position: absolute;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(25, 118, 210, 0.95);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.5s ease, top 2s ease;
-    }
-    #locationDisplay { margin-top: 10px; font-size: 14px; font-weight: bold; }
+#locationBox {
+  position: fixed;       /* 화면에 고정 */
+  top: 20px;             /* 위쪽에 띄움 */
+  left: 20px;
+  background: #f0f0f0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: both;          /* 상하좌우 크기 조절 가능 */
+  overflow: auto;        /* 내용이 넘치면 스크롤 */
+  z-index: 1000;         /* 지도 위에 표시 */
+  width: 250px;          /* 기본 너비 */
+}
+
+#locationBox span {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+  color: #d32f2f;
+  margin-top: 5px;
+}
+
+#locationBox small {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+#shareBtn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+#shareBtn:hover { background: #1565c0; }
+
+#closeBtn {
+  float: right;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+#map { width: 100%; height: 80vh; } /* 500vh → 80vh로 수정 */
+
+#popupMessage {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(25, 118, 210, 0.95);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s ease, top 2s ease;
+}
+
+#locationDisplay {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
   </style>
 </head>
 <body>
@@ -170,6 +202,17 @@ let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
     });
   }
 
+// 닫기 버튼 동작
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("closeBtn");
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      document.getElementById("locationBox").style.display = "none";
+    };
+  }
+});
+
+  
   // ---------------------- 부채꼴 레이더 ----------------------
   function updateRadarPolygon(myPos, heading) {
     if (!radarEnabled) {
@@ -421,8 +464,9 @@ let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
   // ---------------------- 페이지 로드 시 실행 ----------------------
   window.onload = () => {
     startTracking();
-    makeDraggable(document.getElementById("locationBox"));
+    makeDraggable(document.getElementById("locationBox")); // ✅ PC/모바일 드래그 가능
   };
+
   // ---------------------- 주변 장소 ----------------------
   function clearPoiMarkers() {
     poiMarkers.forEach(m => m.setMap(null));
