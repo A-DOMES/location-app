@@ -25,9 +25,8 @@ header {
 /* 현재좌표 창 */
 #locationBox {
   position: fixed;
-  top: 20px;             /* 기본 위치를 위쪽으로 */
-  left: 20px;            /* 좌측 */
-  /* bottom: 20px; → 삭제 */
+  left: 20px;
+  /* bottom: 20px;          좌측 하단 기본 위치 */
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -82,9 +81,8 @@ header {
 /* 목적지 찾기 창 */
 #targetBox {
   position: fixed;
-  top: 120px;            /* 현재좌표 창 아래쪽 기본 위치 */
   left: 20px;
-  /* bottom: 120px; → 삭제 */
+  /* bottom: 120px;     현재좌표 창 위쪽에 배치 */
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -155,7 +153,12 @@ header {
   opacity: 0;
   transition: opacity 0.5s ease, top 2s ease;
 }
-
+#locationDisplay {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+}
+    
   </style>
 </head>
 <body>
@@ -296,12 +299,6 @@ let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
     if (heading >= 270 && heading < 315) return "서";
     if (heading >= 315 && heading <= 360) return "서북방향";
     return "방향 없음";
-  }
-
-  function updateLocationDisplay(lat, lng, heading) {
-    const directionLabel = getDirectionLabel(heading);
-    const display = document.getElementById("locationDisplay");
-    display.innerText = `현재 위치: (${lat.toFixed(5)}, ${lng.toFixed(5)}) / 방향: ${directionLabel}`;
   }
 
   // ---------------------- 경로 안내 ----------------------
