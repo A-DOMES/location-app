@@ -128,24 +128,46 @@
     local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
   };
 
-  // ✅ 위치 박스 드래그 가능
-  function makeDraggable(element) {
-    let offsetX = 0, offsetY = 0, isDown = false;
-    element.addEventListener('mousedown', (e) => {
-      isDown = true;
-      offsetX = e.clientX - element.offsetLeft;
-      offsetY = e.clientY - element.offsetTop;
-      element.style.right = "";
-    });
-    document.addEventListener('mouseup', () => isDown = false);
-    document.addEventListener('mousemove', (e) => {
-      if (isDown) {
-        element.style.left = (e.clientX - offsetX) + 'px';
-        element.style.top = (e.clientY - offsetY) + 'px';
-      }
-    });
-  }
-  makeDraggable(document.getElementById("locationBox"));
+// ✅ 위치 박스 드래그 가능 (모바일 + PC)
+function makeDraggable(element) {
+  let offsetX = 0, offsetY = 0, isDown = false;
+
+  // PC 마우스 이벤트
+  element.addEventListener('mousedown', (e) => {
+    isDown = true;
+    offsetX = e.clientX - element.offsetLeft;
+    offsetY = e.clientY - element.offsetTop;
+    element.style.right = ""; // right 고정 해제
+  });
+  document.addEventListener('mouseup', () => isDown = false);
+  document.addEventListener('mousemove', (e) => {
+    if (isDown) {
+      element.style.left = (e.clientX - offsetX) + 'px';
+      element.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
+
+  // 모바일 터치 이벤트
+  element.addEventListener('touchstart', (e) => {
+    isDown = true;
+    const touch = e.touches[0];
+    offsetX = touch.clientX - element.offsetLeft;
+    offsetY = touch.clientY - element.offsetTop;
+    element.style.right = "";
+  });
+  element.addEventListener('touchend', () => isDown = false);
+  element.addEventListener('touchmove', (e) => {
+    if (isDown) {
+      const touch = e.touches[0];
+      element.style.left = (touch.clientX - offsetX) + 'px';
+      element.style.top = (touch.clientY - offsetY) + 'px';
+    }
+  });
+}
+
+// ✅ 호출
+makeDraggable(document.getElementById("locationBox"));
+
 
 // ---------------------- 부채꼴 레이더 ----------------------
   function updateRadarPolygon(myPos, heading) {
