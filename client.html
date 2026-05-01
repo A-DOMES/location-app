@@ -95,23 +95,30 @@
   <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
-<script>
-  // ---------------------- 전역 변수 ----------------------
-  let map, myMarker;
-  let radarPolygon = null;
-  let radarRadiusMeters = 100;   // 레이더 반경
-  let radarEnabled = true;
-  let pathCoords = [];
-  let pathPolyline;
-  let poiMarkers = [];
-  let compassMarkers = [];
-  let directionsService, directionsRenderer;
-  let currentLat, currentLng;
-  let otherMarker;
+<!-- 장소 입력 UI -->
+<input type="text" id="targetPlace" placeholder="장소 이름 입력">
+<button onclick="searchTarget()">대상 검색</button>
   
-  let circles = [];              // 원형 객체 관리
-  let lastHeading = null;        // 최근 방향값 저장
-  let infoWindow;                // 장소 클릭 시 정보창 재사용
+<script>
+// ---------------------- 전역 변수 ----------------------
+let map, myMarker;               // 지도와 내 위치 마커
+let radarPolygon = null;         // 부채꼴(레이더) 폴리곤
+let radarRadiusMeters = 100;     // 레이더 반경
+let radarEnabled = true;         // 레이더 활성화 여부
+let pathCoords = [];             // 이동 경로 좌표 기록
+let pathPolyline;                // 이동 경로 선
+let poiMarkers = [];             // 주변 장소 마커
+let compassMarkers = [];         // 나침반 마커
+let directionsService, directionsRenderer; // 경로 안내 서비스/렌더러
+let currentLat, currentLng;      // 현재 위치 좌표
+let otherMarker;                 // 상대방 위치 마커
+
+let circles = [];                // 원형 데이터 관리 (지도에는 표시하지 않음)
+let lastHeading = null;          // 최근 방향값 저장
+let infoWindow;                  // 장소 클릭 시 정보창 재사용
+
+let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
+
 
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -275,99 +282,147 @@
     // 실제 구현에서는 서버/소켓을 통해 상대방에게 전달
   }
 
-function startTracking() {
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-      (pos) => {
-        currentLat = pos.coords.latitude;
-        currentLng = pos.coords.longitude;
-        const myPos = { lat: currentLat, lng: currentLng };
-        const heading = pos.coords.heading || 0;
+  // ---------------------- 위치 추적 ----------------------
+  function startTracking() {
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+          const myPos = { lat: currentLat, lng: currentLng };
+          const heading = pos.coords.heading || 0;
 
-        // ✅ 위치정보 박스 갱신
-        const now = new Date();
-        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
-        document.getElementById("locationBox").innerHTML =
-          `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
-           현재 방향: ${getDirectionLabel(heading)}<br>
-           <small>갱신 시간: ${timeString}</small>
-           <button id="shareBtn">현재 위치 공유</button>`;
-        document.getElementById("shareBtn").onclick = showPopup;
+          // ✅ 위치정보 박스 갱신
+          const now = new Date();
+          const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
+          document.getElementById("locationBox").innerHTML =
+            `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
+             현재 방향: ${getDirectionLabel(heading)}<br>
+             <small>갱신 시간: ${timeString}</small>
+             <button id="shareBtn">현재 위치 공유</button>`;
+          document.getElementById("shareBtn").onclick = showPopup;
 
-        updateLocationDisplay(currentLat, currentLng, heading);
+          updateLocationDisplay(currentLat, currentLng, heading);
 
-        // ✅ 지도 초기화 (Ctrl 없이 확대/축소 가능)
-        if (!map) {
-          map = new google.maps.Map(document.getElementById("map"), {
-            center: myPos,
-            zoom: 18,
-            gestureHandling: "cooperative" // ✅ Ctrl 없이 확대/축소
-          });
-          directionsService = new google.maps.DirectionsService();
-          directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
-        }
+          // ✅ 지도 초기화
+          if (!map) {
+            map = new google.maps.Map(document.getElementById("map"), {
+              center: myPos,
+              zoom: 18,
+              gestureHandling: "cooperative" // Ctrl 없이 확대/축소 가능
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
 
-        // ✅ 내 위치 마커 갱신
-        if (!myMarker) {
-          myMarker = new google.maps.Marker({
-            position: myPos,
-            map: map,
-            title: "내 위치",
-            icon: {
-              url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 40)
-            }
-          });
-        } else {
-          myMarker.setPosition(myPos);
-        }
+            // ✅ 지도 클릭으로 대상 설정
+            map.addListener("click", (e) => {
+              targetPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+              alert(`대상 좌표가 설정되었습니다: ${targetPos.lat}, ${targetPos.lng}`);
+              showRouteToTarget();
+            });
+          }
 
-        // ✅ 경로 기록
-        pathCoords.push(myPos);
-        if (pathPolyline) {
-          pathPolyline.setPath(pathCoords);
-        } else {
-          pathPolyline = new google.maps.Polyline({
-            path: pathCoords,
-            geodesic: true,
-            strokeColor: "#FF0000",
-            strokeOpacity: 1.0,
-            strokeWeight: 2,
-            map: map
-          });
-        }
+          // ✅ 내 위치 마커 갱신
+          if (!myMarker) {
+            myMarker = new google.maps.Marker({
+              position: myPos,
+              map: map,
+              title: "내 위치",
+              icon: {
+                url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 40)
+              }
+            });
+          } else {
+            myMarker.setPosition(myPos);
+          }
 
-        // ✅ 부채꼴은 항상 표시
-        updateRadarPolygon(myPos, heading);
+          // ✅ 경로 기록
+          pathCoords.push(myPos);
+          if (pathPolyline) {
+            pathPolyline.setPath(pathCoords);
+          } else {
+            pathPolyline = new google.maps.Polyline({
+              path: pathCoords,
+              geodesic: true,
+              strokeColor: "#FF0000",
+              strokeOpacity: 1.0,
+              strokeWeight: 2,
+              map: map
+            });
+          }
 
-        // ✅ 원형은 지도에 그리지 않고 데이터만 갱신
-        updateCircleData(myPos);
+          // ✅ 부채꼴은 항상 표시
+          updateRadarPolygon(myPos, heading);
 
-        // ✅ 주변 장소 표시
-        showNearbyPlaces(myPos, radarRadiusMeters);
+          // ✅ 원형은 지도에 그리지 않고 데이터만 갱신
+          updateCircleData(myPos);
 
-        // ✅ 지도 중심을 내 위치로 이동
-        map.setCenter(myPos);
-      },
-      (err) => {
-        document.getElementById("locationBox").innerHTML =
-          "위치 정보를 가져올 수 없습니다: " + err.message;
-      },
-      { enableHighAccuracy: true }
-    );
+          // ✅ 주변 장소 표시
+          showNearbyPlaces(myPos, radarRadiusMeters);
+
+          // ✅ 지도 중심을 내 위치로 이동
+          map.setCenter(myPos);
+
+          // ✅ 대상이 설정되어 있으면 실시간 경로 갱신
+          if (targetPos) {
+            showRouteToTarget();
+          }
+        },
+        (err) => {
+          document.getElementById("locationBox").innerHTML =
+            "위치 정보를 가져올 수 없습니다: " + err.message;
+        },
+        { enableHighAccuracy: true }
+      );
+    }
   }
-}
 
-// ---------------------- 원형 데이터 관리 ----------------------
-function updateCircleData(myPos) {
-  circles = [
-    { center: myPos, radius: 100 },
-    { center: myPos, radius: 200 }
-  ];
-  // ❌ 지도에는 그리지 않고, 계산용 데이터만 유지
-}
+  // ---------------------- 원형 데이터 관리 ----------------------
+  function updateCircleData(myPos) {
+    circles = [
+      { center: myPos, radius: 100 },
+      { center: myPos, radius: 200 }
+    ];
+    // ❌ 지도에는 그리지 않고, 계산용 데이터만 유지
+  }
 
+  // ---------------------- 대상 검색 (장소 입력) ----------------------
+  function searchTarget() {
+    const placeName = document.getElementById("targetPlace").value;
+    const service = new google.maps.places.PlacesService(map);
+    service.textSearch({ query: placeName }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+        targetPos = results[0].geometry.location;
+        alert(`대상 장소가 설정되었습니다: ${results[0].name}`);
+        showRouteToTarget();
+      }
+    });
+  }
+
+  // ---------------------- 대상까지 경로 안내 ----------------------
+  function showRouteToTarget() {
+    if (!targetPos || !currentLat || !currentLng) return;
+
+    const request = {
+      origin: { lat: currentLat, lng: currentLng },
+      destination: targetPos,
+      travelMode: google.maps.TravelMode.WALKING // 🚶 도보, 필요시 DRIVING 변경 가능
+    };
+
+    directionsService.route(request, (result, status) => {
+      if (status === google.maps.DirectionsStatus.OK) {
+        directionsRenderer.setDirections(result);
+      }
+    });
+  }
+
+  // ---------------------- 페이지 로드 시 실행 ----------------------
+  window.onload = () => {
+    startTracking();
+    makeDraggable(document.getElementById("locationBox"));
+  };
   // ---------------------- 주변 장소 ----------------------
   function clearPoiMarkers() {
     poiMarkers.forEach(m => m.setMap(null));
