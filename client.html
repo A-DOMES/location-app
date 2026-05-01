@@ -202,11 +202,11 @@ let directionsService, directionsRenderer; // 경로 안내 서비스/렌더러
 let currentLat, currentLng;      // 현재 위치 좌표
 let otherMarker;                 // 상대방 위치 마커
 
-let circles = [];                // 원형 데이터 관리 (지도에는 표시하지 않음)
+let circles = [];                // 원형 데이터 관리
 let lastHeading = null;          // 최근 방향값 저장
 let infoWindow;                  // 장소 클릭 시 정보창 재사용
 
-let targetPos = null;            // 대상 좌표 (클릭/검색으로 설정)
+let targetPos = null;            // 대상 좌표
 
 // ✅ POI 아이콘 정의
 const poiIcons = {
@@ -224,7 +224,6 @@ const poiIcons = {
 // ---------------------- 위치 박스 드래그 가능 ----------------------
 function makeDraggable(element) {
   let offsetX = 0, offsetY = 0, isDown = false;
-
   element.addEventListener('mousedown', (e) => {
     isDown = true;
     offsetX = e.clientX - element.offsetLeft;
@@ -238,7 +237,6 @@ function makeDraggable(element) {
       element.style.top = (e.clientY - offsetY) + 'px';
     }
   });
-
   element.addEventListener('touchstart', (e) => {
     isDown = true;
     const touch = e.touches[0];
@@ -272,12 +270,8 @@ function getDirectionLabel(heading) {
 
 // ---------------------- 경로 안내 ----------------------
 function showRouteToDestination(destination) {
-  if (!directionsService) {
-    directionsService = new google.maps.DirectionsService();
-  }
-  if (!directionsRenderer) {
-    directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
-  }
+  if (!directionsService) directionsService = new google.maps.DirectionsService();
+  if (!directionsRenderer) directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
   const request = {
     origin: { lat: currentLat, lng: currentLng },
     destination: destination,
@@ -308,26 +302,14 @@ function showOtherLocation(otherLat, otherLng) {
   otherMarker = new google.maps.Marker({
     position: otherPos,
     map: map,
-    icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 6,
-      fillColor: "#00FFFF",
-      fillOpacity: 0.9,
-      strokeWeight: 1
-    },
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#00FFFF", fillOpacity: 0.9, strokeWeight: 1 },
     animation: google.maps.Animation.BOUNCE
   });
   setTimeout(() => { otherMarker.setAnimation(null); }, 3000);
   const myPos = { lat: currentLat, lng: currentLng };
   const distance = calculateDistance(myPos, otherPos);
-  document.getElementById("distanceBox").innerText =
-    `상대방까지 거리: ${distance.toFixed(1)} m`;
+  document.getElementById("distanceBox").innerText = `상대방까지 거리: ${distance.toFixed(1)} m`;
   showRouteToDestination(otherPos);
-}
-
-// ---------------------- 위치 공유 ----------------------
-function shareLocation(data) {
-  console.log("내 위치 공유:", data);
 }
 
 // ---------------------- 지도 초기화 ----------------------
@@ -378,63 +360,46 @@ function startTracking() {
             position: myPos,
             map: map,
             title: "내 위치",
-            icon: {
-              url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 40)
-            }
+            icon: { url: "https://cdn-icons-png.flaticon.com/512/684/684908.png", scaledSize: new google.maps.Size(40, 40), anchor: new google.maps.Point(20, 40) }
           });
         } else {
           myMarker.setPosition(myPos);
         }
 
-// ✅ 경로 기록
-pathCoords.push(myPos);
-if (pathPolyline) {
-  pathPolyline.setPath(pathCoords);
-} else {
-  pathPolyline = new google.maps.Polyline({
-    path: pathCoords,
-    geodesic: true,
-    strokeColor: "#FF0000",
-    strokeOpacity: 1.0,
-    strokeWeight: 2,
-    map: map
-  });
+        // ✅ 경로 기록
+        pathCoords.push(myPos);
+        if (pathPolyline) {
+          pathPolyline.setPath(pathCoords);
+        } else {
+          pathPolyline = new google.maps.Polyline({
+            path: pathCoords,
+            geodesic: true,
+            strokeColor: "#FF0000",
+            strokeOpacity: 1.0,
+            strokeWeight: 2,
+            map: map
+          });
+        }
+
+        // ✅ 대상이 설정되어 있으면 실시간 경로 갱신
+        if (targetPos) showRouteToTarget();
+      },
+      (err) => {
+        document.getElementById("locationBox").innerHTML = "위치 정보를 가져올 수 없습니다: " + err.message;
+      },
+      { enableHighAccuracy: true }
+    );
+  }
 }
 
-// ✅ 부채꼴은 항상 표시
-updateRadarPolygon(myPos, heading);
-
-// ✅ 원형은 지도에 그리지 않고 데이터만 갱신
-updateCircleData(myPos);
-
-// ✅ 주변 장소 표시
-showNearbyPlaces(myPos, radarRadiusMeters);
-
-// ✅ 지도 중심을 내 위치로 이동
-map.setCenter(myPos);
-
-// ✅ 대상이 설정되어 있으면 실시간 경로 갱신
-if (targetPos) {
-  showRouteToTarget();
-}
-},
-(err) => {
-  document.getElementById("locationBox").innerHTML =
-    "위치 정보를 가져올 수 없습니다: " + err.message;
-},
-{ enableHighAccuracy: true }
-);
-}
-}
-
+<script>
 // ---------------------- 원형 데이터 관리 ----------------------
 function updateCircleData(myPos) {
   circles = [
     { center: myPos, radius: 100 },
     { center: myPos, radius: 200 }
   ];
+  // 지도에 원형 표시
   circles.forEach(c => {
     new google.maps.Circle({
       strokeColor: "#0000FF",
@@ -448,7 +413,39 @@ function updateCircleData(myPos) {
     });
   });
 }
-// ---------------------- 대상 검색 (장소 입력) ----------------------
+
+// ---------------------- 부채꼴 레이더 ----------------------
+function updateRadarPolygon(myPos, heading) {
+  if (!radarEnabled) {
+    if (radarPolygon) radarPolygon.setMap(null);
+    return;
+  }
+  const angle = 90;
+  const points = [];
+  const radiusInDegrees = radarRadiusMeters / 111000;
+  for (let a = -angle/2; a <= angle/2; a += 5) {
+    const rad = (heading + a) * Math.PI / 180;
+    const latOffset = radiusInDegrees * Math.cos(rad);
+    const lngOffset = radiusInDegrees * Math.sin(rad);
+    points.push({ lat: myPos.lat + latOffset, lng: myPos.lng + lngOffset });
+  }
+  points.unshift(myPos);
+  if (radarPolygon) {
+    radarPolygon.setPath(points);
+  } else {
+    radarPolygon = new google.maps.Polygon({
+      paths: points,
+      strokeColor: "#00BFFF",
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: "#00BFFF",
+      fillOpacity: 0.25,
+      map: map
+    });
+  }
+}
+
+// ---------------------- 대상 검색 ----------------------
 function searchTarget() {
   const placeName = document.getElementById("targetPlace").value;
   const service = new google.maps.places.PlacesService(map);
@@ -464,13 +461,11 @@ function searchTarget() {
 // ---------------------- 대상까지 경로 안내 ----------------------
 function showRouteToTarget() {
   if (!targetPos || !currentLat || !currentLng) return;
-
   const request = {
     origin: { lat: currentLat, lng: currentLng },
     destination: targetPos,
     travelMode: google.maps.TravelMode.WALKING
   };
-
   directionsService.route(request, (result, status) => {
     if (status === google.maps.DirectionsStatus.OK) {
       directionsRenderer.setDirections(result);
@@ -483,13 +478,11 @@ function clearPoiMarkers() {
   poiMarkers.forEach(m => m.setMap(null));
   poiMarkers = [];
 }
-
 function showNearbyPlaces(myPos, radiusMeters) {
   clearPoiMarkers();
   const service = new google.maps.places.PlacesService(map);
   const types = Object.keys(poiIcons);
   const infowindow = new google.maps.InfoWindow();
-
   types.forEach(type => {
     service.nearbySearch({ location: myPos, radius: radiusMeters, type: [type] },
       (results, status) => {
@@ -501,16 +494,13 @@ function showNearbyPlaces(myPos, radiusMeters) {
               title: place.name,
               icon: { url: poiIcons[type], scaledSize: new google.maps.Size(32, 32) }
             });
-
             marker.addListener("click", () => {
               infowindow.setContent(`<b>${place.name}</b><br>${place.vicinity || "주소 정보 없음"}<br>(더블클릭하면 경로 안내)`);
               infowindow.open(map, marker);
             });
-
             marker.addListener("dblclick", () => {
               showRouteToDestination(place.geometry.location);
             });
-
             poiMarkers.push(marker);
           });
         }
@@ -526,13 +516,11 @@ async function showPopup() {
   }
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
   await navigator.clipboard.writeText(shareUrl);
-
   const popup = document.getElementById("popupMessage");
   popup.style.display = "block";
   popup.style.opacity = "0";
   popup.style.top = "80px";
   document.getElementById("notifySound").play();
-
   setTimeout(() => { popup.style.opacity = "1"; }, 10);
   setTimeout(() => {
     popup.style.opacity = "0";
