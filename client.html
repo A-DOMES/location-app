@@ -5,188 +5,40 @@
   <title>내 위치 지도</title>
 
   <!-- ✅ 구글 지도 API (geometry + places 라이브러리 포함) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWc8AJY&libraries=geometry,places"></script>
 
   <style>
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f0f4f8;
-}
-header {
-  padding: 15px;
-  text-align: center;
-  background: #1976d2;
-  color: white;
-  font-size: 26px;
-  font-weight: bold;
-}
-
-/* 현재좌표 창 */
-#locationBox {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  /* bottom: 20px;          좌측 하단 기본 위치 */
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  font-size: 18px;
-  color: #333;
-  text-align: left;
-  min-width: 220px;
-  z-index: 9999;
-  cursor: move;          /* 드래그 가능 */
-  width: fit-content;
-  border: 1px solid rgba(255,255,255,0.3);
-  resize: both;
-  overflow: auto;
-}
-#locationBox span {
-  display: block;
-  font-size: 22px;
-  font-weight: bold;
-  color: #d32f2f;
-  margin-top: 5px;
-}
-#locationBox small {
-  display: block;
-  margin-top: 8px;
-  font-size: 14px;
-  color: #555;
-}
-#shareBtn {
-  margin-top: 10px;
-  padding: 8px 14px;
-  background: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-  width: 100%;           /* 버튼 길이 맞춤 */
-}
-#shareBtn:hover { background: #1565c0; }
-#closeBtn {
-  float: right;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* 목적지 찾기 창 */
-#targetBox {
-  position: fixed;
-  top: 220px;
-  left: 20px;
-  /* bottom: 120px;     현재좌표 창 위쪽에 배치 */
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  font-size: 16px;
-  color: #333;
-  text-align: left;
-  min-width: 220px;
-  z-index: 9999;
-  cursor: move;
-  width: 280px;
-  border: 1px solid rgba(255,255,255,0.3);
-  resize: both;
-  overflow: auto;
-}
-#targetBox h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #1976d2;
-}
-#targetPlace {
-  width: 100%;
-  padding: 12px;         /* 입력란 높이 증가 */
-  font-size: 15px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-#targetSearchBtn {
-  width: 100%;           /* 버튼 길이 텍스트박스와 동일 */
-  padding: 12px;
-  background: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-#targetSearchBtn:hover { background: #1565c0; }
-#targetCloseBtn {
-  float: right;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* 지도 및 기타 */
-#map { width: 100%; height: 80vh; }
-#popupMessage {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(25, 118, 210, 0.95);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  display: none;
-  z-index: 9999;
-  opacity: 0;
-  transition: opacity 0.5s ease, top 2s ease;
-}
-    
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; }
+    header { padding: 15px; text-align: center; background: #1976d2; color: white; font-size: 26px; font-weight: bold; }
+    #locationBox { position: fixed; top: 80px; left: 20px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px);
+      padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 18px; color: #333;
+      min-width: 220px; z-index: 9999; cursor: move; width: fit-content; border: 1px solid rgba(255,255,255,0.3); resize: both; overflow: auto; }
+    #locationBox span { display: block; font-size: 22px; font-weight: bold; color: #d32f2f; margin-top: 5px; }
+    #locationBox small { display: block; margin-top: 8px; font-size: 14px; color: #555; }
+    #shareBtn { margin-top: 10px; padding: 8px 14px; background: #1976d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; width: 100%; }
+    #shareBtn:hover { background: #1565c0; }
+    #closeBtn { float: right; cursor: pointer; font-size: 18px; font-weight: bold; color: #333; }
+    #targetBox { position: fixed; top: 220px; left: 20px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px);
+      padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 16px; color: #333;
+      min-width: 220px; z-index: 9999; cursor: move; width: 280px; border: 1px solid rgba(255,255,255,0.3); resize: both; overflow: auto; }
+    #targetBox h3 { margin: 0 0 10px 0; font-size: 16px; font-weight: bold; color: #1976d2; }
+    #targetPlace { width: 100%; padding: 12px; font-size: 15px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    #targetSearchBtn { width: 100%; padding: 12px; background: #1976d2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    #targetSearchBtn:hover { background: #1565c0; }
+    #targetCloseBtn { float: right; cursor: pointer; font-size: 18px; font-weight: bold; color: #333; }
+    #map { width: 100%; height: 80vh; }
+    #popupMessage { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(25,118,210,0.95);
+      color: white; padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none; z-index: 9999; opacity: 0; transition: opacity 0.5s ease, top 2s ease; }
   </style>
 </head>
 <body>
   <header>📍 A-DOMES | 위치정보시스템</header>
-  
-  <!-- 지도 영역 -->
   <div id="map"></div>
-  
-  <!-- 위치 공유 팝업 메시지 -->
-  <div id="popupMessage">
-    📍 현재 위치 링크가 복사되었습니다.<br>
-    원하는 앱에 붙여넣어 공유하세요.
-  </div>
-  
-  <!-- 알림 사운드 -->
+  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
-
-  <!-- 현재 좌표 창 -->
-  <div id="locationBox">
-    <span id="closeBtn">✖</span>
-    위치 정보를 가져오는 중...
-    <button id="shareBtn">현재 위치 공유</button>
-  </div>
-
-  <!-- 목적지 찾기 창 -->
-  <div id="targetBox">
-    <span id="targetCloseBtn">✖</span>
-    <h3>목적지 찾기</h3>
-    <input type="text" id="targetPlace" placeholder="장소 이름 입력">
-    <button id="targetSearchBtn" onclick="searchTarget()">대상 검색</button>
-  </div>
+  <div id="locationBox"><span id="closeBtn">✖</span>위치 정보를 가져오는 중...<button id="shareBtn">현재 위치 공유</button></div>
+  <div id="targetBox"><span id="targetCloseBtn">✖</span><h3>목적지 찾기</h3><input type="text" id="targetPlace" placeholder="장소 이름 입력"><button id="targetSearchBtn" onclick="searchTarget()">대상 검색</button></div>
 
 <script>
 // ---------------------- 전역 변수 ----------------------
