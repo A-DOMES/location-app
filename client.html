@@ -8,53 +8,42 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f0f4f8;
-    }
-    header {
-      padding: 15px;
-      text-align: center;
-      background: #1976d2;
-      color: white;
-      font-size: 26px;
-      font-weight: bold;
-    }
-    #locationBox {
-    position: absolute;
-    top: auto;          /* 위쪽 고정 해제 */
-    left: 20px;         /* ✅ 좌측으로 붙이기 */
-    bottom: 20px;       /* ✅ 일반/위성 버튼 아래쪽에 배치 */
-    background: rgba(255, 255, 255, 0.25);  /* 반투명 흰색 */
-    backdrop-filter: blur(10px);            /* 유리 효과 */
-    -webkit-backdrop-filter: blur(10px);    /* Safari 호환 */ 
-    padding: 15px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    font-size: 18px;
-    color: #333;
-    text-align: left;   /* 좌측 정렬 */
-    min-width: 220px;
-    z-index: 9999;
-    cursor: move;
-    width: fit-content;
-    border: 1px solid rgba(255,255,255,0.3);  /* 테두리도 은은하게 */
-  }
-#locationBox {
-  position: fixed;       /* 화면에 고정 */
-  top: 20px;             /* 위쪽에 띄움 */
-  left: 20px;
-  background: #f0f0f0;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  resize: both;          /* 상하좌우 크기 조절 가능 */
-  overflow: auto;        /* 내용이 넘치면 스크롤 */
-  z-index: 1000;         /* 지도 위에 표시 */
-  width: 250px;          /* 기본 너비 */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f0f4f8;
+}
+header {
+  padding: 15px;
+  text-align: center;
+  background: #1976d2;
+  color: white;
+  font-size: 26px;
+  font-weight: bold;
 }
 
+/* 현재좌표 창 */
+#locationBox {
+  position: fixed;       /* 화면에 고정 */
+  left: 20px;            /* 좌측 */
+  bottom: 20px;          /* 하단 */
+  background: rgba(255, 255, 255, 0.25);  /* 반투명 흰색 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 18px;
+  color: #333;
+  text-align: left;
+  min-width: 220px;
+  z-index: 9999;
+  cursor: move;          /* 드래그 가능 */
+  width: fit-content;
+  border: 1px solid rgba(255,255,255,0.3);
+  resize: both;          /* 크기 조절 가능 */
+  overflow: auto;
+}
 #locationBox span {
   display: block;
   font-size: 22px;
@@ -62,14 +51,12 @@
   color: #d32f2f;
   margin-top: 5px;
 }
-
 #locationBox small {
   display: block;
   margin-top: 8px;
   font-size: 14px;
   color: #555;
 }
-
 #shareBtn {
   margin-top: 10px;
   padding: 8px 14px;
@@ -82,7 +69,6 @@
   transition: background 0.3s;
 }
 #shareBtn:hover { background: #1565c0; }
-
 #closeBtn {
   float: right;
   cursor: pointer;
@@ -91,8 +77,64 @@
   color: #333;
 }
 
-#map { width: 100%; height: 80vh; } /* 500vh → 80vh로 수정 */
+/* 목적지 찾기 창 */
+#targetBox {
+  position: fixed;
+  left: 20px;
+  bottom: 120px;         /* 현재좌표 창 위쪽에 배치 */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 16px;
+  color: #333;
+  text-align: left;
+  min-width: 220px;
+  z-index: 9999;
+  cursor: move;
+  width: 280px;
+  border: 1px solid rgba(255,255,255,0.3);
+  resize: both;
+  overflow: auto;
+}
+#targetBox h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1976d2;
+}
+#targetPlace {
+  width: 100%;
+  padding: 12px;         /* 입력란 높이 증가 */
+  font-size: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+#targetSearchBtn {
+  width: 100%;
+  padding: 10px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+#targetSearchBtn:hover { background: #1565c0; }
+#targetCloseBtn {
+  float: right;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
 
+/* 지도 및 기타 */
+#map { width: 100%; height: 80vh; }
 #popupMessage {
   position: absolute;
   top: 80px;
@@ -110,27 +152,37 @@
   opacity: 0;
   transition: opacity 0.5s ease, top 2s ease;
 }
-
 #locationDisplay {
   margin-top: 10px;
   font-size: 14px;
   font-weight: bold;
 }
 
+
   </style>
 </head>
 <body>
-  <header>📍 A-DOMES | 위치정보시스템</header>
-  <div id="locationBox">위치 정보를 가져오는 중...<button id="shareBtn">현재 위치 공유</button></div>
-  <div id="map"></div>
-  <div id="locationDisplay"></div>
-  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
-  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+<header>📍 A-DOMES | 위치정보시스템</header>
+<div id="map"></div>
+<div id="locationDisplay"></div>
+<div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
+<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
-<!-- 장소 입력 UI -->
-<input type="text" id="targetPlace" placeholder="장소 이름 입력">
-<button onclick="searchTarget()">대상 검색</button>
-  
+<!-- 현재 좌표 창 -->
+<div id="locationBox">
+  <span id="closeBtn">✖</span>
+  위치 정보를 가져오는 중...
+  <button id="shareBtn">현재 위치 공유</button>
+</div>
+
+<!-- 목적지 찾기 창 -->
+<div id="targetBox">
+  <span id="targetCloseBtn">✖</span>
+  <h3>목적지 찾기</h3>
+  <input type="text" id="targetPlace" placeholder="장소 이름 입력">
+  <button id="targetSearchBtn" onclick="searchTarget()">대상 검색</button>
+</div>
+
 <script>
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker;               // 지도와 내 위치 마커
@@ -210,7 +262,15 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("locationBox").style.display = "none";
     };
   }
+
+  const targetCloseBtn = document.getElementById("targetCloseBtn");
+  if (targetCloseBtn) {
+    targetCloseBtn.onclick = () => {
+      document.getElementById("targetBox").style.display = "none";
+    };
+  }
 });
+
 
 
   
@@ -353,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
             map = new google.maps.Map(document.getElementById("map"), {
               center: myPos,
               zoom: 18,
-              gestureHandling: "cooperative" // Ctrl 없이 확대/축소 가능
+              gestureHandling: "greedy" // Ctrl 없이 확대/축소 가능
             });
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
@@ -463,10 +523,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------- 페이지 로드 시 실행 ----------------------
-  window.onload = () => {
-    startTracking();
-    makeDraggable(document.getElementById("locationBox")); // ✅ PC/모바일 드래그 가능
-  };
+window.onload = () => {
+  startTracking();
+  makeDraggable(document.getElementById("locationBox")); // 현재좌표 창
+  makeDraggable(document.getElementById("targetBox"));   // 목적지 찾기 창
+};
+
 
   // ---------------------- 주변 장소 ----------------------
   function clearPoiMarkers() {
