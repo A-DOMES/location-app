@@ -275,7 +275,6 @@
     // 실제 구현에서는 서버/소켓을 통해 상대방에게 전달
   }
 
-// ---------------------- 위치 추적 ----------------------
 function startTracking() {
   if (navigator.geolocation) {
     navigator.geolocation.watchPosition(
@@ -285,18 +284,30 @@ function startTracking() {
         const myPos = { lat: currentLat, lng: currentLng };
         const heading = pos.coords.heading || 0;
 
-        // ✅ 위치 박스 업데이트 (생략)
+        // ✅ 위치정보 박스 갱신
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
+        document.getElementById("locationBox").innerHTML =
+          `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
+           현재 방향: ${getDirectionLabel(heading)}<br>
+           <small>갱신 시간: ${timeString}</small>
+           <button id="shareBtn">현재 위치 공유</button>`;
+        document.getElementById("shareBtn").onclick = showPopup;
 
+        updateLocationDisplay(currentLat, currentLng, heading);
+
+        // ✅ 지도 초기화 (Ctrl 없이 확대/축소 가능)
         if (!map) {
           map = new google.maps.Map(document.getElementById("map"), {
             center: myPos,
             zoom: 18,
-            gestureHandling: "greedy"
+            gestureHandling: "cooperative" // ✅ Ctrl 없이 확대/축소
           });
           directionsService = new google.maps.DirectionsService();
           directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
         }
 
+        // ✅ 내 위치 마커 갱신
         if (!myMarker) {
           myMarker = new google.maps.Marker({
             position: myPos,
@@ -330,7 +341,7 @@ function startTracking() {
         // ✅ 부채꼴은 항상 표시
         updateRadarPolygon(myPos, heading);
 
-        // ✅ 원형은 지도에 표시하지 않고 내부 데이터만 갱신
+        // ✅ 원형은 지도에 그리지 않고 데이터만 갱신
         updateCircleData(myPos);
 
         // ✅ 주변 장소 표시
@@ -354,7 +365,7 @@ function updateCircleData(myPos) {
     { center: myPos, radius: 100 },
     { center: myPos, radius: 200 }
   ];
-  // ❌ 지도에는 그리지 않고, 필요 시 계산용으로만 사용
+  // ❌ 지도에는 그리지 않고, 계산용 데이터만 유지
 }
 
   // ---------------------- 주변 장소 ----------------------
