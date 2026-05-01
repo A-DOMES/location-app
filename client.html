@@ -7,102 +7,126 @@
   <!-- ✅ 구글 지도 API (geometry + places 라이브러리 포함) -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f0f4f8;
-    }
-    header {
-      padding: 15px;
-      text-align: center;
-      background: #1976d2;
-      color: white;
-      font-size: 26px;
-      font-weight: bold;
-    }
-    /* 좌표 창 */
-    #locationBox {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 */
-      backdrop-filter: blur(10px);            /* 유리 효과 */
-      -webkit-backdrop-filter: blur(10px);    /* Safari 호환 */
-      padding: 15px 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      font-size: 18px;
-      color: #333;
-      text-align: right;
-      min-width: 220px;
-      z-index: 9999;
-      cursor: move;
-      width: fit-content;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-    #locationBox span {
-      display: block;
-      font-size: 22px;
-      font-weight: bold;
-      color: #d32f2f;
-      margin-top: 5px;
-    }
-    #locationBox small {
-      display: block;
-      margin-top: 8px;
-      font-size: 14px;
-      color: #555;
-    }
-    #shareBtn {
-      margin-top: 10px;
-      padding: 8px 14px;
-      background: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s;
-    }
-    #shareBtn:hover { background: #1565c0; }
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+  }
 
-    /* 재열기 버튼 */
-    #reopenBtn {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 9999;
-    }
+  header {
+    padding: 15px;
+    text-align: center;
+    background: #1976d2;
+    color: white;
+    font-size: 26px;
+    font-weight: bold;
+  }
 
-    #map { width: 100%; height: 500vh; }
-    #popupMessage {
-      position: absolute;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(25, 118, 210, 0.95);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.5s ease, top 2s ease;
-    }
-    #locationDisplay { margin-top: 10px; font-size: 14px; font-weight: bold; }
-  </style>
+  /* 좌표 창 */
+  #locationBox {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 */
+    backdrop-filter: blur(10px);            /* 유리 효과 */
+    -webkit-backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    font-size: 18px;
+    color: #333;
+    text-align: right;
+    min-width: 220px;
+    z-index: 9999;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  /* 닫기 버튼 */
+  #closeBtn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+  }
+
+  /* 현재좌표 버튼 */
+  #reopenBtn {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 */
+    backdrop-filter: blur(10px);            /* 유리 효과 */
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 14px 24px;   /* 크기 확대 */
+    font-size: 20px;      /* 글자 크게 */
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: none;
+    z-index: 9999;
+  }
+
+  #locationBox span {
+    display: block;
+    font-size: 22px;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-top: 5px;
+  }
+
+  #locationBox small {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  #shareBtn {
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+  }
+
+  #shareBtn:hover { background: #1565c0; }
+
+  #map { width: 100%; height: 500vh; }
+
+  #popupMessage {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(25, 118, 210, 0.95);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.5s ease, top 2s ease;
+  }
+
+  #locationDisplay {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+</style>
+
 </head>
 <body>
   <header>📍 A-DOMES | 위치정보시스템</header>
@@ -154,63 +178,43 @@
     local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
   };
 
-  // ---------------------- 공통 드래그 + 리사이즈 함수 ----------------------
-  function makeDraggableAndResizable(element) {
-    let isDragging = false, offsetX, offsetY;
-    let initialDistance = null, initialWidth, initialHeight;
+// ---------------------- 공통 드래그 함수 (이동만) ----------------------
+function makeDraggableAndResizable(element) {
+  let isDragging = false, offsetX, offsetY;
 
-    // PC 마우스
-    element.addEventListener('mousedown', e => {
+  // PC 마우스
+  element.addEventListener('mousedown', e => {
+    isDragging = true;
+    offsetX = e.clientX - element.offsetLeft;
+    offsetY = e.clientY - element.offsetTop;
+    element.style.right = "";
+  });
+  document.addEventListener('mousemove', e => {
+    if (isDragging) {
+      element.style.left = (e.clientX - offsetX) + 'px';
+      element.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
+  document.addEventListener('mouseup', () => isDragging = false);
+
+  // 모바일 터치 (이동만)
+  element.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
       isDragging = true;
-      offsetX = e.clientX - element.offsetLeft;
-      offsetY = e.clientY - element.offsetTop;
+      offsetX = e.touches[0].clientX - element.offsetLeft;
+      offsetY = e.touches[0].clientY - element.offsetTop;
       element.style.right = "";
-    });
-    document.addEventListener('mousemove', e => {
-      if (isDragging) {
-        element.style.left = (e.clientX - offsetX) + 'px';
-        element.style.top = (e.clientY - offsetY) + 'px';
-      }
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
+    }
+  });
+  document.addEventListener('touchmove', e => {
+    if (isDragging && e.touches.length === 1) {
+      element.style.left = (e.touches[0].clientX - offsetX) + 'px';
+      element.style.top = (e.touches[0].clientY - offsetY) + 'px';
+    }
+  });
+  document.addEventListener('touchend', () => isDragging = false);
+}
 
-    // 모바일 터치
-    element.addEventListener('touchstart', e => {
-      if (e.touches.length === 1) {
-        isDragging = true;
-        offsetX = e.touches[0].clientX - element.offsetLeft;
-        offsetY = e.touches[0].clientY - element.offsetTop;
-        element.style.right = "";
-      } else if (e.touches.length === 2) {
-        initialDistance = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        initialWidth = element.offsetWidth;
-        initialHeight = element.offsetHeight;
-      }
-    });
-
-    document.addEventListener('touchmove', e => {
-      if (isDragging && e.touches.length === 1) {
-        element.style.left = (e.touches[0].clientX - offsetX) + 'px';
-        element.style.top = (e.touches[0].clientY - offsetY) + 'px';
-      } else if (e.touches.length === 2 && initialDistance) {
-        const newDistance = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const scale = newDistance / initialDistance;
-        element.style.width = (initialWidth * scale) + 'px';
-        element.style.height = (initialHeight * scale) + 'px';
-      }
-    });
-
-    document.addEventListener('touchend', () => {
-      isDragging = false;
-      initialDistance = null;
-    });
-  }
 
   // ---------------------- 닫기/재열기 버튼 로직 ----------------------
   const locationBox = document.getElementById("locationBox");
