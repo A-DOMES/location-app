@@ -44,18 +44,36 @@
   resize: none;          /* 크기 변경 불가 */
 }
 
-/* 닫기 버튼 */
+/* 닫기 버튼 우측 상단 고정 */
 #closeBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: none;
   border: none;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   color: #333;
-  float: right;
 }
 
-
+/* 좌표 창 글씨 스타일 */
+#locationBox h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #1976d2;
+}
+#locationBox span {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #d32f2f;
+}
+#locationBox small {
+  font-size: 0.9rem;
+  color: #555;
+}
+  
   /* 현재좌표 버튼 */
   #reopenBtn {
     position: absolute;
@@ -77,13 +95,13 @@
     z-index: 9999;
   }
 
-  #locationBox span {
-    display: block;
-    font-size: 22px;
-    font-weight: bold;
-    color: #d32f2f;
-    margin-top: 5px;
-  }
+#locationBox span {
+  display: block;
+  font-size: 1rem;   /* 중복 제거, 일관성 유지 */
+  font-weight: bold;
+  color: #d32f2f;
+  margin-top: 5px;
+}
 
   #locationBox small {
     display: block;
@@ -106,7 +124,10 @@
 
   #shareBtn:hover { background: #1565c0; }
 
-  #map { width: 100%; height: 500vh; }
+  #map {
+  width: 100%;
+  height: 100vh;     /* 화면 높이에 맞게 수정 */
+}
 
   #popupMessage {
     position: absolute;
@@ -374,7 +395,8 @@ function updateRadarPolygon(myPos, heading) {
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 18 // 15~18이 적당, 너무 크면 화면이 위쪽만 보이는 느낌
+    zoom: 18,                  // 기본 확대 레벨
+    gestureHandling: "greedy"  // 마우스 휠로 확대/축소 가능
   });
 
   // 내 위치를 가져와서 지도 중심으로 설정
@@ -386,6 +408,7 @@ function initMap() {
           lng: position.coords.longitude
         };
         map.setCenter(userPos);
+        map.setZoom(18);   // 현재 위치 중심으로 확대
 
         // 내 위치 마커 표시
         myMarker = new google.maps.Marker({
@@ -394,20 +417,27 @@ function initMap() {
           title: "내 위치"
         });
 
+        // 원형도 현재 위치 중심으로 맞춤
+        drawMultipleCircles(userPos);
+
         // 위치 추적 시작
         startTracking();
       },
       error => {
         console.error("위치 가져오기 실패:", error);
         // 실패 시 기본 좌표로 fallback
-        map.setCenter({ lat: 34.954691, lng: 127.512740 });
+        const fallbackPos = { lat: 34.954691, lng: 127.512740 };
+        map.setCenter(fallbackPos);
+        map.setZoom(18);   // fallback 위치도 확대
         startTracking();
       },
       { enableHighAccuracy: true }
     );
   } else {
     alert("이 브라우저는 위치 추적을 지원하지 않습니다.");
-    map.setCenter({ lat: 34.954691, lng: 127.512740 });
+    const fallbackPos = { lat: 34.954691, lng: 127.512740 };
+    map.setCenter(fallbackPos);
+    map.setZoom(18);
     startTracking();
   }
 }
