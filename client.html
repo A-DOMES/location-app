@@ -323,37 +323,40 @@
 <body>
   <header>📍 A-DOMES | 위치정보시스템</header>
 
-  <!-- 좌표 창 -->
-  <div id="locationBox">
-    <div id="locationHeader">
-      <h3>현재 좌표</h3>
-      <button id="closeBtn">×</button>
-    </div>
-
-    <!-- 위치 정보 표시 영역 -->
-    <div id="locationContent">
-      위치 정보를 가져오는 중...
-      <span id="latBox"></span>
-      <span id="lngBox"></span>
-      <small id="directionBox"></small>
-      <small id="timeBox"></small>
-      <div id="addressBox"></div>
-    </div>
-
-    <!-- 공유 버튼 -->
-    <button id="shareBtn">현재 위치 공유</button>
+<!-- 좌표 창 -->
+<div id="locationBox">
+  <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
+  <div id="locationHeader">
+    <h3>현재 좌표</h3>
+    <button id="closeBtn">×</button>
   </div>
 
-  <div id="reopenBtn">현재 좌표 열기</div>
-  <div id="map"></div>
-  <div id="locationDisplay"></div>
-  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
-  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
-
-  <!-- 경로 초기화 버튼 -->
-  <div id="mapControls">
-    <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
+  <!-- 위치 정보 표시 영역 -->
+  <div id="locationContent">
+    위치 정보를 가져오는 중...
+    <span id="latBox"></span>
+    <span id="lngBox"></span>
+    <small id="directionBox"></small>
+    <small id="timeBox"></small>
+    <div id="addressBox"></div>
   </div>
+
+
+  <!-- 공유 버튼 -->
+  <button id="shareBtn">현재 위치 공유</button>
+</div>
+
+<div id="reopenBtn">현재 좌표 열기</div>
+<div id="map"></div>
+<div id="locationDisplay"></div>
+<div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
+<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+
+<!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
+<div id="mapControls">
+  <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
+</div>
+
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -384,9 +387,7 @@ let otherMarker;                   // 상대방 위치 마커
 
 // ✅ 원형 표시 관련
 let circles = [];                  // 원형 표시용 배열
-
-// ✅ // "대한민국" 제거 (자신의 위치의 나라표시 제한)
-let address = results[0].formatted_address;              
+              
 
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -680,7 +681,19 @@ function startTracking() {
         const directionLabel = getDirectionLabel(heading);
 
         const now = new Date();
-        const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
+
+        // ✅ 처음 메시지를 좌표 박스로 교체
+        const content = document.getElementById("locationContent");
+        if (!document.getElementById("latBox")) {
+          content.innerHTML = `
+            <span id="latBox"></span>
+            <span id="lngBox"></span>
+            <small id="directionBox"></small>
+            <small id="timeBox"></small>
+            <div id="addressBox"></div>
+          `;
+        }
 
         // ✅ 위치정보 갱신
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
@@ -694,11 +707,7 @@ function startTracking() {
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
-              let address = results[0].formatted_address;
-
-              // ✅ 대한민국 표기 제거 (콤마/공백 포함 모든 경우)
-              address = address.replace(/\s*,?\s*대한민국\s*$/, "");
-
+              const address = results[0].formatted_address;
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
@@ -751,7 +760,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 });
-
 
   // ---------------------- 닫기/재열기 버튼 ----------------------
   document.getElementById("closeBtn").addEventListener("click", () => {
