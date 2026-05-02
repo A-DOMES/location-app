@@ -333,7 +333,11 @@
 
   <!-- 위치 정보 표시 영역 -->
   <div id="locationContent">
-    위치 정보를 가져오는 중...
+    <span id="latBox">위도: -</span>
+    <span id="lngBox">경도: -</span>
+    <small id="directionBox">현재 방향: -</small>
+    <small id="timeBox">갱신 시간: -</small>
+    <div id="addressBox">주소: -</div>
   </div>
 
   <!-- 공유 버튼 -->
@@ -351,15 +355,8 @@
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
 
-<!-- 주소 박스 처리 -->
-<div id="locationContent">
-  <span id="latBox"></span>
-  <span id="lngBox"></span>
-  <small id="directionBox"></small>
-  <small id="timeBox"></small>
-  <div id="addressBox"></div>
-</div>  
-<script>
+  
+<script>  
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;   // 지도, 내 위치 마커, 경로 Polyline
 let pathCoords = [];               // 이동 경로 좌표 배열
