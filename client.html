@@ -106,16 +106,16 @@
     position: absolute;
     top: 80px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); /* 기본 위치 중앙 고정 */
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 2px solid #1976d2;
-    border-radius: 999px; /* pill 형태 */
+    border-radius: 999px;
     padding: 10px 22px;
     font-size: 18px;
-    font-weight: 700; /* 글씨 조금 더 진하게 */
-    color: #1976d2; /* 청색 글씨 */
+    font-weight: 700;
+    color: #1976d2;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     display: none;
@@ -124,10 +124,14 @@
     white-space: nowrap;
     transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
   }
+  
+  /* ✅ 마우스를 올렸을 때 확대 효과만 적용 */
   #reopenBtn:hover {
     background: #e3f2fd;
-    transform: scale(1.1);
+    transform: translateX(-50%) scale(1.1); /* 위치는 그대로, 크기만 확대 */
   }
+  
+  /* 클릭했을 때 살짝 줄어드는 효과 */
   #reopenBtn:active {
     transform: translateX(-50%) scale(0.95);
   }
