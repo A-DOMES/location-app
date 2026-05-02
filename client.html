@@ -9,154 +9,159 @@
 
 <style>
   body {
-    margin: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f0f4f8;
+    margin: 0; /* 페이지 기본 여백 제거 */
+    font-family: 'Segoe UI', Arial, sans-serif; /* 전체 폰트 지정 */
+    background: #f0f4f8; /* 페이지 배경색 */
   }
 
   header {
-    padding: 15px;
-    text-align: center;
-    background: #1976d2;
-    color: white;
-    font-size: 26px;
-    font-weight: bold;
+    padding: 15px; /* 헤더 안쪽 여백 */
+    text-align: center; /* 헤더 글씨 가운데 정렬 */
+    background: #1976d2; /* 헤더 배경색 (파란색) */
+    color: white; /* 헤더 글씨 색상 */
+    font-size: 26px; /* 헤더 글씨 크기 */
+    font-weight: bold; /* 헤더 글씨 굵게 */
   }
 
-/* 좌표 창 */
-#locationBox {
-  position: absolute;
-  top: 80px;
-  right: 20px;
-  width: 260px;          /* 크기 고정 */
-  height: auto;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  font-size: 16px;
-  color: #333;
-  text-align: left;
-  z-index: 9999;
-  border: 1px solid rgba(255,255,255,0.3);
-  resize: none;
-}
+  /* 좌표 창 */
+  #locationBox {
+    position: absolute; /* 화면에 고정 배치 */
+    top: 80px; /* 위쪽 위치 */
+    right: 20px; /* 오른쪽 위치 */
+    width: 260px; /* 창 너비 고정 */
+    height: auto; /* 높이는 내용에 따라 자동 */
+    background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
+    backdrop-filter: blur(10px); /* 유리 효과 */
+    -webkit-backdrop-filter: blur(10px); /* 사파리 브라우저용 유리 효과 */
+    padding: 15px 20px; /* 내부 여백 */
+    border-radius: 12px; /* 모서리 둥글게 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* 그림자 효과 */
+    font-size: 16px; /* 기본 글씨 크기 */
+    color: #333; /* 기본 글씨 색상 */
+    text-align: left; /* 글씨 왼쪽 정렬 */
+    z-index: 9999; /* 화면 최상단에 표시 */
+    border: 1px solid rgba(255,255,255,0.3); /* 테두리 */
+    resize: none; /* 크기 변경 불가 */
+  }
 
-/* 닫기 버튼 우측 상단 고정 */
-#closeBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #333;
-}
+  /* 닫기 버튼 우측 상단 고정 */
+  #closeBtn {
+    position: absolute; /* 좌표창 내부에서 절대 위치 */
+    top: 8px; /* 위쪽 위치 */
+    right: 8px; /* 오른쪽 위치 */
+    background: none; /* 배경 없음 */
+    border: none; /* 테두리 없음 */
+    font-size: 20px; /* 버튼 글씨 크기 */
+    cursor: pointer; /* 마우스 올리면 손 모양 */
+    color: #333; /* 버튼 색상 */
+  }
 
-/* 좌표 창 글씨 스타일 */
-#locationBox h3 {
-  font-size: 26px;       /* 기존 크기 유지 */
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #1976d2;
-}
-#locationBox span {
-  display: block;
-  font-size: 18px;       /* 좌표값 기존 크기로 */
-  font-weight: bold;
-  color: #d32f2f;
-  margin-top: 5px;
-}
-#locationBox small {
-  display: block;
-  margin-top: 8px;
-  font-size: 16px;       /* 방향/시간/주소 크게 */
-  color: #555;
-}
-
-/* 현재좌표 버튼 */
-#reopenBtn {
-  position: absolute;
-  top: 80px;
-  right: 20px;
-  width: 200px;          /* 좌우로 넓어지지 않도록 고정 */
-  height: auto;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 12px;
-  padding: 14px 24px;
-  font-size: 20px;       /* 글씨 크기는 그대로 */
-  font-weight: normal;   /* 두껍게 표시 제거 */
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  display: none;
-  z-index: 9999;
-}
-
-
-#locationBox span {
-  display: block;
-  font-size: 1rem;   /* 중복 제거, 일관성 유지 */
-  font-weight: bold;
-  color: #d32f2f;
-  margin-top: 5px;
-}
-
+  /* 좌표 창 글씨 스타일 */
+  #locationBox h3 {
+    font-size: 30px; /* 타이틀 크기 */
+    font-weight: bold; /* 타이틀 굵게 */
+    margin-bottom: 10px; /* 아래쪽 여백 */
+    color: #1976d2; /* 타이틀 색상 (파란색) */
+  }
+  #locationBox span {
+    display: block; /* 줄바꿈 처리 */
+    font-size: 25px; /* 좌표값 크기 */
+    font-weight: bold; /* 좌표값 굵게 */
+    color: #d32f2f; /* 좌표값 색상 (빨강) */
+    margin-top: 5px; /* 위쪽 여백 */
+  }
   #locationBox small {
-    display: block;
-    margin-top: 8px;
-    font-size: 14px;
-    color: #555;
+    display: block; /* 줄바꿈 처리 */
+    margin-top: 8px; /* 위쪽 여백 */
+    font-size: 16px; /* 방향/시간/주소 글씨 크기 */
+    color: #555; /* 글씨 색상 (회색) */
   }
 
-  #shareBtn {
-    margin-top: 10px;
-    padding: 8px 14px;
-    background: #1976d2;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
+  /* 현재좌표 버튼 */
+  #reopenBtn {
+    position: absolute; /* 화면에 고정 배치 */
+    top: 100px; /* 위쪽 위치 */
+    right: 20px; /* 오른쪽 위치 */
+    width: 150px; /* 버튼 너비 고정 */
+    height: auto; /* 높이는 내용에 따라 자동 */
+    background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
+    backdrop-filter: blur(10px); /* 유리 효과 */
+    -webkit-backdrop-filter: blur(10px); /* 사파리 브라우저용 유리 효과 */
+    border: 1px solid rgba(255,255,255,0.3); /* 테두리 */
+    border-radius: 12px; /* 모서리 둥글게 */
+    padding: 14px 24px; /* 내부 여백 */
+    font-size: 20px; /* 버튼 글씨 크기 */
+    font-weight: normal; /* 글씨 굵게 제거 */
+    cursor: pointer; /* 마우스 올리면 손 모양 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* 그림자 효과 */
+    display: none; /* 기본적으로 숨김 */
+    z-index: 9999; /* 화면 최상단에 표시 */
   }
 
-  #shareBtn:hover { background: #1565c0; }
-
-  #map {
-  width: 100%;
-  height: 100vh;     /* 화면 높이에 맞게 수정 */
+  /* 좌표값 스타일 (중복 선언, 필요 시 조정) */
+#locationBox span {
+  display: inline-block; /* 가로로 나란히 배치 */
+  margin-right: 12px;    /* 위도와 경도 사이 간격 */
+  font-size: 1rem;       /* 글씨 크기 */
+  font-weight: bold;     /* 굵게 표시 */
+  color: #d32f2f;        /* 빨강 */
 }
 
-  #popupMessage {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(25, 118, 210, 0.95);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: none;
-    z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.5s ease, top 2s ease;
+  /* 보조 정보 (갱신 시간, 주소) */
+  #locationBox small {
+    display: block; /* 줄바꿈 처리 */
+    margin-top: 8px; /* 위쪽 여백 */
+    font-size: 14px; /* 글씨 크기 */
+    color: #555; /* 글씨 색상 (회색) */
   }
 
+  /* 공유 버튼 */
+  #shareBtn {
+    margin-top: 10px; /* 위쪽 여백 */
+    padding: 8px 14px; /* 내부 여백 */
+    background: #1976d2; /* 버튼 배경색 (파란색) */
+    color: white; /* 버튼 글씨 색상 */
+    border: none; /* 테두리 없음 */
+    border-radius: 6px; /* 모서리 둥글게 */
+    cursor: pointer; /* 마우스 올리면 손 모양 */
+    font-size: 14px; /* 버튼 글씨 크기 */
+    transition: background 0.3s; /* hover 시 배경색 전환 효과 */
+  }
+  #shareBtn:hover { background: #1565c0; } /* hover 시 색상 변경 */
+
+  /* 지도 영역 */
+  #map {
+    width: 100%; /* 가로 전체 */
+    height: 100vh; /* 화면 높이에 맞춤 */
+  }
+
+  /* 공유 팝업 메시지 */
+  #popupMessage {
+    position: absolute; /* 화면에 고정 배치 */
+    top: 80px; /* 위쪽 위치 */
+    left: 50%; /* 화면 가운데 */
+    transform: translateX(-50%); /* 정확히 가운데 정렬 */
+    background: rgba(25, 118, 210, 0.95); /* 배경색 (짙은 파란색) */
+    color: white; /* 글씨 색상 */
+    padding: 12px 20px; /* 내부 여백 */
+    border-radius: 8px; /* 모서리 둥글게 */
+    font-size: 16px; /* 글씨 크기 */
+    font-weight: bold; /* 글씨 굵게 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); /* 그림자 효과 */
+    display: none; /* 기본적으로 숨김 */
+    z-index: 9999; /* 화면 최상단에 표시 */
+    opacity: 0; /* 투명도 초기값 */
+    transition: opacity 0.5s ease, top 2s ease; /* 애니메이션 효과 */
+  }
+
+  /* 하단 표시창 */
   #locationDisplay {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
+    margin-top: 10px; /* 위쪽 여백 */
+    font-size: 14px; /* 글씨 크기 */
+    font-weight: bold; /* 글씨 굵게 */
   }
 </style>
+
 
 </head>
 <body>
@@ -466,16 +471,16 @@ function startTracking() {
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
         // 좌표창 내용 갱신 (주소 영역은 따로 유지)
-        const locationBox = document.getElementById("locationBox");
-        locationBox.innerHTML = `
-          현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
-          현재 방향: ${directionLabel}<br>
-          <small>갱신 시간: ${timeString}</small><br>
-          <div id="addressBox"></div>
-          <button id="shareBtn">현재 위치 공유</button>
-          <button id="closeBtn">×</button>
-        `;
-
+        const locationBox = document.getElementById("locationBox").innerHTML = `
+        <h3>현재 좌표</h3>
+        <span>위도: ${currentLat.toFixed(6)}</span>
+        <span>경도: ${currentLng.toFixed(6)}</span><br>
+        현재 방향: ${directionLabel}<br>
+        <small>갱신 시간: ${timeString}</small><br>
+        <div id="addressBox"></div>
+        <button id="shareBtn">현재 위치 공유</button>
+        <button id="closeBtn">×</button>
+      `;
         document.getElementById("shareBtn").onclick = showPopup;
 
         // ✅ 주소 변환 추가 (창 안에 출력)
