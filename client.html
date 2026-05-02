@@ -684,7 +684,7 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 위치정보 갱신 (주소 박스는 덮어쓰지 않음)
+        // ✅ 위치정보 갱신 (각 요소별로 업데이트)
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
         document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
         document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
@@ -735,7 +735,7 @@ function startTracking() {
         }
       },
       (err) => {
-        document.getElementById("locationContent").innerHTML =
+        document.getElementById("locationContent").innerText =
           "위치 정보를 가져올 수 없습니다: " + err.message;
       },
       { enableHighAccuracy: true }
@@ -749,7 +749,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 });
-
 
   // ---------------------- 닫기/재열기 버튼 ----------------------
   document.getElementById("closeBtn").addEventListener("click", () => {
