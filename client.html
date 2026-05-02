@@ -300,7 +300,7 @@
 #resetPathBtn {
   position: absolute;
   top: 70px;   /* 지도/위성 전환 UI 바로 아래 */
-  left: 2px;  /* 좌측 상단 고정 */
+  left: 10px;  /* 좌측 상단 고정 (지도 버튼 시작점과 맞춤) */
   width: 160px;   /* 지도/위성 버튼과 동일한 넓이 */
   height: 50px;   /* 동일한 높이 */
   line-height: 50px; /* 글자 세로 중앙 정렬 */
@@ -309,7 +309,7 @@
   -webkit-backdrop-filter: blur(10px);
   border: 2px solid #1976d2;
   border-radius: 999px;
-  font-size: 22px;
+  font-size: 22px;   /* 글자 크기 */
   font-weight: 700;
   color: #1976d2;
   cursor: pointer;
@@ -319,6 +319,9 @@
   text-align: center;
   white-space: nowrap;
   transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
+
+  /* padding 제거 → 글자가 정확히 중앙에 위치 */
+  padding: 0;
 }
 
 #resetPathBtn:hover {
