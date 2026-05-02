@@ -99,24 +99,31 @@
   }
 
   /* 현재좌표 버튼 */
-  #reopenBtn {
-    position: absolute; /* 화면에 고정 배치 */
-    top: 80px; /* 위쪽 위치 */
-    right: 20px; /* 오른쪽 위치 */
-    width: 200px; /* 버튼 너비 고정 */
-    background: rgba(255, 255, 255, 0.25); /* 반투명 배경 */
-    backdrop-filter: blur(10px); /* 유리 효과 */
-    -webkit-backdrop-filter: blur(10px); /* 사파리용 유리 효과 */
-    border: 1px solid rgba(255,255,255,0.3); /* 테두리 */
-    border-radius: 12px; /* 모서리 둥글게 */
-    padding: 14px 24px; /* 내부 여백 */
-    font-size: 20px; /* 글씨 크기 */
-    font-weight: normal; /* 굵게 제거 */
-    cursor: pointer; /* 손 모양 */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* 그림자 */
-    display: none; /* 기본 숨김 */
-    z-index: 9999; /* 화면 최상단 */
-  }
+#reopenBtn {
+  position: absolute;          /* 화면에 고정 배치 */
+  top: 80px;                   /* 위쪽 위치 */
+  left: 50%;                   /* 화면 가운데 기준 */
+  transform: translateX(-50%); /* 정확히 가운데 정렬 */
+  background: rgba(255, 255, 255, 0.25); /* 반투명 배경 */
+  backdrop-filter: blur(10px); /* 유리 효과 */
+  -webkit-backdrop-filter: blur(10px); /* 사파리용 유리 효과 */
+  border: 2px solid #1976d2;   /* 파란색 테두리 */
+  border-radius: 12px;         /* 모서리 둥글게 */
+  padding: 10px 18px;          /* 내부 여백 (글씨에 맞게) */
+  font-size: 18px;             /* 글씨 크기 */
+  font-weight: bold;           /* 글씨 조금 더 진하게 */
+  color: #1976d2;              /* 글씨 색상 (청색) */
+  cursor: pointer;             /* 손 모양 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* 그림자 */
+  display: none;               /* 기본 숨김 */
+  z-index: 9999;               /* 화면 최상단 */
+  text-align: center;          /* 글씨 가운데 정렬 */
+  white-space: nowrap;         /* 줄바꿈 방지 → 버튼 크기 글씨에 맞게 */
+}
+#reopenBtn:hover {
+  background: #e3f2fd;         /* hover 시 연한 파란색 배경 */
+}
+
 
   /* 공유 버튼 */
   #shareBtn {
