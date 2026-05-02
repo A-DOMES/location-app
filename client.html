@@ -350,7 +350,15 @@
 <div id="mapControls">
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
-  
+
+<!-- 주소 박스 처리 -->
+<div id="locationContent">
+  <span id="latBox"></span>
+  <span id="lngBox"></span>
+  <small id="directionBox"></small>
+  <small id="timeBox"></small>
+  <div id="addressBox"></div>
+</div>  
 <script>
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;   // 지도, 내 위치 마커, 경로 Polyline
@@ -676,25 +684,20 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // 위치정보 갱신
-        const content = document.getElementById("locationContent");
-        content.innerHTML = `
-          <span>위도: ${currentLat.toFixed(6)}</span>
-          <span>경도: ${currentLng.toFixed(6)}</span>
-          <small>현재 방향: ${directionLabel}</small>
-          <small>갱신 시간: ${timeString}</small>
-          <div id="addressBox"></div>
-        `;
+        // ✅ 위치정보 갱신 (주소 박스는 덮어쓰지 않음)
+        document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+        document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+        document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+        document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
 
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // 주소 변환 주기
+        // ✅ 주소 변환 주기 (1분마다 갱신)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
               const address = results[0].formatted_address;
-              document.getElementById("addressBox").innerHTML =
-                `<small>주소: ${address}</small>`;
+              document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
           lastGeocodeTime = Date.now();
