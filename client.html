@@ -341,7 +341,6 @@
     <div id="addressBox"></div>
   </div>
 
-
   <!-- 공유 버튼 -->
   <button id="shareBtn">현재 위치 공유</button>
 </div>
@@ -683,18 +682,6 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 처음 메시지를 좌표 박스로 교체
-        const content = document.getElementById("locationContent");
-        if (!document.getElementById("latBox")) {
-          content.innerHTML = `
-            <span id="latBox"></span>
-            <span id="lngBox"></span>
-            <small id="directionBox"></small>
-            <small id="timeBox"></small>
-            <div id="addressBox"></div>
-          `;
-        }
-
         // ✅ 위치정보 갱신
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
         document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
@@ -707,7 +694,13 @@ function startTracking() {
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
-              const address = results[0].formatted_address;
+              let address = results[0].formatted_address;
+
+              // ✅ "대한민국" 제거
+              if (address.endsWith("대한민국")) {
+                address = address.replace(/,?\s*대한민국$/, "");
+              }
+
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
@@ -753,6 +746,7 @@ function startTracking() {
     );
   }
 }
+
 
 // ---------------------- 경로 초기화 버튼 로직 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
