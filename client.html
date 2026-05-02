@@ -190,18 +190,32 @@
     font-weight: bold;
   }
 
- /* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 방식  ---------------------- */
+/* ---------------------- 좌표값 (위도, 경도 → 빨강) ---------------------- */
+#locationBox span {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #d32f2f; /* 빨강: 위도와 값, 경도와 값 모두 빨강 */
+  margin-top: 5px;
+}
+
+/* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 ---------------------- */
 /* 위성지도용 스타일 */
 .map-satellite #locationBox {
   background: rgba(0, 0, 0, 0.6); /* 어두운 반투명 배경 */
   border: 2px solid #fff;         /* 흰색 테두리 */
   transition: background 0.5s ease, border 0.5s ease;
 }
-.map-satellite #locationBox span,
-.map-satellite #locationBox small {
-  color: #fff; /* 흰색 글씨 */
+.map-satellite #locationBox span {
+  color: #d32f2f; /* 위도/경도는 항상 빨강 유지 */
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
                -1px  1px 0 #000, 1px  1px 0 #000; /* 검정 outline */
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+.map-satellite #locationBox small {
+  color: #fff; /* 방향, 시간, 주소는 흰색 */
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
+               -1px  1px 0 #000, 1px  1px 0 #000;
   transition: color 0.5s ease, text-shadow 0.5s ease;
 }
 
@@ -211,21 +225,23 @@
   border: 2px solid #1976d2;            /* 파란색 테두리 */
   transition: background 0.5s ease, border 0.5s ease;
 }
-.map-roadmap #locationBox span,
-.map-roadmap #locationBox small {
-  color: #000; /* 검정 글씨 */
+.map-roadmap #locationBox span {
+  color: #d32f2f; /* 위도/경도는 항상 빨강 유지 */
   text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
                -1px  1px 0 #fff, 1px  1px 0 #fff; /* 흰 outline */
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+.map-roadmap #locationBox small {
+  color: #000; /* 방향, 시간, 주소는 검정 */
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
+               -1px  1px 0 #fff, 1px  1px 0 #fff;
   transition: color 0.5s ease, text-shadow 0.5s ease;
 }
 
 /* ---------------------- 모바일 전용 스타일 ---------------------- */
 @media (max-width: 600px) {
   #locationBox {
-    /* 기존 스타일 유지 */
     background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border: 2px solid #1976d2;
   }
 
@@ -236,15 +252,14 @@
     color: #d32f2f;    /* 빨강 그대로 */
   }
 
-  /* 방향, 갱신 시간, 주소 (검정 글씨 → 조금 더 크게, 진하게) */
+  /* 방향, 갱신 시간, 주소 (검정 그대로, 크기와 굵기 강화) */
   #locationBox small {
     font-size: 18px;   /* 모바일에서 조금 더 크게 */
     font-weight: 700;  /* 더 진하게 */
     color: #555;       /* 기존 색상 유지 */
   }
 }
-
-
+  
 </style>
 
 
