@@ -707,7 +707,11 @@ function startTracking() {
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
-              const address = results[0].formatted_address;
+              let address = results[0].formatted_address;
+
+              // ✅ 대한민국 표기 제거 (콤마/공백 포함 모든 경우)
+              address = address.replace(/\s*,?\s*대한민국\s*$/, "");
+
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
