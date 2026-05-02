@@ -23,36 +23,38 @@
     font-weight: bold;
   }
 
-  /* 좌표 창 */
-  #locationBox {
-    position: absolute;
-    top: 80px;
-    right: 20px;
-    max-width: 300px;
-    max-height: 200px;
-    background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 */
-    backdrop-filter: blur(10px);            /* 유리 효과 */
-    -webkit-backdrop-filter: blur(10px);
-    padding: 15px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    font-size: 18px;
-    color: #333;
-    text-align: right;
-    min-width: 220px;
-    z-index: 9999;
-    border: 1px solid rgba(255,255,255,0.3);
-  }
+/* 좌표 창 */
+#locationBox {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 260px;          /* 크기 고정 */
+  height: auto;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 16px;
+  color: #333;
+  text-align: left;      /* 좌측 정렬 */
+  z-index: 9999;
+  border: 1px solid rgba(255,255,255,0.3);
+  resize: none;          /* 크기 변경 불가 */
+}
 
-  /* 닫기 버튼 */
-  #closeBtn {
-    background: none;
-    border: none;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #333;
-  }
+/* 닫기 버튼 */
+#closeBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  float: right;
+}
+
 
   /* 현재좌표 버튼 */
   #reopenBtn {
@@ -238,36 +240,51 @@ function makeDraggableAndResizable(element) {
     reopenBtn.style.display = "none";
   });
 
-  // ---------------------- 부채꼴 레이더 ----------------------
-  function updateRadarPolygon(myPos, heading) {
-    if (!radarEnabled) {
-      if (radarPolygon) radarPolygon.setMap(null);
-      return;
-    }
-    const angle = 90;
-    const points = [];
-    const radiusInDegrees = radarRadiusMeters / 111000;
-    for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = (heading + a) * Math.PI / 180;
-      const latOffset = radiusInDegrees * Math.cos(rad);
-      const lngOffset = radiusInDegrees * Math.sin(rad);
-      points.push({ lat: myPos.lat + latOffset, lng: myPos.lng + lngOffset });
-    }
-    points.unshift(myPos);
-    if (radarPolygon) {
-      radarPolygon.setPath(points);
+// ---------------------- 부채꼴 레이더 (수정) ----------------------
+function updateRadarPolygon(myPos, heading) {
+  // heading 값이 없으면 마지막 heading 유지
+  if (heading === null || heading === undefined || heading === 0) {
+    if (lastHeading !== null) {
+      heading = lastHeading;
     } else {
-      radarPolygon = new google.maps.Polygon({
-        paths: points,
-        strokeColor: "#00BFFF",
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: "#00BFFF",
-        fillOpacity: 0.25,
-        map: map
-      });
+      heading = 0; // 기본값 북쪽
     }
+  } else {
+    lastHeading = heading; // 새로운 heading 저장
   }
+
+  if (!radarEnabled) {
+    if (radarPolygon) radarPolygon.setMap(null);
+    return;
+  }
+
+  const angle = 90; // 시야각 범위
+  const points = [];
+  const radiusInDegrees = radarRadiusMeters / 111000;
+
+  for (let a = -angle/2; a <= angle/2; a += 5) {
+    const rad = (heading + a) * Math.PI / 180;
+    const latOffset = radiusInDegrees * Math.cos(rad);
+    const lngOffset = radiusInDegrees * Math.sin(rad);
+    points.push({ lat: myPos.lat + latOffset, lng: myPos.lng + lngOffset });
+  }
+  points.unshift(myPos);
+
+  if (radarPolygon) {
+    radarPolygon.setPath(points);
+  } else {
+    radarPolygon = new google.maps.Polygon({
+      paths: points,
+      strokeColor: "#00BFFF",
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: "#00BFFF",
+      fillOpacity: 0.25,
+      map: map
+    });
+  }
+}
+
 
   // ---------------------- 방향 라벨 계산 ----------------------
   function getDirectionLabel(heading) {
@@ -414,30 +431,32 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // 좌표값 + 방향 + 시간 먼저 표시
-        document.getElementById("locationBox").innerHTML =
-          `현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
-           현재 방향: ${directionLabel}<br>
-           <small>갱신 시간: ${timeString}</small><br>
-           <button id="shareBtn">현재 위치 공유</button>
-           <button id="closeBtn">×</button>`;
+        // 좌표창 내용 갱신 (주소 영역은 따로 유지)
+        const locationBox = document.getElementById("locationBox");
+        locationBox.innerHTML = `
+          현재 좌표:<span>${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}</span><br>
+          현재 방향: ${directionLabel}<br>
+          <small>갱신 시간: ${timeString}</small><br>
+          <div id="addressBox"></div>
+          <button id="shareBtn">현재 위치 공유</button>
+          <button id="closeBtn">×</button>
+        `;
 
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // ✅ 주소 변환 추가
+        // ✅ 주소 변환 추가 (창 안에 출력)
         geocoder.geocode({ location: myPos }, (results, status) => {
           if (status === "OK" && results[0]) {
             const address = results[0].formatted_address;
-            // 주소를 좌표창에 추가
-            document.getElementById("locationBox").innerHTML +=
-              `<br><small>주소: ${address}</small>`;
+            document.getElementById("addressBox").innerHTML =
+              `<small>주소: ${address}</small>`;
           }
         });
 
         // ✅ 하단 표시창 업데이트
         updateLocationDisplay(currentLat, currentLng, heading);
 
-        // 지도/마커/폴리라인/부채꼴 등 기존 로직 유지
+        // 마커 갱신
         if (!myMarker) {
           myMarker = new google.maps.Marker({
             position: myPos,
@@ -453,38 +472,13 @@ function startTracking() {
           myMarker.setPosition(myPos);
         }
 
-        pathCoords.push(myPos);
-        if (pathPolyline) {
-          pathPolyline.setPath(pathCoords);
-        } else {
-          pathPolyline = new google.maps.Polyline({
-            path: pathCoords,
-            geodesic: true,
-            strokeColor: "#FF0000",
-            strokeOpacity: 1.0,
-            strokeWeight: 2,
-            map: map
-          });
-        }
-
-        if (pathCoords.length > 1) {
-          const prev = pathCoords[pathCoords.length - 2];
-          const dist = google.maps.geometry.spherical.computeDistanceBetween(
-            new google.maps.LatLng(prev.lat, prev.lng),
-            new google.maps.LatLng(myPos.lat, myPos.lng)
-          );
-          if (dist > 2) {
-            updateRadarPolygon(myPos, heading);
-          } else {
-            if (radarPolygon) radarPolygon.setMap(null);
-          }
-        }
-
-        // ✅ 원형 표시 + 주변 장소
+        // 원형 갱신
         drawMultipleCircles(myPos);
-        showNearbyPlaces(myPos, radarRadiusMeters);
 
-        // ✅ 지도 중심을 항상 내 위치로
+        // 부채꼴 갱신
+        updateRadarPolygon(myPos, heading);
+
+        // 지도 중심 갱신
         map.setCenter(myPos);
       },
       (err) => {
@@ -497,14 +491,18 @@ function startTracking() {
 }
 
 
-  // ---------------------- 원형 표시 ----------------------
-  function drawMultipleCircles(myPos) {
-    const circleStyles = [
-      { radius: 100, strokeColor: "#FF6666" },
-      { radius: 200, strokeColor: "#FF9999" }
-    ];
+// ---------------------- 원형 표시 (수정) ----------------------
+function drawMultipleCircles(myPos) {
+  // 원형 스타일 정의
+  const circleStyles = [
+    { radius: 100, strokeColor: "#FF6666" },
+    { radius: 200, strokeColor: "#FF9999" }
+  ];
+
+  // 기존 원형이 없으면 생성, 있으면 중심만 갱신
+  if (circles.length === 0) {
     circleStyles.forEach(style => {
-      new google.maps.Circle({
+      const circle = new google.maps.Circle({
         center: myPos,
         radius: style.radius,
         strokeColor: style.strokeColor,
@@ -513,8 +511,15 @@ function startTracking() {
         fillOpacity: 0,
         map: map
       });
+      circles.push(circle);
+    });
+  } else {
+    circles.forEach(circle => {
+      circle.setCenter(myPos);
     });
   }
+}
+
 
   // ---------------------- 주변 장소 ----------------------
   function clearPoiMarkers() {
