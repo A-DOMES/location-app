@@ -333,11 +333,7 @@
 
   <!-- 위치 정보 표시 영역 -->
   <div id="locationContent">
-    <span id="latBox">위도: -</span>
-    <span id="lngBox">경도: -</span>
-    <small id="directionBox">현재 방향: -</small>
-    <small id="timeBox">갱신 시간: -</small>
-    <div id="addressBox">주소: -</div>
+    위치 정보를 가져오는 중...
   </div>
 
   <!-- 공유 버튼 -->
@@ -355,6 +351,15 @@
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
 
+<!-- 위치 정보 표시 영역 -->
+<div id="locationContent">
+  위치 정보를 가져오는 중...
+  <span id="latBox"></span>
+  <span id="lngBox"></span>
+  <small id="directionBox"></small>
+  <small id="timeBox"></small>
+  <div id="addressBox"></div>
+</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -681,7 +686,19 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 위치정보 갱신 (각 요소별로 업데이트)
+        // ✅ 처음 메시지를 좌표 박스로 교체
+        const content = document.getElementById("locationContent");
+        if (!document.getElementById("latBox")) {
+          content.innerHTML = `
+            <span id="latBox"></span>
+            <span id="lngBox"></span>
+            <small id="directionBox"></small>
+            <small id="timeBox"></small>
+            <div id="addressBox"></div>
+          `;
+        }
+
+        // ✅ 위치정보 갱신
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
         document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
         document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
