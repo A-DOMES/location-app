@@ -43,11 +43,10 @@
   }
 
   /* 좌표 창 헤더 (타이틀 + 닫기 버튼 같은 줄) */
-  /* 좌표 창 헤더 */
 #locationHeader {
-  display: flex;               /* 가로 배치 */
+  display: flex;
   justify-content: space-between; /* 좌우 끝으로 배치 */
-  align-items: center;         /* 세로 가운데 정렬 */
+  align-items: center;
   margin-bottom: 10px;
 }
 
@@ -60,22 +59,25 @@
 
 /* 닫기 버튼을 아이콘처럼 크게 */
 #closeBtn {
-  background: white;           /* 흰색 배경 */
-  border: 2px solid #1976d2;   /* 파란색 테두리 */
+  background: white;
+  border: 2px solid #1976d2;
   border-radius: 50%;          /* 동그랗게 */
-  width: 36px;                 /* 버튼 크기 */
-  height: 36px;
-  font-size: 20px;             /* X 글씨 크기 */
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
   font-weight: bold;
   cursor: pointer;
   color: #1976d2;
-  display: flex;               /* 가운데 정렬 */
+  display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2); /* 그림자 효과 */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease, background 0.3s ease;
 }
+
 #closeBtn:hover {
-  background: #f0f4f8;         /* hover 시 배경색 */
+  background: #f0f4f8;
+  transform: scale(1.1); /* hover 시 살짝 커짐 */
 }
 
 
@@ -170,7 +172,7 @@
 
 <!-- 좌표 창 -->
 <div id="locationBox">
-  <!-- 헤더: 현재 좌표 + 닫기 버튼 같은 줄 -->
+  <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
   <div id="locationHeader">
     <h3>현재 좌표</h3>
     <button id="closeBtn">×</button>
@@ -185,10 +187,7 @@
   <button id="shareBtn">현재 위치 공유</button>
 </div>
 
-<!-- 재열기 버튼 -->
 <div id="reopenBtn">현재 좌표 열기</div>
-
-<!-- 지도 영역 -->
 <div id="map"></div>
 <div id="locationDisplay"></div>
 <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
@@ -467,7 +466,6 @@ function initMap() {
 window.onload = initMap;
 
 
-// ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
@@ -483,20 +481,20 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // 좌표창 내용 갱신 (주소 영역은 따로 유지)
-        const locationBox = document.getElementById("locationBox").innerHTML = `
-        <h3>현재 좌표</h3>
-        <span>위도: ${currentLat.toFixed(6)}</span>
-        <span>경도: ${currentLng.toFixed(6)}</span><br>
-        현재 방향: ${directionLabel}<br>
-        <small>갱신 시간: ${timeString}</small><br>
-        <div id="addressBox"></div>
-        <button id="shareBtn">현재 위치 공유</button>
-        <button id="closeBtn">×</button>
-      `;
+        // ✅ 위치정보 영역만 갱신
+        const content = document.getElementById("locationContent");
+        content.innerHTML = `
+          <span>위도: ${currentLat.toFixed(6)}</span>
+          <span>경도: ${currentLng.toFixed(6)}</span>
+          <small>현재 방향: ${directionLabel}</small>
+          <small>갱신 시간: ${timeString}</small>
+          <div id="addressBox"></div>
+        `;
+
+        // 공유 버튼 이벤트 연결
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // ✅ 주소 변환 추가 (창 안에 출력)
+        // 주소 변환
         geocoder.geocode({ location: myPos }, (results, status) => {
           if (status === "OK" && results[0]) {
             const address = results[0].formatted_address;
@@ -505,7 +503,7 @@ function startTracking() {
           }
         });
 
-        // ✅ 하단 표시창 업데이트
+        // 하단 표시창 업데이트
         updateLocationDisplay(currentLat, currentLng, heading);
 
         // 마커 갱신
@@ -524,17 +522,12 @@ function startTracking() {
           myMarker.setPosition(myPos);
         }
 
-        // 원형 갱신
         drawMultipleCircles(myPos);
-
-        // 부채꼴 갱신
         updateRadarPolygon(myPos, heading);
-
-        // 지도 중심 갱신
         map.setCenter(myPos);
       },
       (err) => {
-        document.getElementById("locationBox").innerHTML =
+        document.getElementById("locationContent").innerHTML =
           "위치 정보를 가져올 수 없습니다: " + err.message;
       },
       { enableHighAccuracy: true }
@@ -542,6 +535,17 @@ function startTracking() {
   }
 }
 
+// 닫기 버튼 이벤트
+document.getElementById("closeBtn").addEventListener("click", () => {
+  document.getElementById("locationBox").style.display = "none";
+  document.getElementById("reopenBtn").style.display = "block";
+});
+
+// 재열기 버튼 이벤트
+document.getElementById("reopenBtn").addEventListener("click", () => {
+  document.getElementById("locationBox").style.display = "block";
+  document.getElementById("reopenBtn").style.display = "none";
+});
 
 // ---------------------- 원형 표시 (수정) ----------------------
 function drawMultipleCircles(myPos) {
