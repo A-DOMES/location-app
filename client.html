@@ -297,35 +297,37 @@
       cursor: pointer;
     }
 
-    /* 경로 초기화 버튼 (현재좌표열기와 동일 스타일) */
-    #resetPathBtn {
-      position: absolute;
-      top: 140px; /* 일반/위성 버튼 바로 아래 */
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
-      border: 2px solid #1976d2;
-      border-radius: 999px;
-      padding: 10px 22px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #1976d2;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      display: none;
-      z-index: 9999;
-      text-align: center;
-      white-space: nowrap;
-      transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-    }
-    #resetPathBtn:hover {
-      background: #e3f2fd;
-      transform: translateX(-50%) scale(1.1);
-    }
-    #resetPathBtn:active {
-      transform: translateX(-50%) scale(0.95);
-    }
+/* 경로 초기화 버튼 (아이콘 + 텍스트) */
+#resetPathBtn {
+  position: absolute;
+  top: 60px;   /* 구글 지도 위성 버튼 바로 아래 */
+  left: 10px;  /* 좌측 상단 고정 */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 2px solid #1976d2;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1976d2;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  display: none;
+  z-index: 9999;
+  text-align: center;
+  white-space: nowrap;
+  transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
+}
+
+#resetPathBtn:hover {
+  background: #e3f2fd;
+  transform: scale(1.1); /* 좌측 고정이므로 translateX 제거 */
+}
+
+#resetPathBtn:active {
+  transform: scale(0.95);
+}
+
 </style>
 
 
@@ -356,11 +358,8 @@
 <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
 <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
-<!-- 경로 초기화 영역 -->
+<!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
 <div id="mapControls">
-  <button id="mapTypeBtn">일반</button>
-  <button id="satelliteBtn">위성</button>
-  <!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
   
@@ -673,92 +672,93 @@ function updateRadarPolygon(myPos, heading) {
     }
   }
 
-  // ---------------------- 위치 추적 ----------------------
-  function startTracking() {
-    const geocoder = new google.maps.Geocoder();
+// ---------------------- 위치 추적 ----------------------
+function startTracking() {
+  const geocoder = new google.maps.Geocoder();
 
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (pos) => {
-          const currentLat = pos.coords.latitude;
-          const currentLng = pos.coords.longitude;
-          const myPos = { lat: currentLat, lng: currentLng };
-          const heading = pos.coords.heading || 0;
-          const directionLabel = getDirectionLabel(heading);
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+        const myPos = { lat: currentLat, lng: currentLng };
+        const heading = pos.coords.heading || 0;
+        const directionLabel = getDirectionLabel(heading);
 
-          const now = new Date();
-          const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-          // 위치정보 갱신
-          const content = document.getElementById("locationContent");
-          content.innerHTML = `
-            <span>위도: ${currentLat.toFixed(6)}</span>
-            <span>경도: ${currentLng.toFixed(6)}</span>
-            <small>현재 방향: ${directionLabel}</small>
-            <small>갱신 시간: ${timeString}</small>
-            <div id="addressBox"></div>
-          `;
+        // 위치정보 갱신
+        const content = document.getElementById("locationContent");
+        content.innerHTML = `
+          <span>위도: ${currentLat.toFixed(6)}</span>
+          <span>경도: ${currentLng.toFixed(6)}</span>
+          <small>현재 방향: ${directionLabel}</small>
+          <small>갱신 시간: ${timeString}</small>
+          <div id="addressBox"></div>
+        `;
 
-          document.getElementById("shareBtn").onclick = showPopup;
+        document.getElementById("shareBtn").onclick = showPopup;
 
-          // 주소 변환 주기
-          if (Date.now() - lastGeocodeTime > geocodeInterval) {
-            geocoder.geocode({ location: myPos }, (results, status) => {
-              if (status === "OK" && results[0]) {
-                const address = results[0].formatted_address;
-                document.getElementById("addressBox").innerHTML =
-                  `<small>주소: ${address}</small>`;
-              }
-            });
-            lastGeocodeTime = Date.now();
-          }
+        // 주소 변환 주기
+        if (Date.now() - lastGeocodeTime > geocodeInterval) {
+          geocoder.geocode({ location: myPos }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              const address = results[0].formatted_address;
+              document.getElementById("addressBox").innerHTML =
+                `<small>주소: ${address}</small>`;
+            }
+          });
+          lastGeocodeTime = Date.now();
+        }
 
-          updateLocationDisplay(currentLat, currentLng, heading);
+        updateLocationDisplay(currentLat, currentLng, heading);
 
-          // 마커 갱신
-          if (!myMarker) {
-            myMarker = new google.maps.Marker({
-              position: myPos,
-              map: map,
-              title: "내 위치",
-              icon: {
-                url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-                scaledSize: new google.maps.Size(40, 40),
-                anchor: new google.maps.Point(20, 40)
-              }
-            });
-          } else {
-            myMarker.setPosition(myPos);
-          }
+        // 마커 갱신
+        if (!myMarker) {
+          myMarker = new google.maps.Marker({
+            position: myPos,
+            map: map,
+            title: "내 위치",
+            icon: {
+              url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40)
+            }
+          });
+        } else {
+          myMarker.setPosition(myPos);
+        }
 
-          drawMultipleCircles(myPos);
-          updateRadarPolygon(myPos, heading);
-          map.setCenter(myPos);
+        drawMultipleCircles(myPos);
+        updateRadarPolygon(myPos, heading);
+        map.setCenter(myPos);
 
-          // ✅ 경로 갱신
-          pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-          pathPolyline.setPath(pathCoords);
+        // ✅ 경로 갱신
+        pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+        pathPolyline.setPath(pathCoords);
 
-          // 경로가 생기면 초기화 버튼 표시
-          if (pathCoords.length > 1) {
-            document.getElementById("resetPathBtn").style.display = "inline-block";
-          }
-        },
-        (err) => {
-          document.getElementById("locationContent").innerHTML =
-            "위치 정보를 가져올 수 없습니다: " + err.message;
-        },
-        { enableHighAccuracy: true }
-      );
-    }
+        // ✅ 경로가 생기면 초기화 버튼 표시
+        if (pathCoords.length > 1) {
+          document.getElementById("resetPathBtn").style.display = "inline-block";
+        }
+      },
+      (err) => {
+        document.getElementById("locationContent").innerHTML =
+          "위치 정보를 가져올 수 없습니다: " + err.message;
+      },
+      { enableHighAccuracy: true }
+    );
   }
+}
 
-  // ---------------------- 경로 초기화 버튼 로직 ----------------------
-  document.getElementById("resetPathBtn").addEventListener("click", () => {
-    pathCoords = [];
-    pathPolyline.setPath([]);
-    document.getElementById("resetPathBtn").style.display = "none";
-  });
+// ---------------------- 경로 초기화 버튼 로직 ----------------------
+document.getElementById("resetPathBtn").addEventListener("click", () => {
+  pathCoords = [];
+  pathPolyline.setPath([]);
+  document.getElementById("resetPathBtn").style.display = "none";
+});
+
 
   // ---------------------- 닫기/재열기 버튼 ----------------------
   document.getElementById("closeBtn").addEventListener("click", () => {
