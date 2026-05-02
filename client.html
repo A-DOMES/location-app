@@ -278,29 +278,12 @@
   }
 }
 
-/* ---------------------- 경로 초기화 버튼 스타일 ---------------------- */
-    /* 지도 컨트롤 버튼 */
-    #mapControls {
-      position: absolute;
-      top: 60px;   /* 지도/위성 전환 UI 바로 아래 */
-      left: 10px;  /* 좌측 상단 고정 */
-      z-index: 9999;
-    }
-    #mapControls button {
-      margin: 4px;
-      padding: 8px 16px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #1976d2;
-      background: #fff;
-      cursor: pointer;
-    }
 
 /* ---------------------- 경로 초기화 버튼 스타일 ---------------------- */
 #resetPathBtn {
   position: absolute;
   top: 70px;   /* 지도/위성 전환 UI 바로 아래 */
-  left: 10px;  /* 좌측 상단 고정 (지도 버튼 시작점과 맞춤) */
+  left: 10px;  /* 좌측 상단 고정 */
   width: 160px;   /* 지도/위성 버튼과 동일한 넓이 */
   height: 50px;   /* 동일한 높이 */
   line-height: 50px; /* 글자 세로 중앙 정렬 */
@@ -320,7 +303,7 @@
   white-space: nowrap;
   transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
 
-  /* padding 제거 → 글자가 정확히 중앙에 위치 */
+  /* ✅ padding 제거 → 글자가 정확히 중앙에 위치 */
   padding: 0;
 }
 
