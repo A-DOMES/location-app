@@ -386,7 +386,9 @@ let otherMarker;                   // 상대방 위치 마커
 
 // ✅ 원형 표시 관련
 let circles = [];                  // 원형 표시용 배열
-              
+
+// ✅ // "대한민국" 제거 (자신의 위치의 나라표시 제한)
+let address = results[0].formatted_address;              
 
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -693,13 +695,14 @@ function startTracking() {
         // ✅ 주소 변환 주기 (1분마다 갱신)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
-            if (status === "OK" && results[0]) {
-              let address = results[0].formatted_address;
-
-              // ✅ "대한민국" 제거
-              if (address.endsWith("대한민국")) {
-                address = address.replace(/,?\s*대한민국$/, "");
-              }
+                if (status === "OK" && results[0]) {
+                  let address = results[0].formatted_address;
+                
+                  // ✅ 대한민국 표기 제거
+                  address = address.replace(/,\s*대한민국$/, "").replace(/대한민국$/, "");
+                
+                  document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+                }
 
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
