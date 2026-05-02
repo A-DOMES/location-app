@@ -694,7 +694,7 @@ function startTracking() {
 
         // ✅ 처음 메시지를 좌표 박스로 교체
         const content = document.getElementById("locationContent");
-        if (!document.getElementById("latBox")) {
+        if (!document.getElementById("latBox") || content.innerText.includes("위치 정보를 가져오는 중")) {
           content.innerHTML = `
             <span id="latBox"></span>
             <span id="lngBox"></span>
@@ -765,7 +765,6 @@ function startTracking() {
           pathPolyline.setPath(pathCoords);
         }
 
-
         // ✅ 경로가 생기면 초기화 버튼 표시
         if (pathCoords.length > 1) {
           document.getElementById("resetPathBtn").style.display = "inline-block";
@@ -786,6 +785,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 });
+
 
   // ---------------------- 닫기/재열기 버튼 ----------------------
   document.getElementById("closeBtn").addEventListener("click", () => {
