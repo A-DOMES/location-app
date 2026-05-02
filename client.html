@@ -334,7 +334,13 @@
   <!-- 위치 정보 표시 영역 -->
   <div id="locationContent">
     위치 정보를 가져오는 중...
+    <span id="latBox"></span>
+    <span id="lngBox"></span>
+    <small id="directionBox"></small>
+    <small id="timeBox"></small>
+    <div id="addressBox"></div>
   </div>
+
 
   <!-- 공유 버튼 -->
   <button id="shareBtn">현재 위치 공유</button>
@@ -351,15 +357,6 @@
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
 
-<!-- 위치 정보 표시 영역 -->
-<div id="locationContent">
-  위치 정보를 가져오는 중...
-  <span id="latBox"></span>
-  <span id="lngBox"></span>
-  <small id="directionBox"></small>
-  <small id="timeBox"></small>
-  <div id="addressBox"></div>
-</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
