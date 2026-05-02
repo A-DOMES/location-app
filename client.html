@@ -640,28 +640,45 @@ function drawMultipleCircles(myPos) {
     });
   }
 
-  // ---------------------- 공유 팝업 ----------------------
-  async function showPopup() {
-    if (!currentLat || !currentLng) {
-      alert("위치 정보를 먼저 가져와야 합니다.");
-      return;
-    }
-    const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
-    await navigator.clipboard.writeText(shareUrl);
-
-    const popup = document.getElementById("popupMessage");
-    popup.style.display = "block";
-    popup.style.opacity = "0";
-    popup.style.top = "80px";
-    document.getElementById("notifySound").play();
-
-    setTimeout(() => { popup.style.opacity = "1"; }, 10);
-    setTimeout(() => {
-      popup.style.opacity = "0";
-      popup.style.top = "0px";
-      setTimeout(() => { popup.style.display = "none"; }, 2000);
-    }, 3000);
+// ---------------------- 공유 팝업 ----------------------
+async function showPopup() {
+  // 위치 정보가 없으면 안내 메시지
+  if (!currentLat || !currentLng) {
+    alert("위치 정보를 먼저 가져와야 합니다.");
+    return;
   }
+
+  // 공유할 구글 지도 URL 생성 후 클립보드에 복사
+  const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+  await navigator.clipboard.writeText(shareUrl);
+
+  // 팝업 요소 가져오기
+  const popup = document.getElementById("popupMessage");
+
+  // 팝업 초기 상태 설정
+  popup.style.display = "block";   // 팝업 보이기
+  popup.style.opacity = "0";       // 투명도 초기값
+  popup.style.top = "80px";        // 위치 초기값
+  document.getElementById("notifySound").play(); // 알림음 재생
+
+  // ✅ fade-in 애니메이션 (살짝 딜레이 후 표시)
+  setTimeout(() => { 
+    popup.style.opacity = "1";     // 서서히 나타남
+    popup.style.top = "100px";     // 살짝 아래로 내려오며 등장
+  }, 10);
+
+  // ✅ 3초 후 자동으로 fade-out 처리
+  setTimeout(() => {
+    popup.style.opacity = "0";     // 서서히 사라짐
+    popup.style.top = "80px";      // 원래 위치로 복귀
+
+    // 애니메이션이 끝난 뒤 display:none 처리 (0.5초 후)
+    setTimeout(() => { 
+      popup.style.display = "none"; 
+    }, 500);
+  }, 3000); // 3초 후 실행
+}
+
 
   // ✅ 페이지 로드 시 위치 추적 시작
   window.onload = () => {
