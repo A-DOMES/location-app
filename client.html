@@ -682,7 +682,7 @@ function startTracking() {
         const directionLabel = getDirectionLabel(heading);
 
         const now = new Date();
-        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
+        const timeString = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 
         // ✅ 위치정보 갱신
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
@@ -695,14 +695,11 @@ function startTracking() {
         // ✅ 주소 변환 주기 (1분마다 갱신)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                  let address = results[0].formatted_address;
-                
-                  // ✅ 대한민국 표기 제거
-                  address = address.replace(/,\s*대한민국$/, "").replace(/대한민국$/, "");
-                
-                  document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
-                }
+            if (status === "OK" && results[0]) {
+              let address = results[0].formatted_address;
+
+              // ✅ 대한민국 표기 제거 (콤마/공백 포함 모든 경우)
+              address = address.replace(/\s*,?\s*대한민국\s*$/, "");
 
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
@@ -750,13 +747,13 @@ function startTracking() {
   }
 }
 
-
 // ---------------------- 경로 초기화 버튼 로직 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   pathCoords = [];
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 });
+
 
   // ---------------------- 닫기/재열기 버튼 ----------------------
   document.getElementById("closeBtn").addEventListener("click", () => {
