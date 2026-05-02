@@ -585,6 +585,10 @@ window.onload = initMap;
 
 
 // ---------------------- 위치 추적 ----------------------
+let lastGeocodeTime = 0;              // 마지막 주소 갱신 시각 기록
+let geocodeInterval = 60000;          // 주소 갱신 주기 (기본값: 1분 = 60000ms)
+// 👉 필요할 때 geocodeInterval 값을 120000 (2분) 등으로 바꿔주면 됨
+  
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
@@ -613,14 +617,17 @@ function startTracking() {
         // 공유 버튼 이벤트 연결
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // 주소 변환
-        geocoder.geocode({ location: myPos }, (results, status) => {
-          if (status === "OK" && results[0]) {
-            const address = results[0].formatted_address;
-            document.getElementById("addressBox").innerHTML =
-              `<small>주소: ${address}</small>`;
-          }
-        });
+        // ✅ 주소 변환은 설정한 주기(geocodeInterval)마다만 실행
+        if (Date.now() - lastGeocodeTime > geocodeInterval) {
+          geocoder.geocode({ location: myPos }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              const address = results[0].formatted_address;
+              document.getElementById("addressBox").innerHTML =
+                `<small>주소: ${address}</small>`;
+            }
+          });
+          lastGeocodeTime = Date.now(); // 마지막 실행 시각 갱신
+        }
 
         // 하단 표시창 업데이트
         updateLocationDisplay(currentLat, currentLng, heading);
