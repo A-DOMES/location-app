@@ -357,6 +357,10 @@
   <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
 </div>
 
+<div id="infoBox">
+  <small id="speedBox">속도: 0 km/h</small><br>
+  <small id="distanceBox">총 이동 거리: 0 km</small>
+</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -387,8 +391,10 @@ let otherMarker;                   // 상대방 위치 마커
 
 // ✅ 원형 표시 관련
 let circles = [];                  // 원형 표시용 배열
-              
 
+// ✅ 속도와 거리 관련
+let totalDistance = 0; // 누적 이동 거리 (m 단위)
+  
   // ✅ POI 아이콘 정의
   const poiIcons = {
     cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -797,6 +803,40 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     document.getElementById("reopenBtn").style.display = "none";
   });
 
+
+ // ---------------------- 속도 와 거리 계산 ----------------------
+navigator.geolocation.watchPosition((pos) => {
+  const currentLat = pos.coords.latitude;
+  const currentLng = pos.coords.longitude;
+
+  // ✅ 속도 표시
+  const speed = pos.coords.speed; 
+  if (speed !== null && !isNaN(speed)) {
+    document.getElementById("speedBox").innerText = 
+      `속도: ${(speed * 3.6).toFixed(1)} km/h`;
+  }
+
+  // ✅ 총 이동 거리 계산
+  if (pathCoords.length > 0) {
+    const lastPoint = pathCoords[pathCoords.length - 1];
+    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
+
+    if (distance >= 3) { // 3m 이상 이동 시만 추가
+      totalDistance += distance;
+      document.getElementById("distanceBox").innerText = 
+        `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
+    }
+  }
+
+  // 기존 경로 기록 로직
+  pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+  pathPolyline.setPath(pathCoords);
+
+}, (err) => {
+  console.error(err);
+});
+
+  
   // ---------------------- 원형 표시 ----------------------
   function drawMultipleCircles(myPos) {
     const circleStyles = [
