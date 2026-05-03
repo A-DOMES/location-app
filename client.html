@@ -960,23 +960,17 @@ document.getElementById("closeModal").onclick = () => {
 function showTravelStats(speed, totalDistance) {
   const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
   const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
-
   showModal("이동 정보", `${speedText}\n${distanceText}`);
 }
 
 // ---------------------- ✅ 총 이동 거리 계산 ----------------------
-let totalDistance = 0;
-let pathCoords = [];
-
 function updateTravelStats(pos) {
   const currentLat = pos.coords.latitude;
   const currentLng = pos.coords.longitude;
   const speed = pos.coords.speed;
 
-  // 속도/거리 모달창 띄우기
   showTravelStats(speed || 0, totalDistance);
 
-  // 거리 누적
   if (pathCoords.length > 0) {
     const lastPoint = pathCoords[pathCoords.length - 1];
     const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
@@ -986,7 +980,6 @@ function updateTravelStats(pos) {
       showTravelStats(speed || 0, totalDistance);
     }
   }
-
   pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
 }
 
@@ -1005,10 +998,9 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     })
     .then(res => res.json())
     .then(limitData => {
-      if (limitData.speedLimits && limitData.speedLimits.length > 0) {
-        const limit = limitData.speedLimits[0].speedLimit; // km/h
+      if (limitData.speedLimits && limitData.length > 0) {
+        const limit = limitData.speedLimits[0].speedLimit;
         const currentKmh = currentSpeed * 3.6;
-
         if (currentKmh > limit) {
           showModal("속도 제한 초과", 
             `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
@@ -1018,22 +1010,110 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     .catch(err => console.error(err));
 }
 
-// ---------------------- ✅ 위치 추적 ----------------------
-navigator.geolocation.watchPosition((pos) => {
-  const currentLat = pos.coords.latitude;
-  const currentLng = pos.coords.longitude;
+// ---------------------- 위치 추적 ----------------------
+function startTracking() {
+  const geocoder = new google.maps.Geocoder();
 
-  // 독립적으로 속도/거리 계산
-  updateTravelStats(pos);
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+        const myPos = { lat: currentLat, lng: currentLng };
+        const heading = pos.coords.heading || 0;
+        const directionLabel = getDirectionLabel(heading);
 
-  // 독립적으로 Roads API 속도 제한 확인
-  checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-}, (err) => {
-  console.error(err);
-}, { enableHighAccuracy: true });
+        // ✅ 좌표 박스 초기화
+        const content = document.getElementById("locationContent");
+        if (!document.getElementById("latBox") || content.innerText.includes("위치 정보를 가져오는 중")) {
+          content.innerHTML = `
+            <span id="latBox"></span>
+            <span id="lngBox"></span>
+            <small id="directionBox"></small>
+            <small id="timeBox"></small>
+            <div id="addressBox"></div>
+          `;
+        }
 
-  
+        // ✅ 위치정보 갱신
+        document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+        document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+        document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+        document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
+        document.getElementById("shareBtn").onclick = showPopup;
+
+        // ✅ 주소 변환 (1분마다)
+        if (Date.now() - lastGeocodeTime > geocodeInterval) {
+          geocoder.geocode({ location: myPos }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              let address = results[0].formatted_address;
+              address = address.replace(/^대한민국\s*,?\s*/, "");
+              address = address.replace(/\s*,?\s*대한민국$/, "");
+              document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+            }
+          });
+          lastGeocodeTime = Date.now();
+        }
+
+        updateLocationDisplay(currentLat, currentLng, heading);
+
+        // ✅ 마커 갱신
+        if (!myMarker) {
+          myMarker = new google.maps.Marker({
+            position: myPos,
+            map: map,
+            title: "내 위치",
+            icon: {
+              url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40)
+            }
+          });
+        } else {
+          myMarker.setPosition(myPos);
+        }
+
+        drawMultipleCircles(myPos);
+        updateRadarPolygon(myPos, heading);
+        map.setCenter(myPos);
+
+        // ✅ 경로 갱신 (3m 이상 이동 시만 추가)
+        if (pathCoords.length > 0) {
+          const lastPoint = pathCoords[pathCoords.length - 1];
+          const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
+          if (distance >= 3) {
+            pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+            pathPolyline.setPath(pathCoords);
+          }
+        } else {
+          pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+          pathPolyline.setPath(pathCoords);
+        }
+
+        if (pathCoords.length > 1) {
+          document.getElementById("resetPathBtn").style.display = "inline-block";
+        }
+
+        // ---------------------- ✅ 추가된 독립 기능 ----------------------
+        // 속도·총 이동 거리 모달
+        updateTravelStats(pos);
+
+        // Roads API 속도 제한 확인
+        checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
+      },
+      (err) => {
+        document.getElementById("locationContent").innerText =
+          "위치 정보를 가져올 수 없습니다: " + err.message;
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+}
+
+
 </script>
 </body>
 </html>
