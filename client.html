@@ -251,7 +251,16 @@ function initMap() {
   });
 
   updateMapStyle(map);
-  map.addListener("maptypeid_changed", () => updateMapStyle(map));
+
+  map.addListener("maptypeid_changed", () => {
+    updateMapStyle(map);
+    // ✅ 지도 타입 변경 시에도 로딩 메시지가 다시 나타나지 않도록 처리
+    const loadingMsg = document.getElementById("loadingMessage");
+    if (loadingMsg && loadingMsg.style.display !== "none") {
+      loadingMsg.style.display = "none";
+      loadingMsg.classList.add("hidden");
+    }
+  });
 
   pathPolyline = new google.maps.Polyline({
     path: pathCoords,
@@ -274,8 +283,8 @@ function initMap() {
         // ✅ 위치정보 가져오기 성공 시 로딩 메시지 완전히 제거
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
-          loadingMsg.style.display = "none";   // 레이아웃에서 제거
-          loadingMsg.classList.add("hidden");  // CSS 강제 숨김
+          loadingMsg.style.display = "none";
+          loadingMsg.classList.add("hidden");
         }
       },
       () => {
@@ -286,6 +295,7 @@ function initMap() {
     );
   }
 }
+
 
 
 function updateMapStyle(map) {
