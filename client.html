@@ -684,6 +684,17 @@ function updateRadarPolygon(myPos, heading) {
 }
 
 // ---------------------- 모달 및 통계 ----------------------
+// 3초마다 속도·거리 계산을 큐에 기록
+setInterval(() => {
+  if (currentLat && currentLng) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      updateTravelStats(pos); // 속도·거리 정보를 큐에 기록
+    });
+  }
+}, 3000);
+
+
+// 모달 큐 표시 간격을 5초로 변경
 function showQueuedModal(title, message, actions = []) {
   modalQueue.push({ title, message, actions });
   if (!modalTimer) {
@@ -705,9 +716,11 @@ function showQueuedModal(title, message, actions = []) {
         clearInterval(modalTimer);
         modalTimer = null;
       }
-    }, 3000);
+    }, 5000); // 5초 간격으로 메시지 표시
   }
 }
+
+
 
 document.getElementById("closeModal").onclick = () => {
   document.getElementById("popupModal").style.display = "none";
