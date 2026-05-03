@@ -10,15 +10,15 @@
 <style>
   /* ---------------------- 기본 페이지 스타일 ---------------------- */
   body {
-    margin: 0; /* 페이지 기본 여백 제거 */
-    font-family: 'Segoe UI', Arial, sans-serif; /* 전체 글꼴 지정 */
-    background: #f0f4f8; /* 페이지 배경색 */
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
   }
 
   header {
     padding: 15px;
     text-align: center;
-    background: #1976d2; /* 헤더 배경색 (파란색) */
+    background: #1976d2;
     color: white;
     font-size: 26px;
     font-weight: bold;
@@ -30,25 +30,24 @@
     top: 80px;
     right: 20px;
     width: 260px;
-    background: rgba(255, 255, 255, 0.25); /* 반투명 배경 */
-    backdrop-filter: blur(10px); /* 유리 효과 */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 15px 20px;
-    border-radius: 16px; /* pill 느낌을 주기 위해 radius 확대 */
+    border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     font-size: 16px;
     color: #333;
     text-align: left;
     z-index: 9999;
-    border: 2px solid #1976d2; /* 파란색 테두리 */
-    transition: transform 0.3s ease, background 0.3s ease; /* 애니메이션 효과 */
+    border: 2px solid #1976d2;
+    transition: transform 0.3s ease, background 0.3s ease;
   }
   #locationBox:hover {
-    transform: scale(1.02); /* hover 시 살짝 커짐 */
+    transform: scale(1.02);
     background: rgba(255, 255, 255, 0.35);
   }
 
-  /* 좌표창 헤더 (타이틀 + 닫기 버튼 같은 줄) */
   #locationHeader {
     display: flex;
     justify-content: space-between;
@@ -62,7 +61,6 @@
     margin: 0;
   }
 
-  /* 닫기 버튼 */
   #closeBtn {
     background: white;
     border: 2px solid #1976d2;
@@ -84,16 +82,14 @@
     transform: scale(1.1);
   }
 
-  /* 좌표값 (위도, 경도) */
   #locationBox span {
     display: block;
     font-size: 18px;
     font-weight: bold;
-    color: #d32f2f; /* 빨강 */
+    color: #d32f2f;
     margin-top: 5px;
   }
 
-  /* 방향, 갱신 시간, 주소 */
   #locationBox small {
     display: block;
     margin-top: 8px;
@@ -101,64 +97,53 @@
     color: #555;
   }
 
-/* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
-#reopenBtn {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%); /* 기본 위치 중앙 고정 */
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid #1976d2;
-  border-radius: 999px;
-  padding: 10px 22px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1976d2;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  display: none;
-  z-index: 9999;
-  text-align: center;
-  white-space: nowrap;
-  transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-}
-
-/* ✅ 마우스를 올렸을 때 확대 + bounce 애니메이션 */
-#reopenBtn:hover {
-  background: #e3f2fd;
-  transform: translateX(-50%) scale(1.1); /* 위치는 그대로, 크기만 확대 */
-  animation: bounce 0.3s; /* bounce 효과 */
-}
-
-/* 클릭했을 때 살짝 줄어드는 효과 */
-#reopenBtn:active {
-  transform: translateX(-50%) scale(0.95);
-}
-
-/* 포커스 시 테두리 강조 */
-#reopenBtn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4);
-}
-
-/* ✅ bounce 애니메이션 정의 */
-@keyframes bounce {
-  0%   { transform: translateX(-50%) scale(1); }
-  50%  { transform: translateX(-50%) scale(1.15); }
-  100% { transform: translateX(-50%) scale(1.1); }
-}
-
-/* ---------------------- 모바일 전용 스타일 ---------------------- */
-@media (max-width: 600px) {
+  /* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
   #reopenBtn {
-    font-size: 16px;
-    padding: 8px 16px;
-    /* 모바일은 hover 개념이 없으므로 터치만 적용 */
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid #1976d2;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1976d2;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: none;
+    z-index: 9999;
+    text-align: center;
+    white-space: nowrap;
+    transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
   }
-}
+  #reopenBtn:hover {
+    background: #e3f2fd;
+    transform: translateX(-50%) scale(1.1);
+    animation: bounce 0.3s;
+  }
+  #reopenBtn:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+  #reopenBtn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4);
+  }
+  @keyframes bounce {
+    0%   { transform: translateX(-50%) scale(1); }
+    50%  { transform: translateX(-50%) scale(1.15); }
+    100% { transform: translateX(-50%) scale(1.1); }
+  }
 
+  @media (max-width: 600px) {
+    #reopenBtn {
+      font-size: 16px;
+      padding: 8px 16px;
+    }
+  }
 
   /* ---------------------- 공유 버튼 ---------------------- */
   #shareBtn {
@@ -198,7 +183,7 @@
     display: none;
     z-index: 9999;
     opacity: 0;
-    transition: opacity 0.5s ease, top 0.5s ease; /* fade-in/slide-in 효과 */
+    transition: opacity 0.5s ease, top 0.5s ease;
   }
 
   /* ---------------------- 하단 표시창 ---------------------- */
@@ -208,91 +193,69 @@
     font-weight: bold;
   }
 
-/* ---------------------- 좌표값 (위도, 경도 → 빨강) ---------------------- */
-#locationBox span {
-  display: block;
-  font-size: 18px;
-  font-weight: bold;
-  color: #d32f2f; /* 빨강: 위도와 값, 경도와 값 모두 빨강 */
-  margin-top: 5px;
-}
+  /* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 ---------------------- */
+  .map-satellite #locationBox {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #fff;
+    transition: background 0.5s ease, border 0.5s ease;
+  }
+  .map-satellite #locationBox span {
+    color: #d32f2f;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
+                 -1px  1px 0 #000, 1px  1px 0 #000;
+  }
+  .map-satellite #locationBox small {
+    color: #fff;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
+                 -1px  1px 0 #000, 1px  1px 0 #000;
+  }
 
-/* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 ---------------------- */
-/* 위성지도용 스타일 */
-.map-satellite #locationBox {
-  background: rgba(0, 0, 0, 0.6); /* 어두운 반투명 배경 */
-  border: 2px solid #fff;         /* 흰색 테두리 */
-  transition: background 0.5s ease, border 0.5s ease;
-}
-.map-satellite #locationBox span {
-  color: #d32f2f; /* 위도/경도는 항상 빨강 유지 */
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-               -1px  1px 0 #000, 1px  1px 0 #000; /* 검정 outline */
-  transition: color 0.5s ease, text-shadow 0.5s ease;
-}
-.map-satellite #locationBox small {
-  color: #fff; /* 방향, 시간, 주소는 흰색 */
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-               -1px  1px 0 #000, 1px  1px 0 #000;
-  transition: color 0.5s ease, text-shadow 0.5s ease;
-}
-
-/* 일반지도용 스타일 */
-.map-roadmap #locationBox {
-  background: rgba(255, 255, 255, 0.6); /* 밝은 반투명 배경 */
-  border: 2px solid #1976d2;            /* 파란색 테두리 */
-  transition: background 0.5s ease, border 0.5s ease;
-}
-.map-roadmap #locationBox span {
-  color: #d32f2f; /* 위도/경도는 항상 빨강 유지 */
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-               -1px  1px 0 #fff, 1px  1px 0 #fff; /* 흰 outline */
-  transition: color 0.5s ease, text-shadow 0.5s ease;
-}
-.map-roadmap #locationBox small {
-  color: #000; /* 방향, 시간, 주소는 검정 */
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-               -1px  1px 0 #fff, 1px  1px 0 #fff;
-  transition: color 0.5s ease, text-shadow 0.5s ease;
-}
-
-/* ---------------------- 모바일 전용 스타일 ---------------------- */
-@media (max-width: 600px) {
-  #locationBox {
-    background: rgba(255, 255, 255, 0.25);
+  .map-roadmap #locationBox {
+    background: rgba(255, 255, 255, 0.6);
     border: 2px solid #1976d2;
   }
-
-  /* 위도/경도 (빨강 그대로, 크기만 키움) */
-  #locationBox span {
-    font-size: 20px;   /* 모바일에서 조금 더 크게 */
-    font-weight: bold; /* 굵게 유지 */
-    color: #d32f2f;    /* 빨강 그대로 */
+  .map-roadmap #locationBox span {
+    color: #d32f2f;
+    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
+                 -1px  1px 0 #fff, 1px  1px 0 #fff;
+  }
+  .map-roadmap #locationBox small {
+    color: #000;
+    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
+                 -1px  1px 0 #fff, 1px  1px 0 #fff;
   }
 
-  /* 방향, 갱신 시간, 주소 (검정 그대로, 크기와 굵기 강화) */
-  #locationBox small {
-    font-size: 18px;   /* 모바일에서 조금 더 크게 */
-    font-weight: 700;  /* 더 진하게 */
-    color: #555;       /* 기존 색상 유지 */
+  @media (max-width: 600px) {
+    #locationBox {
+      background: rgba(255, 255, 255, 0.25);
+      border: 2px solid #1976d2;
+    }
+    #locationBox span {
+      font-size: 20px;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+    #locationBox small {
+      font-size: 18px;
+      font-weight: 700;
+      color: #555;
+    }
   }
-}
-
 
 /* ---------------------- 경로 초기화 버튼 스타일 ---------------------- */
 #resetPathBtn {
   position: absolute;
   top: 170px;   /* 지도/위성 전환 UI 바로 아래 */
-  left: 5px;  /* 좌측 상단 고정 */
-  width: 160px;   /* 지도/위성 버튼과 동일한 넓이 */
-  height: 50px;   /* 동일한 높이 */
+  left: 5px;    /* 좌측 상단 고정 */
+  width: 160px; /* 버튼 넓이 */
+  height: 50px; /* 버튼 높이 */
   line-height: 50px; /* 글자 세로 중앙 정렬 */
-  background: rgba(255, 255, 255, 0.25); /* 유리 불투명 효과 */
+  background: rgba(255, 255, 255, 0.25); /* 유리 효과 */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 2px solid #1976d2;
   border-radius: 999px;
-  font-size: 20px;   /* 글자 크기 */
+  font-size: 20px;
   font-weight: 700;
   color: #1976d2;
   cursor: pointer;
@@ -302,9 +265,7 @@
   text-align: center;
   white-space: nowrap;
   transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-
-  /* ✅ padding 제거 → 글자가 정확히 중앙에 위치 */
-  padding: 0;
+  padding: 0; /* 글자 중앙 정렬 */
 }
 
 #resetPathBtn:hover {
@@ -323,7 +284,7 @@
   z-index: 999;
   left: 0; top: 0;
   width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.4); /* 배경은 어둡게만 처리 */
+  background: transparent; /* 전체 화면은 투명 처리 */
 }
 
 /* 모달 본문만 유리 효과 */
@@ -336,8 +297,8 @@
   border-radius: 12px;
   width: 320px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.3); /* 반투명 테두리 */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* 은은한 그림자 */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   color: #fff; /* 글자 흰색 */
 }
 
@@ -352,8 +313,6 @@
 .close:hover {
   color: #ffcccc;
 }
-
-  
 </style>
 
 
@@ -477,6 +436,7 @@ function showQueuedModal(title, message, actions = []) {
     }, 3000); // 3초 간격
   }
 }
+
   
 // ---------------------- 공통 드래그 함수 (이동만) ----------------------
 function makeDraggableAndResizable(element) {
