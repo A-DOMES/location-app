@@ -752,45 +752,27 @@ setInterval(() => {
 }, 3000);
 
 // ---------------------- 모달 큐 표시 ----------------------
+// showQueuedModal 수정
 function showQueuedModal(title, message, actions = []) {
-  // 큐에 메시지 추가
   modalQueue.push({ title, message, actions });
-
-  // 타이머가 없으면 새로 시작
   if (!modalTimer) {
     modalTimer = setInterval(() => {
       if (modalQueue.length > 0) {
         const next = modalQueue.shift();
 
-        // 새 모달 구조에 맞게 데이터 넣기
-        const titleBox = document.querySelector(".modal-title");
-        const bodyBox = document.querySelector(".modal-body");
-        const actionsBox = document.getElementById("modalActions");
+        // 새 구조에 맞게 선택자 변경
+        document.querySelector(".modal-title").innerText = next.title;
+        document.querySelector(".modal-body").innerText = next.message;
 
-        // 타이틀과 본문 갱신
-        titleBox.innerText = next.title;
-        bodyBox.innerText = next.message;
-
-        // 액션 버튼 처리 (필요 없으면 비워둠)
-        if (actionsBox) {
-          actionsBox.innerHTML = "";
-          next.actions.forEach(action => {
-            const btn = document.createElement("button");
-            btn.innerText = action.label;
-            btn.onclick = action.onClick;
-            actionsBox.appendChild(btn);
-          });
-        }
-
-        // 모달 표시
         document.querySelector(".modal").style.display = "block";
       } else {
         clearInterval(modalTimer);
         modalTimer = null;
       }
-    }, 5000); // 5초 간격으로 메시지 표시
+    }, 5000);
   }
 }
+
 
 // 닫기 버튼 이벤트 연결
 document.querySelector(".close").onclick = () => {
