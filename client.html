@@ -363,6 +363,12 @@
     <div id="modalActions"></div>
   </div>
 </div>
+
+/* 구글맵 기본 지도/위성 버튼이 다른 UI에 가려지지 않도록 */
+.gm-style-mtc {
+  z-index: 10000 !important; /* 항상 위에 표시되도록 */
+}
+
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -635,12 +641,17 @@ function getDistance(lat1, lng1, lat2, lng2) {
   } 
 
   // ---------------------- 지도 초기화 ----------------------
-  function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 18,
-      gestureHandling: "greedy",
-      mapTypeId: "roadmap"
-    });
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 18,
+    gestureHandling: "greedy",
+    mapTypeId: google.maps.MapTypeId.ROADMAP, // ✅ 상수 사용
+    mapTypeControl: true,                     // ✅ 지도/위성 버튼 활성화
+    mapTypeControlOptions: {
+      style: google.maps.MapTypeControlStyle.DEFAULT,
+      position: google.maps.ControlPosition.TOP_RIGHT
+    }
+  });
 
     // ✅ 초기 스타일 적용
     updateMapStyle(map);
