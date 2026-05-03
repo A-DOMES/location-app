@@ -1036,24 +1036,33 @@ function checkSchoolZones(currentLat, currentLng) {
   });
 }
 
-// ---------------------- 속도 제한 구역 감지 (공공 API 기반) ----------------------
+// ---------------------- 속도 제한 구역 감지 (공공데이터 API 기반) ----------------------
 async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
   const currentKmh = currentSpeed * 3.6;
 
   try {
-    // 예시: 도로교통공단 공공데이터 API 호출 (실제 엔드포인트와 파라미터는 제공 문서 참고)
-    const response = await fetch(`https://api.data.go.kr/openapi/speedLimit?lat=${currentLat}&lng=${currentLng}&serviceKey=YOUR_SERVICE_KEY`);
+    // ✅ 실제 도로교통공단 공공데이터 API 예시 (엔드포인트와 파라미터는 data.go.kr 문서 참고)
+    const response = await fetch(`https://api.data.go.kr/openapi/tn_pubr_public_speed_limit_zone_api?serviceKey=YOUR_SERVICE_KEY&numOfRows=10&pageNo=1&latitude=${currentLat}&longitude=${currentLng}`);
     const data = await response.json();
 
-    if (data && data.speedLimit) {
-      const limit = data.speedLimit;
-      if (currentKmh > limit) {
-        showModal("속도 제한 초과", 
-          `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
-      } else {
-        showModal("속도 제한 구역", 
-          `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
-      }
+    if (data && data.response && data.response.body && data.response.body.items) {
+      const zones = data.response.body.items;
+      zones.forEach(zone => {
+        const limit = zone.lmtSpd; // 제한속도 값
+        const zoneLat = parseFloat(zone.lat);
+        const zoneLng = parseFloat(zone.lng);
+        const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
+
+        if (distance <= 300) { // 반경 300m 이내
+          if (currentKmh > limit) {
+            showModal("속도 제한 초과", 
+              `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+          } else {
+            showModal("속도 제한 구역", 
+              `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+          }
+        }
+      });
     }
   } catch (err) {
     console.error("속도 제한 구역 API 호출 오류:", err);
@@ -1148,7 +1157,7 @@ function startTracking() {
         updateTravelStats(pos); // 속도·총 이동 거리 모달
         checkSpeedLimit(currentLat, currentLng, pos.coords.speed); // Google Roads API 제한속도 확인
         checkSchoolZones(currentLat, currentLng); // 어린이 보호구역 감지
-        checkDynamicSpeedZones(currentLat, currentLng, pos.coords.speed); // 공공데이터 API 기반 속도 제한 구역 감지
+        checkDynamicSpeedZones(currentLat, currentLng, pos.coords.speed); // 도로교통공단 공공데이터 API 기반 속도 제한 구역 감지
       },
       (err) => {
         document.getElementById("locationContent").innerText =
