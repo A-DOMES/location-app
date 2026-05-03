@@ -8,437 +8,79 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places"></script>
 
 <style>
-  /* ---------------------- 기본 페이지 스타일 ---------------------- */
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f0f4f8;
-  }
+/* ---------------------- 기본 페이지 스타일 ---------------------- */
+body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; }
+header { padding:15px; text-align:center; background:#1976d2; color:white; font-size:26px; font-weight:bold; }
 
-  header {
-    padding: 15px;
-    text-align: center;
-    background: #1976d2;
-    color: white;
-    font-size: 26px;
-    font-weight: bold;
-  }
+/* ---------------------- 좌표창 박스 ---------------------- */
+#locationBox { position:absolute; top:80px; right:20px; width:260px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:15px 20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:16px; color:#333; text-align:left; z-index:9999; border:2px solid #1976d2; transition:transform 0.3s ease, background 0.3s ease; }
+#locationBox:hover { transform:scale(1.02); background:rgba(255,255,255,0.35); }
+#locationHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+#locationHeader h3 { font-size:26px; font-weight:bold; color:#1976d2; margin:0; }
+#closeBtn { background:white; border:2px solid #1976d2; border-radius:50%; width:40px; height:40px; font-size:22px; font-weight:bold; cursor:pointer; color:#1976d2; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.2); transition:transform 0.2s ease, background 0.3s ease; }
+#closeBtn:hover { background:#f0f4f8; transform:scale(1.1); }
+#locationBox span { display:block; font-size:18px; font-weight:bold; color:#d32f2f; margin-top:5px; }
+#locationBox small { display:block; margin-top:8px; font-size:16px; color:#555; }
 
-  /* ---------------------- 좌표창 박스 ---------------------- */
-  #locationBox {
-    position: absolute;
-    top: 80px;
-    right: 20px;
-    width: 260px;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 15px 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    font-size: 16px;
-    color: #333;
-    text-align: left;
-    z-index: 9999;
-    border: 2px solid #1976d2;
-    transition: transform 0.3s ease, background 0.3s ease;
-  }
-  #locationBox:hover {
-    transform: scale(1.02);
-    background: rgba(255, 255, 255, 0.35);
-  }
+/* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
+#reopenBtn { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; padding:10px 22px; font-size:18px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; }
+#reopenBtn:hover { background:#e3f2fd; transform:translateX(-50%) scale(1.1); animation:bounce 0.3s; }
+#reopenBtn:active { transform:translateX(-50%) scale(0.95); }
+#reopenBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
+@keyframes bounce { 0%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.15);} 100%{transform:translateX(-50%) scale(1.1);} }
 
-  #locationHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  #locationHeader h3 {
-    font-size: 26px;
-    font-weight: bold;
-    color: #1976d2;
-    margin: 0;
-  }
+/* ---------------------- 공유 버튼 ---------------------- */
+#shareBtn { margin-top:10px; padding:8px 14px; background:#1976d2; color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:background 0.3s; }
+#shareBtn:hover { background:#1565c0; }
 
-  #closeBtn {
-    background: white;
-    border: 2px solid #1976d2;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #1976d2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease, background 0.3s ease;
-  }
-  #closeBtn:hover {
-    background: #f0f4f8;
-    transform: scale(1.1);
-  }
+/* ---------------------- 지도 영역 ---------------------- */
+#map { width:100%; height:100vh; }
 
-  #locationBox span {
-    display: block;
-    font-size: 18px;
-    font-weight: bold;
-    color: #d32f2f;
-    margin-top: 5px;
-  }
+/* ---------------------- 공유 팝업 메시지 ---------------------- */
+#popupMessage { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(25,118,210,0.95); color:white; padding:12px 20px; border-radius:8px; font-size:16px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2); display:none; z-index:9999; opacity:0; transition:opacity 0.5s ease, top 0.5s ease; }
 
-  #locationBox small {
-    display: block;
-    margin-top: 8px;
-    font-size: 16px;
-    color: #555;
-  }
+/* ---------------------- 하단 표시창 ---------------------- */
+#locationDisplay { margin-top:10px; font-size:14px; font-weight:bold; }
 
-  /* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
-  #reopenBtn {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 2px solid #1976d2;
-    border-radius: 999px;
-    padding: 10px 22px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1976d2;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    display: none;
-    z-index: 9999;
-    text-align: center;
-    white-space: nowrap;
-    transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  }
-  #reopenBtn:hover {
-    background: #e3f2fd;
-    transform: translateX(-50%) scale(1.1);
-    animation: bounce 0.3s;
-  }
-  #reopenBtn:active {
-    transform: translateX(-50%) scale(0.95);
-  }
-  #reopenBtn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4);
-  }
-  @keyframes bounce {
-    0%   { transform: translateX(-50%) scale(1); }
-    50%  { transform: translateX(-50%) scale(1.15); }
-    100% { transform: translateX(-50%) scale(1.1); }
-  }
-
-  @media (max-width: 600px) {
-    #reopenBtn {
-      font-size: 16px;
-      padding: 8px 16px;
-    }
-  }
-
-  /* ---------------------- 공유 버튼 ---------------------- */
-  #shareBtn {
-    margin-top: 10px;
-    padding: 8px 14px;
-    background: #1976d2;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
-  }
-  #shareBtn:hover {
-    background: #1565c0;
-  }
-
-  /* ---------------------- 지도 영역 ---------------------- */
-  #map {
-    width: 100%;
-    height: 100vh;
-  }
-
-  /* ---------------------- 공유 팝업 메시지 ---------------------- */
-  #popupMessage {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(25, 118, 210, 0.95);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: none;
-    z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.5s ease, top 0.5s ease;
-  }
-
-  /* ---------------------- 하단 표시창 ---------------------- */
-  #locationDisplay {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
-  }
-
-  /* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 ---------------------- */
-  .map-satellite #locationBox {
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid #fff;
-    transition: background 0.5s ease, border 0.5s ease;
-  }
-  .map-satellite #locationBox span {
-    color: #d32f2f;
-    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-                 -1px  1px 0 #000, 1px  1px 0 #000;
-  }
-  .map-satellite #locationBox small {
-    color: #fff;
-    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-                 -1px  1px 0 #000, 1px  1px 0 #000;
-  }
-
-  .map-roadmap #locationBox {
-    background: rgba(255, 255, 255, 0.6);
-    border: 2px solid #1976d2;
-  }
-  .map-roadmap #locationBox span {
-    color: #d32f2f;
-    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-                 -1px  1px 0 #fff, 1px  1px 0 #fff;
-  }
-  .map-roadmap #locationBox small {
-    color: #000;
-    text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-                 -1px  1px 0 #fff, 1px  1px 0 #fff;
-  }
-
-  @media (max-width: 600px) {
-    #locationBox {
-      background: rgba(255, 255, 255, 0.25);
-      border: 2px solid #1976d2;
-    }
-    #locationBox span {
-      font-size: 20px;
-      font-weight: bold;
-      color: #d32f2f;
-    }
-    #locationBox small {
-      font-size: 18px;
-      font-weight: 700;
-      color: #555;
-    }
-  }
+/* ---------------------- 일반 / 위성 변환시 글자표시 변환처리 ---------------------- */
+.map-satellite #locationBox { background:rgba(0,0,0,0.6); border:2px solid #fff; transition:background 0.5s ease, border 0.5s ease; }
+.map-satellite #locationBox span { color:#d32f2f; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.map-satellite #locationBox small { color:#fff; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.map-roadmap #locationBox { background:rgba(255,255,255,0.6); border:2px solid #1976d2; }
+.map-roadmap #locationBox span { color:#d32f2f; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
+.map-roadmap #locationBox small { color:#000; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
 
 /* ---------------------- 경로 초기화 버튼 스타일 ---------------------- */
-#resetPathBtn {
-  position: absolute;
-  top: 170px;   /* 지도/위성 전환 UI 바로 아래 */
-  left: 5px;    /* 좌측 상단 고정 */
-  width: 160px; /* 버튼 넓이 */
-  height: 50px; /* 버튼 높이 */
-  line-height: 50px; /* 글자 세로 중앙 정렬 */
-  background: rgba(255, 255, 255, 0.25); /* 유리 효과 */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid #1976d2;
-  border-radius: 999px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1976d2;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  display: none;
-  z-index: 9999;
-  text-align: center;
-  white-space: nowrap;
-  transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  padding: 0; /* 글자 중앙 정렬 */
-}
+#resetPathBtn { position:absolute; top:170px; left:5px; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0; }
+#resetPathBtn:hover { background:#e3f2fd; transform:scale(1.1); }
+#resetPathBtn:active { transform:scale(0.95); }
 
-#resetPathBtn:hover {
-  background: #e3f2fd;
-  transform: scale(1.1);
-}
-
-#resetPathBtn:active {
-  transform: scale(0.95);
-}
-
-/* ✅ 다기능 모달 창 */
-
-/* 헤더: 타이틀 중앙, 닫기 버튼 우측 */
-.modal-header {
-  display: flex;
-  justify-content: center;   /* 타이틀 중앙 */
-  align-items: center;       /* 수직 중앙 맞춤 */
-  margin-bottom: 10px;
-  position: relative;
-}
-
-/* 모달 전체 */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 9999; /* 지도 위에서도 항상 보이도록 */
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background: transparent;
-}
-
-/* 등장 애니메이션 */
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: translate(-50%, -20%) scale(0.9); }
-  to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-
-/* 모달 본문 (기본값) */
-.modal-content {
-  position: absolute;
-  left: 50%;
-  top: 7%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 16px;
-  border-radius: 12px;
-  width: 260px;
-  text-align: center;
-  border: 2px solid #1976d2;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  font-size: 15px;
-  font-weight: bold;
-  cursor: move;
-  animation: modalFadeIn 0.4s ease forwards; /* 등장 애니메이션 */
-}
-
-/* 닫기 버튼: 원형 안에 빨간색 X */
-.close {
-  margin-left: auto;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  color: #d32f2f;            /* X 글씨 빨간색 */
-  background-color: #fff;    /* 흰색 배경 */
-  border: 2px solid #d32f2f;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s, color 0.2s, transform 0.2s;
-}
-.close:hover {
-  background-color: #d32f2f;
-  color: #fff;
-  transform: scale(1.1); /* hover 시 확대 */
-}
-
-/* 모달 타이틀 */
-.modal-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #1976d2;
-  text-align: center;
-  flex: 1;
-  line-height: 28px; /* 닫기 버튼과 같은 높이 */
-  margin: 0;
-}
-
-/* 액션 버튼 */
-#modalActions button {
-  margin: 6px;
-  padding: 8px 14px;
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: transform 0.2s ease, background 0.3s ease;
-}
-#modalActions button:hover {
-  background: #1565c0;
-  transform: scale(1.05);
-}
+/* ---------------------- 모달창 ---------------------- */
+.modal-header { display:flex; justify-content:center; align-items:center; margin-bottom:10px; position:relative; }
+.modal { display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:transparent; }
+@keyframes modalFadeIn { from{opacity:0; transform:translate(-50%,-20%) scale(0.9);} to{opacity:1; transform:translate(-50%,0) scale(1);} }
+.modal-content { position:absolute; left:50%; top:7%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px; border-radius:12px; width:260px; text-align:center; border:2px solid #1976d2; box-shadow:0 4px 20px rgba(0,0,0,0.25); font-size:15px; font-weight:bold; cursor:move; animation:modalFadeIn 0.4s ease forwards; }
+.close { margin-left:auto; font-size:20px; font-weight:bold; cursor:pointer; color:#d32f2f; background-color:#fff; border:2px solid #d32f2f; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s, color 0.2s, transform 0.2s; }
+.close:hover { background-color:#d32f2f; color:#fff; transform:scale(1.1); }
+.modal-title { font-size:24px; font-weight:bold; color:#1976d2; text-align:center; flex:1; line-height:28px; margin:0; }
+#modalActions button { margin:6px; padding:8px 14px; background:#1976d2; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:transform 0.2s ease, background 0.3s ease; }
+#modalActions button:hover { background:#1565c0; transform:scale(1.05); }
 
 /* ---------------------- 지도/위성 모드 대응 ---------------------- */
+.map-satellite #popupModal .modal-content { background:rgba(0,0,0,0.6); border:2px solid #fff; color:#fff; }
+.map-satellite #popupModal .modal-title, .map-satellite #popupModal #modalMessage { color:#fff; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.map-roadmap #popupModal .modal-content { background:rgba(255,255,255,0.6); border:2px solid #1976d2; color:#000; }
+.map-roadmap #popupModal .modal-title { color:#1976d2; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
+.map-roadmap #popupModal #modalMessage { color:#000; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
 
-/* 위성지도 모드 */
-.map-satellite #popupModal .modal-content {
-  background: rgba(0, 0, 0, 0.6);
-  border: 2px solid #fff;
-  color: #fff;
-}
-.map-satellite #popupModal .modal-title,
-.map-satellite #popupModal #modalMessage {
-  color: #fff;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-               -1px  1px 0 #000, 1px  1px 0 #000;
-}
+/* ---------------------- 목각파임 효과 ---------------------- */
+.map-satellite #popupModal .modal-title, .map-satellite #popupModal #modalMessage, .map-satellite #popupModal #modalActions button { color:#fff; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.map-roadmap #popupModal .modal-title, .map-roadmap #popupModal #modalMessage, .map-roadmap #popupModal #modalActions button { color:#1976d2; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
 
-/* 일반 지도 모드 */
-.map-roadmap #popupModal .modal-content {
-  background: rgba(255, 255, 255, 0.6);
-  border: 2px solid #1976d2;
-  color: #000;
-}
-.map-roadmap #popupModal .modal-title {
-  color: #1976d2;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-               -1px  1px 0 #fff, 1px  1px 0 #fff;
-}
-.map-roadmap #popupModal #modalMessage {
-  color: #000;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-               -1px  1px 0 #fff, 1px  1px 0 #fff;
-}
+/* ---------------------- 반응형 처리 ---------------------- */
+@media (max-width:600px) { .modal-content { width:90%; font-size:14px; } .modal-title { font-size:20px; } }
 
-/* ---------------------- 지도/위성 모드 대응 ---------------------- */
-
-/* 위성지도 모드: 목각파임 효과 */
-.map-satellite #popupModal .modal-title,
-.map-satellite #popupModal #modalMessage,
-.map-satellite #popupModal #modalActions button {
-  color: #fff;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
-               -1px  1px 0 #000, 1px  1px 0 #000;
-}
-
-/* 일반 지도 모드: 밝은 배경 대비 목각파임 효과 */
-.map-roadmap #popupModal .modal-title,
-.map-roadmap #popupModal #modalMessage,
-.map-roadmap #popupModal #modalActions button {
-  color: #1976d2;
-  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
-               -1px  1px 0 #fff, 1px  1px 0 #fff;
-}
-  
-/* 반응형 처리 */
-@media (max-width: 600px) {
-  .modal-content {
-    width: 90%;
-    font-size: 14px;
-  }
-  .modal-title {
-    font-size: 20px;
-  }
-}
-
+        
 </style>
 
 
