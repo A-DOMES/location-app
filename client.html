@@ -166,6 +166,8 @@ let modalQueue = [];
 let modalTimer = null;
 // 최근 알림 시간을 저장할 변수
 let lastSchoolZoneAlertTime = 0;
+let lastDynamicZoneAlertTime = 0;  
+let lastSpeedLimitAlertTime = 0;
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -566,14 +568,29 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
       if (limitData.speedLimits?.length > 0) {
         const limit = limitData.speedLimits[0].speedLimit;
         const currentKmh = currentSpeed * 3.6;
+
+        // ✅ 예고 알림: 50m 앞에서 제한속도 구간 접근
+        // (실제 API에서는 도로 구간 좌표가 없으므로, 단순히 호출 시점에 예고 알림을 먼저 띄우는 방식)
+        const now = Date.now();
+        if (now - lastSpeedLimitAlertTime > 60000) {
+          showQueuedModal("속도 제한 구역 접근",
+            `앞으로 50m 이내에 속도 제한 구간이 있습니다.\n제한속도: ${limit} km/h`);
+          lastSpeedLimitAlertTime = now;
+        }
+
+        // ✅ 실제 구간 진입 알림
         if (currentKmh > limit) {
-          showQueuedModal("속도 제한 초과", 
+          showQueuedModal("속도 제한 초과",
+            `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+        } else {
+          showQueuedModal("속도 제한 구역",
             `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
         }
       }
     })
     .catch(err => console.error(err));
 }
+
 
 function checkSchoolZones(currentLat, currentLng) {
   const service = new google.maps.places.PlacesService(map);
@@ -614,7 +631,6 @@ function checkSchoolZones(currentLat, currentLng) {
   });
 }
 
-
 async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
   const currentKmh = currentSpeed * 3.6;
   try {
@@ -626,13 +642,29 @@ async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
         const zoneLat = parseFloat(zone.lat);
         const zoneLng = parseFloat(zone.lng);
         const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
-        if (distance <= 300) {
-          if (currentKmh > limit) {
-            showQueuedModal("속도 제한 초과", 
-              `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
-          } else {
-            showQueuedModal("속도 제한 구역", 
-              `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+
+        const now = Date.now();
+
+        // ✅ 50m 앞에서 예고 알림
+        if (distance <= 50 && distance > 20) {
+          if (now - lastDynamicZoneAlertTime > 60000) {
+            showQueuedModal("속도 제한 구역 접근",
+              `앞으로 50m 이내에 속도 제한 구역이 있습니다.\n제한속도: ${limit} km/h`);
+            lastDynamicZoneAlertTime = now;
+          }
+        }
+
+        // ✅ 실제 구역 진입 알림
+        if (distance <= 20) {
+          if (now - lastDynamicZoneAlertTime > 60000) {
+            if (currentKmh > limit) {
+              showQueuedModal("속도 제한 초과",
+                `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+            } else {
+              showQueuedModal("속도 제한 구역",
+                `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+            }
+            lastDynamicZoneAlertTime = now;
           }
         }
       });
@@ -641,6 +673,7 @@ async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
     console.error("속도 제한 구역 API 호출 오류:", err);
   }
 }
+
 
 // ---------------------- 초기화 ----------------------
 window.onload = () => {
