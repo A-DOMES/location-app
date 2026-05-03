@@ -363,37 +363,37 @@
 </div>
   
 <script>  
-// ---------------------- 전역 변수 ----------------------
-let map, myMarker, pathPolyline;   // 지도, 내 위치 마커, 경로 Polyline
-let pathCoords = [];               // 이동 경로 좌표 배열
-
-// ✅ 위치 추적 관련
-let lastGeocodeTime = 0;           // 마지막 주소 갱신 시각 기록
-let geocodeInterval = 60000;       // 주소 갱신 주기 (기본값: 1분)
-
-// ✅ 레이더 관련
-let radarPolygon = null;
-let radarRadiusMeters = 100;       // 레이더 반경
-let radarEnabled = true;
-let lastHeading = null;            // 마지막 방향 값 저장
-
-// ✅ 주변 장소/POI 관련
-let poiMarkers = [];               // 주변 장소 마커 배열
-let compassMarkers = [];           // 나침반 마커 배열
-let infoWindow;                    // POI 정보창
-
-// ✅ 경로 안내 관련
-let directionsService, directionsRenderer;
-
-// ✅ 현재 위치 관련
-let currentLat, currentLng;
-let otherMarker;                   // 상대방 위치 마커
-
-// ✅ 원형 표시 관련
-let circles = [];                  // 원형 표시용 배열
-
-// ✅ 속도와 거리 관련
-let totalDistance = 0; // 누적 이동 거리 (m 단위)
+  // ---------------------- 전역 변수 ----------------------
+  let map, myMarker, pathPolyline;   // 지도, 내 위치 마커, 경로 Polyline
+  let pathCoords = [];               // 이동 경로 좌표 배열
+  
+  // ✅ 위치 추적 관련
+  let lastGeocodeTime = 0;           // 마지막 주소 갱신 시각 기록
+  let geocodeInterval = 60000;       // 주소 갱신 주기 (기본값: 1분)
+  
+  // ✅ 레이더 관련
+  let radarPolygon = null;
+  let radarRadiusMeters = 100;       // 레이더 반경
+  let radarEnabled = true;
+  let lastHeading = null;            // 마지막 방향 값 저장
+  
+  // ✅ 주변 장소/POI 관련
+  let poiMarkers = [];               // 주변 장소 마커 배열
+  let compassMarkers = [];           // 나침반 마커 배열
+  let infoWindow;                    // POI 정보창
+  
+  // ✅ 경로 안내 관련
+  let directionsService, directionsRenderer;
+  
+  // ✅ 현재 위치 관련
+  let currentLat, currentLng;
+  let otherMarker;                   // 상대방 위치 마커
+  
+  // ✅ 원형 표시 관련
+  let circles = [];                  // 원형 표시용 배열
+  
+  // ✅ 속도와 거리 관련
+  let totalDistance = 0; // 누적 이동 거리 (m 단위)
   
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -682,6 +682,7 @@ function getDistance(lat1, lng1, lat2, lng2) {
     }
   }
 
+
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
@@ -698,7 +699,7 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 처음 메시지를 좌표 박스로 교체
+        // ✅ 위치 정보 박스 초기화
         const content = document.getElementById("locationContent");
         if (!document.getElementById("latBox") || content.innerText.includes("위치 정보를 가져오는 중")) {
           content.innerHTML = `
@@ -707,6 +708,8 @@ function startTracking() {
             <small id="directionBox"></small>
             <small id="timeBox"></small>
             <div id="addressBox"></div>
+            <small id="speedBox"></small><br>
+            <small id="distanceBox"></small>
           `;
         }
 
@@ -718,16 +721,13 @@ function startTracking() {
 
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // ✅ 주소 변환 주기 (1분마다 갱신)
+        // ✅ 주소 변환 (1분마다 갱신)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
               let address = results[0].formatted_address;
-
-              // ✅ 대한민국 표기 제거 (앞/뒤에 붙은 경우 모두 제거)
-              address = address.replace(/^대한민국\s*,?\s*/, "");   // 맨 앞 제거
-              address = address.replace(/\s*,?\s*대한민국$/, "");   // 맨 뒤 제거
-
+              address = address.replace(/^대한민국\s*,?\s*/, "");
+              address = address.replace(/\s*,?\s*대한민국$/, "");
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
@@ -736,7 +736,7 @@ function startTracking() {
 
         updateLocationDisplay(currentLat, currentLng, heading);
 
-        // 마커 갱신
+        // ✅ 마커 갱신
         if (!myMarker) {
           myMarker = new google.maps.Marker({
             position: myPos,
@@ -760,15 +760,27 @@ function startTracking() {
         if (pathCoords.length > 0) {
           const lastPoint = pathCoords[pathCoords.length - 1];
           const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
-        
-          if (distance >= 3) {   // ← 여기서 3m 기준
+
+          if (distance >= 3) {
             pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
             pathPolyline.setPath(pathCoords);
+
+            // ✅ 총 이동 거리 누적
+            totalDistance += distance;
+            document.getElementById("distanceBox").innerText = 
+              `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
           }
         } else {
           // 첫 좌표는 무조건 추가
           pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
           pathPolyline.setPath(pathCoords);
+        }
+
+        // ✅ 속도 표시 (m/s → km/h)
+        const speed = pos.coords.speed;
+        if (speed !== null && !isNaN(speed)) {
+          document.getElementById("speedBox").innerText = 
+            `속도: ${(speed * 3.6).toFixed(1)} km/h`;
         }
 
         // ✅ 경로가 생기면 초기화 버튼 표시
@@ -784,6 +796,7 @@ function startTracking() {
     );
   }
 }
+
 
 // ---------------------- 경로 초기화 버튼 로직 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
@@ -803,38 +816,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     document.getElementById("reopenBtn").style.display = "none";
   });
 
-
- // ---------------------- 속도 와 거리 계산 ----------------------
-navigator.geolocation.watchPosition((pos) => {
-  const currentLat = pos.coords.latitude;
-  const currentLng = pos.coords.longitude;
-
-  // ✅ 속도 표시
-  const speed = pos.coords.speed; 
-  if (speed !== null && !isNaN(speed)) {
-    document.getElementById("speedBox").innerText = 
-      `속도: ${(speed * 3.6).toFixed(1)} km/h`;
-  }
-
-  // ✅ 총 이동 거리 계산
-  if (pathCoords.length > 0) {
-    const lastPoint = pathCoords[pathCoords.length - 1];
-    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
-
-    if (distance >= 3) { // 3m 이상 이동 시만 추가
-      totalDistance += distance;
-      document.getElementById("distanceBox").innerText = 
-        `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
-    }
-  }
-
-  // 기존 경로 기록 로직
-  pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-  pathPolyline.setPath(pathCoords);
-
-}, (err) => {
-  console.error(err);
-});
 
   
   // ---------------------- 원형 표시 ----------------------
