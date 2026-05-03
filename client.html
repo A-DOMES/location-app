@@ -321,46 +321,46 @@
 
 </head>
 <body>
-  <header>📍 A-DOMES | 위치정보시스템</header>
-
-<!-- 좌표 창 -->
-<div id="locationBox">
-  <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
-  <div id="locationHeader">
-    <h3>현재 좌표</h3>
-    <button id="closeBtn">×</button>
+    <header>📍 A-DOMES | 위치정보시스템</header>
+  
+  <!-- 좌표 창 -->
+  <div id="locationBox">
+    <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
+    <div id="locationHeader">
+      <h3>현재 좌표</h3>
+      <button id="closeBtn">×</button>
+    </div>
+  
+    <!-- 위치 정보 표시 영역 -->
+    <div id="locationContent">
+      위치 정보를 가져오는 중...
+      <span id="latBox"></span>
+      <span id="lngBox"></span>
+      <small id="directionBox"></small>
+      <small id="timeBox"></small>
+      <div id="addressBox"></div>
+    </div>
+  
+  
+    <!-- 공유 버튼 -->
+    <button id="shareBtn">현재 위치 공유</button>
   </div>
-
-  <!-- 위치 정보 표시 영역 -->
-  <div id="locationContent">
-    위치 정보를 가져오는 중...
-    <span id="latBox"></span>
-    <span id="lngBox"></span>
-    <small id="directionBox"></small>
-    <small id="timeBox"></small>
-    <div id="addressBox"></div>
+  
+  <div id="reopenBtn">현재 좌표 열기</div>
+  <div id="map"></div>
+  <div id="locationDisplay"></div>
+  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
+  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+  
+  <!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
+  <div id="mapControls">
+    <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
   </div>
-
-
-  <!-- 공유 버튼 -->
-  <button id="shareBtn">현재 위치 공유</button>
-</div>
-
-<div id="reopenBtn">현재 좌표 열기</div>
-<div id="map"></div>
-<div id="locationDisplay"></div>
-<div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
-<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
-
-<!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
-<div id="mapControls">
-  <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
-</div>
-
-<div id="infoBox">
-  <small id="speedBox">속도: 0 km/h</small><br>
-  <small id="distanceBox">총 이동 거리: 0 km</small>
-</div>
+  
+  <div id="infoBox">
+    <div id="speedBox">속도: 0 km/h</div>
+    <div id="distanceBox">총 이동 거리: 0 km</div>
+  </div>
   
 <script>  
   // ---------------------- 전역 변수 ----------------------
