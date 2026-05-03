@@ -279,10 +279,11 @@
 
 /* ✅ 다기능 모달 창 */
 
-/* 헤더: 타이틀과 닫기 버튼 같은 줄 */
+/* 헤더: 타이틀 중앙, 닫기 버튼 우측 */
 .modal-header {
+  position: relative;
   display: flex;
-  justify-content: space-between; /* 좌측 타이틀, 우측 닫기 버튼 */
+  justify-content: center;   /* 타이틀 중앙 */
   align-items: center;
   margin-bottom: 10px;
 }
@@ -302,47 +303,61 @@
   position: absolute;
   left: 50%;
   top: 7%; /* 화면 상단에서 조금 아래 */
-  transform: translateX(-50%); /* 가로만 중앙 정렬 */
-  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
-  backdrop-filter: blur(12px); /* 유리 효과 */
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 16px;
   border-radius: 12px;
-  width: 260px; /* 폭 지정 */
+  width: 260px;
   text-align: center;
-  border: 1px solid rgba(25, 118, 210, 0.3); /* 은은한 파란색 테두리 */
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* 그림자 */
+  border: 1px solid rgba(25, 118, 210, 0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   color: #000;
   font-size: 15px;
   font-weight: bold;
-  cursor: move; /* 드래그 가능 표시 */
+  cursor: move;
 }
 
-/* 닫기 버튼 */
+/* 닫기 버튼: 원형 안에 빨간색 X */
 .close {
-  font-size: 20px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  color: #1976d2; /* 기본 파란색 */
-  transition: color 0.2s;
+  color: #d32f2f;            /* X 글씨 빨간색 */
+  background-color: #fff;    /* 흰색 배경 */
+  border: 2px solid #d32f2f; /* 빨간색 테두리 */
+  border-radius: 50%;        /* 동그라미 */
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .close:hover {
-  color: #d32f2f; /* hover 시 빨간색 강조 */
+  background-color: #d32f2f; /* hover 시 빨간 원 */
+  color: #fff;               /* hover 시 X는 흰색 */
 }
 
 /* 모달 타이틀 */
 .modal-title {
-  font-size: 18px;
+  font-size: 24px;           /* 타이틀 크게 */
   font-weight: bold;
   color: #1976d2;
-  display: flex;
-  align-items: center;
+  text-align: center;
+  flex: 1;
 }
 
 .modal-icon {
   margin-right: 8px;
-  font-size: 20px;
+  font-size: 22px;
 }
+
 
 
 </style>
@@ -389,10 +404,9 @@
 <!-- 다기능 모달창 -->
 <div id="popupModal" class="modal">
   <div class="modal-content">
-    <!-- 헤더: 타이틀과 닫기 버튼을 같은 줄에 배치 -->
     <div class="modal-header">
-      <h3 id="modalTitle" class="modal-title">알림</h3>
-      <span id="closeModal" class="close">❌</span>
+      <h2 id="modalTitle" class="modal-title">알림</h2>
+      <span id="closeModal" class="close">✖</span>
     </div>
 
     <!-- 메시지: 기존 코드에서 값이 들어옴 -->
