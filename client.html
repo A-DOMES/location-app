@@ -469,7 +469,7 @@ function showQueuedModal(title, message, actions = []) {
       if (modalQueue.length > 0) {
         const next = modalQueue.shift();
         playSound();
-        showQueuedModal(next.title, next.message, next.actions);
+        showModal(next.title, next.message, next.actions); // ✅ 여기서는 showModal만 호출
       } else {
         clearInterval(modalTimer);
         modalTimer = null;
@@ -477,7 +477,6 @@ function showQueuedModal(title, message, actions = []) {
     }, 3000); // 3초 간격
   }
 }
-
   
 // ---------------------- 공통 드래그 함수 (이동만) ----------------------
 function makeDraggableAndResizable(element) {
