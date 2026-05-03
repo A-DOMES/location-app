@@ -298,6 +298,12 @@
   background: transparent;
 }
 
+/* 등장 애니메이션 */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translate(-50%, -20%) scale(0.9); }
+  to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
 /* 모달 본문 (기본값) */
 .modal-content {
   position: absolute;
@@ -316,6 +322,7 @@
   font-size: 15px;
   font-weight: bold;
   cursor: move;
+  animation: modalFadeIn 0.4s ease forwards; /* 등장 애니메이션 */
 }
 
 /* 닫기 버튼: 원형 안에 빨간색 X */
@@ -333,11 +340,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
 }
 .close:hover {
   background-color: #d32f2f;
   color: #fff;
+  transform: scale(1.1); /* hover 시 확대 */
 }
 
 /* 모달 타이틀 */
@@ -349,6 +357,23 @@
   flex: 1;
   line-height: 28px; /* 닫기 버튼과 같은 높이 */
   margin: 0;
+}
+
+/* 액션 버튼 */
+#modalActions button {
+  margin: 6px;
+  padding: 8px 14px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+#modalActions button:hover {
+  background: #1565c0;
+  transform: scale(1.05);
 }
 
 /* ---------------------- 지도/위성 모드 대응 ---------------------- */
@@ -381,6 +406,17 @@
   color: #000;
   text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
                -1px  1px 0 #fff, 1px  1px 0 #fff;
+}
+
+/* 반응형 처리 */
+@media (max-width: 600px) {
+  .modal-content {
+    width: 90%;
+    font-size: 14px;
+  }
+  .modal-title {
+    font-size: 20px;
+  }
 }
 
 </style>
