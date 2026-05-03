@@ -366,15 +366,16 @@
   </div>
 
   <!-- 위치 정보 표시 영역 -->
-  <div id="locationContent">
-    위치 정보를 가져오는 중...
-    <span id="latBox"></span>
-    <span id="lngBox"></span>
-    <small id="directionBox"></small>
-    <small id="timeBox"></small>
-    <div id="addressBox"></div>
+<div id="popupModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div id="modalTitle">알림</div>
+      <span id="closeModal">❌</span>
+    </div>
+    <div id="modalMessage"></div>
+    <div id="modalActions"></div>
   </div>
-
+</div>
 
   <!-- 공유 버튼 -->
   <button id="shareBtn">현재 위치 공유</button>
