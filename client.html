@@ -1010,6 +1010,56 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     .catch(err => console.error(err));
 }
 
+// ---------------------- 어린이 보호구역 감지 ----------------------
+function checkSchoolZones(currentLat, currentLng) {
+  const service = new google.maps.places.PlacesService(map);
+
+  service.nearbySearch({
+    location: { lat: currentLat, lng: currentLng },
+    radius: 2000, // 2km 반경 내 학교 검색
+    type: 'school'
+  }, (results, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      results.forEach(school => {
+        const zoneCenter = school.geometry.location;
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(
+          new google.maps.LatLng(currentLat, currentLng),
+          zoneCenter
+        );
+
+        if (distance <= 300) { // 반경 300m를 보호구역으로 설정
+          showModal("어린이 보호구역", 
+            `주의! 어린이 보호구역에 진입했습니다.\n속도 제한: 30 km/h`);
+        }
+      });
+    }
+  });
+}
+
+// ---------------------- 속도 제한 구역 감지 (공공 API 기반) ----------------------
+async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
+  const currentKmh = currentSpeed * 3.6;
+
+  try {
+    // 예시: 도로교통공단 공공데이터 API 호출 (실제 엔드포인트와 파라미터는 제공 문서 참고)
+    const response = await fetch(`https://api.data.go.kr/openapi/speedLimit?lat=${currentLat}&lng=${currentLng}&serviceKey=YOUR_SERVICE_KEY`);
+    const data = await response.json();
+
+    if (data && data.speedLimit) {
+      const limit = data.speedLimit;
+      if (currentKmh > limit) {
+        showModal("속도 제한 초과", 
+          `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+      } else {
+        showModal("속도 제한 구역", 
+          `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+      }
+    }
+  } catch (err) {
+    console.error("속도 제한 구역 API 호출 오류:", err);
+  }
+}
+
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
@@ -1026,7 +1076,7 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 좌표 박스 초기화
+        // ✅ 좌표 박스 초기화 및 갱신 (기존 로직 유지)
         const content = document.getElementById("locationContent");
         if (!document.getElementById("latBox") || content.innerText.includes("위치 정보를 가져오는 중")) {
           content.innerHTML = `
@@ -1037,15 +1087,13 @@ function startTracking() {
             <div id="addressBox"></div>
           `;
         }
-
-        // ✅ 위치정보 갱신
         document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
         document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
         document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
         document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // ✅ 주소 변환 (1분마다)
+        // ✅ 주소 변환 (기존 로직 유지)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
@@ -1060,7 +1108,7 @@ function startTracking() {
 
         updateLocationDisplay(currentLat, currentLng, heading);
 
-        // ✅ 마커 갱신
+        // ✅ 마커 갱신, 경로 갱신 (기존 로직 유지)
         if (!myMarker) {
           myMarker = new google.maps.Marker({
             position: myPos,
@@ -1080,7 +1128,6 @@ function startTracking() {
         updateRadarPolygon(myPos, heading);
         map.setCenter(myPos);
 
-        // ✅ 경로 갱신 (3m 이상 이동 시만 추가)
         if (pathCoords.length > 0) {
           const lastPoint = pathCoords[pathCoords.length - 1];
           const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
@@ -1098,11 +1145,10 @@ function startTracking() {
         }
 
         // ---------------------- ✅ 추가된 독립 기능 ----------------------
-        // 속도·총 이동 거리 모달
-        updateTravelStats(pos);
-
-        // Roads API 속도 제한 확인
-        checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
+        updateTravelStats(pos); // 속도·총 이동 거리 모달
+        checkSpeedLimit(currentLat, currentLng, pos.coords.speed); // Google Roads API 제한속도 확인
+        checkSchoolZones(currentLat, currentLng); // 어린이 보호구역 감지
+        checkDynamicSpeedZones(currentLat, currentLng, pos.coords.speed); // 공공데이터 API 기반 속도 제한 구역 감지
       },
       (err) => {
         document.getElementById("locationContent").innerText =
@@ -1112,8 +1158,6 @@ function startTracking() {
     );
   }
 }
-
-
 </script>
 </body>
 </html>
