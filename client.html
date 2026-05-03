@@ -277,78 +277,73 @@
   transform: scale(0.95);
 }
 
-/* ✅ 다기능 모달 창 전체 영역 */
-.modal {
-  display: none;                 /* 기본은 숨김 상태 */
-  position: fixed;               /* 화면 전체에 고정 */
-  z-index: 999;                  /* 다른 요소보다 위에 표시 */
-  left: 0; top: 0;               /* 화면 좌측 상단 기준 */
-  width: 100%; height: 100%;     /* 전체 화면 크기 */
-  background: transparent;       /* 배경은 투명 처리 */
-}
+/* ✅ 다기능 모달 창 */
 
-/* 모달 본문 박스 */
-.modal-content {
-  position: absolute;            /* 위치를 자유롭게 지정 가능 */
-  left: 50%;                     /* 가로 중앙 기준 */
-  top: 7%;                       /* 화면 상단에서 조금 아래 */
-  transform: translateX(-50%);   /* 가로만 중앙 정렬 */
-  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
-  backdrop-filter: blur(12px);   /* 유리 효과 */
-  -webkit-backdrop-filter: blur(12px); /* Safari 호환 */
-  padding: 16px;                 /* 내부 여백 */
-  border-radius: 12px;           /* 모서리 둥글게 */
-  width: 280px;                  /* 폭 지정 */
-  border: 1px solid rgba(25, 118, 210, 0.3); /* 은은한 파란색 테두리 */
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);    /* 그림자 효과 */
-  color: #000;                   /* 본문 글씨 검정색 */
-  font-size: 15px;               /* 본문 글씨 크기 */
-  font-weight: bold;             /* 본문 글씨 굵게 */
-  cursor: move;                  /* 드래그 가능 표시 */
-}
-
-/* 모달 헤더: 타이틀 + 닫기 버튼 같은 줄 */
+/* 헤더: 타이틀과 닫기 버튼 같은 줄 */
 .modal-header {
-  display: flex;                 /* 가로 정렬 */
-  justify-content: space-between;/* 좌측 타이틀, 우측 닫기 버튼 */
-  align-items: center;           /* 세로 중앙 정렬 */
-  margin-bottom: 12px;           /* 본문과 간격 */
+  display: flex;
+  justify-content: space-between; /* 좌측 타이틀, 우측 닫기 버튼 */
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-/* 모달 타이틀 */
-.modal-title {
-  font-size: 18px;               /* 타이틀 글씨 크기 */
-  font-weight: bold;             /* 타이틀 글씨 굵게 */
-  color: #1976d2;                /* 청색 강조 */
-  display: flex;                 /* 아이콘과 글씨 나란히 */
-  align-items: center;           /* 아이콘과 글씨 세로 중앙 */
+/* 모달 전체 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: transparent; /* 전체 화면은 투명 처리 */
 }
 
-/* 타이틀 아이콘 */
-.modal-icon {
-  margin-right: 8px;             /* 아이콘과 글씨 간격 */
-  font-size: 20px;               /* 아이콘 크기 */
+/* 모달 본문 */
+.modal-content {
+  position: absolute;
+  left: 50%;
+  top: 7%; /* 화면 상단에서 조금 아래 */
+  transform: translateX(-50%); /* 가로만 중앙 정렬 */
+  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
+  backdrop-filter: blur(12px); /* 유리 효과 */
+  -webkit-backdrop-filter: blur(12px);
+  padding: 16px;
+  border-radius: 12px;
+  width: 260px; /* 폭 지정 */
+  text-align: center;
+  border: 1px solid rgba(25, 118, 210, 0.3); /* 은은한 파란색 테두리 */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* 그림자 */
+  color: #000;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: move; /* 드래그 가능 표시 */
 }
 
 /* 닫기 버튼 */
 .close {
-  font-size: 26px;               /* 닫기 버튼 크게 표시 */
-  cursor: pointer;               /* 마우스 포인터 변경 */
-  color: #1976d2;                /* 기본 파란색 */
-  transition: color 0.2s;        /* hover 시 색상 전환 효과 */
+  font-size: 20px;
+  cursor: pointer;
+  color: #1976d2; /* 기본 파란색 */
+  transition: color 0.2s;
 }
 
 .close:hover {
-  color: #d32f2f;                /* hover 시 빨간색 강조 */
+  color: #d32f2f; /* hover 시 빨간색 강조 */
 }
 
-/* 모달 본문 */
-.modal-body {
-  font-size: 14px;               /* 본문 글씨 크기 */
-  color: #000;                   /* 본문 글씨 색상 */
-  text-align: left;              /* 왼쪽 정렬 */
-  line-height: 1.5;              /* 줄 간격 */
+/* 모달 타이틀 */
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1976d2;
+  display: flex;
+  align-items: center;
 }
+
+.modal-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
 
 </style>
 
@@ -366,16 +361,15 @@
   </div>
 
   <!-- 위치 정보 표시 영역 -->
-<div id="popupModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div id="modalTitle">알림</div>
-      <span id="closeModal">❌</span>
-    </div>
-    <div id="modalMessage"></div>
-    <div id="modalActions"></div>
+  <div id="locationContent">
+    위치 정보를 가져오는 중...
+    <span id="latBox"></span>
+    <span id="lngBox"></span>
+    <small id="directionBox"></small>
+    <small id="timeBox"></small>
+    <div id="addressBox"></div>
   </div>
-</div>
+
 
   <!-- 공유 버튼 -->
   <button id="shareBtn">현재 위치 공유</button>
@@ -395,32 +389,21 @@
 <!-- 다기능 모달창 -->
 <div id="popupModal" class="modal">
   <div class="modal-content">
-    <span id="closeModal" class="close">&times;</span>
-    <h3 id="modalTitle">알림</h3>
+    <!-- 헤더: 타이틀과 닫기 버튼을 같은 줄에 배치 -->
+    <div class="modal-header">
+      <h3 id="modalTitle" class="modal-title">알림</h3>
+      <span id="closeModal" class="close">❌</span>
+    </div>
+
+    <!-- 메시지: 기존 코드에서 값이 들어옴 -->
     <p id="modalMessage"></p>
+
+    <!-- 액션 버튼 영역 (필요 시만 사용) -->
     <div id="modalActions"></div>
   </div>
 </div>
 
-<!-- 모달창 상황별 아이콘 -->
-<div class="modal">
-  <div class="modal-content">
-    <!-- 헤더: 타이틀 + 닫기 버튼 -->
-    <div class="modal-header">
-      <div class="modal-title">
-        <span class="modal-icon">⏱️</span> 이동 정보
-      </div>
-      <span class="close">❌</span>
-    </div>
 
-    <!-- 본문: 데이터가 자동으로 갱신될 자리 -->
-    <div class="modal-body">
-      <p>예상 소요 시간: 15분</p>
-      <p>경로 안내: 어린이 보호구역 포함</p>
-      <p>속도 제한: 30km/h</p>
-    </div>
-  </div>
-</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -751,34 +734,36 @@ setInterval(() => {
   }
 }, 3000);
 
-// ---------------------- 모달 큐 표시 ----------------------
-// showQueuedModal 수정
+
+// 모달 큐 표시 간격을 5초로 변경
 function showQueuedModal(title, message, actions = []) {
   modalQueue.push({ title, message, actions });
   if (!modalTimer) {
     modalTimer = setInterval(() => {
       if (modalQueue.length > 0) {
         const next = modalQueue.shift();
-
-        // 새 구조에 맞게 선택자 변경
-        document.querySelector(".modal-title").innerText = next.title;
-        document.querySelector(".modal-body").innerText = next.message;
-
-        document.querySelector(".modal").style.display = "block";
+        document.getElementById("modalTitle").innerText = next.title;
+        document.getElementById("modalMessage").innerText = next.message;
+        const actionsBox = document.getElementById("modalActions");
+        actionsBox.innerHTML = "";
+        next.actions.forEach(action => {
+          const btn = document.createElement("button");
+          btn.innerText = action.label;
+          btn.onclick = action.onClick;
+          actionsBox.appendChild(btn);
+        });
+        document.getElementById("popupModal").style.display = "block";
       } else {
         clearInterval(modalTimer);
         modalTimer = null;
       }
-    }, 5000);
+    }, 5000); // 5초 간격으로 메시지 표시
   }
 }
 
-
-// 닫기 버튼 이벤트 연결
-document.querySelector(".close").onclick = () => {
-  document.querySelector(".modal").style.display = "none";
+document.getElementById("closeModal").onclick = () => {
+  document.getElementById("popupModal").style.display = "none";
 };
-
 
 function showTravelStats(speed, totalDistance) {
   const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
