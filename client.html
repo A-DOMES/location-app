@@ -103,14 +103,13 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
   <!-- 위치 정보 표시 영역 -->
   <div id="locationContent">
-    위치 정보를 가져오는 중...
+    <div id="loadingMessage">위치 정보를 가져오는 중...</div>
     <span id="latBox"></span>
     <span id="lngBox"></span>
     <small id="directionBox"></small>
     <small id="timeBox"></small>
     <div id="addressBox"></div>
   </div>
-
 
   <!-- 공유 버튼 -->
   <button id="shareBtn">현재 위치 공유</button>
@@ -256,9 +255,9 @@ function initMap() {
     updateMapStyle(map);
     // ✅ 지도 타입 변경 시에도 로딩 메시지가 다시 나타나지 않도록 처리
     const loadingMsg = document.getElementById("loadingMessage");
-    if (loadingMsg && loadingMsg.style.display !== "none") {
-      loadingMsg.style.display = "none";
-      loadingMsg.classList.add("hidden");
+    if (loadingMsg) {
+      loadingMsg.style.display = "none";   // 레이아웃에서 제거
+      loadingMsg.classList.add("hidden");  // CSS 강제 숨김
     }
   });
 
