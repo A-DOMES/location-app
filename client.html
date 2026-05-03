@@ -168,6 +168,9 @@ let modalTimer = null;
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
 let lastSpeedLimitAlertTime = 0;
+let speedHistory = [];
+let startTime = Date.now();
+
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -552,6 +555,31 @@ function updateTravelStats(pos) {
   pathCoords.push(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
 }
 
+
+// ----------------------✅ 모달창 이동정보 확장) ----------------------
+function showTravelStats(speed, totalDistance) {
+  // 속도 기록
+  speedHistory.push(speed * 3.6);
+
+  // 평균 속도 계산
+  const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+
+  // 최고 속도 계산
+  const maxSpeed = Math.max(...speedHistory);
+
+  // 주행 시간 계산
+  const elapsedTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1); // 분 단위
+
+  const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
+  const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
+  const avgText = `평균 속도: ${avgSpeed.toFixed(1)} km/h`;
+  const maxText = `최고 속도: ${maxSpeed.toFixed(1)} km/h`;
+  const timeText = `주행 시간: ${elapsedTime} 분`;
+
+  showQueuedModal("이동 정보", `${speedText}\n${distanceText}\n${avgText}\n${maxText}\n${timeText}`);
+}
+
+  
 // ----------------------✅ 공통 알림 함수 + 사운드 추가 ----------------------
 // 사운드 재생 함수
 function playAlertSound() {
