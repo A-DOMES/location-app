@@ -408,6 +408,26 @@
                -1px  1px 0 #fff, 1px  1px 0 #fff;
 }
 
+/* ---------------------- 지도/위성 모드 대응 ---------------------- */
+
+/* 위성지도 모드: 목각파임 효과 */
+.map-satellite #popupModal .modal-title,
+.map-satellite #popupModal #modalMessage,
+.map-satellite #popupModal #modalActions button {
+  color: #fff;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000,
+               -1px  1px 0 #000, 1px  1px 0 #000;
+}
+
+/* 일반 지도 모드: 밝은 배경 대비 목각파임 효과 */
+.map-roadmap #popupModal .modal-title,
+.map-roadmap #popupModal #modalMessage,
+.map-roadmap #popupModal #modalActions button {
+  color: #1976d2;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff,
+               -1px  1px 0 #fff, 1px  1px 0 #fff;
+}
+  
 /* 반응형 처리 */
 @media (max-width: 600px) {
   .modal-content {
