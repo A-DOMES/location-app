@@ -289,25 +289,27 @@
 
 /* 모달 본문 */
 .modal-content {
-  background: rgba(255, 255, 255, 0.85); /* 반투명 흰색 배경 */
+  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 유지 */
   backdrop-filter: blur(12px); /* 유리 효과 */
   -webkit-backdrop-filter: blur(12px);
-  margin: 15% auto;
-  padding: 20px;
+  margin: 10% auto;
+  padding: 16px;
   border-radius: 12px;
-  width: 320px;
+  width: 260px; /* 폭을 줄여서 현재 위치 창처럼 */
   text-align: center;
-  border: 1px solid rgba(25, 118, 210, 0.4); /* 은은한 파란색 테두리 */
+  border: 1px solid rgba(25, 118, 210, 0.3); /* 은은한 파란색 테두리 */
   box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* 부드러운 그림자 */
   color: #000; /* 글씨 검정색 */
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
+  position: absolute; /* 상하좌우 이동 가능하도록 */
+  cursor: move; /* 드래그 가능 표시 */
 }
 
 /* 닫기 버튼 */
 .close {
   float: right;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   color: #1976d2; /* 기본 파란색 */
   transition: color 0.2s;
@@ -316,6 +318,7 @@
 .close:hover {
   color: #d32f2f; /* hover 시 빨간색 강조 */
 }
+
 
 </style>
 
@@ -831,6 +834,7 @@ window.onload = () => {
   makeDraggableAndResizable(document.getElementById("locationBox"));
   makeDraggableAndResizable(document.getElementById("reopenBtn"));
   makeDraggableAndResizable(document.getElementById("resetPathBtn"));
+  makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 };
 
 // 경로 초기화 버튼
@@ -850,6 +854,23 @@ document.getElementById("reopenBtn").addEventListener("click", () => {
   document.getElementById("locationBox").style.display = "block";
   document.getElementById("reopenBtn").style.display = "none";
 });
+
+// ---------------------- 모달창 드래그 가능하게 만들기 ----------------------
+function makeDraggableModal(element) {
+  let isDragging = false, offsetX, offsetY;
+  element.addEventListener('mousedown', e => {
+    isDragging = true;
+    offsetX = e.clientX - element.offsetLeft;
+    offsetY = e.clientY - element.offsetTop;
+  });
+  document.addEventListener('mousemove', e => {
+    if (isDragging) {
+      element.style.left = (e.clientX - offsetX) + 'px';
+      element.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
+  document.addEventListener('mouseup', () => isDragging = false);
+}
   
 </script>  
 </body>
