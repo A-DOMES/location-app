@@ -277,68 +277,78 @@
   transform: scale(0.95);
 }
 
-/* ✅ 다기능 모달 창 */
+/* ✅ 다기능 모달 창 전체 영역 */
 .modal {
-  display: none;
-  position: fixed;
-  z-index: 999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background: transparent; /* 전체 화면은 투명 처리 */
+  display: none;                 /* 기본은 숨김 상태 */
+  position: fixed;               /* 화면 전체에 고정 */
+  z-index: 999;                  /* 다른 요소보다 위에 표시 */
+  left: 0; top: 0;               /* 화면 좌측 상단 기준 */
+  width: 100%; height: 100%;     /* 전체 화면 크기 */
+  background: transparent;       /* 배경은 투명 처리 */
 }
 
-/* 모달 본문 */
+/* 모달 본문 박스 */
 .modal-content {
-  position: absolute;
-  left: 50%;
-  top: 7%; /* 화면 상단에서 20% 아래로 */
-  transform: translateX(-50%); /* 가로만 중앙 정렬 */
-  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 유지 */
-  backdrop-filter: blur(12px); /* 유리 효과 */
-  -webkit-backdrop-filter: blur(12px);
-  padding: 16px;
-  border-radius: 12px;
-  width: 260px; /* 폭을 줄여서 현재 위치 창처럼 */
-  text-align: center;
+  position: absolute;            /* 위치를 자유롭게 지정 가능 */
+  left: 50%;                     /* 가로 중앙 기준 */
+  top: 7%;                       /* 화면 상단에서 조금 아래 */
+  transform: translateX(-50%);   /* 가로만 중앙 정렬 */
+  background: rgba(255, 255, 255, 0.25); /* 반투명 흰색 배경 */
+  backdrop-filter: blur(12px);   /* 유리 효과 */
+  -webkit-backdrop-filter: blur(12px); /* Safari 호환 */
+  padding: 16px;                 /* 내부 여백 */
+  border-radius: 12px;           /* 모서리 둥글게 */
+  width: 280px;                  /* 폭 지정 */
   border: 1px solid rgba(25, 118, 210, 0.3); /* 은은한 파란색 테두리 */
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2); /* 부드러운 그림자 */
-  color: #000; /* 글씨 검정색 */
-  font-size: 15px;
-  font-weight: bold;
-  cursor: move; /* 드래그 가능 표시 */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);    /* 그림자 효과 */
+  color: #000;                   /* 본문 글씨 검정색 */
+  font-size: 15px;               /* 본문 글씨 크기 */
+  font-weight: bold;             /* 본문 글씨 굵게 */
+  cursor: move;                  /* 드래그 가능 표시 */
 }
 
-
-/* 닫기 버튼 */
-.close {
-  float: right;
-  font-size: 20px;
-  cursor: pointer;
-  color: #1976d2; /* 기본 파란색 */
-  transition: color 0.2s;
-}
-
-.close:hover {
-  color: #d32f2f; /* hover 시 빨간색 강조 */
+/* 모달 헤더: 타이틀 + 닫기 버튼 같은 줄 */
+.modal-header {
+  display: flex;                 /* 가로 정렬 */
+  justify-content: space-between;/* 좌측 타이틀, 우측 닫기 버튼 */
+  align-items: center;           /* 세로 중앙 정렬 */
+  margin-bottom: 12px;           /* 본문과 간격 */
 }
 
 /* 모달 타이틀 */
 .modal-title {
-  font-size: 18px;
-  font-weight: bold;   /* 글씨 진하게 */
-  color: #1976d2;      /* 청색으로 강조 */
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 18px;               /* 타이틀 글씨 크기 */
+  font-weight: bold;             /* 타이틀 글씨 굵게 */
+  color: #1976d2;                /* 청색 강조 */
+  display: flex;                 /* 아이콘과 글씨 나란히 */
+  align-items: center;           /* 아이콘과 글씨 세로 중앙 */
 }
 
+/* 타이틀 아이콘 */
 .modal-icon {
-  margin-right: 8px;
-  font-size: 20px;
+  margin-right: 8px;             /* 아이콘과 글씨 간격 */
+  font-size: 20px;               /* 아이콘 크기 */
 }
 
-  
+/* 닫기 버튼 */
+.close {
+  font-size: 26px;               /* 닫기 버튼 크게 표시 */
+  cursor: pointer;               /* 마우스 포인터 변경 */
+  color: #1976d2;                /* 기본 파란색 */
+  transition: color 0.2s;        /* hover 시 색상 전환 효과 */
+}
+
+.close:hover {
+  color: #d32f2f;                /* hover 시 빨간색 강조 */
+}
+
+/* 모달 본문 */
+.modal-body {
+  font-size: 14px;               /* 본문 글씨 크기 */
+  color: #000;                   /* 본문 글씨 색상 */
+  text-align: left;              /* 왼쪽 정렬 */
+  line-height: 1.5;              /* 줄 간격 */
+}
 
 </style>
 
@@ -392,9 +402,24 @@
 </div>
 
 <!-- 모달창 상황별 아이콘 -->
-<div class="modal-title">
-  <span class="modal-icon">⏱️</span> 이동 정보
-</div>  
+<div class="modal">
+  <div class="modal-content">
+    <!-- 헤더: 타이틀 + 닫기 버튼 -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="modal-icon">⏱️</span> 이동 정보
+      </div>
+      <span class="close">❌</span>
+    </div>
+
+    <!-- 본문: 데이터가 자동으로 갱신될 자리 -->
+    <div class="modal-body">
+      <p>예상 소요 시간: 15분</p>
+      <p>경로 안내: 어린이 보호구역 포함</p>
+      <p>속도 제한: 30km/h</p>
+    </div>
+  </div>
+</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -725,25 +750,39 @@ setInterval(() => {
   }
 }, 3000);
 
-
-// 모달 큐 표시 간격을 5초로 변경
+// ---------------------- 모달 큐 표시 ----------------------
 function showQueuedModal(title, message, actions = []) {
+  // 큐에 메시지 추가
   modalQueue.push({ title, message, actions });
+
+  // 타이머가 없으면 새로 시작
   if (!modalTimer) {
     modalTimer = setInterval(() => {
       if (modalQueue.length > 0) {
         const next = modalQueue.shift();
-        document.getElementById("modalTitle").innerText = next.title;
-        document.getElementById("modalMessage").innerText = next.message;
+
+        // 새 모달 구조에 맞게 데이터 넣기
+        const titleBox = document.querySelector(".modal-title");
+        const bodyBox = document.querySelector(".modal-body");
         const actionsBox = document.getElementById("modalActions");
-        actionsBox.innerHTML = "";
-        next.actions.forEach(action => {
-          const btn = document.createElement("button");
-          btn.innerText = action.label;
-          btn.onclick = action.onClick;
-          actionsBox.appendChild(btn);
-        });
-        document.getElementById("popupModal").style.display = "block";
+
+        // 타이틀과 본문 갱신
+        titleBox.innerText = next.title;
+        bodyBox.innerText = next.message;
+
+        // 액션 버튼 처리 (필요 없으면 비워둠)
+        if (actionsBox) {
+          actionsBox.innerHTML = "";
+          next.actions.forEach(action => {
+            const btn = document.createElement("button");
+            btn.innerText = action.label;
+            btn.onclick = action.onClick;
+            actionsBox.appendChild(btn);
+          });
+        }
+
+        // 모달 표시
+        document.querySelector(".modal").style.display = "block";
       } else {
         clearInterval(modalTimer);
         modalTimer = null;
@@ -752,11 +791,11 @@ function showQueuedModal(title, message, actions = []) {
   }
 }
 
-
-
-document.getElementById("closeModal").onclick = () => {
-  document.getElementById("popupModal").style.display = "none";
+// 닫기 버튼 이벤트 연결
+document.querySelector(".close").onclick = () => {
+  document.querySelector(".modal").style.display = "none";
 };
+
 
 function showTravelStats(speed, totalDistance) {
   const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
