@@ -316,55 +316,82 @@
   transform: scale(0.95);
 }
 
+/* ✅ 다기능 모달 창  */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 320px;
+  text-align: center;
+}
+.close {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+}  
+  
 </style>
 
 
 </head>
 <body>
-    <header>📍 A-DOMES | 위치정보시스템</header>
-  
-  <!-- 좌표 창 -->
-  <div id="locationBox">
-    <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
-    <div id="locationHeader">
-      <h3>현재 좌표</h3>
-      <button id="closeBtn">×</button>
-    </div>
-  
-    <!-- 위치 정보 표시 영역 -->
-    <div id="locationContent">
-      위치 정보를 가져오는 중...
-      <span id="latBox"></span>
-      <span id="lngBox"></span>
-      <small id="directionBox"></small>
-      <small id="timeBox"></small>
-      <div id="addressBox"></div>
-    </div>
-  
-  
-    <!-- 공유 버튼 -->
-    <button id="shareBtn">현재 위치 공유</button>
-  </div>
-  
-  <div id="reopenBtn">현재 좌표 열기</div>
-  <div id="map"></div>
-  <div id="locationDisplay"></div>
-  <div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
-  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
-  
-  <!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
-  <div id="mapControls">
-    <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
-  </div>
-  
-  <div id="infoBox">
-    <small id="speedBox">속도: 0 km/h</small>
-    <small id="distanceBox">총 이동 거리: 0 km</small>
+  <header>📍 A-DOMES | 위치정보시스템</header>
+
+<!-- 좌표 창 -->
+<div id="locationBox">
+  <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
+  <div id="locationHeader">
+    <h3>현재 좌표</h3>
+    <button id="closeBtn">×</button>
   </div>
 
+  <!-- 위치 정보 표시 영역 -->
+  <div id="locationContent">
+    위치 정보를 가져오는 중...
+    <span id="latBox"></span>
+    <span id="lngBox"></span>
+    <small id="directionBox"></small>
+    <small id="timeBox"></small>
+    <div id="addressBox"></div>
+  </div>
+
+
+  <!-- 공유 버튼 -->
+  <button id="shareBtn">현재 위치 공유</button>
+</div>
+
+<div id="reopenBtn">현재 좌표 열기</div>
+<div id="map"></div>
+<div id="locationDisplay"></div>
+<div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
+<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+
+<!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
+<div id="mapControls">
+  <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
+</div>
+
+<!-- 다기능 모달창 -->
+<div id="popupModal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+    <h3 id="modalTitle">알림</h3>
+    <p id="modalMessage"></p>
+    <div id="modalActions"></div>
+  </div>
+</div>
   
 <script>  
-  // ---------------------- 전역 변수 ----------------------
+// ---------------------- 전역 변수 ----------------------
   let map, myMarker, pathPolyline;   // 지도, 내 위치 마커, 경로 Polyline
   let pathCoords = [];               // 이동 경로 좌표 배열
   
@@ -392,9 +419,9 @@
   
   // ✅ 원형 표시 관련
   let circles = [];                  // 원형 표시용 배열
-  
-  // ✅ 속도와 거리 관련
-  let totalDistance = 0; // 누적 이동 거리 (m 단위)
+                
+  // ✅ 속도 및 총 거리게산 
+  let totalDistance = 0;
   
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -683,7 +710,6 @@ function getDistance(lat1, lng1, lat2, lng2) {
     }
   }
 
-
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
@@ -700,7 +726,7 @@ function startTracking() {
         const now = new Date();
         const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit"});
 
-        // ✅ 위치 정보 박스 초기화
+        // ✅ 처음 메시지를 좌표 박스로 교체
         const content = document.getElementById("locationContent");
         if (!document.getElementById("latBox") || content.innerText.includes("위치 정보를 가져오는 중")) {
           content.innerHTML = `
@@ -709,8 +735,6 @@ function startTracking() {
             <small id="directionBox"></small>
             <small id="timeBox"></small>
             <div id="addressBox"></div>
-            <small id="speedBox"></small><br>
-            <small id="distanceBox"></small>
           `;
         }
 
@@ -722,13 +746,16 @@ function startTracking() {
 
         document.getElementById("shareBtn").onclick = showPopup;
 
-        // ✅ 주소 변환 (1분마다 갱신)
+        // ✅ 주소 변환 주기 (1분마다 갱신)
         if (Date.now() - lastGeocodeTime > geocodeInterval) {
           geocoder.geocode({ location: myPos }, (results, status) => {
             if (status === "OK" && results[0]) {
               let address = results[0].formatted_address;
-              address = address.replace(/^대한민국\s*,?\s*/, "");
-              address = address.replace(/\s*,?\s*대한민국$/, "");
+
+              // ✅ 대한민국 표기 제거 (앞/뒤에 붙은 경우 모두 제거)
+              address = address.replace(/^대한민국\s*,?\s*/, "");   // 맨 앞 제거
+              address = address.replace(/\s*,?\s*대한민국$/, "");   // 맨 뒤 제거
+
               document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
             }
           });
@@ -737,7 +764,7 @@ function startTracking() {
 
         updateLocationDisplay(currentLat, currentLng, heading);
 
-        // ✅ 마커 갱신
+        // 마커 갱신
         if (!myMarker) {
           myMarker = new google.maps.Marker({
             position: myPos,
@@ -761,27 +788,15 @@ function startTracking() {
         if (pathCoords.length > 0) {
           const lastPoint = pathCoords[pathCoords.length - 1];
           const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
-
-          if (distance >= 3) {
+        
+          if (distance >= 3) {   // ← 여기서 3m 기준
             pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
             pathPolyline.setPath(pathCoords);
-
-            // ✅ 총 이동 거리 누적
-            totalDistance += distance;
-            document.getElementById("distanceBox").innerText = 
-              `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
           }
         } else {
           // 첫 좌표는 무조건 추가
           pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
           pathPolyline.setPath(pathCoords);
-        }
-
-        // ✅ 속도 표시 (m/s → km/h)
-        const speed = pos.coords.speed;
-        if (speed !== null && !isNaN(speed)) {
-          document.getElementById("speedBox").innerText = 
-            `속도: ${(speed * 3.6).toFixed(1)} km/h`;
         }
 
         // ✅ 경로가 생기면 초기화 버튼 표시
@@ -797,7 +812,6 @@ function startTracking() {
     );
   }
 }
-
 
 // ---------------------- 경로 초기화 버튼 로직 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
@@ -817,8 +831,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     document.getElementById("reopenBtn").style.display = "none";
   });
 
-
-  
   // ---------------------- 원형 표시 ----------------------
   function drawMultipleCircles(myPos) {
     const circleStyles = [
@@ -918,6 +930,110 @@ window.onload = () => {
   makeDraggableAndResizable(document.getElementById("reopenBtn"));
   makeDraggableAndResizable(document.getElementById("resetPathBtn")); // 경로 초기화 버튼도 드래그 가능
 };
+
+  
+// ---------------------- 모달창 제어 코드 ----------------------
+function showModal(title, message, actions = []) {
+  document.getElementById("modalTitle").innerText = title;
+  document.getElementById("modalMessage").innerText = message;
+
+  const actionsBox = document.getElementById("modalActions");
+  actionsBox.innerHTML = "";
+
+  // 버튼 추가
+  actions.forEach(action => {
+    const btn = document.createElement("button");
+    btn.innerText = action.label;
+    btn.onclick = action.onClick;
+    actionsBox.appendChild(btn);
+  });
+
+  document.getElementById("popupModal").style.display = "block";
+}
+
+// 닫기 버튼
+document.getElementById("closeModal").onclick = () => {
+  document.getElementById("popupModal").style.display = "none";
+};
+
+// ---------------------- ✅ 모달창 띄우기 (속도·거리) ----------------------  
+function showTravelStats(speed, totalDistance) {
+  const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
+  const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
+
+  showModal("이동 정보", `${speedText}\n${distanceText}`);
+}
+
+// ---------------------- ✅ 총 이동 거리 계산 ----------------------
+let totalDistance = 0;
+let pathCoords = [];
+
+function updateTravelStats(pos) {
+  const currentLat = pos.coords.latitude;
+  const currentLng = pos.coords.longitude;
+  const speed = pos.coords.speed;
+
+  // 속도/거리 모달창 띄우기
+  showTravelStats(speed || 0, totalDistance);
+
+  // 거리 누적
+  if (pathCoords.length > 0) {
+    const lastPoint = pathCoords[pathCoords.length - 1];
+    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
+
+    if (distance >= 3) {
+      totalDistance += distance;
+      showTravelStats(speed || 0, totalDistance);
+    }
+  }
+
+  pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+}
+
+// ---------------------- ✅ Roads API 속도 제한 확인 ----------------------
+function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
+  const snapUrl = `https://roads.googleapis.com/v1/snapToRoads?path=${currentLat},${currentLng}&key=YOUR_API_KEY`;
+
+  fetch(snapUrl)
+    .then(res => res.json())
+    .then(data => {
+      if (data.snappedPoints && data.snappedPoints.length > 0) {
+        const placeId = data.snappedPoints[0].placeId;
+        const limitUrl = `https://roads.googleapis.com/v1/speedLimits?placeId=${placeId}&key=YOUR_API_KEY`;
+        return fetch(limitUrl);
+      }
+    })
+    .then(res => res.json())
+    .then(limitData => {
+      if (limitData.speedLimits && limitData.speedLimits.length > 0) {
+        const limit = limitData.speedLimits[0].speedLimit; // km/h
+        const currentKmh = currentSpeed * 3.6;
+
+        if (currentKmh > limit) {
+          showModal("속도 제한 초과", 
+            `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+        }
+      }
+    })
+    .catch(err => console.error(err));
+}
+
+// ---------------------- ✅ 위치 추적 ----------------------
+navigator.geolocation.watchPosition((pos) => {
+  const currentLat = pos.coords.latitude;
+  const currentLng = pos.coords.longitude;
+
+  // 독립적으로 속도/거리 계산
+  updateTravelStats(pos);
+
+  // 독립적으로 Roads API 속도 제한 확인
+  checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
+
+}, (err) => {
+  console.error(err);
+}, { enableHighAccuracy: true });
+
+  
 </script>
 </body>
 </html>
