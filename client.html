@@ -316,28 +316,44 @@
   transform: scale(0.95);
 }
 
-/* ✅ 다기능 모달 창  */
+/* ✅ 다기능 모달 창 (유리 효과) */
 .modal {
   display: none;
   position: fixed;
   z-index: 999;
   left: 0; top: 0;
   width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0,0,0,0.3); /* 배경 어둡게 반투명 */
+  backdrop-filter: blur(4px); /* 배경 흐림 */
+  -webkit-backdrop-filter: blur(4px); /* 사파리 호환 */
 }
+
 .modal-content {
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.2); /* 반투명 흰색 */
+  backdrop-filter: blur(12px); /* 유리 효과 */
+  -webkit-backdrop-filter: blur(12px);
   margin: 15% auto;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 320px;
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3); /* 반투명 테두리 */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* 은은한 그림자 */
+  color: #fff; /* 글자 흰색 */
 }
+
 .close {
   float: right;
   font-size: 24px;
   cursor: pointer;
-}  
+  color: #fff; /* 닫기 버튼도 흰색 */
+  transition: color 0.2s;
+}
+
+.close:hover {
+  color: #ffcccc; /* hover 시 강조 */
+}
+
   
 </style>
 
@@ -422,6 +438,10 @@
                 
   // ✅ 속도 및 총 거리게산 
   let totalDistance = 0;
+
+  // ✅ 모달 메세지 큐   
+  let modalQueue = [];
+  let modalTimer = null;
   
   // ✅ POI 아이콘 정의
   const poiIcons = {
@@ -436,6 +456,30 @@
     local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
   };
 
+// ---------------------- 모달 메시지 큐 ----------------------
+function playSound() {
+  const audio = new Audio("ding.mp3"); // 효과음 파일 경로
+  audio.play();
+}
+
+function showQueuedModal(title, message, actions = []) {
+  modalQueue.push({ title, message, actions });
+
+  if (!modalTimer) {
+    modalTimer = setInterval(() => {
+      if (modalQueue.length > 0) {
+        const next = modalQueue.shift();
+        playSound();
+        showQueuedModal(next.title, next.message, next.actions);
+      } else {
+        clearInterval(modalTimer);
+        modalTimer = null;
+      }
+    }, 3000); // 3초 간격
+  }
+}
+
+  
 // ---------------------- 공통 드래그 함수 (이동만) ----------------------
 function makeDraggableAndResizable(element) {
   let isDragging = false, offsetX, offsetY;
@@ -933,7 +977,7 @@ window.onload = () => {
 
   
 // ---------------------- 모달창 제어 코드 ----------------------
-function showModal(title, message, actions = []) {
+function showQueuedModal(title, message, actions = []) {
   document.getElementById("modalTitle").innerText = title;
   document.getElementById("modalMessage").innerText = message;
 
@@ -960,7 +1004,7 @@ document.getElementById("closeModal").onclick = () => {
 function showTravelStats(speed, totalDistance) {
   const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
   const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
-  showModal("이동 정보", `${speedText}\n${distanceText}`);
+  showQueuedModal("이동 정보", `${speedText}\n${distanceText}`);
 }
 
 // ---------------------- ✅ 총 이동 거리 계산 ----------------------
@@ -1002,7 +1046,7 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
         const limit = limitData.speedLimits[0].speedLimit;
         const currentKmh = currentSpeed * 3.6;
         if (currentKmh > limit) {
-          showModal("속도 제한 초과", 
+          showQueuedModal("속도 제한 초과", 
             `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
         }
       }
@@ -1028,7 +1072,7 @@ function checkSchoolZones(currentLat, currentLng) {
         );
 
         if (distance <= 300) { // 반경 300m를 보호구역으로 설정
-          showModal("어린이 보호구역", 
+          showQueuedModal("어린이 보호구역", 
             `주의! 어린이 보호구역에 진입했습니다.\n속도 제한: 30 km/h`);
         }
       });
@@ -1055,10 +1099,10 @@ async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
 
         if (distance <= 300) { // 반경 300m 이내
           if (currentKmh > limit) {
-            showModal("속도 제한 초과", 
+            showQueuedModal("속도 제한 초과", 
               `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
           } else {
-            showModal("속도 제한 구역", 
+            showQueuedModal("속도 제한 구역", 
               `현재 도로 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
           }
         }
