@@ -86,6 +86,34 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* 위치정보를 가져온 뒤에는 hidden 클래스 적용 */
 #loadingMessage.hidden { display:none !important; }
 
+/* 이동정보: 가로 정렬 + 아이콘 */
+.data-message {
+  font-family: monospace;
+  display: flex;          /* 가로 배치 */
+  flex-wrap: wrap;        /* 화면 좁으면 줄바꿈 */
+  gap: 16px;              /* 항목 간격 */
+  justify-content: flex-start;
+}
+
+.data-message span {
+  display: flex;
+  align-items: center;
+  gap: 6px;               /* 아이콘과 텍스트 간격 */
+  font-size: 18px;
+}
+
+/* 알림: 단락 유지 */
+.alert-message p {
+  margin: 8px 0;
+}
+
+/* 속도 초과 강조 */
+.speed-warning {
+  color: red;
+  font-weight: bold;
+}
+
+  
 </style>
 
 
@@ -505,7 +533,7 @@ setInterval(() => {
 }, 3000);
 
 
-// 모달 큐 표시 간격을 5초로 변경
+// ---------------------- 모달 큐 표시 ----------------------
 function showQueuedModal(title, message, actions = []) {
   modalQueue.push({ title, message, actions });
   if (!modalTimer) {
@@ -513,7 +541,8 @@ function showQueuedModal(title, message, actions = []) {
       if (modalQueue.length > 0) {
         const next = modalQueue.shift();
         document.getElementById("modalTitle").innerText = next.title;
-        document.getElementById("modalMessage").innerText = next.message;
+        // 메시지를 HTML로 넣어야 <div>, <p> 태그가 적용됨
+        document.getElementById("modalMessage").innerHTML = next.message;
         const actionsBox = document.getElementById("modalActions");
         actionsBox.innerHTML = "";
         next.actions.forEach(action => {
@@ -527,94 +556,68 @@ function showQueuedModal(title, message, actions = []) {
         clearInterval(modalTimer);
         modalTimer = null;
       }
-    }, 5000); // 5초 간격으로 메시지 표시
+    }, 5000);
   }
 }
 
-document.getElementById("closeModal").onclick = () => {
-  document.getElementById("popupModal").style.display = "none";
-};
-
+// ---------------------- 이동정보 모달 ----------------------
 function showTravelStats(speed, totalDistance) {
-  const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
-  const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
-  showQueuedModal("이동 정보", `${speedText}\n${distanceText}`);
-}
-
-function updateTravelStats(pos) {
-  const speed = pos.coords.speed || 0;
-  showTravelStats(speed, totalDistance);
-  if (pathCoords.length > 0) {
-    const lastPoint = pathCoords[pathCoords.length - 1];
-    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), pos.coords.latitude, pos.coords.longitude);
-    if (distance >= 3) {
-      totalDistance += distance;
-      showTravelStats(speed, totalDistance);
-    }
-  }
-  pathCoords.push(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
-}
-
-
-// ----------------------✅ 모달창 이동정보 확장) ----------------------
-function showTravelStats(speed, totalDistance) {
-  // 속도 기록
   speedHistory.push(speed * 3.6);
 
-  // 평균 속도 계산
   const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-
-  // 최고 속도 계산
   const maxSpeed = Math.max(...speedHistory);
+  const elapsedTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
 
-  // 주행 시간 계산
-  const elapsedTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1); // 분 단위
+  const message = `<div class="data-message">
+    <span>🚗 현재 속도: ${(speed * 3.6).toFixed(1)} km/h</span>
+    <span>📊 평균 속도: ${avgSpeed.toFixed(1)} km/h</span>
+    <span>⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h</span>
+    <span>⏱️ 주행 시간: ${elapsedTime} 분</span>
+    <span>📏 총 이동 거리: ${(totalDistance/1000).toFixed(2)} km</span>
+  </div>`;
 
-  const speedText = `현재 속도: ${(speed * 3.6).toFixed(1)} km/h`;
-  const distanceText = `총 이동 거리: ${(totalDistance/1000).toFixed(2)} km`;
-  const avgText = `평균 속도: ${avgSpeed.toFixed(1)} km/h`;
-  const maxText = `최고 속도: ${maxSpeed.toFixed(1)} km/h`;
-  const timeText = `주행 시간: ${elapsedTime} 분`;
-
-  showQueuedModal("이동 정보", `${speedText}\n${distanceText}\n${avgText}\n${maxText}\n${timeText}`);
+  showQueuedModal("이동 정보", message);
 }
 
-  
-// ----------------------✅ 공통 알림 함수 + 사운드 추가 ----------------------
-// 사운드 재생 함수
-function playAlertSound() {
-  const audio = new Audio("alert.mp3"); // 경고음 파일 경로
-  audio.play().catch(err => console.error("사운드 재생 오류:", err));
-}
 
+// ---------------------- 보호구역/속도 제한 알림 ----------------------
 function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) {
   const now = Date.now();
 
-  // 예고 알림 (50m 앞)
   if (distance <= 50 && distance > 20) {
     if (now - lastAlertTimeVar.value > 60000) {
-      showQueuedModal(`${zoneName} 접근`,
-        `앞으로 50m 이내에 ${zoneName}이 있습니다.${limit ? `\n제한속도: ${limit} km/h` : ""}`);
-      playAlertSound(); // ✅ 알림 사운드 재생
+      const message = `<div class="alert-message">
+        <p>앞으로 50m 이내에 ${zoneName}이 있습니다.</p>
+        ${limit ? `<p class="speed-warning">제한속도: ${limit} km/h</p>` : ""}
+      </div>`;
+      showQueuedModal(`${zoneName} 접근`, message);
+      playAlertSound();
       lastAlertTimeVar.value = now;
     }
   }
 
-  // 진입 알림 (20m 이하)
   if (distance <= 20) {
     if (now - lastAlertTimeVar.value > 60000) {
+      let message;
       if (limit && currentKmh > limit) {
-        showQueuedModal(`${zoneName} 초과`,
-          `현재 제한속도: ${limit} km/h\n현재 속도: ${currentKmh.toFixed(1)} km/h`);
+        message = `<div class="alert-message">
+          <p class="speed-warning">현재 제한속도: ${limit} km/h</p>
+          <p class="speed-warning">현재 속도: ${currentKmh.toFixed(1)} km/h</p>
+        </div>`;
+        showQueuedModal(`${zoneName} 초과`, message);
       } else {
-        showQueuedModal(`${zoneName} 진입`,
-          `${limit ? `현재 제한속도: ${limit} km/h\n` : ""}주의하세요!`);
+        message = `<div class="alert-message">
+          ${limit ? `<p>현재 제한속도: ${limit} km/h</p>` : ""}
+          <p>주의하세요!</p>
+        </div>`;
+        showQueuedModal(`${zoneName} 진입`, message);
       }
-      playAlertSound(); // ✅ 알림 사운드 재생
+      playAlertSound();
       lastAlertTimeVar.value = now;
     }
   }
 }
+
 
   
 // ---------------------- 속도 제한 관련 ----------------------
