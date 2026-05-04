@@ -83,39 +83,26 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* ---------------------- 로딩 메시지 ---------------------- */
 #loadingMessage { display:block; color:#d32f2f; font-weight:bold; }
 
-/* 위치정보를 가져온 뒤에는 hidden 클래스 적용 */
+/* ----------------------  위치정보를 가져온 뒤에는 hidden 클래스 적용  ---------------------- */  
 #loadingMessage.hidden { display:none !important; }
+.data-message { font-family:monospace; display:flex; flex-wrap:wrap; gap:16px; justify-content:flex-start; } 
+.data-message span { display:flex; align-items:center; gap:6px; font-size:18px; }
+.alert-message p { margin:8px 0; }
+.speed-warning { color:red; font-weight:bold; }
 
-/* 이동정보: 가로 정렬 + 아이콘 */
-.data-message {
-  font-family: monospace;
-  display: flex;          /* 가로 배치 */
-  flex-wrap: wrap;        /* 화면 좁으면 줄바꿈 */
-  gap: 16px;              /* 항목 간격 */
-  justify-content: flex-start;
-}
+/* ---------------------- 경로 초기화 & 목적지 찾기 버튼 ---------------------- */
+#resetPathBtn, #openDestinationModal { position:absolute; left:5px; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0; }
+#resetPathBtn { top:170px; display:none; }
+#openDestinationModal { top:230px; }
+#resetPathBtn:hover, #openDestinationModal:hover { background:#e3f2fd; transform:scale(1.1); }
+#resetPathBtn:active, #openDestinationModal:active { transform:scale(0.95); }
 
-.data-message span {
-  display: flex;
-  align-items: center;
-  gap: 6px;               /* 아이콘과 텍스트 간격 */
-  font-size: 18px;
-}
-
-/* 알림: 단락 유지 */
-.alert-message p {
-  margin: 8px 0;
-}
-
-/* 속도 초과 강조 */
-.speed-warning {
-  color: red;
-  font-weight: bold;
-}
-
-
-
-  
+/* ---------------------- 목적지 모달 입력창 ---------------------- */
+#destinationInput { width:90%; padding:8px; margin:10px 0; border:1px solid #1976d2; border-radius:6px; font-size:14px; }
+#searchDestinationBtn { background:#1976d2; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:14px; margin-top:6px; }
+#searchDestinationBtn:hover { background:#1565c0; }
+#destinationResult { margin-top:10px; font-size:14px; color:#333; }
+ 
 </style>
 
 
@@ -123,56 +110,52 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 <body>
   <header>📍 A-DOMES | 위치정보시스템</header>
 
-<!-- 좌표 창 -->
-<div id="locationBox">
-  <!-- 상단 그룹: 현재 좌표 + 닫기 버튼 -->
-  <div id="locationHeader">
-    <h3>현재 좌표</h3>
-    <button id="closeBtn">×</button>
-  </div>
-
-  <!-- 위치 정보 표시 영역 -->
-  <div id="locationContent">
-    <div id="loadingMessage">위치 정보를 가져오는 중...</div>
-    <span id="latBox"></span>
-    <span id="lngBox"></span>
-    <small id="directionBox"></small>
-    <small id="timeBox"></small>
-    <div id="addressBox"></div>
-  </div>
-
-  <!-- 공유 버튼 -->
-  <button id="shareBtn">현재 위치 공유</button>
-</div>
-
-<div id="reopenBtn">현재 좌표 열기</div>
-<div id="map"></div>
-<div id="locationDisplay"></div>
-<div id="popupMessage">📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.</div>
-<audio id="notifySound" src="notify.mp3" preload="auto"></audio>
-
-<!-- 경로 초기화 버튼 (아이콘 + 텍스트) -->
-<div id="mapControls">
-  <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
-  <!-- ✅ 목적지 찾기 모달 열기 버튼 -->
-  <button id="openDestinationModal">📍 목적지 찾기</button>
-</div>
-
-<!-- 다기능 모달창 -->
-<div id="popupModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modalTitle" class="modal-title">알림</h2>
-      <span id="closeModal" class="close">✖</span>
+  <!-- 좌표 창 -->
+  <div id="locationBox">
+    <div id="locationHeader">
+      <h3>현재 좌표</h3>
+      <button id="closeBtn">×</button>
     </div>
 
-    <!-- 메시지: 기존 코드에서 값이 들어옴 -->
-    <p id="modalMessage"></p>
+    <div id="locationContent">
+      <div id="loadingMessage">위치 정보를 가져오는 중...</div>
+      <span id="latBox"></span>
+      <span id="lngBox"></span>
+      <small id="directionBox"></small>
+      <small id="timeBox"></small>
+      <div id="addressBox"></div>
+    </div>
 
-    <!-- 액션 버튼 영역 (필요 시만 사용) -->
-    <div id="modalActions"></div>
+    <button id="shareBtn">현재 위치 공유</button>
   </div>
-</div>
+
+  <div id="reopenBtn">현재 좌표 열기</div>
+  <div id="map"></div>
+  <div id="locationDisplay"></div>
+  <div id="popupMessage">
+    📍 현재 위치 링크가 복사되었습니다.<br>원하는 앱에 붙여넣어 공유하세요.
+  </div>
+  <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+
+  <!-- 지도 컨트롤 영역 -->
+  <div id="mapControls">
+    <!-- 경로 초기화 버튼 -->
+    <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
+    <!-- 목적지 찾기 버튼 -->
+    <button id="openDestinationModal">📍 목적지 찾기</button>
+  </div>
+
+  <!-- 다기능 모달창 -->
+  <div id="popupModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="modal-title">알림</h2>
+        <span id="closeModal" class="close">✖</span>
+      </div>
+      <p id="modalMessage"></p>
+      <div id="modalActions"></div>
+    </div>
+  </div>
 
   <!-- 목적지 찾기 모달창 -->
   <div id="destinationModal" class="modal" style="display:none;">
@@ -182,18 +165,15 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
         <span id="closeDestinationModal" class="close">✖</span>
       </div>
 
-      <!-- 입력창 -->
-      <input type="text" id="destinationInput" placeholder="목적지 이름 입력" 
+      <input type="text" id="destinationInput" placeholder="목적지 이름 입력"
              style="width:90%; padding:8px; margin:10px 0; border:1px solid #1976d2; border-radius:6px;">
 
-      <!-- 검색 버튼 -->
       <button id="searchDestinationBtn">검색</button>
 
-      <!-- 결과 표시 영역 -->
       <div id="destinationResult" style="margin-top:10px; font-size:14px; color:#333;"></div>
     </div>
   </div>
-  
+
 <script>  
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;
@@ -201,25 +181,36 @@ let pathCoords = [];
 let lastGeocodeTime = 0;
 let geocodeInterval = 60000;
 let radarPolygon = null;
-let radarRadiusMeters = 100;
+let radarRadiusMeters = 100;   // 기본 레이더 반경 (100m)
 let radarEnabled = true;
 let lastHeading = null;
 let poiMarkers = [];
 let compassMarkers = [];
 let infoWindow;
-let directionsService, directionsRenderer;
+let directionsService, directionsRenderer;  // 기존 경로 안내용 (일반 목적)
 let currentLat, currentLng;
 let otherMarker;
 let circles = [];
 let totalDistance = 0;
 let modalQueue = [];
 let modalTimer = null;
+
 // 최근 알림 시간을 저장할 변수
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
 let lastSpeedLimitAlertTime = 0;
+
+// 속도 기록
 let speedHistory = [];
 let startTime = Date.now();
+
+/* ---------------------- 추가된 전역 변수 ---------------------- */
+// 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
+let livePathRenderer = null;
+
+// 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
+let destinationRenderer = null;
+
 
   
 const poiIcons = {
@@ -792,7 +783,6 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
   }
 
   try {
-    // 관리자 서버 요청 (예시 URL, 실제 API 엔드포인트로 교체 필요)
     const response = await fetch(`/api/location?name=${encodeURIComponent(name)}`);
     const data = await response.json();
 
@@ -804,7 +794,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     const destLat = data.lat;
     const destLng = data.lng;
 
-    // ✅ 청색 마커 표시
+    // ✅ 목적지 마커 표시
     new google.maps.Marker({
       position: { lat: destLat, lng: destLng },
       map: map,
@@ -812,12 +802,12 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
       title: name
     });
 
-    // ✅ 거리 계산 (현재 위치 → 목적지)
+    // ✅ 거리 계산
     const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
     const distanceKm = (distanceMeters / 1000).toFixed(2);
 
-    // ✅ 예상 도착 시간 (평균 속도 기반)
-    let avgSpeed = 30; // 기본값: 30km/h
+    // ✅ 예상 도착 시간
+    let avgSpeed = 30;
     if (speedHistory.length > 0) {
       avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
     }
@@ -825,7 +815,8 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
 
     // ✅ 결과 표시
     document.getElementById("destinationResult").innerHTML =
-      `목적지 좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
+      `목적지: ${name}<br>
+       좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
        직선 거리: ${distanceKm} km<br>
        예상 도착 시간: ${estimatedMinutes} 분`;
 
@@ -838,26 +829,34 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
   }
 });
 
-// 모달 닫기 버튼
-document.getElementById("closeDestinationModal").onclick = () => {
+/* ---------------------- 모달 열기/닫기 ---------------------- */
+document.getElementById("openDestinationModal").addEventListener("click", () => {
+  document.getElementById("destinationModal").style.display = "block";
+});
+document.getElementById("closeDestinationModal").addEventListener("click", () => {
   document.getElementById("destinationModal").style.display = "none";
-};
-
+});
 
 /* ---------------------- 경로 안내 메시지 ---------------------- */
 function showRouteToDestination(destination) {
   if (!directionsService) directionsService = new google.maps.DirectionsService();
-  if (!directionsRenderer) directionsRenderer = new google.maps.DirectionsRenderer({ map });
+
+  // ✅ 기존 목적지 경로 제거 후 새로 생성
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  destinationRenderer = new google.maps.DirectionsRenderer({ map });
 
   const request = {
     origin: { lat: currentLat, lng: currentLng },
     destination,
-    travelMode: google.maps.TravelMode.WALKING // 🚶 기본은 도보, 필요시 DRIVING으로 변경 가능
+    travelMode: google.maps.TravelMode.WALKING
   };
 
   directionsService.route(request, (result, status) => {
     if (status === google.maps.DirectionsStatus.OK) {
-      directionsRenderer.setDirections(result);
+      destinationRenderer.setDirections(result);
 
       // ✅ 안내 메시지 표시
       const steps = result.routes[0].legs[0].steps;
@@ -868,43 +867,28 @@ function showRouteToDestination(destination) {
       instructions += "</div>";
 
       showQueuedModal("경로 안내", instructions);
-
-    } else {
-      alert("경로를 가져올 수 없습니다: " + status);
     }
   });
 }
 
-
-/* ---------------------- 레이더 반경 내 사물 탐지 ---------------------- */
+/* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
   const service = new google.maps.places.PlacesService(map);
 
   service.nearbySearch({
     location: myPos,
-    radius: radarRadiusMeters, // 레이더 반경 값 활용
-    type: ["cafe", "restaurant", "pharmacy", "gas_station"] // 탐지할 장소 유형
+    radius: radarRadiusMeters,
+    type: ["cafe", "restaurant", "pharmacy", "gas_station"]
   }, (results, status) => {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       results.forEach(place => {
         const poiPos = place.geometry.location;
 
-        // ✅ 마커 표시
-        const marker = new google.maps.Marker({
-          position: poiPos,
-          map: map,
-          icon: poiIcons[place.types[0]] || "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-          title: place.name
-        });
-        poiMarkers.push(marker);
-
-        // ✅ 거리 계산
         const distance = google.maps.geometry.spherical.computeDistanceBetween(
           new google.maps.LatLng(currentLat, currentLng),
           poiPos
         );
 
-        // ✅ 반경 내 탐지 시 알림 모달 표시
         if (distance <= radarRadiusMeters) {
           const message = `<div class="alert-message">
             <p>📍 레이더 반경 내 탐지: ${place.name}</p>
@@ -916,113 +900,3 @@ function checkRadarPOIs(myPos) {
     }
   });
 }
-
-
-/* ---------------------- 최종 목적지 검색 코드 (서버 → 실패 시 Google Places API → 거리·시간 계산 → 경로 안내) ---------------------- */  
-document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
-  const name = document.getElementById("destinationInput").value;
-  if (!name) {
-    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    return;
-  }
-
-  try {
-    // 1️⃣ 관리자 서버 요청
-    const response = await fetch(`/api/location?name=${encodeURIComponent(name)}`);
-    const data = await response.json();
-
-    if (data && data.lat && data.lng) {
-      // ✅ 서버에서 좌표 반환됨
-      const destLat = data.lat;
-      const destLng = data.lng;
-      const phone = data.phone || "전화번호 없음";
-
-      // 마커 표시
-      new google.maps.Marker({
-        position: { lat: destLat, lng: destLng },
-        map: map,
-        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-        title: `${name} (${phone})`
-      });
-
-      // 거리 계산
-      const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
-      const distanceKm = (distanceMeters / 1000).toFixed(2);
-
-      // 예상 도착 시간
-      let avgSpeed = 30; // 기본값: 30km/h
-      if (speedHistory.length > 0) {
-        avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-      }
-      const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
-
-      // 결과 표시
-      document.getElementById("destinationResult").innerHTML =
-        `목적지: ${name}<br>전화번호: ${phone}<br>
-         좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
-         직선 거리: ${distanceKm} km<br>
-         예상 도착 시간: ${estimatedMinutes} 분`;
-
-      // 경로 안내
-      showRouteToDestination({ lat: destLat, lng: destLng });
-      return; // 서버 결과가 있으면 여기서 종료
-    }
-
-    // 2️⃣ 서버에 값이 없으면 Google Places API 사용
-    const service = new google.maps.places.PlacesService(map);
-    service.findPlaceFromQuery({
-      query: name,
-      fields: ["name", "geometry"]
-    }, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
-        const destLat = results[0].geometry.location.lat();
-        const destLng = results[0].geometry.location.lng();
-
-        new google.maps.Marker({
-          position: { lat: destLat, lng: destLng },
-          map: map,
-          icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-          title: results[0].name
-        });
-
-        // 거리 계산
-        const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
-        const distanceKm = (distanceMeters / 1000).toFixed(2);
-
-        // 예상 도착 시간
-        let avgSpeed = 30;
-        if (speedHistory.length > 0) {
-          avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-        }
-        const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
-
-        // 결과 표시
-        document.getElementById("destinationResult").innerHTML =
-          `목적지: ${results[0].name}<br>
-           좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
-           직선 거리: ${distanceKm} km<br>
-           예상 도착 시간: ${estimatedMinutes} 분`;
-
-        showRouteToDestination({ lat: destLat, lng: destLng });
-      } else {
-        document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
-      }
-    });
-
-  } catch (err) {
-    console.error("목적지 조회 오류:", err);
-    document.getElementById("destinationResult").innerText = "서버 요청 실패";
-  }
-});
-
-    // 모달 열기/닫기 연결
-    document.getElementById("openDestinationModal").addEventListener("click", () => {
-      document.getElementById("destinationModal").style.display = "block";
-    });
-
-    document.getElementById("closeDestinationModal").addEventListener("click", () => {
-      document.getElementById("destinationModal").style.display = "none";
-    });
-</script>  
-</body>
-</html>
