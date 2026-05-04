@@ -69,45 +69,41 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbxmitQyT6yIujajdpgZCy3nH88towA6l9vBxSvBR_4DoCtDAV5lwFGq3DkIwcguMSL_zg/exec")
-        .then(res => res.json())
-        .then(data => {
-          record = data.find(item => item.phone === phone);
-          if (!record) {
-            alert("해당 사용자의 데이터가 없습니다.");
-            return;
-          }
-
-          const baseLat = parseFloat(record.lat);
-          const baseLng = parseFloat(record.lng);
-
-          // ✅ 상단 좌표 표시
-          document.getElementById("coords").innerText =
-            "위도: " + baseLat + " , 경도: " + baseLng;
-
-          // 지도 초기화
-          map = new google.maps.Map(document.getElementById("map"), {
-            center: {lat: baseLat, lng: baseLng},
-            zoom: 13
+    fetch(CONFIG.USER_URL + "?mode=getCarLocations")
+      .then(res => res.json())
+      .then(data => {
+        record = data.find(item => item.phone === phone);
+        if (!record) {
+          alert("해당 사용자의 데이터가 없습니다.");
+          return;
+        }
+    
+        const baseLat = parseFloat(record.lat);
+        const baseLng = parseFloat(record.lng);
+    
+        document.getElementById("coords").innerText =
+          "위도: " + baseLat + " , 경도: " + baseLng;
+    
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: {lat: baseLat, lng: baseLng},
+          zoom: 13
+        });
+    
+        new google.maps.Marker({
+          position: {lat: baseLat, lng: baseLng},
+          map: map,
+          icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          title: "현재 위치 (" + record.time + ")"
+        });
+    
+        if (record.path) {
+          record.path.forEach(p => {
+            pathCoords.push({lat: parseFloat(p[0]), lng: parseFloat(p[1])});
           });
+        }
+      })
+      .catch(err => { alert("데이터 불러오기 실패: " + err.message); });
 
-          // 현재 위치 마커
-          new google.maps.Marker({
-            position: {lat: baseLat, lng: baseLng},
-            map: map,
-            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            title: "현재 위치 (" + record.time + ")"
-          });
-
-          // 경로 좌표 준비
-          if (record.path) {
-            record.path.forEach(p => {
-              pathCoords.push({lat: parseFloat(p[0]), lng: parseFloat(p[1])});
-            });
-          }
-        })
-        .catch(err => { alert("데이터 불러오기 실패: " + err.message); });
-    }
 
     // 버튼 클릭 시 경로 토글
     document.getElementById("showPathBtn").addEventListener("click", () => {
