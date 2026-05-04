@@ -205,32 +205,27 @@ fetch(USER_API_URL, {
   headers: { "Content-Type": "application/x-www-form-urlencoded" },
   body: new URLSearchParams({ mode: "checkPassword", id, pw })
 })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("HTTP 오류: " + response.status);
+    }
+    return response.json();
+  })
   .then(result => {
+    console.log("서버 응답:", result); // ✅ 디버깅용 로그
     if (result.result === "success") {
-      // 로그인 성공 처리
-      sessionStorage.setItem("loggedIn", "true");
-      sessionStorage.setItem("role", result.role);
-      sessionStorage.setItem("userId", id);
+      alert("✅ 로그인 성공!");
       sessionStorage.setItem("token", result.token);
-      localStorage.setItem("nickname", result.nickname);
-
-      setTimeout(() => {
-        if (result.role === "AD") {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "user.html";
-        }
-      }, 1500);
-    } else if (result.result === "blocked") {
-      alert("🚫 계정이 비활성화되었습니다.");
+      // 이후 페이지 이동
     } else {
-      alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+      alert("❌ 로그인 실패: " + (result.message || "아이디/비밀번호 오류"));
     }
   })
   .catch(error => {
+    console.error("로그인 에러:", error);
     alert("❌ 서버 오류: " + error.message);
   });
+
 
   function goRegister() {
     window.location.href = "registerUser.html";
