@@ -185,6 +185,36 @@
   // ✅ config.js에서 사용자 서버 URL 가져오기
   const USER_API_URL = CONFIG.USER_URL;
 
+  // JSONP 응답을 처리할 콜백 함수
+  function handleLoginResponse(result) {
+    const modal = document.getElementById("loginModal");
+
+    if (result.result === "success") {
+      modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+      modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+
+      sessionStorage.setItem("loggedIn", "true");
+      sessionStorage.setItem("role", result.role);
+      sessionStorage.setItem("userId", result.userId);
+      sessionStorage.setItem("token", result.token);
+      localStorage.setItem("nickname", result.nickname);
+
+      setTimeout(() => {
+        if (result.role === "AD") {
+          window.location.href = "admin.html";
+        } else if (result.role === "RU") {
+          window.location.href = "user.html";
+        }
+      }, 1500);
+    } else if (result.result === "blocked") {
+      modal.style.display = "none";
+      alert("🚫 계정이 비활성화되었습니다.");
+    } else {
+      modal.style.display = "none";
+      alert("❌ 로그인 실패: " + result.message);
+    }
+  }
+
   function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
@@ -199,42 +229,10 @@
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ GET 방식으로 호출 (JSON 응답)
-    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
-
-    fetch(url)
-      .then(response => response.json())
-      .then(result => {
-        if (result.result === "success") {
-          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-
-          sessionStorage.setItem("loggedIn", "true");
-          sessionStorage.setItem("role", result.role);
-          sessionStorage.setItem("userId", id);
-          sessionStorage.setItem("token", result.token);
-
-          localStorage.setItem("nickname", result.nickname);
-
-          setTimeout(() => {
-            if (result.role === "AD") {
-              window.location.href = "admin.html";
-            } else if (result.role === "RU") {
-              window.location.href = "user.html";
-            }
-          }, 1500);
-        } else if (result.result === "blocked") {
-          modal.style.display = "none";
-          alert("🚫 계정이 비활성화되었습니다.");
-        } else {
-          modal.style.display = "none";
-          alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
-        }
-      })
-      .catch(error => {
-        modal.style.display = "none";
-        alert("❌ 서버 오류: " + error.message);
-      });
+    // ✅ JSONP 방식 호출: <script> 태그 삽입
+    const script = document.createElement("script");
+    script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=handleLoginResponse`;
+    document.body.appendChild(script);
   }
 
   function goRegister() {
@@ -253,6 +251,7 @@
       .catch(err => console.error('Service Worker registration failed:', err));
   }
 </script>
+
 
 </body>
 </html>
