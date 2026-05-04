@@ -783,12 +783,14 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
   }
 
   try {
-    // 사용자 서버에 요청 → 관리자 서버 데이터 가져옴
-    const response = await fetch(`/api/location`);
-    const data = await response.json();
+    // 사용자 서버에 요청 → 관리자 서버 데이터(JSON 배열) 가져오기
+    const response = await fetch("/api/location");   // 사용자 서버 엔드포인트
+    const data = await response.json();              // 배열 형태로 반환됨
 
-    // phone 값과 입력값 매칭 (공백/대소문자 무시, 부분 일치 허용)
+    // 입력값 정규화
     const inputName = name.trim().toLowerCase();
+
+    // phone 값과 입력값 매칭 (부분 일치 허용)
     const match = data.find(item =>
       String(item.phone).trim().toLowerCase().includes(inputName)
     );
