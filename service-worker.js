@@ -13,13 +13,17 @@ self.addEventListener("install", (event) => {
   );
 });
 
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).catch(err => {
+        console.error("Service Worker fetch failed:", err);
+        return new Response("Network error", { status: 408 });
+      });
     })
   );
 });
+
 
 self.addEventListener("activate", (event) => {
   const cacheWhitelist = [CACHE_NAME];
