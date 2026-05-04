@@ -784,7 +784,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
 
   try {
     // 사용자 서버 호출 → 관리자 서버 데이터 가져오기
-    const response = await fetch("/api/location?mode=getLocations");
+    const response = await fetch("/api/location?mode=getAdminLocations");  // 🔑 수정된 부분
     const data = await response.json();   // JSON 배열
 
     // 입력값 정규화
@@ -835,7 +835,6 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     document.getElementById("destinationResult").innerText = "서버 요청 실패";
   }
 });
-
 
 /* ---------------------- 모달 열기/닫기 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
