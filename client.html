@@ -787,8 +787,11 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     const response = await fetch("https://script.google.com/macros/s/AKfycb.../exec");
     const data = await response.json();
 
-    // 2️⃣ phone 값과 입력값 매칭
-    const match = data.find(item => item.phone === name);
+    // 2️⃣ phone 값과 입력값 매칭 (공백/대소문자 무시, 부분 일치 허용)
+    const inputName = name.trim().toLowerCase();
+    const match = data.find(item =>
+      String(item.phone).trim().toLowerCase().includes(inputName)
+    );
 
     if (match) {
       const destLat = parseFloat(match.lat);
@@ -799,7 +802,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
         position: { lat: destLat, lng: destLng },
         map: map,
         icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-        title: `${match.phone}`
+        title: match.phone
       });
 
       // ✅ 거리 계산
@@ -815,7 +818,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
 
       // ✅ 결과 표시
       document.getElementById("destinationResult").innerHTML =
-        `목적지(전화번호): ${match.phone}<br>
+        `목적지(별명): ${match.phone}<br>
          좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
          직선 거리: ${distanceKm} km<br>
          예상 도착 시간: ${estimatedMinutes} 분`;
@@ -866,6 +869,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     document.getElementById("destinationResult").innerText = "서버 요청 실패";
   }
 });
+
 
 /* ---------------------- 모달 열기/닫기 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
