@@ -172,24 +172,25 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   </div>
 </div>
 
-<!-- 목적지 찾기 모달창 -->
-<div id="destinationModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">목적지 찾기</h2>
-      <span id="closeDestinationModal" class="close">✖</span>
+  <!-- 목적지 찾기 모달창 -->
+  <div id="destinationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">목적지 찾기</h2>
+        <span id="closeDestinationModal" class="close">✖</span>
+      </div>
+
+      <!-- 입력창 -->
+      <input type="text" id="destinationInput" placeholder="목적지 이름 입력" 
+             style="width:90%; padding:8px; margin:10px 0; border:1px solid #1976d2; border-radius:6px;">
+
+      <!-- 검색 버튼 -->
+      <button id="searchDestinationBtn">검색</button>
+
+      <!-- 결과 표시 영역 -->
+      <div id="destinationResult" style="margin-top:10px; font-size:14px; color:#333;"></div>
     </div>
-
-    <!-- 입력창 -->
-    <input type="text" id="destinationInput" placeholder="목적지 이름 입력" style="width:90%; padding:8px; margin:10px 0; border:1px solid #1976d2; border-radius:6px;">
-
-    <!-- 검색 버튼 -->
-    <button id="searchDestinationBtn">검색</button>
-
-    <!-- 결과 표시 영역 -->
-    <div id="destinationResult" style="margin-top:10px; font-size:14px; color:#333;"></div>
   </div>
-</div>
   
 <script>  
 // ---------------------- 전역 변수 ----------------------
@@ -914,6 +915,112 @@ function checkRadarPOIs(myPos) {
   });
 }
 
+
+/* ---------------------- 최종 목적지 검색 코드 (서버 → 실패 시 Google Places API → 거리·시간 계산 → 경로 안내) ---------------------- */  
+document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
+  const name = document.getElementById("destinationInput").value;
+  if (!name) {
+    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
+    return;
+  }
+
+  try {
+    // 1️⃣ 관리자 서버 요청
+    const response = await fetch(`/api/location?name=${encodeURIComponent(name)}`);
+    const data = await response.json();
+
+    if (data && data.lat && data.lng) {
+      // ✅ 서버에서 좌표 반환됨
+      const destLat = data.lat;
+      const destLng = data.lng;
+      const phone = data.phone || "전화번호 없음";
+
+      // 마커 표시
+      new google.maps.Marker({
+        position: { lat: destLat, lng: destLng },
+        map: map,
+        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        title: `${name} (${phone})`
+      });
+
+      // 거리 계산
+      const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
+      const distanceKm = (distanceMeters / 1000).toFixed(2);
+
+      // 예상 도착 시간
+      let avgSpeed = 30; // 기본값: 30km/h
+      if (speedHistory.length > 0) {
+        avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+      }
+      const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
+
+      // 결과 표시
+      document.getElementById("destinationResult").innerHTML =
+        `목적지: ${name}<br>전화번호: ${phone}<br>
+         좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
+         직선 거리: ${distanceKm} km<br>
+         예상 도착 시간: ${estimatedMinutes} 분`;
+
+      // 경로 안내
+      showRouteToDestination({ lat: destLat, lng: destLng });
+      return; // 서버 결과가 있으면 여기서 종료
+    }
+
+    // 2️⃣ 서버에 값이 없으면 Google Places API 사용
+    const service = new google.maps.places.PlacesService(map);
+    service.findPlaceFromQuery({
+      query: name,
+      fields: ["name", "geometry"]
+    }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+        const destLat = results[0].geometry.location.lat();
+        const destLng = results[0].geometry.location.lng();
+
+        new google.maps.Marker({
+          position: { lat: destLat, lng: destLng },
+          map: map,
+          icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          title: results[0].name
+        });
+
+        // 거리 계산
+        const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
+        const distanceKm = (distanceMeters / 1000).toFixed(2);
+
+        // 예상 도착 시간
+        let avgSpeed = 30;
+        if (speedHistory.length > 0) {
+          avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+        }
+        const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
+
+        // 결과 표시
+        document.getElementById("destinationResult").innerHTML =
+          `목적지: ${results[0].name}<br>
+           좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
+           직선 거리: ${distanceKm} km<br>
+           예상 도착 시간: ${estimatedMinutes} 분`;
+
+        showRouteToDestination({ lat: destLat, lng: destLng });
+      } else {
+        document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+      }
+    });
+
+  } catch (err) {
+    console.error("목적지 조회 오류:", err);
+    document.getElementById("destinationResult").innerText = "서버 요청 실패";
+  }
+});
+
+    // 모달 열기/닫기 연결
+    document.getElementById("openDestinationModal").addEventListener("click", () => {
+      document.getElementById("destinationModal").style.display = "block";
+    });
+
+    document.getElementById("closeDestinationModal").addEventListener("click", () => {
+      document.getElementById("destinationModal").style.display = "none";
+    });
 </script>  
 </body>
 </html>
