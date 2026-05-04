@@ -783,11 +783,11 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
   }
 
   try {
-    // 1️⃣ 서버에서 전체 배열 받아오기
-    const response = await fetch("https://script.google.com/macros/s/AKfycb.../exec");
+    // 사용자 서버에 요청 → 관리자 서버 데이터 가져옴
+    const response = await fetch(`/api/location`);
     const data = await response.json();
 
-    // 2️⃣ phone 값과 입력값 매칭 (공백/대소문자 무시, 부분 일치 허용)
+    // phone 값과 입력값 매칭 (공백/대소문자 무시, 부분 일치 허용)
     const inputName = name.trim().toLowerCase();
     const match = data.find(item =>
       String(item.phone).trim().toLowerCase().includes(inputName)
@@ -826,43 +826,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
       // ✅ 경로 안내 호출
       showRouteToDestination({ lat: destLat, lng: destLng });
     } else {
-      // 3️⃣ 서버에 없으면 Google Places API로 검색
-      const service = new google.maps.places.PlacesService(map);
-      service.findPlaceFromQuery({
-        query: name,
-        fields: ["name", "geometry"]
-      }, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
-          const destLat = results[0].geometry.location.lat();
-          const destLng = results[0].geometry.location.lng();
-
-          new google.maps.Marker({
-            position: { lat: destLat, lng: destLng },
-            map: map,
-            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            title: results[0].name
-          });
-
-          const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
-          const distanceKm = (distanceMeters / 1000).toFixed(2);
-
-          let avgSpeed = 30;
-          if (speedHistory.length > 0) {
-            avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-          }
-          const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
-
-          document.getElementById("destinationResult").innerHTML =
-            `목적지: ${results[0].name}<br>
-             좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
-             직선 거리: ${distanceKm} km<br>
-             예상 도착 시간: ${estimatedMinutes} 분`;
-
-          showRouteToDestination({ lat: destLat, lng: destLng });
-        } else {
-          document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
-        }
-      });
+      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
     }
   } catch (err) {
     console.error("목적지 조회 오류:", err);
