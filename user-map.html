@@ -69,7 +69,7 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbyx-pBoxlZjoTAtrPFQ3GRrQsnlQ-9nhWoRdXExhhbT5_hpsf1MsvuIAwH3knAo7dtVbQ/exec")
+      fetch("https://script.google.com/macros/s/AKfycbxYrQ4cHHG7fIL9OtfIj2AvIrqRTiOwqOkrKzBvDAckpaTpUh8Np4TyU6QE0j7eVfnKsg/exec")
         .then(res => res.json())
         .then(data => {
           record = data.find(item => item.phone === phone);
