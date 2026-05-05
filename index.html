@@ -184,6 +184,19 @@
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
+  // JSONP 요청 헬퍼 함수
+  function requestJSONP(url, callbackName, callbackFn) {
+    const script = document.createElement("script");
+    window[callbackName] = function(data) {
+      // 응답 후 정리
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      callbackFn(data);
+    };
+    script.src = `${url}&callback=${callbackName}`;
+    document.body.appendChild(script);
+  }
+
   function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
@@ -200,18 +213,10 @@
 
     // ✅ 동적 콜백 이름 생성
     const callbackName = "handleLoginResponse_" + Date.now();
+    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
 
-    // ✅ script 태그 미리 선언
-    const script = document.createElement("script");
-
-    // ✅ 응답 처리 함수 등록
-    window[callbackName] = function(result) {
-      // 응답 후 정리
-      delete window[callbackName];
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-
+    // ✅ JSONP 요청 실행
+    requestJSONP(url, callbackName, function(result) {
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
@@ -224,11 +229,7 @@
         localStorage.setItem("nickname", result.name);
 
         setTimeout(() => {
-          if (result.role === "AD") {
-            window.location.href = "admin.html";
-          } else {
-            window.location.href = "user.html";
-          }
+          window.location.href = result.role === "AD" ? "admin.html" : "user.html";
         }, 1500);
       } else if (result.result === "blocked") {
         modal.style.display = "none";
@@ -237,14 +238,10 @@
         modal.style.display = "none";
         alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
       }
-    };
-
-    // ✅ JSONP 요청
-    script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
-    document.body.appendChild(script);
+    });
   }
 
-  // 회원가입 이동 함수도 그대로 유지
+  // 회원가입 이동 함수
   function goRegister() {
     window.location.href = "registerUser.html";
   }
