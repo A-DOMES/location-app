@@ -201,10 +201,16 @@
     // ✅ 동적 콜백 이름 생성
     const callbackName = "handleLoginResponse_" + Date.now();
 
+    // ✅ script 태그 미리 선언
+    const script = document.createElement("script");
+
     // ✅ 응답 처리 함수 등록
     window[callbackName] = function(result) {
+      // 응답 후 정리
       delete window[callbackName];
-      document.body.removeChild(script);
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
 
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
@@ -234,11 +240,11 @@
     };
 
     // ✅ JSONP 요청
-    const script = document.createElement("script");
     script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
     document.body.appendChild(script);
   }
 
+  // 회원가입 이동 함수도 그대로 유지
   function goRegister() {
     window.location.href = "registerUser.html";
   }
@@ -246,7 +252,6 @@
   window.login = login;
   window.goRegister = goRegister;
 </script>
-
 
 <!-- ✅ 서비스 워커 등록 -->
 <script>
