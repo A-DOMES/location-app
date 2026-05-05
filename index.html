@@ -61,42 +61,43 @@
   const USER_API_URL = CONFIG.USER_URL;
 
   // 로그인 (fetch POST)
-  async function login() {
-    const id = document.getElementById("id").value.trim();
-    const pw = document.getElementById("pw").value.trim();
-    if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+async function login() {
+  const id = document.getElementById("id").value.trim();
+  const pw = document.getElementById("pw").value.trim();
+  if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
 
-    const modal = document.getElementById("loginModal");
-    modal.style.display = "block";
-    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
-    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+  const modal = document.getElementById("loginModal");
+  modal.style.display = "block";
+  modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+  modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    try {
-      const response = await fetch(USER_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ mode: "checkPassword", id, pw })
-      });
-      const result = await response.json();
+  try {
+    const response = await fetch(USER_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ mode: "checkPassword", id, pw })
+    });
+    const result = await response.json();
 
-      if (result.result === "success") {
-        modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-        modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-        sessionStorage.setItem("loggedIn","true");
-        sessionStorage.setItem("role",result.role);
-        sessionStorage.setItem("userId",id);
-        sessionStorage.setItem("token",result.token);
-        localStorage.setItem("nickname",result.name);
-        setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
-      } else {
-        modal.style.display = "none";
-        alert("❌ 로그인 실패: " + (result.message || ""));
-      }
-    } catch(err) {
+    if (result.result === "success") {
+      modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+      modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+      sessionStorage.setItem("loggedIn","true");
+      sessionStorage.setItem("role",result.role);
+      sessionStorage.setItem("userId",id);
+      sessionStorage.setItem("token",result.token);
+      localStorage.setItem("nickname",result.name);
+      setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
+    } else {
       modal.style.display = "none";
-      alert("❌ 서버 오류: " + err.message);
+      alert("❌ 로그인 실패: " + (result.message || ""));
     }
+  } catch(err) {
+    modal.style.display = "none";
+    alert("❌ 서버 오류: " + err.message);
   }
+}
+
 
   // 일반 API 호출(fetch POST)
   async function callApi(mode, params={}) {
