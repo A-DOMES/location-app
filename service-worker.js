@@ -4,7 +4,7 @@ const urlsToCache = [
   "manifest.json",
   "icon-192.png",
   "icon-512.png",
-  "config.js"   // ✅ 새로 추가된 파일
+  "config.js"   // ✅ 필요한 정적 파일만 캐싱
 ];
 
 self.addEventListener("install", (event) => {
@@ -22,12 +22,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ✅ 기본 캐시 처리 (동적 처리)
+  // ✅ 기본 캐시 처리 (정적 파일만)
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => caches.match("offline.html"));
+      return response || fetch(event.request);
     })
   );
+});
 
 self.addEventListener("activate", (event) => {
   const cacheWhitelist = [CACHE_NAME];
