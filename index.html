@@ -42,16 +42,22 @@
 <body>
   <div class="login-box">
     <h2>📍 A-DOMES | 위치정보시스템</h2>
+
+    <!-- 입력 그룹 -->
     <div class="form-section input-group">
       <label for="id"><i class="fa fa-user user-icon"></i> 아이디</label>
       <input type="text" id="id" placeholder="아이디를 입력하세요">
+
       <label for="pw"><i class="fa fa-lock lock-icon"></i> 비밀번호</label>
       <input type="password" id="pw" placeholder="비밀번호를 입력하세요">
     </div>
+
+    <!-- 버튼 그룹 -->
     <div class="form-section button-group">
       <button onclick="login()" class="login-btn">로그인</button>
       <button onclick="goRegister()" class="signup-btn">회원가입</button>
     </div>
+
     <div id="message"></div>
   </div>
 
@@ -62,60 +68,70 @@
       <p>잠시 후 이동합니다...</p>
     </div>
   </div>
+</body>
+</html>
 
-  <!-- 📌 스크립트 -->
+<!-- config.js 먼저 불러오기 -->
 <script src="config.js"></script>
+
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
-  // JSONP 요청
-  function requestJSONP(url, callbackFn) {
-    const callbackName = "jsonpCallback_" + Date.now();
-    const script = document.createElement("script");
-
-    window[callbackName] = function(data) {
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      callbackFn(data);
-    };
-
-    script.src = `${url}&callback=${callbackName}`;
-    document.body.appendChild(script);
-  }
-
-  // 로그인(JSONP)
   function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
-    if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+
+    if (!id || !pw) {
+      alert("⚠️ 아이디와 비밀번호를 입력하세요.");
+      return;
+    }
 
     const modal = document.getElementById("loginModal");
     modal.style.display = "block";
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
-    requestJSONP(url, function(result) {
+    // ✅ JSONP 방식 호출
+    const callbackName = "handleLoginResponse";
+    window[callbackName] = function(result) {
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-        sessionStorage.setItem("loggedIn","true");
-        sessionStorage.setItem("role",result.role);
-        sessionStorage.setItem("userId",id);
-        sessionStorage.setItem("token",result.token);
-        localStorage.setItem("nickname",result.name);
-        setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
+
+        sessionStorage.setItem("loggedIn", "true");
+        sessionStorage.setItem("role", result.role);
+        sessionStorage.setItem("userId", id);
+        sessionStorage.setItem("token", result.token);
+        localStorage.setItem("nickname", result.nickname);
+
+        setTimeout(() => {
+          if (result.role === "AD") {
+            window.location.href = "admin.html";
+          } else if (result.role === "RU") {
+            window.location.href = "user.html";
+          }
+        }, 1500);
+      } else if (result.result === "blocked") {
+        modal.style.display = "none";
+        alert("🚫 계정이 비활성화되었습니다.");
       } else {
         modal.style.display = "none";
-        alert("❌ 로그인 실패");
+        alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
       }
-    });
+    };
+
+    // ✅ script 태그를 동적으로 추가해서 JSONP 요청
+    const script = document.createElement("script");
+    script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
+    document.body.appendChild(script);
   }
 
-  // 회원가입 페이지 이동
   function goRegister() {
     window.location.href = "registerUser.html";
   }
+
+  window.login = login;
+  window.goRegister = goRegister;
 </script>
 
 <!-- ✅ 서비스 워커 등록 -->
@@ -126,6 +142,5 @@
       .catch(err => console.error('Service Worker registration failed:', err));
   }
 </script>
-
 </body>
 </html>
