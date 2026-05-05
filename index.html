@@ -179,82 +179,97 @@
 </body>
 </html>
 
-<script src="config.js"></script>
-<script>
-  const USER_API_URL = CONFIG.USER_URL;
+  <!-- 📌 스크립트 -->
+  <script src="config.js"></script>
+  <script>
+    const USER_API_URL = CONFIG.USER_URL;
 
-  // JSONP 요청 전용 함수
-  function requestJSONP(url, callbackFn) {
-    const callbackName = "jsonpCallback_" + Date.now();
-    const script = document.createElement("script");
+    // JSONP 요청 전용 함수
+    function requestJSONP(url, callbackFn) {
+      const callbackName = "jsonpCallback_" + Date.now();
+      const script = document.createElement("script");
 
-    window[callbackName] = function(data) {
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      callbackFn(data);
-    };
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        callbackFn(data);
+      };
 
-    script.src = `${url}&callback=${callbackName}`;
-    document.body.appendChild(script);
-  }
-
-  function login() {
-    const id = document.getElementById("id").value.trim();
-    const pw = document.getElementById("pw").value.trim();
-
-    if (!id || !pw) {
-      alert("⚠️ 아이디와 비밀번호를 입력하세요.");
-      return;
+      script.src = `${url}&callback=${callbackName}`;
+      document.body.appendChild(script);
     }
 
-    const modal = document.getElementById("loginModal");
-    modal.style.display = "block";
-    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
-    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+    // 로그인(JSONP)
+    function login() {
+      const id = document.getElementById("id").value.trim();
+      const pw = document.getElementById("pw").value.trim();
 
-    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
-
-    // ✅ JSONP 요청 강제
-    requestJSONP(url, function(result) {
-      if (result.result === "success") {
-        modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-        modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-
-        sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("role", result.role);
-        sessionStorage.setItem("userId", id);
-        sessionStorage.setItem("token", result.token);
-        localStorage.setItem("nickname", result.name);
-
-        setTimeout(() => {
-          window.location.href = result.role === "AD" ? "admin.html" : "user.html";
-        }, 1500);
-      } else if (result.result === "blocked") {
-        modal.style.display = "none";
-        alert("🚫 계정이 비활성화되었습니다.");
-      } else {
-        modal.style.display = "none";
-        alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+      if (!id || !pw) {
+        alert("⚠️ 아이디와 비밀번호를 입력하세요.");
+        return;
       }
-    });
-  }
 
-  function goRegister() {
-    window.location.href = "registerUser.html";
-  }
+      const modal = document.getElementById("loginModal");
+      modal.style.display = "block";
+      modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+      modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-  window.login = login;
-  window.goRegister = goRegister;
-</script>
+      const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
 
-<!-- ✅ 서비스 워커 등록 -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/location-app/service-worker.js')
-      .then(reg => console.log('Service Worker registered:', reg))
-      .catch(err => console.error('Service Worker registration failed:', err));
-  }
-</script>
+      requestJSONP(url, function(result) {
+        if (result.result === "success") {
+          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
 
+          sessionStorage.setItem("loggedIn", "true");
+          sessionStorage.setItem("role", result.role);
+          sessionStorage.setItem("userId", id);
+          sessionStorage.setItem("token", result.token);
+          localStorage.setItem("nickname", result.name);
+
+          setTimeout(() => {
+            window.location.href = result.role === "AD" ? "admin.html" : "user.html";
+          }, 1500);
+        } else {
+          modal.style.display = "none";
+          alert("❌ 로그인 실패");
+        }
+      });
+    }
+
+    // 일반 API 호출(fetch POST)
+    async function callApi(mode, params = {}) {
+      try {
+        const response = await fetch(USER_API_URL, {
+          method: "POST",
+          redirect: "follow",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({ mode, ...params })
+        });
+
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        return { result: "fail", message: err.message };
+      }
+    }
+
+    // 예시: 사용자 목록 조회
+    async function getUsers() {
+      const result = await callApi("getAllUsers");
+      document.getElementById("message").innerText = JSON.stringify(result);
+    }
+  </script>
+
+  <!-- ✅ 서비스 워커 등록 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/location-app/service-worker.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    }
+  </script>
 </body>
 </html>
