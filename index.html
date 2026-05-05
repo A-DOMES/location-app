@@ -60,32 +60,8 @@
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
-  // JSONP 요청 (타임아웃/실패 처리 포함)
-  function requestJSONP(url, callbackFn) {
-    const callbackName = "jsonpCallback_" + Date.now();
-    const script = document.createElement("script");
-
-    // 5초 타임아웃: 응답 없으면 실패 처리
-    let timeout = setTimeout(() => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[callbackName];
-      document.getElementById("loginModal").style.display = "none";
-      alert("❌ 서버 응답이 차단되었거나 실패했습니다.");
-    }, 5000);
-
-    window[callbackName] = function(data) {
-      clearTimeout(timeout);
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      callbackFn(data);
-    };
-
-    script.src = `${url}&callback=${callbackName}`;
-    document.body.appendChild(script);
-  }
-
-  // 로그인(JSONP)
-  function login() {
+  // 로그인 (fetch POST)
+  async function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
     if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
@@ -95,9 +71,15 @@
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
-    requestJSONP(url, function(result) {
-      if (result && result.result === "success") {
+    try {
+      const response = await fetch(USER_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ mode: "checkPassword", id, pw })
+      });
+      const result = await response.json();
+
+      if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
         sessionStorage.setItem("loggedIn","true");
@@ -108,16 +90,19 @@
         setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
       } else {
         modal.style.display = "none";
-        alert("❌ 로그인 실패");
+        alert("❌ 로그인 실패: " + (result.message || ""));
       }
-    });
+    } catch(err) {
+      modal.style.display = "none";
+      alert("❌ 서버 오류: " + err.message);
+    }
   }
 
   // 일반 API 호출(fetch POST)
   async function callApi(mode, params={}) {
     try {
       const response = await fetch(USER_API_URL, {
-        method:"POST", redirect:"follow",
+        method:"POST",
         headers:{ "Content-Type":"text/plain;charset=utf-8" },
         body: JSON.stringify({ mode, ...params })
       });
@@ -138,6 +123,7 @@
     window.location.href = "registerUser.html";
   }
 </script>
+
 
 <!-- ✅ 서비스 워커 등록 -->
 <script>
