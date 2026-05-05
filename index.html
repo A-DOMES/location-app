@@ -199,9 +199,15 @@
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ JSONP 방식 호출
-    const callbackName = "handleLoginResponse";
+    // ✅ 고유한 콜백 이름 생성
+    const callbackName = "handleLoginResponse_" + Date.now();
+
+    // ✅ 응답 처리 함수 등록
     window[callbackName] = function(result) {
+      // script 태그와 콜백 정리
+      delete window[callbackName];
+      document.body.removeChild(script);
+
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
@@ -250,5 +256,6 @@
       .catch(err => console.error('Service Worker registration failed:', err));
   }
 </script>
+
 </body>
 </html>
