@@ -71,11 +71,16 @@ async function login() {
   modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
   modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
+  // ✅ URLSearchParams로 폼 데이터 구성
+  const params = new URLSearchParams();
+  params.append("mode", "checkPassword");
+  params.append("id", id);
+  params.append("pw", pw);
+
   try {
     const response = await fetch(USER_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ mode: "checkPassword", id, pw })
+      body: params
     });
     const result = await response.json();
 
