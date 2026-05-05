@@ -56,85 +56,97 @@
   </div>
 
   <!-- 📌 스크립트 -->
-  <script src="config.js"></script>
-  <script>
-    const USER_API_URL = CONFIG.USER_URL;
+<script src="config.js"></script>
+<script>
+  const USER_API_URL = CONFIG.USER_URL;
 
-    // JSONP 요청
-    function requestJSONP(url, callbackFn) {
-      const callbackName = "jsonpCallback_" + Date.now();
-      const script = document.createElement("script");
-      window[callbackName] = function(data) {
-        delete window[callbackName];
-        if (script.parentNode) script.parentNode.removeChild(script);
-        callbackFn(data);
-      };
-      script.src = `${url}&callback=${callbackName}`;
-      document.body.appendChild(script);
-    }
+  // JSONP 요청 (타임아웃/실패 처리 포함)
+  function requestJSONP(url, callbackFn) {
+    const callbackName = "jsonpCallback_" + Date.now();
+    const script = document.createElement("script");
 
-    // 로그인(JSONP)
-    function login() {
-      const id = document.getElementById("id").value.trim();
-      const pw = document.getElementById("pw").value.trim();
-      if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+    // 5초 타임아웃: 응답 없으면 실패 처리
+    let timeout = setTimeout(() => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[callbackName];
+      document.getElementById("loginModal").style.display = "none";
+      alert("❌ 서버 응답이 차단되었거나 실패했습니다.");
+    }, 5000);
 
-      const modal = document.getElementById("loginModal");
-      modal.style.display = "block";
-      modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
-      modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+    window[callbackName] = function(data) {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      callbackFn(data);
+    };
 
-      const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
-      requestJSONP(url, function(result) {
-        if (result.result === "success") {
-          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-          sessionStorage.setItem("loggedIn","true");
-          sessionStorage.setItem("role",result.role);
-          sessionStorage.setItem("userId",id);
-          sessionStorage.setItem("token",result.token);
-          localStorage.setItem("nickname",result.name);
-          setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
-        } else {
-          modal.style.display = "none";
-          alert("❌ 로그인 실패");
-        }
-      });
-    }
+    script.src = `${url}&callback=${callbackName}`;
+    document.body.appendChild(script);
+  }
 
-    // 일반 API 호출(fetch POST)
-    async function callApi(mode, params={}) {
-      try {
-        const response = await fetch(USER_API_URL, {
-          method:"POST", redirect:"follow",
-          headers:{ "Content-Type":"text/plain;charset=utf-8" },
-          body: JSON.stringify({ mode, ...params })
-        });
-        return await response.json();
-      } catch(err) {
-        return { result:"fail", message:err.message };
+  // 로그인(JSONP)
+  function login() {
+    const id = document.getElementById("id").value.trim();
+    const pw = document.getElementById("pw").value.trim();
+    if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "block";
+    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+
+    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
+    requestJSONP(url, function(result) {
+      if (result && result.result === "success") {
+        modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+        modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+        sessionStorage.setItem("loggedIn","true");
+        sessionStorage.setItem("role",result.role);
+        sessionStorage.setItem("userId",id);
+        sessionStorage.setItem("token",result.token);
+        localStorage.setItem("nickname",result.name);
+        setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
+      } else {
+        modal.style.display = "none";
+        alert("❌ 로그인 실패");
       }
-    }
+    });
+  }
 
-    // 사용자 조회(fetch POST)
-    async function getUsers() {
-      const result = await callApi("getAllUsers");
-      document.getElementById("message").innerText = JSON.stringify(result);
+  // 일반 API 호출(fetch POST)
+  async function callApi(mode, params={}) {
+    try {
+      const response = await fetch(USER_API_URL, {
+        method:"POST", redirect:"follow",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body: JSON.stringify({ mode, ...params })
+      });
+      return await response.json();
+    } catch(err) {
+      return { result:"fail", message:err.message };
     }
+  }
 
-    // 회원가입 페이지 이동
-    function goRegister() {
-      window.location.href = "registerUser.html";
-    }
-  </script>
+  // 사용자 조회(fetch POST)
+  async function getUsers() {
+    const result = await callApi("getAllUsers");
+    document.getElementById("message").innerText = JSON.stringify(result);
+  }
 
-  <!-- ✅ 서비스 워커 등록 -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/location-app/service-worker.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.error('Service Worker registration failed:', err));
-    }
-  </script>
+  // 회원가입 페이지 이동
+  function goRegister() {
+    window.location.href = "registerUser.html";
+  }
+</script>
+
+<!-- ✅ 서비스 워커 등록 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/location-app/service-worker.js')
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.error('Service Worker registration failed:', err));
+  }
+</script>
+
 </body>
 </html>
