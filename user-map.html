@@ -69,7 +69,7 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbyMq5B-du_-Ac7Jagtq-TuK9rZuUKUkQF6FsOTsDli-66UeaAX0syTuioq6YLO0MFNY/exec")
+      fetch("https://bold-butterfly-f459.mailsock9.workers.dev/user")
         .then(res => res.json())
         .then(data => {
           record = data.find(item => item.phone === phone);
