@@ -185,7 +185,7 @@
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
-  function login() {
+  async function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
 
@@ -199,9 +199,11 @@
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ JSONP 방식 호출
-    const callbackName = "handleLoginResponse";
-    window[callbackName] = function(result) {
+    try {
+      // ✅ JSONP 대신 fetch 방식으로 호출
+      const response = await fetch(`${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`);
+      const result = await response.json();
+
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
@@ -226,12 +228,10 @@
         modal.style.display = "none";
         alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
       }
-    };
-
-    // ✅ script 태그를 동적으로 추가해서 JSONP 요청
-    const script = document.createElement("script");
-    script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
-    document.body.appendChild(script);
+    } catch (error) {
+      modal.style.display = "none";
+      alert("⚠️ 서버 오류: " + error);
+    }
   }
 
   function goRegister() {
