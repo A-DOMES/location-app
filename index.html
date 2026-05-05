@@ -10,25 +10,34 @@
   <link rel="manifest" href="/location-app/manifest.json">
   <meta name="theme-color" content="#2196F3">
 
-  <style>
-    /* 스타일은 그대로 유지 */
-    body { display:flex; justify-content:center; align-items:flex-start; height:100vh;
-           background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; padding-top:40px; }
-    .login-box { background:#fff; padding:60px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2);
-                 text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-    .login-box h2 { margin-bottom:20px; color:#2c3e50; font-size:28px; font-weight:600; }
-    .input-group { margin-top:80px; }
-    .button-group { margin-top:60px; }
-    .login-box label { display:block; text-align:left; font-size:16px; font-weight:500; color:#2c3e50; margin-top:25px; }
-    .login-box input { width:100%; margin-top:8px; padding:20px; font-size:18px; border:1.5px solid #bdc3c7; border-radius:10px; }
-    .login-btn, .signup-btn { width:100%; padding:18px; border:none; border-radius:12px; cursor:pointer; font-size:18px; font-weight:500; color:white; }
-    .login-btn { margin-bottom:15px; background:linear-gradient(to right,#3498db,#2980b9); }
-    .signup-btn { background:linear-gradient(to right,#2ecc71,#27ae60); }
-    #message { margin-top:20px; font-weight:bold; color:#e74c3c; }
-    .modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.3); }
-    .modal-content { background:#fff; margin:12% auto; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center; }
-  </style>
+<style>
+  body { display:flex; justify-content:center; align-items:flex-start; height:100vh;
+         background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; padding-top:40px; }
+  .login-box { background:#fff; padding:60px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2);
+               text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+  .login-box h2 { margin-bottom:20px; color:#2c3e50; font-size:28px; font-weight:600; }
+  .input-group { margin-top:80px; } .button-group { margin-top:60px; }
+  .login-box label { display:block; text-align:left; font-size:16px; font-weight:500; color:#2c3e50; margin-top:25px; }
+  .login-box label i { margin-right:8px; vertical-align:middle; }
+  .user-icon { color:#3498db; } .lock-icon { color:#27ae60; }
+  .login-box input { width:100%; margin-top:8px; padding:20px; font-size:18px; border:1.5px solid #bdc3c7; border-radius:10px;
+                     transition:border-color .3s, box-shadow .3s; box-sizing:border-box; }
+  .login-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
+  .login-btn,.signup-btn { width:100%; padding:18px; border:none; border-radius:12px; cursor:pointer; font-size:18px; font-weight:500;
+                           color:#fff; transition:transform .2s, background .3s; }
+  .login-btn { margin-bottom:15px; background:linear-gradient(to right,#3498db,#2980b9); }
+  .login-btn:hover { background:linear-gradient(to right,#2980b9,#1f6391); transform:scale(1.03); }
+  .signup-btn { background:linear-gradient(to right,#2ecc71,#27ae60); }
+  .signup-btn:hover { background:linear-gradient(to right,#27ae60,#1e8449); transform:scale(1.03); }
+  #message { margin-top:20px; font-weight:bold; color:#e74c3c; }
+  .modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,.3); }
+  .modal-content { background:#fff; margin:12% auto; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center;
+                   box-shadow:0 4px 15px rgba(0,0,0,.3); }
+  .modal-content h2 { font-size:24px; margin-bottom:15px; color:#2c3e50; }
+  .modal-content p { font-size:18px; color:#555; }
+</style>
+
 </head>
 <body>
   <div class="login-box">
@@ -60,68 +69,48 @@
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
-  // 로그인 (fetch POST)
-async function login() {
-  const id = document.getElementById("id").value.trim();
-  const pw = document.getElementById("pw").value.trim();
-  if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+  // JSONP 요청
+  function requestJSONP(url, callbackFn) {
+    const callbackName = "jsonpCallback_" + Date.now();
+    const script = document.createElement("script");
 
-  const modal = document.getElementById("loginModal");
-  modal.style.display = "block";
-  modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
-  modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      callbackFn(data);
+    };
 
-  // ✅ URLSearchParams로 폼 데이터 구성
-  const params = new URLSearchParams();
-  params.append("mode", "checkPassword");
-  params.append("id", id);
-  params.append("pw", pw);
+    script.src = `${url}&callback=${callbackName}`;
+    document.body.appendChild(script);
+  }
 
-  try {
-    const response = await fetch(USER_API_URL, {
-      method: "POST",
-      body: params
+  // 로그인(JSONP)
+  function login() {
+    const id = document.getElementById("id").value.trim();
+    const pw = document.getElementById("pw").value.trim();
+    if (!id || !pw) { alert("⚠️ 아이디와 비밀번호를 입력하세요."); return; }
+
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "block";
+    modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
+    modal.querySelector("p").innerText = "잠시만 기다려주세요.";
+
+    const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
+    requestJSONP(url, function(result) {
+      if (result.result === "success") {
+        modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+        modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+        sessionStorage.setItem("loggedIn","true");
+        sessionStorage.setItem("role",result.role);
+        sessionStorage.setItem("userId",id);
+        sessionStorage.setItem("token",result.token);
+        localStorage.setItem("nickname",result.name);
+        setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
+      } else {
+        modal.style.display = "none";
+        alert("❌ 로그인 실패");
+      }
     });
-    const result = await response.json();
-
-    if (result.result === "success") {
-      modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-      modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-      sessionStorage.setItem("loggedIn","true");
-      sessionStorage.setItem("role",result.role);
-      sessionStorage.setItem("userId",id);
-      sessionStorage.setItem("token",result.token);
-      localStorage.setItem("nickname",result.name);
-      setTimeout(()=>{ window.location.href = result.role==="AD" ? "admin.html" : "user.html"; },1500);
-    } else {
-      modal.style.display = "none";
-      alert("❌ 로그인 실패: " + (result.message || ""));
-    }
-  } catch(err) {
-    modal.style.display = "none";
-    alert("❌ 서버 오류: " + err.message);
-  }
-}
-
-
-  // 일반 API 호출(fetch POST)
-  async function callApi(mode, params={}) {
-    try {
-      const response = await fetch(USER_API_URL, {
-        method:"POST",
-        headers:{ "Content-Type":"text/plain;charset=utf-8" },
-        body: JSON.stringify({ mode, ...params })
-      });
-      return await response.json();
-    } catch(err) {
-      return { result:"fail", message:err.message };
-    }
-  }
-
-  // 사용자 조회(fetch POST)
-  async function getUsers() {
-    const result = await callApi("getAllUsers");
-    document.getElementById("message").innerText = JSON.stringify(result);
   }
 
   // 회원가입 페이지 이동
@@ -129,7 +118,6 @@ async function login() {
     window.location.href = "registerUser.html";
   }
 </script>
-
 
 <!-- ✅ 서비스 워커 등록 -->
 <script>
