@@ -14,6 +14,15 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // ✅ Google Apps Script API 요청은 캐시하지 않고 네트워크로 직접 전달
+  if (url.hostname.includes("script.google.com")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // ✅ 기본 캐시 처리 (정적 파일만)
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
