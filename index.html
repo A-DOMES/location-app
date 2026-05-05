@@ -30,13 +30,13 @@
   .login-btn:hover { background:linear-gradient(to right,#2980b9,#1f6391); transform:scale(1.03); }
   .signup-btn { background:linear-gradient(to right,#2ecc71,#27ae60); }
   .signup-btn:hover { background:linear-gradient(to right,#27ae60,#1e8449); transform:scale(1.03); }
-  #message { margin-top:20px; font-weight:bold; color:#e74c3c; }
   .modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,.3); }
   .modal-content { background:#fff; margin:12% auto; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center;
                    box-shadow:0 4px 15px rgba(0,0,0,.3); }
   .modal-content h2 { font-size:24px; margin-bottom:15px; color:#2c3e50; }
   .modal-content p { font-size:18px; color:#555; }
 </style>
+
 
 </head>
 <body>
@@ -51,7 +51,6 @@
     <div class="form-section button-group">
       <button onclick="login()" class="login-btn">로그인</button>
       <button onclick="goRegister()" class="signup-btn">회원가입</button>
-      <button onclick="getUsers()" class="signup-btn">사용자 조회</button>
     </div>
     <div id="message"></div>
   </div>
