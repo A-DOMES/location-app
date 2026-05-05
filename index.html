@@ -179,20 +179,21 @@
 </body>
 </html>
 
-<!-- config.js 먼저 불러오기 -->
 <script src="config.js"></script>
 <script>
   const USER_API_URL = CONFIG.USER_URL;
 
-  // JSONP 요청 헬퍼 함수
-  function requestJSONP(url, callbackName, callbackFn) {
+  // JSONP 요청 전용 함수
+  function requestJSONP(url, callbackFn) {
+    const callbackName = "jsonpCallback_" + Date.now();
     const script = document.createElement("script");
+
     window[callbackName] = function(data) {
-      // 응답 후 정리
       delete window[callbackName];
       if (script.parentNode) script.parentNode.removeChild(script);
       callbackFn(data);
     };
+
     script.src = `${url}&callback=${callbackName}`;
     document.body.appendChild(script);
   }
@@ -211,17 +212,14 @@
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ 동적 콜백 이름 생성
-    const callbackName = "handleLoginResponse_" + Date.now();
     const url = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`;
 
-    // ✅ JSONP 요청 실행
-    requestJSONP(url, callbackName, function(result) {
+    // ✅ JSONP 요청 강제
+    requestJSONP(url, function(result) {
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
 
-        // 세션/로컬스토리지에 값 저장
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("role", result.role);
         sessionStorage.setItem("userId", id);
@@ -241,7 +239,6 @@
     });
   }
 
-  // 회원가입 이동 함수
   function goRegister() {
     window.location.href = "registerUser.html";
   }
