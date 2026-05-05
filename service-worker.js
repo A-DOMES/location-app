@@ -22,13 +22,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ✅ 기본 캐시 처리 (정적 파일만)
+  // ✅ 기본 캐시 처리 (동적 처리)
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).catch(() => caches.match("offline.html"));
     })
   );
-});
 
 self.addEventListener("activate", (event) => {
   const cacheWhitelist = [CACHE_NAME];
