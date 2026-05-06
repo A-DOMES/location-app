@@ -154,13 +154,21 @@ body { display:flex; justify-content:center; align-items:center;
         sessionStorage.setItem("token", result.token);
         localStorage.setItem("nickname", result.nickname);
 
+        // ✅ role에 따라 분기 처리
+        const roleRedirects = {
+          "AD": "https://a-domes.github.io/location-pwa/admin.html",
+          "RU": "https://a-domes.github.io/location-app/user.html"
+        };
+
         setTimeout(() => {
-          if (result.role === "AD") {
-            window.location.href = "admin.html";
-          } else if (result.role === "RU") {
-            window.location.href = "user.html";
+          const targetUrl = roleRedirects[result.role];
+          if (targetUrl) {
+            window.location.href = targetUrl;
+          } else {
+            alert("알 수 없는 권한입니다.");
           }
         }, 1500);
+
       } else if (result.result === "blocked") {
         modal.style.display = "none";
         alert("🚫 계정이 비활성화되었습니다.");
@@ -184,13 +192,5 @@ body { display:flex; justify-content:center; align-items:center;
   window.goRegister = goRegister;
 </script>
 
-<!-- ✅ 서비스 워커 등록 -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/location-app/service-worker.js')
-      .then(reg => console.log('Service Worker registered:', reg))
-      .catch(err => console.error('Service Worker registration failed:', err));
-  }
-</script>
 </body>
 </html>
