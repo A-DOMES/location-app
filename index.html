@@ -51,7 +51,8 @@ body { display:flex; justify-content:center; align-items:center;
   cursor:pointer; font-size:18px; font-weight:500; color:#fff;
   background:linear-gradient(to right,#3498db,#2980b9);
   transition:transform .2s, background .3s;
-  margin-bottom:15px; /* 로그인 버튼 아래 여백 */
+  margin-top:50px;   /* 로그인 버튼을 조금 더 아래로 내림 */
+  margin-bottom:15px; /* 회원가입 버튼과의 간격 유지 */
 }
 .login-btn:hover {
   background:linear-gradient(to right,#2980b9,#1f6391);
@@ -64,13 +65,11 @@ body { display:flex; justify-content:center; align-items:center;
   cursor:pointer; font-size:18px; font-weight:500; color:#fff;
   background:linear-gradient(to right,#2ecc71,#27ae60);
   transition:transform .2s, background .3s;
-  /* margin-top 제거 → 로그인 버튼의 margin-bottom으로 간격 유지 */
 }
 .signup-btn:hover {
   background:linear-gradient(to right,#27ae60,#1e8449);
   transform:scale(1.03);
 }
-
 
 /* ---------------------- 모달 ---------------------- */
 .modal { display:none; position:fixed; z-index:999; left:0; top:0;
