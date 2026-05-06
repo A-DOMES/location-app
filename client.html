@@ -121,17 +121,35 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #openTravelStatsModal:hover { background:#e3f2fd; transform:scale(1.1); }
 #openTravelStatsModal:active { transform:scale(0.95); }
 
+/* ---------------------- 이동정보 버튼 ---------------------- */
+#openTravelStatsModal {
+  position:absolute; left:5px; top:290px;
+  display:flex; flex-direction:row; align-items:center; justify-content:center;
+  width:160px; height:50px; line-height:50px;
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:2px solid #1976d2; border-radius:999px;
+  font-size:20px; font-weight:700; color:#1976d2;
+  font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
+  cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  z-index:9999; text-align:center; white-space:nowrap;
+  transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
+  padding:0 12px;
+}
+#openTravelStatsModal:hover { background:#e3f2fd; transform:scale(1.1); }
+#openTravelStatsModal:active { transform:scale(0.95); }
+
 /* ---------------------- 이동정보 모달 내용 ---------------------- */
 #travelStatsContent {
   margin-top:10px; 
-  font-size:15px; 
-  color:#111;              /* 더 진한 글씨색 */
-  font-weight:600;         /* 글씨 굵게 */
-  font-family: "맑은 고딕", "Malgun Gothic", sans-serif; /* 글씨체 적용 */
+  font-size:18px; 
+  color:#111; 
+  font-weight:600; 
+  font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
   display:flex; 
   flex-direction:row; 
   flex-wrap:wrap;
-  gap:12px; 
+  gap:14px; 
   justify-content:flex-start;
 }
 
@@ -139,10 +157,17 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   display:flex; 
   align-items:center; 
   gap:6px; 
-  font-size:16px; 
-  font-weight:700;         /* 각 항목 글씨 더 굵게 */
-  color:#000;              /* 완전 진한 글씨색 */
-  font-family: "맑은 고딕", "Malgun Gothic", sans-serif; /* 글씨체 적용 */
+  font-size:20px; 
+  font-weight:700; 
+  color:#000; 
+  font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
+}
+
+/* ---------------------- 숫자 강조 ---------------------- */
+#travelStatsContent .highlight {
+  font-size:22px;              /* 숫자 더 크게 */
+  font-weight:800;             /* 굵게 */
+  color:#1976d2;               /* 파란색 강조 */
 }
 
   
@@ -227,13 +252,15 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
       <span id="closeTravelStatsModal" class="close">✖</span>
     </div>
 
-    <!-- 목적지 모달 입력창과 동일한 디자인 적용 -->
-    <div id="travelStatsContent" style="margin-top:10px; font-size:14px; color:#333;">
-      🚗 현재 속도: 0 km/h<br>
-      📊 평균 속도: 0 km/h<br>
-      ⚡ 최고 속도: 0 km/h<br>
-      ⏱️ 주행 시간: 0 분<br>
-      📏 총 이동 거리: 0 km
+    <!-- 이동정보 내용 -->
+    <div id="travelStatsContent">
+      <span>🚗 현재 속도: <span class="highlight">0 km/h</span></span>
+      <span>📊 평균 속도: <span class="highlight">0 km/h</span></span>
+      <span>⚡ 최고 속도: <span class="highlight">0 km/h</span></span>
+      <span>⏱️ 주행 시간: <span class="highlight">0 분</span></span>
+      <span>📏 총 이동 거리: <span class="highlight">0 km</span></span>
+      <span>직선 거리: <span class="highlight">12.5 km</span></span>
+      <span>예상 도착 시간: <span class="highlight">25 분</span></span>
     </div>
   </div>
 </div>
