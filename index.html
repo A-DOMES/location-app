@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>A-DOMES | 위치정보시스템</title>
+  <!-- 📌 모바일 대응을 위한 뷰포트 태그 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 📌 폰트 로딩 -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
+  <!-- 📌 Font Awesome 아이콘 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- 📌 PWA 매니페스트 연결 -->
-  <link rel="manifest" href="/location-app/manifest.json">
-  <meta name="theme-color" content="#2196F3">
-
-    <!-- 모바일 대응을 위한 뷰포트 태그 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/location-pwa/manifest.json">
+  <meta name="theme-color" content="#2196F3">  
   
 <style>
 /* ---------------------- 기본 페이지 스타일 ---------------------- */
@@ -94,6 +97,17 @@ body {
 }
 .modal-content h2 { font-size:24px; margin-bottom:15px; color:#2c3e50; }
 .modal-content p { font-size:18px; color:#555; }
+
+/* ---------------------- 모바일 전용 스타일 ---------------------- */
+@media (max-width:767px) {
+  /* 로그인 타이틀 폰트 줄이기 */
+  .login-box h2 { font-size:20px; }
+
+  /* 모달창 크기 줄이기 */
+  .modal-content { width:80%; max-width:280px; padding:18px; }
+  .modal-content h2 { font-size:18px; }
+  .modal-content p { font-size:14px; }
+}
 
 </style>
 
