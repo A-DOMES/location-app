@@ -912,12 +912,15 @@ function makeDraggableModal(element) {
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName) {
-  const name = inputName.trim().toLowerCase();
+  // 입력값 정규화
+  const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
   // 1️⃣ 관리자 시트 데이터 배열에서 검색
   if (Array.isArray(adminLocations)) {
-    match = adminLocations.find(item => item.phone.trim().toLowerCase() === name);
+    match = adminLocations.find(item =>
+      item.phone.trim().toLowerCase().normalize("NFC") === name
+    );
   }
 
   if (match) {
@@ -980,6 +983,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   findDestination(inputName);
 });
 
+  
   
 /* ---------------------- 모달 열기 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
