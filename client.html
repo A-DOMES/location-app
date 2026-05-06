@@ -313,6 +313,9 @@ let destinationRenderer = null;
 /* ---------------------- 속도 거리 측정 전역 변수 ---------------------- */  
 let destinationLat = null;
 let destinationLng = null;
+
+// ---------------------- 전역 변수 ----------------------
+let adminLocations = []; // 🚗 서버에서 가져온 차량 위치 데이터 저장  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -966,82 +969,77 @@ function makeDraggableModal(element) {
   });
 }
 
-/* ---------------------- 목적지 검색 기능 연결 ---------------------- */
-document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
-  const name = document.getElementById("destinationInput").value;
-  if (!name) {
+/* ---------------------- 목적지 검색 기능 ---------------------- */
+async function findDestination(inputName) {
+  const name = inputName.trim().toLowerCase();
+  let match = null;
+
+  // 1️⃣ 관리자 시트 데이터 배열에서 검색
+  if (Array.isArray(adminLocations)) {
+    match = adminLocations.find(item => item.phone.trim().toLowerCase() === name);
+  }
+
+  if (match) {
+    return showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng));
+  }
+
+  // 2️⃣ 외부 API (구글 Places 등) 검색
+  const service = new google.maps.places.PlacesService(map);
+  return new Promise((resolve) => {
+    service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+        const place = results[0].geometry.location;
+        showDestinationOnMap(results[0].name, place.lat(), place.lng());
+        resolve(true);
+      } else {
+        // 3️⃣ 최종 실패
+        document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+        openModal(document.getElementById("destinationModal"));
+        resolve(false);
+      }
+    });
+  });
+}
+
+/* ---------------------- 지도 표시 + 모달 ---------------------- */
+function showDestinationOnMap(title, lat, lng) {
+  destinationLat = lat;
+  destinationLng = lng;
+
+  const pos = new google.maps.LatLng(lat, lng);
+
+  new google.maps.Marker({
+    position: pos,
+    map: map,
+    icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+    title: title
+  });
+
+  map.setCenter(pos);
+
+  // 모달 표시
+  document.getElementById("destinationResult").innerHTML =
+    `목적지: ${title}<br>
+     좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+
+  openModal(document.getElementById("destinationModal"));
+
+  // 경로 안내 호출
+  showRouteToDestination({ lat, lng });
+}
+
+/* ---------------------- 버튼 이벤트 연결 ---------------------- */
+document.getElementById("searchDestinationBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("destinationInput").value;
+  if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     openModal(document.getElementById("destinationModal"));
     return;
   }
-
-  const inputName = name.trim().toLowerCase();
-  let match = null;
-
-  // 1차: 이미 받아온 배열에서 검색 (adminLocations이 있다고 가정)
-  if (typeof adminLocations !== "undefined" && Array.isArray(adminLocations)) {
-    match = adminLocations.find(item =>
-      item.phone.trim().toLowerCase() === inputName
-    );
-  }
-
-  // 2차: 없으면 API 호출
-  if (!match) {
-    try {
-      const response = await fetch("/api/location?mode=getAdminLocations");
-      const data = await response.json();
-      match = data.find(item =>
-        item.phone.trim().toLowerCase() === inputName
-      );
-    } catch (err) {
-      console.error("목적지 조회 오류:", err);
-      document.getElementById("destinationResult").innerText = "서버 요청 실패";
-      openModal(document.getElementById("destinationModal"));
-      return;
-    }
-  }
-
-  // 3차: 결과 처리
-  if (match) {
-    const destLat = parseFloat(match.lat);
-    const destLng = parseFloat(match.lng);
-
-    // 지도에 마커 표시
-    new google.maps.Marker({
-      position: { lat: destLat, lng: destLng },
-      map: map,
-      icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-      title: match.phone
-    });
-
-    // 거리 및 예상 도착 시간 계산
-    const distanceMeters = getDistance(currentLat, currentLng, destLat, destLng);
-    const distanceKm = (distanceMeters / 1000).toFixed(2);
-
-    let avgSpeed = 30;
-    if (speedHistory.length > 0) {
-      avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-    }
-    const estimatedMinutes = ((distanceKm / avgSpeed) * 60).toFixed(1);
-
-    // 목적지 모달에 결과 표시
-    document.getElementById("destinationResult").innerHTML =
-      `목적지(별명): ${match.phone}<br>
-       좌표: (${destLat.toFixed(5)}, ${destLng.toFixed(5)})<br>
-       직선 거리: ${distanceKm} km<br>
-       예상 도착 시간: ${estimatedMinutes} 분`;
-
-    // 모달 열기
-    openModal(document.getElementById("destinationModal"));
-
-    // 경로 안내 호출
-    showRouteToDestination({ lat: destLat, lng: destLng });
-  } else {
-    document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
-    openModal(document.getElementById("destinationModal"));
-  }
+  findDestination(inputName);
 });
 
+  
 /* ---------------------- 모달 열기 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   openModal(document.getElementById("destinationModal"));
