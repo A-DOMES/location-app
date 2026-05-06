@@ -170,6 +170,14 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   color:#1976d2;               /* 파란색 강조 */
 }
 
+/* ---------------------- 직선 거리 & ETA 강조 ---------------------- */
+#travelStatsContent .eta-highlight {
+  font-size:22px;
+  font-weight:800;
+  color:#2e7d32; /* 초록색 강조 */
+}
+
+  
 </style>
 
 
@@ -302,7 +310,9 @@ let livePathRenderer = null;
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
 
-
+/* ---------------------- 속도 거리 측정 전역 변수 ---------------------- */  
+let destinationLat = null;
+let destinationLng = null;
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -696,20 +706,32 @@ function showTravelStats(speed, totalDistance) {
   const maxSpeed = Math.max(...speedHistory);
   const elapsedTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
 
+  // 직선 거리 & ETA 계산
+  let directDistance = 0, eta = "계산 불가";
+  if (destinationLat && destinationLng) {
+    const current = new google.maps.LatLng(currentLat, currentLng);
+    const destination = new google.maps.LatLng(destinationLat, destinationLng);
+    directDistance = google.maps.geometry.spherical.computeDistanceBetween(current, destination);
+    if (avgSpeed > 0) {
+      const distanceKm = directDistance / 1000;
+      const hours = distanceKm / avgSpeed;
+      eta = (hours * 60).toFixed(1) + " 분";
+    }
+  }
+
   const message = `<div class="data-message">
-    <span>🚗 현재 속도: ${(speed * 3.6).toFixed(1)} km/h</span>
-    <span>📊 평균 속도: ${avgSpeed.toFixed(1)} km/h</span>
-    <span>⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h</span>
-    <span>⏱️ 주행 시간: ${elapsedTime} 분</span>
-    <span>📏 총 이동 거리: ${(totalDistance/1000).toFixed(2)} km</span>
+    <span>🚗 현재 속도: <span class="highlight">${(speed * 3.6).toFixed(1)} km/h</span></span>
+    <span>📊 평균 속도: <span class="highlight">${avgSpeed.toFixed(1)} km/h</span></span>
+    <span>⚡ 최고 속도: <span class="highlight">${maxSpeed.toFixed(1)} km/h</span></span>
+    <span>⏱️ 주행 시간: <span class="highlight">${elapsedTime} 분</span></span>
+    <span>📏 총 이동 거리: <span class="highlight">${(totalDistance/1000).toFixed(2)} km</span></span>
+    <span>📐 직선 거리: <span class="eta-highlight">${(directDistance/1000).toFixed(2)} km</span></span>
+    <span>🕒 예상 도착 시간: <span class="eta-highlight">${eta}</span></span>
   </div>`;
 
-  // ❌ 자동 모달 제거
-  // showQueuedModal("이동 정보", message);
-
-  // ✅ 대신 모달 내용만 업데이트
   document.getElementById("travelStatsContent").innerHTML = message;
 }
+
 
 
 // ---------------------- 보호구역/속도 제한 알림 ----------------------
@@ -750,7 +772,42 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
   }
 }
 
+// ---------------------- 직선거리/에상 도착 계산 ----------------------  
+function showRouteToDestination(destination) {
+  if (!directionsService) directionsService = new google.maps.DirectionsService();
 
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  destinationRenderer = new google.maps.DirectionsRenderer({ map });
+
+  const request = {
+    origin: { lat: currentLat, lng: currentLng },
+    destination,
+    travelMode: google.maps.TravelMode.WALKING
+  };
+
+  directionsService.route(request, (result, status) => {
+    if (status === google.maps.DirectionsStatus.OK) {
+      destinationRenderer.setDirections(result);
+
+      // 목적지 좌표 저장
+      const destLeg = result.routes[0].legs[0];
+      destinationLat = destLeg.end_location.lat();
+      destinationLng = destLeg.end_location.lng();
+
+      const steps = destLeg.steps;
+      let instructions = "<div style='text-align:left; font-size:14px;'>";
+      steps.forEach((step, idx) => {
+        instructions += `<p>${idx + 1}. ${step.instructions} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
+      });
+      instructions += "</div>";
+
+      showQueuedModal("경로 안내", instructions);
+    }
+  });
+}
   
 // ---------------------- 속도 제한 관련 ----------------------
 // 어린이 보호구역
@@ -835,19 +892,24 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 이동정보 초기화
   speedHistory = [];
   startTime = Date.now();
+  destinationLat = null;
+  destinationLng = null;
 
   // 모달 내용도 초기화
   document.getElementById("travelStatsContent").innerHTML = `
-    🚗 현재 속도: 0 km/h<br>
-    📊 평균 속도: 0 km/h<br>
-    ⚡ 최고 속도: 0 km/h<br>
-    ⏱️ 주행 시간: 0 분<br>
-    📏 총 이동 거리: 0 km
+    🚗 현재 속도: <span class="highlight">0 km/h</span><br>
+    📊 평균 속도: <span class="highlight">0 km/h</span><br>
+    ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
+    ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
+    📏 총 이동 거리: <span class="highlight">0 km</span><br>
+    📐 직선 거리: <span class="eta-highlight">0 km</span><br>
+    🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
   `;
 
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 
 // ---------------------- 좌표 박스 닫기/재열기 버튼 ----------------------
