@@ -895,7 +895,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   destinationLat = null;
   destinationLng = null;
 
-  // 모달 내용도 초기화
+  // 모달 내용도 초기화 (직선 거리 & ETA 포함)
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: <span class="highlight">0 km/h</span><br>
     📊 평균 속도: <span class="highlight">0 km/h</span><br>
@@ -909,8 +909,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
-
-
 
 // ---------------------- 좌표 박스 닫기/재열기 버튼 ----------------------
 document.getElementById("closeBtn").addEventListener("click", () => {
