@@ -781,16 +781,29 @@ window.onload = () => {
   makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 };
 
-// ---------------------- 경로 초기화 버튼 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 초기화
   pathCoords = [];
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 
+  // 이동정보 초기화
+  speedHistory = [];
+  startTime = Date.now();
+
+  // 모달 내용도 초기화
+  document.getElementById("travelStatsContent").innerHTML = `
+    🚗 현재 속도: 0 km/h<br>
+    📊 평균 속도: 0 km/h<br>
+    ⚡ 최고 속도: 0 km/h<br>
+    ⏱️ 주행 시간: 0 분<br>
+    📏 총 이동 거리: 0 km
+  `;
+
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 // ---------------------- 좌표 박스 닫기/재열기 버튼 ----------------------
 document.getElementById("closeBtn").addEventListener("click", () => {
