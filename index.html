@@ -52,12 +52,9 @@ body { display:flex; justify-content:center; align-items:center;
   background:linear-gradient(to right,#3498db,#2980b9);
   transition:transform .2s, background .3s;
   margin-top:30px;   /* 비밀번호 입력창과의 간격 확보 */
-  margin-bottom:20px; /* 회원가입 버튼과의 간격을 아주 조금 늘림 */
+  margin-bottom:20px; /* 회원가입 버튼과의 간격을 조금 넓힘 */
 }
-.login-btn:hover {
-  background:linear-gradient(to right,#2980b9,#1f6391);
-  transform:scale(1.03);
-}
+.login-btn:hover { background:linear-gradient(to right,#2980b9,#1f6391); transform:scale(1.03); }
 
 /* ---------------------- 회원가입 버튼 ---------------------- */
 .signup-btn {
@@ -66,10 +63,7 @@ body { display:flex; justify-content:center; align-items:center;
   background:linear-gradient(to right,#2ecc71,#27ae60);
   transition:transform .2s, background .3s;
 }
-.signup-btn:hover {
-  background:linear-gradient(to right,#27ae60,#1e8449);
-  transform:scale(1.03);
-}
+.signup-btn:hover { background:linear-gradient(to right,#27ae60,#1e8449); transform:scale(1.03); }
 
 /* ---------------------- 모달 ---------------------- */
 .modal { display:none; position:fixed; z-index:999; left:0; top:0;
@@ -85,15 +79,11 @@ body { display:flex; justify-content:center; align-items:center;
 
 /* ---------------------- 모바일 전용 스타일 ---------------------- */
 @media (max-width:767px) {
-  /* 로그인 타이틀 폰트 줄이기 */
   .login-box h2 { font-size:20px; }
-
-  /* 모달창 크기 줄이기 */
   .modal-content { width:80%; max-width:280px; padding:18px; }
   .modal-content h2 { font-size:18px; }
   .modal-content p { font-size:14px; }
 }
-
 
 </style>
 
