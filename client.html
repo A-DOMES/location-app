@@ -690,7 +690,6 @@ function showQueuedModal(title, message, actions = []) {
   }
 }
 
-// ---------------------- 이동정보 모달 ----------------------
 function showTravelStats(speed, totalDistance) {
   speedHistory.push(speed * 3.6);
 
@@ -706,7 +705,11 @@ function showTravelStats(speed, totalDistance) {
     <span>📏 총 이동 거리: ${(totalDistance/1000).toFixed(2)} km</span>
   </div>`;
 
-  showQueuedModal("이동 정보", message);
+  // ❌ 자동 모달 제거
+  // showQueuedModal("이동 정보", message);
+
+  // ✅ 대신 모달 내용만 업데이트
+  document.getElementById("travelStatsContent").innerHTML = message;
 }
 
 
