@@ -59,12 +59,14 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 .modal-header { display:flex; justify-content:center; align-items:center; margin-bottom:10px; position:relative; }
 .modal { display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:transparent; }
 @keyframes modalFadeIn { from{opacity:0; transform:translate(-50%,-20%) scale(0.9);} to{opacity:1; transform:translate(-50%,0) scale(1);} }
-.modal-content { position:absolute; left:50%; top:7%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px; border-radius:12px; width:260px; text-align:center; border:2px solid #1976d2; box-shadow:0 4px 20px rgba(0,0,0,0.25); font-size:15px; font-weight:bold; cursor:move; animation:modalFadeIn 0.4s ease forwards; }
+.modal-content { position:absolute; left:50%; top:7%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px; border-radius:12px; width:260px; text-align:center; border:2px solid #1976d2; box-shadow:0 4px 20px rgba(0,0,0,0.25); font-size:15px; font-weight:bold; animation:modalFadeIn 0.4s ease forwards; }
+.drag-handle { cursor:move; background:#eee; padding:8px; border-radius:6px; }
 .close { margin-left:auto; font-size:20px; font-weight:bold; cursor:pointer; color:#d32f2f; background-color:#fff; border:2px solid #d32f2f; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s, color 0.2s, transform 0.2s; }
 .close:hover { background-color:#d32f2f; color:#fff; transform:scale(1.1); }
 .modal-title { font-size:24px; font-weight:bold; color:#1976d2; text-align:center; flex:1; line-height:28px; margin:0; }
 #modalActions button { margin:6px; padding:8px 14px; background:#1976d2; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:transform 0.2s ease, background 0.3s ease; }
 #modalActions button:hover { background:#1565c0; transform:scale(1.05); }
+
 
 /* ---------------------- 지도/위성 모드 대응 ---------------------- */
 .map-satellite #popupModal .modal-content { background:rgba(0,0,0,0.6); border:2px solid #fff; color:#fff; }
@@ -365,8 +367,15 @@ makeDraggableAndResizable(document.getElementById("openTravelStatsModal"));
 
 // 모달창들 이동 가능 (모달 전체를 이동)
 makeDraggableAndResizable(document.getElementById("popupModal"));
-makeDraggableAndResizable(document.getElementById("destinationModal"));
-makeDraggableAndResizable(document.getElementById("travelStatsModal"));
+
+// 목적지 찾기 창은 헤더만 드래그 가능
+const destHandle = document.querySelector('#destinationModal .modal-header');
+makeDraggableAndResizable(destHandle);
+
+// 여행 통계 창은 헤더만 드래그 가능
+const statsHandle = document.querySelector('#travelStatsModal .modal-header');
+makeDraggableAndResizable(statsHandle);
+
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
