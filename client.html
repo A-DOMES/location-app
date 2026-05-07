@@ -618,8 +618,17 @@ async function showPopup() {
 
 // 레이더 표시
 function updateRadarPolygon(myPos, heading) {
-  if (heading == null || heading === 0) heading = lastHeading ?? 0;
-  else lastHeading = heading;
+  // heading 값이 없으면 이동 경로로 보정
+  if (!heading || heading === 0) {
+    if (pathCoords.length > 1) {
+      const last = pathCoords[pathCoords.length - 1];
+      const prev = pathCoords[pathCoords.length - 2];
+      heading = google.maps.geometry.spherical.computeHeading(prev, last);
+    } else {
+      heading = lastHeading ?? 0;
+    }
+  }
+  lastHeading = heading;
 
   if (!radarEnabled) {
     if (radarPolygon) radarPolygon.setMap(null);
@@ -638,8 +647,9 @@ function updateRadarPolygon(myPos, heading) {
   }
   points.unshift(myPos);
 
-  if (radarPolygon) radarPolygon.setPath(points);
-  else {
+  if (radarPolygon) {
+    radarPolygon.setPath(points); // ✅ 기존 레이더 갱신
+  } else {
     radarPolygon = new google.maps.Polygon({
       paths: points,
       strokeColor: "#00BFFF",
