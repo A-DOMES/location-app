@@ -448,20 +448,13 @@ function startTracking() {
     // 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
+    currentSpeed = pos.coords.speed || 0;  // ✅ 속도도 저장
     const myPos = { lat: currentLat, lng: currentLng };
     const heading = pos.coords.heading || 0;
 
     // 좌표창 업데이트
     updateLocationDisplay(currentLat, currentLng, heading);
-    if (Date.now() - lastGeocodeTime > geocodeInterval) {
-      geocoder.geocode({ location: myPos }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          let address = results[0].formatted_address.replace(/^대한민국\s*,?\s*/, "").replace(/\s*,?\s*대한민국$/, "");
-          document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
-        }
-      });
-      lastGeocodeTime = Date.now();
-    }
+    updateAddressBox(geocoder, myPos);
 
     // 마커 이동
     if (!myMarker) {
@@ -475,28 +468,15 @@ function startTracking() {
     updateRadarPolygon(myPos, heading);
 
     // 경로 polyline 갱신
-    if (pathCoords.length > 0) {
-      const lastPoint = pathCoords[pathCoords.length - 1];
-      const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
-      if (distance >= 3) {
-        pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-        pathPolyline.setPath(pathCoords);
-      }
-    } else {
-      pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-      pathPolyline.setPath(pathCoords);
-    }
-    if (pathCoords.length > 1) {
-      document.getElementById("resetPathBtn").style.display = "inline-block";
-    }
+    updatePathPolyline(currentLat, currentLng);
 
-    // ✅ 이동정보 업데이트 (실시간 좌표값 그대로 사용)
-    updateTravelStats(pos);
+    // ✅ 이동정보 업데이트 (좌표창에서 받은 값 그대로 사용)
+    updateTravelStats();
 
     // 보호구역/속도 제한 체크
-    checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
+    checkSpeedLimit(currentLat, currentLng, currentSpeed);
     checkSchoolZones(currentLat, currentLng);
-    checkDynamicSpeedZones(currentLat, currentLng, pos.coords.speed);
+    checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
 
     // 레이더 탐지
     checkRadarPOIs(myPos);
@@ -505,6 +485,14 @@ function startTracking() {
   }, { enableHighAccuracy: true });
 }
 
+// ---------------------- 이동정보 업데이트 ----------------------
+function updateTravelStats() {
+  const totalDistance = computeTotalDistance(pathCoords);
+  showTravelStats(currentSpeed, totalDistance);
+
+  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
+  document.getElementById("travelStatsContent").innerHTML = message;
+}
 
 // ---------------------- 기타 기능 ----------------------
 
