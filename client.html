@@ -1028,16 +1028,25 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   }
   findDestination(inputName);
 });
-  
-  
-/* ---------------------- 모달 열기 ---------------------- */
+
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   openModal(document.getElementById("destinationModal"));
 });
+
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
   const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
   document.getElementById("travelStatsContent").innerHTML = message;
   openModal(document.getElementById("travelStatsModal"));
+});
+
+document.getElementById("resetPathBtn").addEventListener("click", () => {
+  // 경로 초기화
+  pathCoords = [];
+  pathPolyline.setPath([]);
+  document.getElementById("resetPathBtn").style.display = "none";
+
+  // 알림 모달 자동 닫힘
+  openPopupModal(document.getElementById("popupModal"));
 });
 
 /* ---------------------- 경로 안내 메시지 ---------------------- */
@@ -1101,7 +1110,7 @@ function checkRadarPOIs(myPos) {
   });
 }
 
-// ---------------------- 이동정보 업데이트 ----------------------
+/* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats(pos) {
   const speed = pos.coords.speed || 0;
   const totalDistance = computeTotalDistance(pathCoords);
@@ -1111,7 +1120,7 @@ function updateTravelStats(pos) {
   document.getElementById("travelStatsContent").innerHTML = message;
 }
 
-// ---------------------- 총 이동거리 계산 ----------------------
+/* ---------------------- 총 이동거리 계산 ---------------------- */
 function computeTotalDistance(coords) {
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
@@ -1123,7 +1132,7 @@ function computeTotalDistance(coords) {
   return total;
 }
 
-// ---------------------- 이동정보 메시지 빌드 ----------------------
+/* ---------------------- 이동정보 메시지 빌드 ---------------------- */
 function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const currentSpeed = speedHistory[speedHistory.length - 1] || 0;
   const avgSpeed = speedHistory.length > 0 
@@ -1142,7 +1151,7 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   `;
 }
 
-// ---------------------- 모달 열기/닫기 공통 함수 ----------------------
+/* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function openModal(modal) {
   modal.style.display = 'block';
 }
@@ -1154,24 +1163,7 @@ function openPopupModal(modal) {
   setTimeout(() => closeModal(modal), 5000); // 5초 후 자동 닫힘
 }
 
-// ---------------------- 버튼 이벤트 ----------------------
-document.getElementById("openTravelStatsModal").addEventListener("click", () => {
-  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-  document.getElementById("travelStatsContent").innerHTML = message;
-  openModal(document.getElementById("travelStatsModal"));
-});
-
-document.getElementById("resetPathBtn").addEventListener("click", () => {
-  // 경로 초기화
-  pathCoords = [];
-  pathPolyline.setPath([]);
-  document.getElementById("resetPathBtn").style.display = "none";
-
-  // 알림 모달 자동 닫힘
-  openPopupModal(document.getElementById("popupModal"));
-});
-
-// ---------------------- 모달 닫기 버튼 처리 ----------------------
+/* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
   btn.addEventListener('click', () => {
     const modal = btn.closest('.modal');
