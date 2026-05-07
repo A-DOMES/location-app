@@ -368,13 +368,15 @@ makeDraggableAndResizable(document.getElementById("openTravelStatsModal"));
 // 모달창들 이동 가능 (모달 전체를 이동)
 makeDraggableAndResizable(document.getElementById("popupModal"));
 
-// 목적지 찾기 창은 헤더만 드래그 가능
-const destHandle = document.querySelector('#destinationModal .modal-header');
-makeDraggableAndResizable(destHandle);
+// 목적지 찾기 창은 헤더를 잡아 전체 창을 드래그 가능
+const destModal = document.querySelector('#destinationModal .modal-content');
+const destHandle = destModal.querySelector('.modal-header');
+makeDraggableModal(destModal, destHandle);
 
-// 여행 통계 창은 헤더만 드래그 가능
-const statsHandle = document.querySelector('#travelStatsModal .modal-header');
-makeDraggableAndResizable(statsHandle);
+// 여행 통계 창도 헤더를 잡아 전체 창을 드래그 가능
+const statsModal = document.querySelector('#travelStatsModal .modal-content');
+const statsHandle = statsModal.querySelector('.modal-header');
+makeDraggableModal(statsModal, statsHandle);
 
 
 // ---------------------- 지도 초기화 ----------------------
