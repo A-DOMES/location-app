@@ -938,11 +938,10 @@ async function loadAdminLocations() {
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName) {
-  // 입력값 정규화
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
-  // 1️⃣ 사용자 서버에서 가져온 배열에서 검색
+  // 1️⃣ 사용자 서버에서 검색
   if (Array.isArray(adminLocations)) {
     match = adminLocations.find(item =>
       item.phone.trim().toLowerCase().normalize("NFC") === name
@@ -950,19 +949,19 @@ async function findDestination(inputName) {
   }
 
   if (match) {
-    return showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng));
+    return showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
   }
 
-  // 2️⃣ 외부 API (구글 Places 등) 검색
+  // 2️⃣ 외부 API (구글 Places)
   const service = new google.maps.places.PlacesService(map);
   return new Promise((resolve) => {
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
         const place = results[0].geometry.location;
-        showDestinationOnMap(results[0].name, place.lat(), place.lng());
+        const address = results[0].formatted_address || "";
+        showDestinationOnMap(results[0].name, place.lat(), place.lng(), address);
         resolve(true);
       } else {
-        // 3️⃣ 최종 실패
         document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
         openModal(document.getElementById("destinationModal"));
         resolve(false);
@@ -972,29 +971,13 @@ async function findDestination(inputName) {
 }
 
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
-function showDestinationOnMap(title, lat, lng) {
+function showDestinationOnMap(title, lat, lng, address = "") {
   destinationLat = lat;
   destinationLng = lng;
 
   const pos = new google.maps.LatLng(lat, lng);
 
-  // 🔵 파란 원형 마커
-  const circleMarker = new google.maps.Marker({
-    position: pos,
-    map: map,
-    icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 18,
-      fillColor: "#1976d2",
-      fillOpacity: 0.6,
-      strokeColor: "#ffffff",
-      strokeWeight: 2
-    },
-    clickable: false
-  });
-  markers.push(circleMarker);
-
-  // 🔴 빨간 핀 모양 마커 (통통 튀는 효과)
+  // 🔴 목적지 마커
   const pinMarker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1014,11 +997,18 @@ function showDestinationOnMap(title, lat, lng) {
 
   map.setCenter(pos);
 
-  // 모달 표시
+  // 📌 결과 표시 (아이콘 + 텍스트 좌측 정렬)
   document.getElementById("destinationResult").innerHTML =
-    `최종 목적지: ${title}<br>좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+    `<div style="display:flex; align-items:flex-start;">
+       <img src="images/location-icon.png" alt="목적지 아이콘" style="width:40px; height:40px; margin-right:10px;">
+       <div>
+         <strong>목적지:</strong> ${title}<br>
+         ${address ? `<strong>주소:</strong> ${address}<br>` : ""}
+         <strong>좌표:</strong> (${lat.toFixed(5)}, ${lng.toFixed(5)})
+       </div>
+     </div>`;
 
-  openModal(document.getElementById("destinationModal")); // 공통 함수 사용
+  openModal(document.getElementById("destinationModal"));
 
   // 경로 안내 호출
   showRouteToDestination({ lat, lng });
