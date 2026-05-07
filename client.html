@@ -523,14 +523,6 @@ function updateTravelStats() {
   document.getElementById("travelStatsContent").innerHTML = message;
 }
 
-// ---------------------- 이동정보 업데이트 ----------------------
-function updateTravelStats() {
-  const totalDistance = computeTotalDistance(pathCoords);
-  showTravelStats(currentSpeed, totalDistance);
-
-  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-  document.getElementById("travelStatsContent").innerHTML = message;
-}
 
 // ---------------------- 기타 기능 ----------------------
 
