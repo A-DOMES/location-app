@@ -306,8 +306,9 @@ let destinationLng = null;
 // ---------------------- 전역 변수 ---------------------- 
 let adminLocations = []; // 🚗 서버에서 가져온 차량 위치 데이터 저장  
 // ---------------------- 마커 지우기 ---------------------- 
-let destinationMarker = null;
 let destinationCircle = null;
+let destinationMarker = null;
+let currentTargetPhone = null;
 // ---------------------- 실시간 지도마거 이동  ---------------------- 
 let liveMarker = null
 
@@ -1087,7 +1088,6 @@ async function findDestination(inputName) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
-  // 1️⃣ 서버 배열 검색
   if (Array.isArray(adminLocations)) {
     match = adminLocations.find(item =>
       item.phone.trim().toLowerCase().normalize("NFC") === name
@@ -1095,13 +1095,14 @@ async function findDestination(inputName) {
   }
 
   if (match) {
+    currentTargetPhone = match.phone; // ✅ 선택된 대상 기억
     showDestinationOnMap(
       match.phone,
       parseFloat(match.lat),
       parseFloat(match.lng),
       match.address
     );
-    return Promise.resolve(true); // ✅ 성공 반환
+     return Promise.resolve(true); // ✅ 성공 반환
   }
 
   // 2️⃣ 외부 API 검색
@@ -1124,60 +1125,78 @@ async function findDestination(inputName) {
 
 
 
-/* ---------------------- 지도 표시 + 모달 ---------------------- */
+/* ---------------------- 지도 표시 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  destinationLat = lat;
-  destinationLng = lng;
-
   const pos = new google.maps.LatLng(lat, lng);
 
-  // 청색 원 (전역 변수에 저장)
-  destinationCircle = new google.maps.Circle({
-    strokeColor: "#1976d2",
-    strokeOpacity: 0.9,
-    strokeWeight: 2,
-    fillColor: "#1976d2",
-    fillOpacity: 0.25,
-    map,
-    center: pos,
-    radius: 40
-  });
-  
-  // 붉은색 커스텀 마커 (전역 변수에 저장)
-  destinationMarker = new google.maps.Marker({
-    position: pos,
-    map: map,
-    icon: {
-      path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
-      fillColor: "#FF3B3B",
-      fillOpacity: 0.95,
-      strokeColor: "#fff",
+  // 청색 원 (이미 있으면 갱신, 없으면 새로 생성)
+  if (destinationCircle) {
+    destinationCircle.setCenter(pos);
+  } else {
+    destinationCircle = new google.maps.Circle({
+      strokeColor: "#1976d2",
+      strokeOpacity: 0.9,
       strokeWeight: 2,
-      scale: 2,
-      anchor: new google.maps.Point(12, 24)
-    },
-    animation: google.maps.Animation.BOUNCE,
-    title: title
-  });
+      fillColor: "#1976d2",
+      fillOpacity: 0.25,
+      map,
+      center: pos,
+      radius: 40
+    });
+  }
 
+  // 붉은색 마커 (이미 있으면 위치 갱신, 없으면 새로 생성)
+  if (destinationMarker) {
+    destinationMarker.setPosition(pos);
+  } else {
+    destinationMarker = new google.maps.Marker({
+      position: pos,
+      map: map,
+      icon: {
+        path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
+        fillColor: "#FF3B3B",
+        fillOpacity: 0.95,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+        scale: 2,
+        anchor: new google.maps.Point(12, 24)
+      },
+      animation: google.maps.Animation.BOUNCE,
+      title: title
+    });
+  }
 
-  // 화면 이동
   map.panTo(pos);
   map.setZoom(16);
 
-  // 좌측정렬 정보 표시 (목적지 → 좌표 → 주소)
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
       🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
       🏠 주소: ${address}
     </div>`;
-
-  openModal(document.getElementById("destinationModal"));
-
-  // 경로 안내 호출
-  showRouteToDestination({ lat, lng });
 }
+
+/* ---------------------- 목적지 위치 주기적 갱신 ---------------------- */
+async function refreshDestination() {
+  if (!currentTargetPhone) return;
+  try {
+    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations");
+    const locations = await res.json();
+    const match = locations.find(item => item.phone === currentTargetPhone);
+    if (match) {
+      const pos = new google.maps.LatLng(parseFloat(match.lat), parseFloat(match.lng));
+      destinationMarker.setPosition(pos);
+      destinationCircle.setCenter(pos);
+      map.panTo(pos);
+    }
+  } catch (err) {
+    console.error("목적지 갱신 오류:", err);
+  }
+}
+
+// 5분마다 목적지 위치 갱신
+setInterval(refreshDestination, 5 * 60 * 1000);
 
 // 경로 안내 버튼 이벤트
 document.getElementById("startRouteBtn").addEventListener("click", () => {
