@@ -308,6 +308,9 @@ let adminLocations = []; // 🚗 서버에서 가져온 차량 위치 데이터 
 // ---------------------- 마커 지우기 ---------------------- 
 let destinationMarker = null;
 let destinationCircle = null;
+// ---------------------- 실시간 지도마거 이동  ---------------------- 
+let liveMarker = null
+
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -1358,6 +1361,42 @@ document.querySelectorAll('.close').forEach(btn => {
     if (modal) closeModal(modal);
   });
 });
+
+
+/* ---------------------- 지도에 마커 후 위치가 이동시 지도에 표시되는 코드  ---------------------- */  
+let otherMarker = null;
+
+function updateOtherMarker(lat, lng) {
+  if (otherMarker) {
+    otherMarker.setPosition(new google.maps.LatLng(lat, lng));
+  } else {
+    otherMarker = new google.maps.Marker({
+      position: new google.maps.LatLng(lat, lng),
+      map: map,
+      icon: {
+        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 6,
+        fillColor: "#0000FF",
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2
+      },
+      title: "상대방 위치"
+    });
+  }
+}
+
+// 서버에서 5분마다 위치 가져오기
+setInterval(async () => {
+  try {
+    const response = await fetch("/api/other-location"); // 서버 API 호출
+    const data = await response.json();
+    updateOtherMarker(data.lat, data.lng);
+  } catch (err) {
+    console.error("상대방 위치 갱신 실패:", err);
+  }
+}, 5 * 60 * 1000);
+
 </script>
 </body>
 </html>
