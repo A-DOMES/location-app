@@ -1104,7 +1104,7 @@ async function findDestination(inputName) {
       parseFloat(match.lng),
       match.address
     );
-    return Promise.resolve(true); // ✅ 성공 반환
+    return Promise.resolve(true);
   }
 
   // 2️⃣ 외부 API 검색 (기존 로직 유지)
@@ -1186,9 +1186,9 @@ async function refreshDestination() {
     const match = locations.find(item => item.phone === currentTargetPhone);
     if (match && destinationMarker) {
       const pos = new google.maps.LatLng(parseFloat(match.lat), parseFloat(match.lng));
-      destinationMarker.setPosition(pos);
-      destinationCircle.setCenter(pos);
-      map.panTo(pos);
+      destinationMarker.setPosition(pos);   // 마커 위치 갱신
+      destinationCircle.setCenter(pos);     // 원 위치 갱신
+      map.panTo(pos);                       // 필요하다면 화면도 이동
     }
   } catch (err) {
     console.error("목적지 갱신 오류:", err);
