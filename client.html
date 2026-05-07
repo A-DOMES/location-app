@@ -451,10 +451,28 @@ function startTracking() {
     currentSpeed = pos.coords.speed || 0;  // ✅ 속도도 저장
     const myPos = { lat: currentLat, lng: currentLng };
     const heading = pos.coords.heading || 0;
+    const directionLabel = getDirectionLabel(heading);
+    const now = new Date();
+    const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // 좌표창 업데이트
+    // ✅ 좌표창 업데이트 (원본 그대로 유지)
+    document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+    document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+    document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+    document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
+    document.getElementById("shareBtn").onclick = showPopup;
+
+    if (Date.now() - lastGeocodeTime > geocodeInterval) {
+      geocoder.geocode({ location: myPos }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          let address = results[0].formatted_address.replace(/^대한민국\s*,?\s*/, "").replace(/\s*,?\s*대한민국$/, "");
+          document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+        }
+      });
+      lastGeocodeTime = Date.now();
+    }
+
     updateLocationDisplay(currentLat, currentLng, heading);
-    updateAddressBox(geocoder, myPos);
 
     // 마커 이동
     if (!myMarker) {
@@ -468,7 +486,20 @@ function startTracking() {
     updateRadarPolygon(myPos, heading);
 
     // 경로 polyline 갱신
-    updatePathPolyline(currentLat, currentLng);
+    if (pathCoords.length > 0) {
+      const lastPoint = pathCoords[pathCoords.length-1];
+      const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
+      if (distance >= 3) {
+        pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+        pathPolyline.setPath(pathCoords);
+      }
+    } else {
+      pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
+      pathPolyline.setPath(pathCoords);
+    }
+    if (pathCoords.length > 1) {
+      document.getElementById("resetPathBtn").style.display = "inline-block";
+    }
 
     // ✅ 이동정보 업데이트 (좌표창에서 받은 값 그대로 사용)
     updateTravelStats();
@@ -480,9 +511,16 @@ function startTracking() {
 
     // 레이더 탐지
     checkRadarPOIs(myPos);
-  }, err => {
-    console.error("위치 추적 오류:", err);
-  }, { enableHighAccuracy: true });
+  });
+}
+
+// ---------------------- 이동정보 업데이트 ----------------------
+function updateTravelStats() {
+  const totalDistance = computeTotalDistance(pathCoords);
+  showTravelStats(currentSpeed, totalDistance);
+
+  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
+  document.getElementById("travelStatsContent").innerHTML = message;
 }
 
 // ---------------------- 이동정보 업데이트 ----------------------
