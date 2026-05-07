@@ -485,18 +485,9 @@ function startTracking() {
     drawMultipleCircles(myPos);
     updateRadarPolygon(myPos, heading);
 
-    // 경로 polyline 갱신
-    if (pathCoords.length > 0) {
-      const lastPoint = pathCoords[pathCoords.length-1];
-      const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
-      if (distance >= 3) {
-        pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-        pathPolyline.setPath(pathCoords);
-      }
-    } else {
-      pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
-      pathPolyline.setPath(pathCoords);
-    }
+    // ✅ 경로 polyline 갱신 (보정 함수 사용)
+    updatePathPolyline(currentLat, currentLng);
+
     if (pathCoords.length > 1) {
       document.getElementById("resetPathBtn").style.display = "inline-block";
     }
@@ -514,6 +505,29 @@ function startTracking() {
   });
 }
 
+// ---------------------- 경로 보정 ----------------------
+function updatePathPolyline(lat, lng) {
+  if (pathCoords.length > 0) {
+    const lastPoint = pathCoords[pathCoords.length - 1];
+    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), lat, lng);
+
+    // ✅ 최소 이동 거리 기준 (5m 이상일 때만 추가)
+    if (distance >= 5 && distance < 100) {
+      pathCoords.push(new google.maps.LatLng(lat, lng));
+      pathPolyline.setPath(pathCoords);
+    } else if (distance >= 100) {
+      // ✅ 튀는 값 보정: 이전 좌표와 새 좌표의 중간값 추가
+      const midLat = (lastPoint.lat() + lat) / 2;
+      const midLng = (lastPoint.lng() + lng) / 2;
+      pathCoords.push(new google.maps.LatLng(midLat, midLng));
+      pathPolyline.setPath(pathCoords);
+    }
+  } else {
+    pathCoords.push(new google.maps.LatLng(lat, lng));
+    pathPolyline.setPath(pathCoords);
+  }
+}
+
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
   const totalDistance = computeTotalDistance(pathCoords);
@@ -522,6 +536,7 @@ function updateTravelStats() {
   const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
   document.getElementById("travelStatsContent").innerHTML = message;
 }
+
 
 
 // ---------------------- 기타 기능 ----------------------
