@@ -1146,7 +1146,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // 붉은색 커스텀 마커
+  // 붉은색 마커
   if (destinationMarker) destinationMarker.setMap(null);
   destinationMarker = new google.maps.Marker({
     position: pos,
@@ -1168,7 +1168,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.panTo(pos);
   map.setZoom(16);
 
-  // 좌측정렬 정보 표시
+  // 결과 표시
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
@@ -1277,6 +1277,7 @@ function showRouteToDestination(destination) {
     }
   });
 }
+
 
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
