@@ -1041,7 +1041,13 @@ async function findDestination(inputName) {
   }
 
   if (match) {
-    return showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng));
+    // 서버에서 주소까지 함께 전달
+    return showDestinationOnMap(
+      match.phone,
+      parseFloat(match.lat),
+      parseFloat(match.lng),
+      match.address
+    );
   }
 
   // 2️⃣ 외부 API (구글 Places 등) 검색
@@ -1050,7 +1056,8 @@ async function findDestination(inputName) {
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
         const place = results[0].geometry.location;
-        showDestinationOnMap(results[0].name, place.lat(), place.lng());
+        const address = results[0].formatted_address; // ✅ 구글에서 제공하는 주소
+        showDestinationOnMap(results[0].name, place.lat(), place.lng(), address);
         resolve(true);
       } else {
         // 3️⃣ 최종 실패
@@ -1082,7 +1089,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 
   // 붉은색 커스텀 마커 (세련된 핀 모양)
-  const marker = new google.maps.Marker({
+  new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1102,7 +1109,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.panTo(pos);
   map.setZoom(16);
 
-  // 좌측정렬 정보 표시
+  // 좌측정렬 정보 표시 (목적지 → 좌표 → 주소)
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
@@ -1115,7 +1122,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   // 경로 안내 호출
   showRouteToDestination({ lat, lng });
 }
-
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
