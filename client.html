@@ -288,29 +288,26 @@ let circles = [];
 let totalDistance = 0;
 let modalQueue = [];
 let modalTimer = null;
-
 // 최근 알림 시간을 저장할 변수
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
 let lastSpeedLimitAlertTime = 0;
-
 // 속도 기록
 let speedHistory = [];
 let startTime = Date.now();
-
 /* ---------------------- 추가된 전역 변수 ---------------------- */
 // 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
 let livePathRenderer = null;
-
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
-
 /* ---------------------- 속도 거리 측정 전역 변수 ---------------------- */  
 let destinationLat = null;
 let destinationLng = null;
-
-// ---------------------- 전역 변수 ----------------------
+// ---------------------- 전역 변수 ---------------------- 
 let adminLocations = []; // 🚗 서버에서 가져온 차량 위치 데이터 저장  
+// ---------------------- 마커 지우기 ---------------------- 
+let destinationMarker = null;
+let destinationCircle = null;
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
