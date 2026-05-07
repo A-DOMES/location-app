@@ -1128,8 +1128,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   const pos = new google.maps.LatLng(lat, lng);
 
-  // 청색 원
-  new google.maps.Circle({
+  // 청색 원 (전역 변수에 저장)
+  destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
     strokeWeight: 2,
@@ -1139,9 +1139,9 @@ function showDestinationOnMap(title, lat, lng, address="") {
     center: pos,
     radius: 40
   });
-
-  // 붉은색 커스텀 마커 (세련된 핀 모양)
-  new google.maps.Marker({
+  
+  // 붉은색 커스텀 마커 (전역 변수에 저장)
+  destinationMarker = new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1156,6 +1156,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     animation: google.maps.Animation.BOUNCE,
     title: title
   });
+
 
   // 화면 이동
   map.panTo(pos);
