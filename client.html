@@ -1176,8 +1176,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
       🏠 주소: ${address}
     </div>`;
 
+  // 모달 열기
   openModal(document.getElementById("destinationModal"));
-  // ❌ 여기서는 경로 안내 호출하지 않음
 }
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
@@ -1203,6 +1203,40 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
     return;
   }
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
+});
+
+document.getElementById("openDestinationModal").addEventListener("click", () => {
+  openModal(document.getElementById("destinationModal"));
+});
+
+document.getElementById("openTravelStatsModal").addEventListener("click", () => {
+  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
+  document.getElementById("travelStatsContent").innerHTML = message;
+  openModal(document.getElementById("travelStatsModal"));
+});
+
+document.getElementById("resetPathBtn").addEventListener("click", () => {
+  // 경로 초기화
+  pathCoords = [];
+  pathPolyline.setPath([]);
+  document.getElementById("resetPathBtn").style.display = "none";
+
+  // 목적지 관련 초기화
+  if (destinationCircle) {
+    destinationCircle.setMap(null);
+    destinationCircle = null;
+  }
+  if (destinationMarker) {
+    destinationMarker.setMap(null);
+    destinationMarker = null;
+  }
+  destinationLat = null;
+  destinationLng = null;
+  document.getElementById("destinationResult").innerHTML = "";
+  document.getElementById("startRouteBtn").style.display = "none";
+
+  // 알림 모달 자동 닫힘
+  openPopupModal(document.getElementById("popupModal"));
 });
 
 /* ---------------------- 경로 안내 ---------------------- */
