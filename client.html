@@ -445,18 +445,14 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
   navigator.geolocation.watchPosition(pos => {
+    // 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
     const myPos = { lat: currentLat, lng: currentLng };
     const heading = pos.coords.heading || 0;
-    const directionLabel = getDirectionLabel(heading);
-    const now = new Date();
-    const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-    document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
-    document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
-    document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
-    document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-    document.getElementById("shareBtn").onclick = showPopup;
+
+    // 좌표창 업데이트
+    updateLocationDisplay(currentLat, currentLng, heading);
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
@@ -466,17 +462,21 @@ function startTracking() {
       });
       lastGeocodeTime = Date.now();
     }
-    updateLocationDisplay(currentLat, currentLng, heading);
+
+    // 마커 이동
     if (!myMarker) {
       myMarker = new google.maps.Marker({ position: myPos, map, title: "내 위치" });
     } else {
       myMarker.setPosition(myPos);
     }
+
+    // 원형/레이더 표시
     drawMultipleCircles(myPos);
     updateRadarPolygon(myPos, heading);
-    map.setCenter(myPos);
+
+    // 경로 polyline 갱신
     if (pathCoords.length > 0) {
-      const lastPoint = pathCoords[pathCoords.length-1];
+      const lastPoint = pathCoords[pathCoords.length - 1];
       const distance = getDistance(lastPoint.lat(), lastPoint.lng(), currentLat, currentLng);
       if (distance >= 3) {
         pathCoords.push(new google.maps.LatLng(currentLat, currentLng));
@@ -489,15 +489,22 @@ function startTracking() {
     if (pathCoords.length > 1) {
       document.getElementById("resetPathBtn").style.display = "inline-block";
     }
+
+    // ✅ 이동정보 업데이트 (실시간 좌표값 그대로 사용)
     updateTravelStats(pos);
+
+    // 보호구역/속도 제한 체크
     checkSpeedLimit(currentLat, currentLng, pos.coords.speed);
     checkSchoolZones(currentLat, currentLng);
     checkDynamicSpeedZones(currentLat, currentLng, pos.coords.speed);
 
-    // ✅ 레이더 반경 내 사물 탐지 추가
+    // 레이더 탐지
     checkRadarPOIs(myPos);
-  });
+  }, err => {
+    console.error("위치 추적 오류:", err);
+  }, { enableHighAccuracy: true });
 }
+
 
 // ---------------------- 기타 기능 ----------------------
 
