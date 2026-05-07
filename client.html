@@ -945,7 +945,17 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   destinationLat = null;
   destinationLng = null;
 
-  // 모달 내용도 초기화 (직선 거리 & ETA 포함)
+  // 목적지 관련 초기화
+  if (destinationCircle) {
+    destinationCircle.setMap(null);
+    destinationCircle = null;
+  }
+  if (destinationMarker) {
+    destinationMarker.setMap(null);
+    destinationMarker = null;
+  }
+
+  // 모달 내용 초기화 (직선 거리 & ETA 포함)
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: <span class="highlight">0 km/h</span><br>
     📊 평균 속도: <span class="highlight">0 km/h</span><br>
@@ -956,9 +966,13 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
   `;
 
+  // 목적지 결과창도 초기화
+  document.getElementById("destinationResult").innerHTML = "";
+
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 // ---------------------- 좌표 박스 닫기/재열기 버튼 ----------------------
 document.getElementById("closeBtn").addEventListener("click", () => {
