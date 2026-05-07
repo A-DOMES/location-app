@@ -1132,8 +1132,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   const pos = new google.maps.LatLng(lat, lng);
 
   // 청색 원
-  if (destinationCircle) destinationCircle.setMap(null);
-  destinationCircle = new google.maps.Circle({
+  new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
     strokeWeight: 2,
@@ -1144,9 +1143,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // 붉은색 마커
-  if (destinationMarker) destinationMarker.setMap(null);
-  destinationMarker = new google.maps.Marker({
+  // 붉은색 커스텀 마커 (세련된 핀 모양)
+  new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1166,7 +1164,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.panTo(pos);
   map.setZoom(16);
 
-  // 결과 표시
+  // 좌측정렬 정보 표시 (목적지 → 좌표 → 주소)
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
@@ -1174,8 +1172,10 @@ function showDestinationOnMap(title, lat, lng, address="") {
       🏠 주소: ${address}
     </div>`;
 
-  // 모달 열기
   openModal(document.getElementById("destinationModal"));
+
+  // 경로 안내 호출
+  showRouteToDestination({ lat, lng });
 }
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
@@ -1187,8 +1187,10 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
+  // 목적지 검색 실행
   findDestination(inputName).then(success => {
     if (success) {
+      // ✅ 검색 성공 시 경로 안내 버튼 표시
       document.getElementById("startRouteBtn").style.display = "inline-block";
     }
   });
@@ -1237,14 +1239,10 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   openPopupModal(document.getElementById("popupModal"));
 });
 
-/* ---------------------- 경로 안내 ---------------------- */
+/* ---------------------- 경로 안내 메시지 ---------------------- */
 function showRouteToDestination(destination) {
-  if (!currentLat || !currentLng) {
-    alert("현재 위치를 가져올 수 없습니다.");
-    return;
-  }
-
   if (!directionsService) directionsService = new google.maps.DirectionsService();
+
   if (destinationRenderer) {
     destinationRenderer.setMap(null);
     destinationRenderer = null;
@@ -1269,14 +1267,9 @@ function showRouteToDestination(destination) {
       instructions += "</div>";
 
       showQueuedModal("경로 안내", instructions);
-      document.getElementById("resetPathBtn").style.display = "inline-block";
-    } else {
-      alert("경로를 가져올 수 없습니다: " + status);
     }
   });
 }
-
-
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
