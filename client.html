@@ -941,15 +941,17 @@ async function findDestination(inputName) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
-  // 1️⃣ 사용자 서버에서 검색
+  // 1️⃣ 서버 데이터 검색 (phone 또는 name/title 비교)
   if (Array.isArray(adminLocations)) {
     match = adminLocations.find(item =>
-      item.phone.trim().toLowerCase().normalize("NFC") === name
+      item.phone.trim().toLowerCase().normalize("NFC") === name ||
+      (item.name && item.name.trim().toLowerCase().normalize("NFC") === name) ||
+      (item.title && item.title.trim().toLowerCase().normalize("NFC") === name)
     );
   }
 
   if (match) {
-    return showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
+    return showDestinationOnMap(match.name || match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
   }
 
   // 2️⃣ 외부 API (구글 Places)
@@ -977,7 +979,7 @@ function showDestinationOnMap(title, lat, lng, address = "") {
 
   const pos = new google.maps.LatLng(lat, lng);
 
-  // 🔴 목적지 마커
+  // 🔴 마커 표시
   const pinMarker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1010,9 +1012,9 @@ function showDestinationOnMap(title, lat, lng, address = "") {
 
   openModal(document.getElementById("destinationModal"));
 
-  // 경로 안내 호출
   showRouteToDestination({ lat, lng });
 }
+
 
 /* ---------------------- 경로 초기화 ---------------------- */
 function resetPath() {
