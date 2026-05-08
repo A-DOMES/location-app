@@ -192,21 +192,6 @@ button:hover {
   font-size: 14px;
   color: #856404;
 }
-
-/* ---------------------목적지 찾기 창 옆에 검색 내용 표시 ------------------*/
-#searchResults {
-  position: absolute;
-  right: 20px;
-  top: 80px;   /* 모달창 상단 기준으로 조정 */
-  width: 300px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
   
 </style>
   
@@ -265,7 +250,7 @@ button:hover {
     </div>
   </div>
 
-<!-- 목적지 찾기 모달창 -->
+    <!-- 목적지 찾기 모달창 -->
 <div id="destinationModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -282,14 +267,10 @@ button:hover {
     <!-- 검색 성공 시 표시되는 버튼 -->
     <button id="startRouteBtn" style="display:none;">🚗 경로 안내</button>
 
-    <!-- 결과 영역 (원본 복구) -->
+    <!-- 결과 영역 -->
     <div id="destinationResult"></div>
   </div>
 </div>
-
-<!-- 모달창 우측 검색 결과 패널 -->
-<div id="searchResults"></div>
-
 
 
 <!-- 이동정보 모달창 -->
@@ -478,11 +459,7 @@ function initMap() {
     mapTypeId: "roadmap"
   });
 
-   // ✅ 지도 스타일 업데이트는 여기서 호출해야 안전
   updateMapStyle(map);
-
-   // ✅ 지도 초기화 후 자동완성도 같이 초기화
-  // initAutocomplete();
 
   map.addListener("maptypeid_changed", () => {
     updateMapStyle(map);
@@ -532,70 +509,13 @@ function initMap() {
   }
 }
 
+  
 function updateMapStyle(map) {
   const body = document.body;
   body.classList.remove("map-roadmap", "map-satellite");
   const type = map.getMapTypeId();
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
-
-// ---------------------- 목적지 검색 버튼 이벤트 ----------------------
-document.getElementById("searchDestinationBtn").addEventListener("click", () => {
-  const inputName = document.getElementById("destinationInput").value;
-  if (!inputName) {
-    openModal(document.getElementById("destinationModal"));
-    return;
-  }
-
-  // 서버 우선 검색 → 없으면 외부 API
-  findDestination(inputName).then(success => {
-    if (success) {
-      document.getElementById("startRouteBtn").style.display = "inline-block";
-    }
-  });
-});
-
-/* ---------------------- 검색 결과 패널 표시 ---------------------- */
-function showSearchResults(results) {
-  const container = document.getElementById("searchResults");
-  container.innerHTML = "";
-
-  results.forEach(place => {
-    const item = document.createElement("div");
-    item.className = "resultItem";
-    item.innerText = place.name;
-
-    item.onclick = () => {
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      const address = place.formatted_address || "";
-
-      // ✅ 내가 선택해야 지도 이동 + 마커 표시
-      showDestinationOnMap(place.name, lat, lng, address);
-
-      // 선택 후 경로 안내 버튼 표시
-      document.getElementById("startRouteBtn").style.display = "inline-block";
-    };
-
-    container.appendChild(item);
-  });
-}
-
-/* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
-document.getElementById("startRouteBtn").addEventListener("click", () => {
-  if (!destinationLat || !destinationLng) {
-    alert("먼저 목적지를 검색하세요!");
-    return;
-  }
-
-  // ✅ 경로 안내 실행
-  showRouteToDestination({ lat: destinationLat, lng: destinationLng });
-
-  // ✅ 모달창 열기 (안내 시작)
-  openModal(document.getElementById("destinationModal"));
-});
-
-
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
@@ -839,7 +759,6 @@ function showOtherLocation(otherLat, otherLng) {
   });
 }
 
-  
 // ---------------------- 위치 공유 ----------------------
 function shareLocation() {
   if (!currentLat || !currentLng) {
@@ -1180,6 +1099,9 @@ window.onload = async () => {
   makeDraggableAndResizable(document.getElementById("resetPathBtn"));
   makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 
+  // ✅ 자동완성 초기화 호출
+  initAutocomplete();
+};
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
@@ -1346,6 +1268,8 @@ async function findDestination(inputName) {
   });
 }
 
+
+
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   destinationLat = lat;
@@ -1461,7 +1385,33 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   openPopupModal(document.getElementById("popupModal"));
 });
 
+// ---------------------- 목적지 자동완성 ----------------------
+function initAutocomplete() {
+  const input = document.getElementById("destinationInput");
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["geometry", "name", "formatted_address"],
+    types: ["establishment"], // 장소 유형 (cafe, restaurant 등)
+    componentRestrictions: { country: "kr" } // 한국으로 제한
+  });
 
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) {
+      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+      return;
+    }
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    const address = place.formatted_address || "";
+
+    showDestinationOnMap(place.name, lat, lng, address);
+
+    // ✅ 검색 성공 시 경로 안내 버튼 표시
+    document.getElementById("startRouteBtn").style.display = "inline-block";
+  });
+}
+  
 /* ---------------------- 경로 안내 메시지 ---------------------- */
 function showRouteToDestination(destination) {
   if (!directionsService) directionsService = new google.maps.DirectionsService();
@@ -1610,52 +1560,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-
-// ---------------------- 목적지 자동완성 (우측 패널 표시) ----------------------
-function initAutocomplete() {
-  const input = document.getElementById("destinationInput");
-  const autocompleteService = new google.maps.places.AutocompleteService();
-  const placesService = new google.maps.places.PlacesService(map);
-
-  input.addEventListener("input", () => {
-    const query = input.value;
-    if (!query) {
-      document.getElementById("searchResults").innerHTML = "";
-      return;
-    }
-
-    autocompleteService.getPlacePredictions(
-      { input: query, componentRestrictions: { country: "kr" } },
-      (predictions, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-          const container = document.getElementById("searchResults");
-          container.innerHTML = "";
-
-          predictions.forEach(prediction => {
-            const item = document.createElement("div");
-            item.className = "resultItem";
-            item.innerText = prediction.description;
-
-            item.onclick = () => {
-              placesService.getDetails({ placeId: prediction.place_id }, (place, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                  const lat = place.geometry.location.lat();
-                  const lng = place.geometry.location.lng();
-                  const address = place.formatted_address || "";
-
-                  showDestinationOnMap(place.name, lat, lng, address);
-                  document.getElementById("startRouteBtn").style.display = "inline-block";
-                }
-              });
-            };
-
-            container.appendChild(item);
-          });
-        }
-      }
-    );
-  });
-}
 
 </script>
 </body>
