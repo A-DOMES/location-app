@@ -787,9 +787,13 @@ function shareLocation() {
     showPopup(); // 공유 완료 팝업 호출
   }).catch(err => {
     console.error("클립보드 복사 실패:", err);
-    alert("클립보드에 복사할 수 없습니다. 브라우저 권한을 확인하세요.");
+    alert("클립보드에 복사할 수 없습니다. HTTPS 환경인지 확인하세요.");
   });
 }
+
+// 버튼 이벤트 연결
+document.getElementById("shareBtn").addEventListener("click", shareLocation);
+
 
   
 // ---------------------- 원형 표시 ----------------------
