@@ -1352,6 +1352,13 @@ function showRouteToDestination(destination) {
     if (status === google.maps.DirectionsStatus.OK) {
       destinationRenderer.setDirections(result);
 
+      // ✅ 내 위치와 목적지를 동시에 화면에 표시
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(new google.maps.LatLng(currentLat, currentLng));
+      bounds.extend(new google.maps.LatLng(destination.lat, destination.lng));
+      map.fitBounds(bounds);
+
+      // ✅ 경로 안내 단계별 메시지 표시
       const steps = result.routes[0].legs[0].steps;
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       steps.forEach((step, idx) => {
@@ -1363,6 +1370,7 @@ function showRouteToDestination(destination) {
     }
   });
 }
+
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
