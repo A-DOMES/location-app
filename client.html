@@ -478,7 +478,11 @@ function initMap() {
     mapTypeId: "roadmap"
   });
 
+   // ✅ 지도 스타일 업데이트는 여기서 호출해야 안전
   updateMapStyle(map);
+
+   // ✅ 지도 초기화 후 자동완성도 같이 초기화
+  initAutocomplete();
 
   map.addListener("maptypeid_changed", () => {
     updateMapStyle(map);
