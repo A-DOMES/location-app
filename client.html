@@ -1436,15 +1436,26 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
 
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function openModal(modal) {
+  // ✅ 모든 모달 닫기 → 중첩 방지
+  document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+
+  // ✅ 선택 모달 열기
   modal.style.display = 'block';
+
+  // ✅ 중앙 정렬 보정
+  modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
 }
+
 function closeModal(modal) {
   modal.style.display = 'none';
 }
+
 function openPopupModal(modal) {
   openModal(modal);
-  setTimeout(() => closeModal(modal), 5000); // 5초 후 자동 닫힘
+  // ✅ 자동 닫힘 시간 3초로 조정 (UX 개선)
+  setTimeout(() => closeModal(modal), 3000);
 }
+
 
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
@@ -1452,7 +1463,16 @@ document.querySelectorAll('.close').forEach(btn => {
     const modal = btn.closest('.modal');
     if (modal) closeModal(modal);
   });
+  });
+
+// ✅ ESC 키로 모달 닫기
+document.addEventListener('keydown', e => {
+  if (e.key === "Escape") {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+  }
 });
+
+
 </script>
 </body>
 </html>
