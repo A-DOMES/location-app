@@ -578,6 +578,9 @@ function startTracking() {
       myMarker.setPosition(myPos);
     }
 
+    // ✅ 지도 중심을 사용자 위치로 이동 (핵심 수정 부분)  여기를 삭제유무에 따라 지도중심 / 사람 중심으로 변환됨
+    map.setCenter(myPos);
+    
     // ✅ 원형 표시
     drawMultipleCircles(myPos);
 
