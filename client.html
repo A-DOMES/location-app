@@ -535,24 +535,23 @@ function updateMapStyle(map) {
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
 
-// ---------------------- 목적지 찾기 ----------------------
+// ---------------------- 목적지 검색 버튼 이벤트 ----------------------
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
-    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     openModal(document.getElementById("destinationModal"));
     return;
   }
 
-  // ✅ 서버 우선 검색
+  // 서버 우선 검색 → 없으면 외부 API
   findDestination(inputName).then(success => {
     if (success) {
-      // 서버에서 찾았거나 선택 완료 시 경로 안내 버튼 표시
       document.getElementById("startRouteBtn").style.display = "inline-block";
     }
   });
 });
 
+/* ---------------------- 검색 결과 패널 표시 ---------------------- */
 function showSearchResults(results) {
   const container = document.getElementById("searchResults");
   container.innerHTML = "";
@@ -577,6 +576,20 @@ function showSearchResults(results) {
     container.appendChild(item);
   });
 }
+
+/* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
+document.getElementById("startRouteBtn").addEventListener("click", () => {
+  if (!destinationLat || !destinationLng) {
+    alert("먼저 목적지를 검색하세요!");
+    return;
+  }
+
+  // ✅ 경로 안내 실행
+  showRouteToDestination({ lat: destinationLat, lng: destinationLng });
+
+  // ✅ 모달창 열기 (안내 시작)
+  openModal(document.getElementById("destinationModal"));
+});
 
 
 
