@@ -1607,6 +1607,52 @@ document.addEventListener('keydown', e => {
 });
 
 
+// ---------------------- 목적지 자동완성 (우측 패널 표시) ----------------------
+function initAutocomplete() {
+  const input = document.getElementById("destinationInput");
+  const autocompleteService = new google.maps.places.AutocompleteService();
+  const placesService = new google.maps.places.PlacesService(map);
+
+  input.addEventListener("input", () => {
+    const query = input.value;
+    if (!query) {
+      document.getElementById("searchResults").innerHTML = "";
+      return;
+    }
+
+    autocompleteService.getPlacePredictions(
+      { input: query, componentRestrictions: { country: "kr" } },
+      (predictions, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+          const container = document.getElementById("searchResults");
+          container.innerHTML = "";
+
+          predictions.forEach(prediction => {
+            const item = document.createElement("div");
+            item.className = "resultItem";
+            item.innerText = prediction.description;
+
+            item.onclick = () => {
+              placesService.getDetails({ placeId: prediction.place_id }, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                  const lat = place.geometry.location.lat();
+                  const lng = place.geometry.location.lng();
+                  const address = place.formatted_address || "";
+
+                  showDestinationOnMap(place.name, lat, lng, address);
+                  document.getElementById("startRouteBtn").style.display = "inline-block";
+                }
+              });
+            };
+
+            container.appendChild(item);
+          });
+        }
+      }
+    );
+  });
+}
+
 </script>
 </body>
 </html>
