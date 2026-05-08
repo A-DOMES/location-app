@@ -987,6 +987,7 @@ window.onload = async () => {
   makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 };
 
+/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 초기화
   pathCoords = [];
@@ -1008,6 +1009,22 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     destinationMarker.setMap(null);
     destinationMarker = null;
   }
+
+  // ✅ 내 위치 마커 제거
+  if (myMarker) {
+    myMarker.setMap(null);
+    myMarker = null;
+  }
+
+  // ✅ 상대방 마커 제거
+  if (otherMarker) {
+    otherMarker.setMap(null);
+    otherMarker = null;
+  }
+
+  // ✅ 원형 표시 제거
+  circles.forEach(circle => circle.setMap(null));
+  circles = [];
 
   // 모달 내용 초기화 (직선 거리 & ETA 포함)
   document.getElementById("travelStatsContent").innerHTML = `
