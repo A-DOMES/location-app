@@ -487,6 +487,10 @@ function initMap() {
         map.setCenter(userPos);
         myMarker = new google.maps.Marker({ position: userPos, map, title: "내 위치" });
         drawMultipleCircles(userPos);
+
+        // ✅ 최초 위치에서도 레이더 강제 표시
+        updateRadarPolygon(userPos, 0);
+        
         startTracking();
 
         // ✅ 위치정보 가져오기 성공 시 로딩 메시지 완전히 제거
@@ -552,6 +556,8 @@ function startTracking() {
     }
 
     updateLocationDisplay(currentLat, currentLng, heading);
+
+    
     // ✅ 경로 polyline 갱신 (오차율 포함)
     updatePathPolyline(currentLat, currentLng, pos.coords.accuracy);
 
@@ -574,9 +580,9 @@ function startTracking() {
       }
     }
 
-
     // 원형 표시
     drawMultipleCircles(myPos);
+    
 
     // ✅ 레이더 방향 보정
     if (!heading || heading === 0) {
@@ -589,6 +595,9 @@ function startTracking() {
       }
     }
     lastHeading = heading;
+    updateRadarPolygon(myPos, heading);
+
+    // ✅ 내 위치에 레이더 붙이기
     updateRadarPolygon(myPos, heading);
 
     // ✅ 지도 방향도 업데이트
