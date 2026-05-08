@@ -1176,9 +1176,6 @@ window.onload = async () => {
   makeDraggableAndResizable(document.getElementById("resetPathBtn"));
   makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 
-  // ✅ 자동완성 초기화 호출
-  initAutocomplete();
-};
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
@@ -1345,8 +1342,6 @@ async function findDestination(inputName) {
   });
 }
 
-
-
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   destinationLat = lat;
@@ -1462,33 +1457,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   openPopupModal(document.getElementById("popupModal"));
 });
 
-// ---------------------- 목적지 자동완성 ----------------------
-function initAutocomplete() {
-  const input = document.getElementById("destinationInput");
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["geometry", "name", "formatted_address"],
-    types: ["establishment"], // 장소 유형 (cafe, restaurant 등)
-    componentRestrictions: { country: "kr" } // 한국으로 제한
-  });
 
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-    if (!place.geometry) {
-      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
-      return;
-    }
-
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
-    const address = place.formatted_address || "";
-
-    showDestinationOnMap(place.name, lat, lng, address);
-
-    // ✅ 검색 성공 시 경로 안내 버튼 표시
-    document.getElementById("startRouteBtn").style.display = "inline-block";
-  });
-}
-  
 /* ---------------------- 경로 안내 메시지 ---------------------- */
 function showRouteToDestination(destination) {
   if (!directionsService) directionsService = new google.maps.DirectionsService();
