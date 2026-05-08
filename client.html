@@ -250,7 +250,7 @@ button:hover {
     </div>
   </div>
 
-    <!-- 목적지 찾기 모달창 -->
+<!-- 목적지 찾기 모달창 -->
 <div id="destinationModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -267,10 +267,14 @@ button:hover {
     <!-- 검색 성공 시 표시되는 버튼 -->
     <button id="startRouteBtn" style="display:none;">🚗 경로 안내</button>
 
-    <!-- 결과 영역 -->
+    <!-- 결과 영역 (원본 복구) -->
     <div id="destinationResult"></div>
   </div>
 </div>
+
+<!-- 모달창 우측 검색 결과 패널 -->
+<div id="searchResults"></div>
+
 
 
 <!-- 이동정보 모달창 -->
@@ -509,13 +513,75 @@ function initMap() {
   }
 }
 
-  
 function updateMapStyle(map) {
   const body = document.body;
   body.classList.remove("map-roadmap", "map-satellite");
   const type = map.getMapTypeId();
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
+
+// ---------------------- 목적지 찾기 ----------------------
+document.getElementById("searchDestinationBtn").addEventListener("click", () => {
+  const query = document.getElementById("destinationInput").value;
+  if (!query) {
+    alert("목적지를 입력하세요.");
+    return;
+  }
+
+  const service = new google.maps.places.PlacesService(map);
+  service.textSearch({ query }, (results, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      // ✅ 원본 복구: 경로안내 버튼 표시 + 첫 결과 정보 표시
+      document.getElementById("startRouteBtn").style.display = "inline-block";
+      document.getElementById("destinationResult").innerText =
+        results[0].formatted_address || results[0].name;
+
+      // ✅ 우측 패널에 결과 표시
+      showSearchResults(results);
+    } else {
+      alert("검색 결과가 없습니다.");
+    }
+  });
+});
+
+function showSearchResults(results) {
+  const container = document.getElementById("searchResults");
+  container.innerHTML = "";
+
+  results.forEach(place => {
+    const item = document.createElement("div");
+    item.className = "resultItem";
+    item.innerText = place.name;
+
+    item.onclick = () => {
+      // 지도 이동
+      map.setCenter(place.geometry.location);
+      map.setZoom(15);
+
+      // 기존 마커 제거
+      if (markers.length > 0) {
+        markers.forEach(m => m.setMap(null));
+        markers = [];
+      }
+
+      // 새 마커 표시 (통통 뛰기 애니메이션)
+      const marker = new google.maps.Marker({
+        position: place.geometry.location,
+        map,
+        animation: google.maps.Animation.BOUNCE
+      });
+      markers.push(marker);
+
+      // 선택한 결과를 기존 영역에도 표시
+      document.getElementById("destinationResult").innerText =
+        place.formatted_address || place.name;
+    };
+
+    container.appendChild(item);
+  });
+}
+
+
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
@@ -759,6 +825,7 @@ function showOtherLocation(otherLat, otherLng) {
   });
 }
 
+  
 // ---------------------- 위치 공유 ----------------------
 function shareLocation() {
   if (!currentLat || !currentLng) {
