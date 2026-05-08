@@ -523,13 +523,14 @@ function startTracking() {
 
   // ✅ watchPosition으로 실시간 추적 (1~2초 단위 갱신)
   navigator.geolocation.watchPosition(pos => {
+    // ✅ 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    currentSpeed = pos.coords.speed || 0;
+    currentSpeed = pos.coords.speed || 0;  // 속도도 저장
+    let heading = pos.coords.heading || 0;
     const myPos = { lat: currentLat, lng: currentLng };
 
-    // ✅ 방향 계산 및 변환
-    let heading = pos.coords.heading || 0;
+    // ✅ 방향 계산 및 변환 (초기값 없을 때 보정)
     if (!heading || heading === 0) {
       if (pathCoords.length > 1) {
         const last = pathCoords[pathCoords.length - 1];
@@ -540,31 +541,34 @@ function startTracking() {
       }
     }
     lastHeading = heading;
-    const directionLabel = getDirectionLabel(heading); // 문자열 변환 적용
+    const directionLabel = getDirectionLabel(heading);
 
     // ✅ 갱신 시간
     const now = new Date();
     const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // ✅ 현재 위치 창 업데이트
+    // ✅ 현재 위치 창 업데이트 (좌표/방향/시간은 즉시 표시)
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
     document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 주소 갱신 (첫 실행 즉시 + 이후 10초마다)
-    const geocodeInterval = 10000; // 10초
+    // ✅ 주소 갱신 (비동기 요청, 즉시 "불러오는 중..." 표시)
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
+      document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
-          let address = results[0].formatted_address.replace(/^대한민국\s*,?\s*/, "").replace(/\s*,?\s*대한민국$/, "");
+          let address = results[0].formatted_address
+            .replace(/^대한민국\s*,?\s*/, "")
+            .replace(/\s*,?\s*대한민국$/, "");
           document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
         }
       });
       lastGeocodeTime = Date.now();
     }
 
+    // ✅ 위치 표시 갱신
     updateLocationDisplay(currentLat, currentLng, heading);
 
     // ✅ 마커 이동
@@ -597,6 +601,7 @@ function startTracking() {
 
     // ✅ 레이더 탐지
     checkRadarPOIs(myPos);
+
   }, err => {
     console.error("위치 추적 오류:", err);
     document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
@@ -608,13 +613,7 @@ function startTracking() {
 }
 
 // ---------------------- 경로 보정 ----------------------
-function updatePathPolyline(lat, lng, accuracy = 0) {
-  // ✅ GPS 오차율 체크 (50m 이상이면 무시)
-  if (accuracy > 50) {
-    console.warn("GPS 오차율이 너무 큼:", accuracy);
-    return;
-  }
-
+function updatePathPolyline(lat, lng) {
   if (pathCoords.length > 0) {
     const lastPoint = pathCoords[pathCoords.length - 1];
     const distance = getDistance(lastPoint.lat(), lastPoint.lng(), lat, lng);
