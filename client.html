@@ -535,10 +535,17 @@ function startTracking() {
       myMarker.setPosition(myPos);
     }
 
-    // ✅ 지도 중심 자동 이동
+    // ✅ 지도 중심 자동 이동 + 방향 회전
     if (map) {
       map.setCenter(myPos);
+    
+      // heading 값이 있을 때 지도 회전
+      if (heading && heading !== 0) {
+        map.setHeading(heading);   // 지도 회전
+        map.setTilt(45);           // 3D 기울기 (선택)
+      }
     }
+
 
     // 원형 표시
     drawMultipleCircles(myPos);
@@ -556,12 +563,19 @@ function startTracking() {
     lastHeading = heading;
     updateRadarPolygon(myPos, heading);
 
+    // ✅ 지도 방향도 업데이트
+    if (map) {
+      map.setHeading(heading);
+    }
+
     // ✅ 경로 polyline 갱신 (보정 함수 사용)
     updatePathPolyline(currentLat, currentLng);
 
     if (pathCoords.length > 1) {
       document.getElementById("resetPathBtn").style.display = "inline-block";
     }
+
+    map.setTilt(45); // 3D 기울기 적용 (선택) - 일반지도는 효과 미비, 위성지도에서 효과가 잇음.
 
     // ✅ 이동정보 업데이트
     updateTravelStats();
