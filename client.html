@@ -492,6 +492,12 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
   navigator.geolocation.watchPosition(pos => {
+    // ✅ GPS 오차율 체크 (50m 이상이면 무시)
+    if (pos.coords.accuracy > 50) {
+      console.warn("GPS 오차율이 너무 큼:", pos.coords.accuracy);
+      return;
+    }
+
     // 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
@@ -502,13 +508,14 @@ function startTracking() {
     const now = new Date();
     const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // ✅ 좌표창 업데이트 (원본 그대로 유지)
+    // ✅ 좌표창 업데이트
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
     document.getElementById("shareBtn").onclick = showPopup;
 
+    // ✅ 주소 갱신 (1분마다)
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
@@ -521,11 +528,16 @@ function startTracking() {
 
     updateLocationDisplay(currentLat, currentLng, heading);
 
-    // 마커 이동
+    // ✅ 마커 이동
     if (!myMarker) {
       myMarker = new google.maps.Marker({ position: myPos, map, title: "내 위치" });
     } else {
       myMarker.setPosition(myPos);
+    }
+
+    // ✅ 지도 중심 자동 이동
+    if (map) {
+      map.setCenter(myPos);
     }
 
     // 원형 표시
@@ -551,7 +563,7 @@ function startTracking() {
       document.getElementById("resetPathBtn").style.display = "inline-block";
     }
 
-    // ✅ 이동정보 업데이트 (좌표창에서 받은 값 그대로 사용)
+    // ✅ 이동정보 업데이트
     updateTravelStats();
 
     // 보호구역/속도 제한 체크
@@ -561,8 +573,15 @@ function startTracking() {
 
     // 레이더 탐지
     checkRadarPOIs(myPos);
+  }, err => {
+    console.error("위치 추적 오류:", err);
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 10000
   });
 }
+
 
 // ---------------------- 경로 보정 ----------------------
 function updatePathPolyline(lat, lng) {
