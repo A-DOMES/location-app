@@ -829,21 +829,33 @@ async function showPopup() {
     alert("위치 정보를 먼저 가져와야 합니다.");
     return;
   }
-  const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
-  await navigator.clipboard.writeText(shareUrl);
 
+  // ✅ 주소와 지도 링크를 함께 복사
+  const address = document.getElementById("addressBox").innerText || "";
+  const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+  const textToCopy = `${address}\n${shareUrl}`;
+  await navigator.clipboard.writeText(textToCopy);
+
+  // ✅ 팝업 메시지 표시 (애니메이션 포함)
   const popup = document.getElementById("popupMessage");
   popup.style.display = "block";
   popup.style.opacity = "0";
   popup.style.top = "80px";
+
   document.getElementById("notifySound").play();
 
-  setTimeout(() => { popup.style.opacity = "1"; popup.style.top = "100px"; }, 10);
   setTimeout(() => {
-    popup.style.opacity = "0"; popup.style.top = "80px";
+    popup.style.opacity = "1";
+    popup.style.top = "100px";
+  }, 10);
+
+  setTimeout(() => {
+    popup.style.opacity = "0";
+    popup.style.top = "80px";
     setTimeout(() => popup.style.display = "none", 500);
   }, 3000);
 }
+
 
 // ---------------------- 레이더 표시 ----------------------
 function updateRadarPolygon(myPos, heading) {
