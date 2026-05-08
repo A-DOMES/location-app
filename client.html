@@ -633,11 +633,43 @@ function updatePathPolyline(lat, lng, accuracy = 0) {
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
   const totalDistance = computeTotalDistance(pathCoords);
-  showTravelStats(currentSpeed, totalDistance);
 
-  const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-  document.getElementById("travelStatsContent").innerHTML = message;
+  // ✅ 속도 히스토리 관리
+  speedHistory.push(currentSpeed);
+
+  // ✅ 평균 속도 계산
+  const avgSpeed = speedHistory.length > 0 
+    ? speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length 
+    : 0;
+
+  // ✅ 최고 속도 계산
+  const maxSpeed = speedHistory.length > 0 ? Math.max(...speedHistory) : 0;
+
+  // ✅ 주행 시간 계산 (분 단위)
+  const elapsedTime = (Date.now() - startTime) / 1000; // 초 단위
+  const elapsedMinutes = (elapsedTime / 60).toFixed(1);
+
+  // ✅ ETA 계산 (목적지가 있을 때만)
+  let etaMessage = "계산 불가";
+  if (destinationLat && destinationLng && avgSpeed > 0) {
+    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
+    const currentPos = new google.maps.LatLng(currentLat, currentLng);
+    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
+    const etaMinutes = (straightDistance / 1000) / avgSpeed * 60; // 분 단위
+    etaMessage = `${etaMinutes.toFixed(1)} 분 후 도착 예상`;
+  }
+
+  // ✅ 모달창 업데이트
+  document.getElementById("travelStatsContent").innerHTML = `
+    🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
+    📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
+    ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
+    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+    📏 총 이동 거리: ${(totalDistance / 1000).toFixed(2)} km<br>
+    🕒 예상 도착 시간: <span class="eta-highlight">${etaMessage}</span>
+  `;
 }
+
 
 
 // ---------------------- 기타 기능 ----------------------
