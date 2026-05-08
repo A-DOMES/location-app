@@ -192,6 +192,12 @@ button:hover {
   font-size: 14px;
   color: #856404;
 }
+
+/* ---------------------- 토글 버튼 ( 사람중심 / 지도중심 )---------------------- */
+#toggleFollowBtn { position:absolute; left:5px; top:360px; display:flex; flex-direction:row; align-items:center; justify-content:center; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; font-family:"맑은 고딕","Malgun Gothic",sans-serif; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0 12px; }
+#toggleFollowBtn:hover { background:#e3f2fd; transform:scale(1.1); }
+#toggleFollowBtn:active { transform:scale(0.95); }
+
   
 </style>
   
@@ -294,7 +300,8 @@ button:hover {
   </div>
 </div>
 
-
+<!-- ✅ 토글 버튼 추가-->
+<button id="toggleFollowBtn">사람 중심 모드: ON</button>
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
@@ -329,19 +336,21 @@ let lastSpeedLimitAlertTime = 0;
 let speedHistory = [];
 let startTime = Date.now();
 
-/* ---------------------- 추가된 전역 변수 ---------------------- */
 // 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
 let livePathRenderer = null;
 
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
 
-/* ---------------------- 속도 거리 측정 전역 변수 ---------------------- */  
+// 속도 거리 측정 전역 변수
 let destinationLat = null;
 let destinationLng = null;
 
-// ---------------------- 전역 변수 ----------------------
-let adminLocations = []; // 🚗 서버에서 가져온 차량 위치 데이터 저장  
+// 🚗 서버에서 가져온 차량 위치 데이터 저장  
+let adminLocations = []; 
+
+// 기본값: 사람 중심 모드
+let followUser = true; 
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -578,8 +587,10 @@ function startTracking() {
       myMarker.setPosition(myPos);
     }
 
-    // ✅ 지도 중심을 사용자 위치로 이동 (핵심 수정 부분)  여기를 삭제유무에 따라 지도중심 / 사람 중심으로 변환됨
-    map.setCenter(myPos);
+    // ✅ 토글 상태에 따라 지도 중심 이동 여부 결정
+    if (followUser) {
+      map.setCenter(myPos);
+    }
     
     // ✅ 원형 표시
     drawMultipleCircles(myPos);
@@ -614,6 +625,14 @@ function startTracking() {
     timeout: 5000 // ✅ 응답 지연 최소화
   });
 }
+
+// ---------------------- 토글 버튼 이벤트 ----------------------
+document.getElementById("toggleFollowBtn").addEventListener("click", () => {
+  followUser = !followUser;
+  document.getElementById("toggleFollowBtn").innerText =
+    followUser ? "사람 중심 모드: ON" : "지도 고정 모드: ON";
+});
+
 
 // ---------------------- 경로 보정 ----------------------
 function updatePathPolyline(lat, lng) {
