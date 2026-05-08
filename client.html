@@ -451,7 +451,7 @@ function initMap() {
     geodesic: true,
     strokeColor: "#1976d2",
     strokeOpacity: 1.0,
-    strokeWeight: 5,
+    strokeWeight: 8,    // 레이더 원형의 두께 조절
     map: map
   });
 
@@ -686,9 +686,15 @@ function shareLocation(data) {
 // ---------------------- 원형 표시 ----------------------
 function drawMultipleCircles(myPos) {
   const circleStyles = [
-    { radius: 100, strokeColor: "#FF6666" },
-    { radius: 200, strokeColor: "#FF9999" }
+    { radius: 100, strokeColor: "#FF0000" },  // 원형 색상 수정
+    { radius: 200, strokeColor: "#FF0000" }   // 원형 색상 수정
   ];
+
+  // 모바일 대비 색상 옵션 (이미 strokeColor를 빨강으로 지정했지만, 추가 옵션을 주고 싶다면 여기서 수정 가능)
+  circleStyles.forEach(style => {
+    style.strokeColor = "#FF0000"; // 강한 빨강
+  });
+
   if (circles.length === 0) {
     circleStyles.forEach(style => {
       const circle = new google.maps.Circle({
@@ -696,7 +702,7 @@ function drawMultipleCircles(myPos) {
         radius: style.radius,
         strokeColor: style.strokeColor,
         strokeOpacity: 0.8,
-        strokeWeight: 2,
+        strokeWeight: 4,
         fillOpacity: 0,
         map
       });
@@ -706,6 +712,7 @@ function drawMultipleCircles(myPos) {
     circles.forEach(circle => circle.setCenter(myPos));
   }
 }
+
 
 // ---------------------- 공유 팝업 ----------------------
 async function showPopup() {
