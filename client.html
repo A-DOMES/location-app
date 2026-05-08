@@ -168,8 +168,33 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* ---------------------- 직선 거리 & ETA 강조 ---------------------- */
 #travelStatsContent .eta-highlight { font-size:22px; font-weight:800; color:#2e7d32; }
 
+/* ---------------------- 목적지 검색 성공 startRouteBtn 보이도록 버튼 스타일 처리 ---------------------- */ 
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background-color: #1565c0;
+}
+
+
+/* ---------------------레이더 탐지, 속도 제한 알림 ------------------*/
+.alert-message {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #856404;
+}
   
 </style>
+  
 
 
 </head>
@@ -225,7 +250,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
     </div>
   </div>
 
-/* ---------------------- 목적지 찾기 모달창 ---------------------- */
+    <!-- 목적지 찾기 모달창 -->
 <div id="destinationModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -269,8 +294,14 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   </div>
 </div>
 
+ <!-- 정보 표시 박스 -->
+<div id="latBox">📍 위도: ...</div>
+<div id="lngBox">🌐 경도: ...</div>
+<div id="directionBox">🧭 방향: ...</div>
+<div id="timeBox">⏱️ 갱신 시간: ...</div>
 
 
+  
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
   
