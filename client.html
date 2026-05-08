@@ -520,6 +520,8 @@ function updateMapStyle(map) {
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
+
+  // 좌표 추적 시작
   navigator.geolocation.watchPosition(pos => {
     // ✅ GPS 오차율 체크 (50m 이상이면 무시)
     if (pos.coords.accuracy > 50) {
@@ -527,24 +529,30 @@ function startTracking() {
       return;
     }
 
-    // 좌표값 갱신
+    // ✅ 로딩 메시지 숨기기
+    document.getElementById("loadingMessage").style.display = "none";
+
+    // ✅ 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    currentSpeed = pos.coords.speed || 0;  // ✅ 속도도 저장
+    currentSpeed = pos.coords.speed || 0;
     const myPos = { lat: currentLat, lng: currentLng };
+
+    // ✅ 방향 계산
     let heading = pos.coords.heading || 0;
     const directionLabel = getDirectionLabel(heading);
-    const now = new Date();
-    const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // ✅ 좌표창 업데이트
+    // ✅ 갱신 시간
+    const now = new Date();
+    const timeString = now.toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
+
+    // ✅ 현재 위치 창 업데이트
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-    document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 주소 갱신 (30초마다)
+    // ✅ 주소 갱신 (첫 실행 즉시 + 이후 30초마다)
     const geocodeInterval = 30000; // 30초
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       geocoder.geocode({ location: myPos }, (results, status) => {
@@ -558,63 +566,15 @@ function startTracking() {
       lastGeocodeTime = Date.now();
     }
 
-    // ✅ 좌표 및 경로 갱신
-    updateLocationDisplay(currentLat, currentLng, heading);
-    updatePathPolyline(currentLat, currentLng, pos.coords.accuracy);
+    // ✅ 공유 버튼 이벤트 연결
+    document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 마커 이동
-    if (!myMarker) {
-      myMarker = new google.maps.Marker({ position: myPos, map, title: "내 위치" });
-    } else {
-      myMarker.setPosition(myPos);
-    }
+    // ✅ 디버깅 로그
+    console.log("위도:", currentLat, "경도:", currentLng, "방향:", heading);
 
-    // ✅ 지도 중심 이동 + 회전
-    if (map) {
-      map.setCenter(myPos);
-      if (heading && heading !== 0) {
-        map.setHeading(heading);
-        map.setTilt(45);
-      }
-    }
-
-    // ✅ 원형 표시
-    drawMultipleCircles(myPos);
-
-    // ✅ 레이더 방향 보정
-    if (!heading || heading === 0) {
-      if (pathCoords.length > 1) {
-        const last = pathCoords[pathCoords.length - 1];
-        const prev = pathCoords[pathCoords.length - 2];
-        heading = google.maps.geometry.spherical.computeHeading(prev, last);
-      } else {
-        heading = lastHeading ?? 0;
-      }
-    }
-    lastHeading = heading;
-    updateRadarPolygon(myPos, heading);
-
-    // ✅ 경로 polyline 갱신
-    updatePathPolyline(currentLat, currentLng);
-
-    if (pathCoords.length > 1) {
-      document.getElementById("resetPathBtn").style.display = "inline-block";
-    }
-
-    map.setTilt(45);
-
-    // ✅ 이동정보 업데이트
-    updateTravelStats();
-
-    // 보호구역/속도 제한 체크
-    checkSpeedLimit(currentLat, currentLng, currentSpeed);
-    checkSchoolZones(currentLat, currentLng);
-    checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
-
-    // ✅ 레이더 탐지
-    checkRadarPOIs(myPos);
   }, err => {
     console.error("위치 추적 오류:", err);
+    document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
   }, {
     enableHighAccuracy: true,
     maximumAge: 0,
