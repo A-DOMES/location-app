@@ -544,23 +544,23 @@ function startTracking() {
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
     document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 주소 갱신 (1분마다)
+    // ✅ 주소 갱신 (30초마다)
+    const geocodeInterval = 30000; // 30초
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
-          let address = results[0].formatted_address.replace(/^대한민국\s*,?\s*/, "").replace(/\s*,?\s*대한민국$/, "");
+          let address = results[0].formatted_address
+            .replace(/^대한민국\s*,?\s*/, "")
+            .replace(/\s*,?\s*대한민국$/, "");
           document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
         }
       });
       lastGeocodeTime = Date.now();
     }
 
+    // ✅ 좌표 및 경로 갱신
     updateLocationDisplay(currentLat, currentLng, heading);
-
-    
-    // ✅ 경로 polyline 갱신 (오차율 포함)
     updatePathPolyline(currentLat, currentLng, pos.coords.accuracy);
-
 
     // ✅ 마커 이동
     if (!myMarker) {
@@ -569,20 +569,17 @@ function startTracking() {
       myMarker.setPosition(myPos);
     }
 
-    // ✅ 지도 중심 자동 이동 + 방향 회전
+    // ✅ 지도 중심 이동 + 회전
     if (map) {
       map.setCenter(myPos);
-    
-      // heading 값이 있을 때 지도 회전
       if (heading && heading !== 0) {
-        map.setHeading(heading);   // 지도 회전
-        map.setTilt(45);           // 3D 기울기 (선택)
+        map.setHeading(heading);
+        map.setTilt(45);
       }
     }
 
-    // 원형 표시
+    // ✅ 원형 표시
     drawMultipleCircles(myPos);
-    
 
     // ✅ 레이더 방향 보정
     if (!heading || heading === 0) {
@@ -597,22 +594,14 @@ function startTracking() {
     lastHeading = heading;
     updateRadarPolygon(myPos, heading);
 
-    // ✅ 내 위치에 레이더 붙이기
-    updateRadarPolygon(myPos, heading);
-
-    // ✅ 지도 방향도 업데이트
-    if (map) {
-      map.setHeading(heading);
-    }
-
-    // ✅ 경로 polyline 갱신 (보정 함수 사용)
+    // ✅ 경로 polyline 갱신
     updatePathPolyline(currentLat, currentLng);
 
     if (pathCoords.length > 1) {
       document.getElementById("resetPathBtn").style.display = "inline-block";
     }
 
-    map.setTilt(45); // 3D 기울기 적용 (선택) - 일반지도는 효과 미비, 위성지도에서 효과가 잇음.
+    map.setTilt(45);
 
     // ✅ 이동정보 업데이트
     updateTravelStats();
@@ -622,7 +611,7 @@ function startTracking() {
     checkSchoolZones(currentLat, currentLng);
     checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
 
-    // 레이더 탐지
+    // ✅ 레이더 탐지
     checkRadarPOIs(myPos);
   }, err => {
     console.error("위치 추적 오류:", err);
@@ -632,6 +621,7 @@ function startTracking() {
     timeout: 10000
   });
 }
+
 
 
 // ---------------------- 경로 보정 ----------------------
