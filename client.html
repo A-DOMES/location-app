@@ -770,13 +770,17 @@ function shareLocation() {
   const address = document.getElementById("addressBox").innerText || "주소 정보 없음";
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
-  // ✅ 보기 좋은 텍스트 구성
-  const textToCopy = 
-    `📍 내 현재 위치\n` +
+  // ✅ 명함 스타일 텍스트 구성
+  const textToCopy =
+    "━━━━━━━━━━━━━━━━━━\n" +
+    "📍 내 현재 위치 정보\n" +
+    "━━━━━━━━━━━━━━━━━━\n" +
+    `이름: minkoo\n` +
     `위도: ${currentLat.toFixed(6)}\n` +
     `경도: ${currentLng.toFixed(6)}\n` +
-    `${address}\n\n` +
-    `👉 지도에서 보기: ${shareUrl}`;
+    `주소: ${address}\n\n` +
+    `👉 지도에서 보기: ${shareUrl}\n` +
+    "━━━━━━━━━━━━━━━━━━";
 
   // ✅ 클립보드에 복사
   navigator.clipboard.writeText(textToCopy).then(() => {
@@ -786,6 +790,7 @@ function shareLocation() {
     alert("클립보드에 복사할 수 없습니다. 브라우저 권한을 확인하세요.");
   });
 }
+
   
 // ---------------------- 원형 표시 ----------------------
 function drawMultipleCircles(myPos) {
