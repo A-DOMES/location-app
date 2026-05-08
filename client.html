@@ -527,6 +527,9 @@ function startTracking() {
     }
 
     updateLocationDisplay(currentLat, currentLng, heading);
+    // ✅ 경로 polyline 갱신 (오차율 포함)
+    updatePathPolyline(currentLat, currentLng, pos.coords.accuracy);
+
 
     // ✅ 마커 이동
     if (!myMarker) {
@@ -598,7 +601,13 @@ function startTracking() {
 
 
 // ---------------------- 경로 보정 ----------------------
-function updatePathPolyline(lat, lng) {
+function updatePathPolyline(lat, lng, accuracy = 0) {
+  // ✅ GPS 오차율 체크 (50m 이상이면 무시)
+  if (accuracy > 50) {
+    console.warn("GPS 오차율이 너무 큼:", accuracy);
+    return;
+  }
+
   if (pathCoords.length > 0) {
     const lastPoint = pathCoords[pathCoords.length - 1];
     const distance = getDistance(lastPoint.lat(), lastPoint.lng(), lat, lng);
@@ -619,6 +628,7 @@ function updatePathPolyline(lat, lng) {
     pathPolyline.setPath(pathCoords);
   }
 }
+
 
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
