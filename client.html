@@ -197,7 +197,7 @@ button:hover {
 #toggleFollowBtn {
   position:absolute;
   left:5px;
-  top:5px;
+  top:6px;
   display:flex;
   flex-direction:row;
   align-items:center;
@@ -231,6 +231,11 @@ button:hover {
   margin-left:2px;    /* 글씨를 살짝 오른쪽으로 이동 */
 }
 
+#toggleFollowBtn {    /* 글씨를 살짝 오른쪽으로 이동 */
+  /* 기존 스타일 유지 */
+  color:#1976d2; /* 기본 글씨색 */
+  mix-blend-mode: difference; /* 배경과 반전 효과 */
+}
   
 </style>
   
@@ -433,6 +438,23 @@ function updateLocationDisplay(lat, lng, heading) {
     `현재 위치: (${lat.toFixed(5)}, ${lng.toFixed(5)}) / 방향: ${directionLabel}`;
 }
 
+function adjustTextColor() {
+  const btn = document.getElementById("toggleFollowBtn");
+  const bgColor = window.getComputedStyle(btn).backgroundColor;
+
+  // RGB 값 추출
+  const rgb = bgColor.match(/\d+/g).map(Number);
+  const brightness = (rgb[0]*0.299 + rgb[1]*0.587 + rgb[2]*0.114);
+
+  // 밝기 기준으로 글씨색 변경
+  btn.style.color = brightness < 128 ? "#ffffff" : "#1976d2";
+}
+
+// 처음 실행 + 윈도우 리사이즈 시 실행
+adjustTextColor();
+window.addEventListener("resize", adjustTextColor);
+
+  
 function makeDraggableAndResizable(element) {
   let isDragging = false, offsetX, offsetY;
 
