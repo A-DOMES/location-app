@@ -351,6 +351,31 @@ button:hover {
   margin-left: 2px;    /* 글씨를 살짝 오른쪽으로 이동 */
 }
 
+
+/* ---------------------- 마커 위 마우스를 올렸을 때 정보 표시  ---------------------- */
+/* 모달 헤더 스타일 */
+.modal-header {
+  display: flex;
+  justify-content: space-between; /* 좌측 제목, 우측 닫기 버튼 */
+  align-items: center;
+  padding: 10px;
+  background-color: #1976d2; /* 파란색 헤더 */
+  color: #fff;
+  font-weight: bold;
+}
+
+.modal-title {
+  font-size: 16px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #fff;
+  cursor: pointer;
+}
+  
 </style>
   
 
@@ -467,6 +492,19 @@ button:hover {
   <span class="label">중심모드</span>
 </div>  
 
+<!-- 마커 위 마우스를 올렸을 때 정보표기 -->
+<div id="destinationModal" class="modal">
+  <div class="modal-header">
+    <!-- ✅ 좌측에 제목/사용자 정보 -->
+    <span class="modal-title">📍 목적지 정보</span>
+    <!-- ✅ 우측에 닫기 버튼 -->
+    <button class="close-btn" onclick="closeModal('destinationModal')">×</button>
+  </div>
+
+  <div class="modal-body" id="destinationResult">
+    <!-- 목적지 내용이 동적으로 들어옴 -->
+  </div>
+</div>
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
