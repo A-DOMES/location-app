@@ -637,6 +637,11 @@ function initMap() {
 
   updateMapStyle(map);
 
+  // ✅ 우클릭 이벤트 추가
+  map.addListener("rightclick", () => {
+    map.setZoom(7);
+  });
+  
   map.addListener("maptypeid_changed", () => {
     updateMapStyle(map);
     const loadingMsg = document.getElementById("loadingMessage");
@@ -1594,9 +1599,6 @@ async function findDestination(inputName) {
 
 
 
-
-
-
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   destinationLat = lat;
@@ -1637,12 +1639,30 @@ function showDestinationOnMap(title, lat, lng, address="") {
     title: title
   });
 
+  // ✅ InfoWindow 생성 (hover 시 표시)
+  const infoWindow = new google.maps.InfoWindow({
+    content: `
+      <div style="text-align:left">
+        📍 목적지: ${title}<br>
+        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+        🏠 주소: ${address}
+      </div>`
+  });
+
+  marker.addListener("mouseover", () => {
+    infoWindow.open(map, marker);
+  });
+
+  marker.addListener("mouseout", () => {
+    infoWindow.close();
+  });
+
   // ✅ 마커 클릭 시 해당 위치로 이동 + 줌 레벨 18
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
 
-    // 좌측정렬 정보 표시
+    // ✅ 기존 모달창 로직 유지 (절대 삭제하지 않음)
     document.getElementById("destinationResult").innerHTML = `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
@@ -1656,6 +1676,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     showRouteToDestination({ lat, lng });
   });
 }
+
 
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
