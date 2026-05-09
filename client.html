@@ -1305,10 +1305,19 @@ window.onload = async () => {
     });
   });
 
-  // ✅ 닫기 버튼 이벤트 추가
-  document.getElementById("closeSearchPanel").addEventListener("click", () => {
-    document.getElementById("searchResultPanel").style.display = "none";
-  });
+// ✅ 닫기 버튼 이벤트 추가
+document.getElementById("closeSearchPanel").addEventListener("click", () => {
+  document.getElementById("searchResultPanel").style.display = "none";
+  document.getElementById("destinationInput").value = ""; // 입력값 초기화
+});
+
+// ✅ 목적지 모달 닫을 때도 입력값 초기화
+document.getElementById("closeDestinationModal").addEventListener("click", () => {
+  document.getElementById("destinationModal").style.display = "none";
+  document.getElementById("searchResultPanel").style.display = "none";
+  document.getElementById("destinationInput").value = ""; // 입력값 초기화
+});
+
 
   // ✅ 검색결과 패널도 독립적으로 드래그 가능
   makeDraggableAndResizable(document.getElementById("searchResultPanel"));
