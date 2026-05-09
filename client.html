@@ -194,37 +194,9 @@ button:hover {
 }
 
 /* ---------------------- 토글 버튼 ( 사람중심 / 지도중심 ) ---------------------- */
-#toggleFollowBtn {
-  position:absolute;
-  left:5px;
-  top:360px;
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start; /* 좌측 정렬 */
-  width:150px;
-  height:50px;
-  line-height:50px;
-  background:rgba(255,255,255,0.25);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border:2px solid #1976d2;
-  border-radius:999px;
-  font-size:20px;
-  font-weight:700;
-  color:#1976d2;
-  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
-  cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
-  z-index:9999;
-  text-align:left; /* 글씨 좌측 정렬 */
-  white-space:nowrap;
-  transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  padding-left:12px; /* 좌측에서 1px 더 띄움 */
-}
+#toggleFollowBtn { position:absolute; left:5px; top:360px; display:flex; flex-direction:row; align-items:center; justify-content:center; width:140px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; font-family:"맑은 고딕","Malgun Gothic",sans-serif; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0 12px; }
 #toggleFollowBtn:hover { background:#e3f2fd; transform:scale(1.1); }
 #toggleFollowBtn:active { transform:scale(0.95); }
-
 
 
 </style>
@@ -660,7 +632,7 @@ const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 �
 toggleBtn.addEventListener("click", () => {
   followUser = !followUser;
   // 👤 사람 아이콘 / 🗺️ 지도 아이콘으로 표시
-  toggleBtn.innerText = followUser ? "👤  중심모드" : "🗺️  중심모드";
+  toggleBtn.innerText = followUser ? "👤 중심모드  " : "🗺️ 중심모드  ";
 });
 
   
