@@ -1207,6 +1207,16 @@ window.onload = async () => {
       return;
     }
 
+    // 🔹 목적지 모달 위치 기준으로 검색결과 패널 위치 잡기
+    const destModal = document.getElementById("destinationModal");
+    const panel = document.getElementById("searchResultPanel");
+    if (destModal && panel) {
+      const rect = destModal.getBoundingClientRect();
+      panel.style.position = "absolute";
+      panel.style.top = rect.top + "px";
+      panel.style.left = (rect.right + 20) + "px"; // 모달 오른쪽 + 간격 20px
+    }
+
     const service = new google.maps.places.PlacesService(map);
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
@@ -1217,7 +1227,6 @@ window.onload = async () => {
                      🏠 ${r.formatted_address}
                    </div>`;
         });
-        const panel = document.getElementById("searchResultPanel");
         panel.innerHTML = html;
         panel.style.display = "block";
 
@@ -1229,7 +1238,6 @@ window.onload = async () => {
           });
         });
       } else {
-        const panel = document.getElementById("searchResultPanel");
         panel.innerHTML = "검색 결과가 없습니다.";
         panel.style.display = "block";
       }
