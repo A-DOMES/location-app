@@ -1731,33 +1731,32 @@ destinationMarker.addListener("click", () => {
 }
 
 
-/* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// ✅ 검색 버튼 클릭 시
-document.getElementById("searchDestinationBtn").addEventListener("click", () => {
-  const inputName = document.getElementById("destinationInput").value;
-  if (!inputName) {
-    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    openModal(document.getElementById("destinationModal"));
-    return;
-  }
-
-  findDestination(inputName).then(success => {
-    if (success) {
-      document.getElementById("startRouteBtn").style.display = "inline-block";
-    }
+// ---------------------- 목적지 자동완성 ----------------------
+function initAutocomplete() {
+  const input = document.getElementById("destinationInput");
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["geometry", "name", "formatted_address"],
+    types: ["establishment"], // 장소 유형 (cafe, restaurant 등)
+    componentRestrictions: { country: "kr" } // 한국으로 제한
   });
-});
 
-// ✅ 경로 안내 버튼 클릭 시
-document.getElementById("startRouteBtn").addEventListener("click", () => {
-  if (!destinationLat || !destinationLng) {
-    alert("먼저 목적지를 검색하세요!");
-    return;
-  }
-  showRouteToDestination({ lat: destinationLat, lng: destinationLng });
-});
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) {
+      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+      return;
+    }
 
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    const address = place.formatted_address || "";
+
+    showDestinationOnMap(place.name, lat, lng, address);
+
+    // ✅ 검색 성공 시 경로 안내 버튼 표시
+    document.getElementById("startRouteBtn").style.display = "inline-block";
+  });
+}
 /* ---------------------- 경로 안내 ---------------------- */
 function showRouteToDestination(destination) {
   if (!directionsService) directionsService = new google.maps.DirectionsService();
