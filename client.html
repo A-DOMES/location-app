@@ -438,6 +438,7 @@ function updateLocationDisplay(lat, lng, heading) {
     `현재 위치: (${lat.toFixed(5)}, ${lng.toFixed(5)}) / 방향: ${directionLabel}`;
 }
 
+// ---------------------- 사람/지도중심 모드 변환 색상 변경 (어두울때/ 밝을때) ----------------------  
 function adjustTextColor() {
   const btn = document.getElementById("toggleFollowBtn");
   const bgColor = window.getComputedStyle(btn).backgroundColor;
@@ -447,12 +448,21 @@ function adjustTextColor() {
   const brightness = (rgb[0]*0.299 + rgb[1]*0.587 + rgb[2]*0.114);
 
   // 밝기 기준으로 글씨색 변경
-  btn.style.color = brightness < 128 ? "#ffffff" : "#1976d2";
+  if (brightness < 128) {
+    btn.style.color = "#ffffff"; // 어두운 배경 → 흰색
+  } else {
+    btn.style.color = "#1976d2"; // 밝은 배경 → 파란색
+  }
 }
 
-// 처음 실행 + 윈도우 리사이즈 시 실행
+// 초기 실행
+const toggleBtn = document.getElementById("toggleFollowBtn");
+toggleBtn.style.color = "#ffffff"; // 초기값 흰색
 adjustTextColor();
+
+// 필요할 때마다 실행 (예: 윈도우 리사이즈, 배경 변경 시)
 window.addEventListener("resize", adjustTextColor);
+
 
   
 function makeDraggableAndResizable(element) {
