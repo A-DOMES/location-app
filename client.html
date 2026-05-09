@@ -114,11 +114,24 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 @keyframes bounce { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1.1);} }
 #destinationResult { margin-top:10px; font-size:14px; color:#333; }
 
-/* ---------------------- 목적지 모달 입력창 (검색 전용) ---------------------- */
-.destinationWrapper { display:flex; flex-direction:row; width:100%; }
-.destinationWrapper #destinationInput { width:50%; border-radius:6px 0 0 6px; }
-.destinationWrapper #destinationResult { width:50%; border-radius:0 6px 6px 0; background:#f9f9f9; border:1px solid #1976d2; padding:12px; font-size:14px; color:#333; }
-
+/* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
+/* 독립적인 검색결과 창 */
+#searchResultPanel {
+  position:fixed;
+  top:120px;       /* 모달과 비슷한 높이 */
+  right:20px;      /* 화면 오른쪽에 붙임 */
+  width:300px;
+  max-height:400px;
+  overflow-y:auto;
+  background:rgba(255,255,255,0.95);
+  border:2px solid #1976d2;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  padding:16px;
+  font-size:14px;
+  color:#333;
+  z-index:10000;   /* 모달보다 위에 표시 */
+}
 
 /* ---------------------- 경로 안내 버튼 ---------------------- */
 #startRouteBtn {
@@ -297,7 +310,7 @@ button:hover {
     </div>
   </div>
 
-<!-- 목적지 찾기 모달창 -->
+    <!-- 목적지 찾기 모달창 -->
 <div id="destinationModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -305,20 +318,22 @@ button:hover {
       <span id="closeDestinationModal" class="close">✖</span>
     </div>
 
-    <!-- 입력창과 결과창을 같은 래퍼에 넣음 -->
-    <div class="destinationWrapper">
-      <input type="text" id="destinationInput" placeholder="목적지 이름 입력">
-      <div id="destinationResult"></div>
-    </div>
+    <!-- 입력창 -->
+    <input type="text" id="destinationInput" placeholder="목적지 이름 입력">
 
     <!-- 검색 버튼 -->
     <button id="searchDestinationBtn">🔍 위 치 검 색</button>
 
     <!-- 검색 성공 시 표시되는 버튼 -->
     <button id="startRouteBtn" style="display:none;">🚗 경로 안내</button>
+
+    <!-- 결과 영역 -->
+    <div id="destinationResult"></div>
   </div>
 </div>
 
+<!-- 독립적인 검색결과 창 -->
+<div id="searchResultPanel" style="display:none;"></div>
 
 
 <!-- 이동정보 모달창 -->
