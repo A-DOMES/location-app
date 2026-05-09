@@ -69,7 +69,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 .drag-handle { cursor:move; background:#eee; padding:8px; border-radius:6px; }
 .close { margin-left:auto; font-size:20px; font-weight:bold; cursor:pointer; color:#d32f2f; background-color:#fff; border:2px solid #d32f2f; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s, color 0.2s, transform 0.2s; }
 .close:hover { background-color:#d32f2f; color:#fff; transform:scale(1.1); }
-.modal-title { font-size:24px; font-weight:bold; color:#1976d2; text-align:center; flex:1; line-height:28px; margin:0; }
+.modal-title { font-size:18px; font-weight:bold; color:#1976d2; text-align:center; flex:1; line-height:24px; margin:0; }
 #modalActions button { margin:6px; padding:8px 14px; background:#1976d2; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:transform 0.2s ease, background 0.3s ease; }
 #modalActions button:hover { background:#1565c0; transform:scale(1.05); }
 
@@ -351,6 +351,33 @@ button:hover {
   margin-left: 2px;    /* 글씨를 살짝 오른쪽으로 이동 */
 }
 
+
+/* ---------------------- 마우스를 마커위에 올렸을 때 마커 정보 모달 전용 ---------------------- */
+#destinationInfoModal .modal-header {
+  display: flex;
+  justify-content: space-between; /* 좌측 제목, 우측 닫기 버튼 */
+  align-items: center;
+  padding: 10px;
+  background-color: #1976d2; /* 파란색 헤더 */
+  color: #fff;
+  font-weight: bold;
+}
+
+#destinationInfoModal .modal-title {
+  font-size: 16px;
+  color: #fff; /* 배경색 대비되는 색상 */
+  display: inline-block; /* 혹시 다른 스타일에 의해 숨겨지지 않도록 */
+}
+
+#destinationInfoModal .close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #fff;
+  cursor: pointer;
+}
+
+  
 </style>
   
 
@@ -467,6 +494,17 @@ button:hover {
   <span class="label">중심모드</span>
 </div>  
 
+<!-- 마커 위 마우스를 올렸을 때 정보표기 모달 -->
+<div id="destinationInfoModal" class="modal">
+  <div class="modal-header">
+    <span class="modal-title">📍 목적지 정보</span>
+    <button class="close-btn" onclick="closeModal('destinationInfoModal')">×</button>
+  </div>
+  <div class="modal-body" id="destinationInfoResult">
+    <!-- 목적지 내용이 동적으로 들어옴 -->
+  </div>
+</div>
+
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
@@ -516,6 +554,9 @@ let adminLocations = [];
 
 // 기본값: 사람 중심 모드
 let followUser = true; 
+
+//마커 배열 선언
+let destinationMarkers = []; // 목적지 마커들을 담을 배열  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -1408,10 +1449,10 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     destinationCircle.setMap(null);   // 목적지 원형 제거
     destinationCircle = null;
   }
-  if (destinationMarker) {
-    destinationMarker.setMap(null);   // 목적지 마커 제거
-    destinationMarker = null;
-  }
+
+  // ✅ 모든 목적지 마커 제거
+  destinationMarkers.forEach(marker => marker.setMap(null));
+  destinationMarkers = []; // 배열 비우기
 
   // ❌ 내 위치 마커(myMarker)는 유지 (삭제 코드 제거)
 
@@ -1420,10 +1461,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     otherMarker.setMap(null);
     otherMarker = null;
   }
-
-  // ---------------------- 내 위치 주변 원형 제거 ----------------------
-  circles.forEach(circle => circle.setMap(null));
-  circles = [];
 
   // ---------------------- 모달 내용 초기화 ----------------------
   document.getElementById("travelStatsContent").innerHTML = `
@@ -1624,6 +1661,9 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
+  // ✅ 배열에 추가 (전역 변수 destinationMarkers 사용)
+  destinationMarkers.push(marker);
+  
   // ✅ 원형 우클릭 이벤트
   destinationCircle.addListener("rightclick", () => {
     map.setZoom(7);
@@ -1652,42 +1692,42 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map.setZoom(7);
   });
 
-  // ---------------------- InfoWindow ----------------------
-  const infoWindow = new google.maps.InfoWindow({
-    content: `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`
-  });
+// ---------------------- InfoWindow ----------------------
+const infoWindow = new google.maps.InfoWindow({
+  content: `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`
+});
 
-  destinationMarker.addListener("mouseover", () => {
-    infoWindow.open(map, destinationMarker);
-  });
+destinationMarker.addListener("mouseover", () => {
+  infoWindow.open(map, destinationMarker);
+});
 
-  destinationMarker.addListener("mouseout", () => {
-    infoWindow.close();
-  });
+destinationMarker.addListener("mouseout", () => {
+  infoWindow.close();
+});
 
-  // ---------------------- 마커 클릭 이벤트 ----------------------
-  destinationMarker.addListener("click", () => {
-    map.setCenter(pos);
-    map.setZoom(18);
+// ---------------------- 마커 클릭 이벤트 ----------------------
+destinationMarker.addListener("click", () => {
+  map.setCenter(pos);
+  map.setZoom(18);
 
-    // ✅ 모달창에 정보 표시
-    document.getElementById("destinationResult").innerHTML = `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`;
+  // ✅ 마커 정보 모달에 표시
+  document.getElementById("destinationInfoResult").innerHTML = `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`;
 
-    openModal(document.getElementById("destinationModal"));
+  openModal(document.getElementById("destinationInfoModal"));
 
-    // ✅ 경로 안내 호출
-    showRouteToDestination({ lat, lng });
-  });
+  // ✅ 경로 안내 호출
+  showRouteToDestination({ lat, lng });
+});
 }
 
 
