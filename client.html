@@ -630,7 +630,7 @@ makeDraggableModal(statsModal, statsHandle);
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 18,
+    zoom: 7, // ✅ 초기 줌 레벨을 7로 설정
     gestureHandling: "greedy",
     mapTypeId: "roadmap"
   });
@@ -639,11 +639,10 @@ function initMap() {
 
   map.addListener("maptypeid_changed", () => {
     updateMapStyle(map);
-    // ✅ 지도 타입 변경 시에도 로딩 메시지가 다시 나타나지 않도록 처리
     const loadingMsg = document.getElementById("loadingMessage");
     if (loadingMsg) {
-      loadingMsg.style.display = "none";   // 레이아웃에서 제거
-      loadingMsg.classList.add("hidden");  // CSS 강제 숨김
+      loadingMsg.style.display = "none";
+      loadingMsg.classList.add("hidden");
     }
   });
 
@@ -652,7 +651,7 @@ function initMap() {
     geodesic: true,
     strokeColor: "#1976d2",
     strokeOpacity: 1.0,
-    strokeWeight: 8,    // 레이더 원형의 두께 조절
+    strokeWeight: 8,
     map: map
   });
 
@@ -661,15 +660,24 @@ function initMap() {
       pos => {
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userPos);
-        myMarker = new google.maps.Marker({ position: userPos, map, title: "내 위치" });
-        drawMultipleCircles(userPos);
 
-        // ✅ 최초 위치에서도 레이더 강제 표시
+        // ✅ 내 위치 마커 생성
+        myMarker = new google.maps.Marker({
+          position: userPos,
+          map,
+          title: "내 위치"
+        });
+
+        // ✅ 내 위치 마커 클릭 시 이동 + 확대
+        myMarker.addListener("click", () => {
+          map.setCenter(userPos);
+          map.setZoom(18);
+        });
+
+        drawMultipleCircles(userPos);
         updateRadarPolygon(userPos, 0);
-        
         startTracking();
 
-        // ✅ 위치정보 가져오기 성공 시 로딩 메시지 완전히 제거
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
           loadingMsg.style.display = "none";
@@ -678,20 +686,19 @@ function initMap() {
       },
       () => {
         startTracking();
-        // 실패 시에는 로딩 메시지를 그대로 두거나 에러 메시지 표시
       },
       { enableHighAccuracy: true }
     );
   }
 }
 
-  
 function updateMapStyle(map) {
   const body = document.body;
   body.classList.remove("map-roadmap", "map-satellite");
   const type = map.getMapTypeId();
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
+
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
@@ -1597,6 +1604,10 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   const pos = new google.maps.LatLng(lat, lng);
 
+  // ✅ 마커 생성 시 지도는 레벨 7로 복귀
+  map.setCenter(pos);
+  map.setZoom(7);
+
   // 청색 원
   new google.maps.Circle({
     strokeColor: "#1976d2",
@@ -1609,8 +1620,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // 붉은색 커스텀 마커 (세련된 핀 모양)
-  new google.maps.Marker({
+  // 붉은색 커스텀 마커
+  const marker = new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1626,23 +1637,26 @@ function showDestinationOnMap(title, lat, lng, address="") {
     title: title
   });
 
-  // 화면 이동
-  map.panTo(pos);
-  map.setZoom(16);
+  // ✅ 마커 클릭 시 해당 위치로 이동 + 줌 레벨 18
+  marker.addListener("click", () => {
+    map.setCenter(pos);
+    map.setZoom(18);
 
-  // 좌측정렬 정보 표시 (목적지 → 좌표 → 주소)
-  document.getElementById("destinationResult").innerHTML = `
-    <div style="text-align:left">
-      📍 목적지: ${title}<br>
-      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-      🏠 주소: ${address}
-    </div>`;
+    // 좌측정렬 정보 표시
+    document.getElementById("destinationResult").innerHTML = `
+      <div style="text-align:left">
+        📍 목적지: ${title}<br>
+        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+        🏠 주소: ${address}
+      </div>`;
 
-  openModal(document.getElementById("destinationModal"));
+    openModal(document.getElementById("destinationModal"));
 
-  // 경로 안내 호출
-  showRouteToDestination({ lat, lng });
+    // 경로 안내 호출
+    showRouteToDestination({ lat, lng });
+  });
 }
+
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 
