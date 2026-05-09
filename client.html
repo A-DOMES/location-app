@@ -201,9 +201,9 @@ button:hover {
   display:flex;
   flex-direction:row;
   align-items:center;
-  justify-content:center; /* 전체는 중앙정렬 */
+  justify-content:center; /* 버튼 전체는 중앙정렬 */
   width:145px;
-  height:50px;
+  height:45px;
   line-height:50px;
   background:rgba(255,255,255,0.25);
   backdrop-filter:blur(10px);
@@ -219,17 +219,18 @@ button:hover {
   z-index:9999;
   white-space:nowrap;
   transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  padding:0 10px;
+  padding:0 12px;
 }
 
 #toggleFollowBtn .icon {
-  margin-right:6px;   /* 아이콘과 글씨 사이 간격 */
-  margin-left:-10px;  /* 아이콘을 살짝 왼쪽으로 당김 */
+  margin-right:8px;   /* 아이콘과 글씨 사이 간격 */
+  margin-left:-10px;  /* 아이콘을 살짝 왼쪽으로 이동 */
 }
 
 #toggleFollowBtn .label {
-  text-align:left;    /* 글씨는 좌측 기준 */
+  margin-left:2px;    /* 글씨를 살짝 오른쪽으로 이동 */
 }
+
 
 
 
@@ -335,7 +336,11 @@ button:hover {
 </div>
 
 <!-- ✅ 토글 버튼 추가-->
-<div id="toggleFollowBtn">👤중심모드</div></div>
+<div id="toggleFollowBtn">
+  <span class="icon">👤</span>
+  <span class="label">중심모드</span>
+</div>  
+
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
