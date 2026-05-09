@@ -116,28 +116,28 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
-#searchResultPanel {
-  position:absolute;   /* 모달 기준으로 위치 */
-  top:0;
-  left:100%;           /* 모달 오른쪽에 붙임 */
-  margin-left:20px;    /* 모달과 간격 */
-  width:300px;
-  max-height:400px;
-  overflow-y:auto;
-  background:rgba(255,255,255,0.95);
-  border:2px solid #1976d2;
-  border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
-  padding:16px;
-  font-size:14px;
-  color:#333;
-  z-index:10000;
-  display:none;
-  cursor:move;         /* 드래그 가능 표시 */
+#destinationModal .modal-content {
+  position: relative; /* 기준점 설정 */
 }
 
+#searchResultPanel {
+  position: absolute; /* 모달 콘텐츠 기준 */
+  top: 0;
+  left: 100%;         /* 모달 오른쪽에 붙임 */
+  margin-left: 20px;  /* 간격 */
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  padding: 16px;
+  display: none;
+  cursor: move;
+}
 
-
+  
 /* ---------------------- 경로 안내 버튼 ---------------------- */
 #startRouteBtn {
   width:90%; /* ✅ 검색 버튼과 동일한 너비 */
@@ -315,7 +315,7 @@ button:hover {
     </div>
   </div>
 
-    <!-- 목적지 찾기 모달창 -->
+<!-- 목적지 찾기 모달창 -->
 <div id="destinationModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -334,11 +334,12 @@ button:hover {
 
     <!-- 결과 영역 -->
     <div id="destinationResult"></div>
+
+    <!-- ✅ 검색결과 패널을 모달 콘텐츠 안에 배치 -->
+    <div id="searchResultPanel" style="display:none;"></div>
   </div>
 </div>
 
-<!-- 독립적인 검색결과 창 -->
-<div id="searchResultPanel" style="display:none;"></div>
 
 
 <!-- 이동정보 모달창 -->
@@ -1184,22 +1185,7 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
 }  
 
 
-  
-// ------------------------------- 목적지 찾기 창의 검색결과 보조함수-----------------------------------
-// 🔹 모달창 옆에 검색결과 패널 위치 잡기
-function setSearchPanelPosition() {
-  const destModal = document.getElementById("destinationModal");
-  const panel = document.getElementById("searchResultPanel");
-
-  if (destModal && panel) {
-    const rect = destModal.getBoundingClientRect();
-    panel.style.position = "fixed";   // ✅ fixed로 변경
-    panel.style.top = rect.top + "px";
-    panel.style.left = (rect.right + 20) + "px"; // 모달 오른쪽 + 간격
-  }
-}
-  
-// ------------------------------- 초기화 -----------------------------------
+ // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
   await loadAdminLocations();
@@ -1223,19 +1209,6 @@ window.onload = async () => {
       return;
     }
 
-    // ✅ 위치 먼저 잡아주기
-    setSearchPanelPosition();
-    
-    // 🔹 목적지 모달 위치 기준으로 검색결과 패널 위치 잡기
-    const destModal = document.getElementById("destinationModal");
-    const panel = document.getElementById("searchResultPanel");
-    if (destModal && panel) {
-      const rect = destModal.getBoundingClientRect();
-      panel.style.position = "absolute";
-      panel.style.top = rect.top + "px";
-      panel.style.left = (rect.right + 20) + "px"; // 모달 오른쪽 + 간격 20px
-    }
-
     const service = new google.maps.places.PlacesService(map);
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
@@ -1246,6 +1219,7 @@ window.onload = async () => {
                      🏠 ${r.formatted_address}
                    </div>`;
         });
+        const panel = document.getElementById("searchResultPanel");
         panel.innerHTML = html;
         panel.style.display = "block";
 
@@ -1257,6 +1231,7 @@ window.onload = async () => {
           });
         });
       } else {
+        const panel = document.getElementById("searchResultPanel");
         panel.innerHTML = "검색 결과가 없습니다.";
         panel.style.display = "block";
       }
@@ -1264,6 +1239,7 @@ window.onload = async () => {
   });
 };
 
+  
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 초기화
