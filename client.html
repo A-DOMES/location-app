@@ -1731,6 +1731,14 @@ destinationMarker.addListener("click", () => {
 }
 
 
+/* ---------------------- 전역 변수 초기화 ---------------------- */
+let destinationLat, destinationLng, destinationMarker;
+let directionsService, destinationRenderer;
+let currentLat, currentLng;
+let speedHistory = [];
+let pathCoords = [];
+let startTime = Date.now();
+
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 
 // ✅ 검색 버튼 클릭 시 기존 로직 유지
@@ -1773,7 +1781,7 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 초기화
   pathCoords = [];
-  pathPolyline.setPath([]);
+  if (pathPolyline) pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 
   // 목적지 관련 초기화
@@ -1794,14 +1802,42 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   openPopupModal(document.getElementById("popupModal"));
 });
 
+/* ---------------------- 목적지 검색 ---------------------- */
+function findDestination(name) {
+  return new Promise(resolve => {
+    const service = new google.maps.places.PlacesService(map);
+    service.textSearch({ query: name }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+        const loc = results[0].geometry.location;
+        destinationLat = loc.lat();
+        destinationLng = loc.lng();
 
-// ---------------------- 목적지 자동완성 ----------------------
+        if (destinationMarker) destinationMarker.setMap(null);
+        destinationMarker = new google.maps.Marker({
+          map,
+          position: loc,
+          title: results[0].name
+        });
+
+        document.getElementById("destinationResult").innerText =
+          `📍 ${results[0].name} (${results[0].formatted_address})`;
+
+        resolve(true);
+      } else {
+        document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+        resolve(false);
+      }
+    });
+  });
+}
+
+/* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
   const input = document.getElementById("destinationInput");
   const autocomplete = new google.maps.places.Autocomplete(input, {
     fields: ["geometry", "name", "formatted_address"],
-    types: ["establishment"], // 장소 유형 (cafe, restaurant 등)
-    componentRestrictions: { country: "kr" } // 한국으로 제한
+    types: ["establishment"],
+    componentRestrictions: { country: "kr" }
   });
 
   autocomplete.addListener("place_changed", () => {
@@ -1817,11 +1853,10 @@ function initAutocomplete() {
 
     showDestinationOnMap(place.name, lat, lng, address);
 
-    // ✅ 검색 성공 시 경로 안내 버튼 표시
     document.getElementById("startRouteBtn").style.display = "inline-block";
   });
 }
-  
+
 /* ---------------------- 경로 안내 메시지 ---------------------- */
 function showRouteToDestination(destination) {
   if (!directionsService) directionsService = new google.maps.DirectionsService();
@@ -1842,13 +1877,11 @@ function showRouteToDestination(destination) {
     if (status === google.maps.DirectionsStatus.OK) {
       destinationRenderer.setDirections(result);
 
-      // ✅ 내 위치와 목적지를 동시에 화면에 표시
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(new google.maps.LatLng(currentLat, currentLng));
       bounds.extend(new google.maps.LatLng(destination.lat, destination.lng));
       map.fitBounds(bounds);
 
-      // ✅ 경로 안내 단계별 메시지 표시
       const steps = result.routes[0].legs[0].steps;
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       steps.forEach((step, idx) => {
@@ -1861,43 +1894,25 @@ function showRouteToDestination(destination) {
   });
 }
 
+/* ---------------------- 위치 업데이트 ---------------------- */
+navigator.geolocation.watchPosition(pos => {
+  currentLat = pos.coords.latitude;
+  currentLng = pos.coords.longitude;
 
-/* ---------------------- 레이더 반경 내 탐지 ---------------------- */
-function checkRadarPOIs(myPos) {
-  const service = new google.maps.places.PlacesService(map);
+  const myPos = new google.maps.LatLng(currentLat, currentLng);
+  pathCoords.push(myPos);
 
-  service.nearbySearch({
-    location: myPos,
-    radius: radarRadiusMeters,
-    type: ["cafe", "restaurant", "pharmacy", "gas_station"]
-  }, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      results.forEach(place => {
-        const poiPos = place.geometry.location;
-        const distance = google.maps.geometry.spherical.computeDistanceBetween(
-          new google.maps.LatLng(currentLat, currentLng),
-          poiPos
-        );
-
-        if (distance <= radarRadiusMeters) {
-          const message = `<div class="alert-message">
-            <p>📍 레이더 반경 내 탐지: ${place.name}</p>
-            <p>거리: ${distance.toFixed(1)} m</p>
-          </div>`;
-          showQueuedModal("레이더 탐지", message);
-        }
-      });
-    }
-  });
-}
+  updateTravelStats(pos);
+}, err => console.error("위치 오류:", err), { enableHighAccuracy: true });
 
 /* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats(pos) {
-  const speed = pos.coords.speed || 0;
-  const totalDistance = computeTotalDistance(pathCoords);
-  showTravelStats(speed, totalDistance);
+  const speed = pos.coords.speed ? pos.coords.speed * 3.6 : 0; // m/s → km/h
+  speedHistory.push(speed);
 
+  const totalDistance = computeTotalDistance(pathCoords);
   const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
+
   document.getElementById("travelStatsContent").innerHTML = message;
 }
 
@@ -1905,10 +1920,7 @@ function updateTravelStats(pos) {
 function computeTotalDistance(coords) {
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
-    total += google.maps.geometry.spherical.computeDistanceBetween(
-      coords[i - 1],
-      coords[i]
-    );
+    total += google.maps.geometry.spherical.computeDistanceBetween(coords[i - 1], coords[i]);
   }
   return total;
 }
@@ -1921,7 +1933,7 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
     : 0;
   const maxSpeed = speedHistory.length > 0 ? Math.max(...speedHistory) : 0;
   const totalDistance = computeTotalDistance(pathCoords);
-  const elapsedTime = (Date.now() - startTime) / 1000; // 초 단위
+  const elapsedTime = (Date.now() - startTime) / 1000;
 
   return `
     🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
@@ -1934,13 +1946,8 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
 
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function openModal(modal) {
-  // ✅ 모든 모달 닫기 → 중첩 방지
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-
-  // ✅ 선택 모달 열기
   modal.style.display = 'block';
-
-  // ✅ 중앙 정렬 보정
   modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
 }
 
@@ -1950,10 +1957,8 @@ function closeModal(modal) {
 
 function openPopupModal(modal) {
   openModal(modal);
-  // ✅ 자동 닫힘 시간 3초로 조정 (UX 개선)
   setTimeout(() => closeModal(modal), 3000);
 }
-
 
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
@@ -1961,7 +1966,7 @@ document.querySelectorAll('.close').forEach(btn => {
     const modal = btn.closest('.modal');
     if (modal) closeModal(modal);
   });
-  });
+});
 
 // ✅ ESC 키로 모달 닫기
 document.addEventListener('keydown', e => {
@@ -1969,7 +1974,6 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
   }
 });
-
 
 </script>
 </body>
