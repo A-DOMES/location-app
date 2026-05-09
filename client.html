@@ -114,6 +114,12 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 @keyframes bounce { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1.1);} }
 #destinationResult { margin-top:10px; font-size:14px; color:#333; }
 
+/* ---------------------- 목적지 모달 입력창 (검색 전용) ---------------------- */
+.destinationWrapper { display:flex; flex-direction:row; width:100%; }
+.destinationWrapper #destinationInput { width:50%; border-radius:6px 0 0 6px; }
+.destinationWrapper #destinationResult { width:50%; border-radius:0 6px 6px 0; background:#f9f9f9; border:1px solid #1976d2; padding:12px; font-size:14px; color:#333; }
+
+
 /* ---------------------- 경로 안내 버튼 ---------------------- */
 #startRouteBtn {
   width:90%; /* ✅ 검색 버튼과 동일한 너비 */
