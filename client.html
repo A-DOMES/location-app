@@ -352,9 +352,8 @@ button:hover {
 }
 
 
-/* ---------------------- 마커 위 마우스를 올렸을 때 정보 표시  ---------------------- */
-/* 모달 헤더 스타일 */
-.modal-header {
+/* ---------------------- 마우스를 마커위에 올렸을 때 마커 정보 모달 전용 ---------------------- */
+#destinationInfoModal .modal-header {
   display: flex;
   justify-content: space-between; /* 좌측 제목, 우측 닫기 버튼 */
   align-items: center;
@@ -364,17 +363,18 @@ button:hover {
   font-weight: bold;
 }
 
-.modal-title {
+#destinationInfoModal .modal-title {
   font-size: 16px;
 }
 
-.close-btn {
+#destinationInfoModal .close-btn {
   background: none;
   border: none;
   font-size: 20px;
   color: #fff;
   cursor: pointer;
 }
+
   
 </style>
   
@@ -492,19 +492,17 @@ button:hover {
   <span class="label">중심모드</span>
 </div>  
 
-<!-- 마커 위 마우스를 올렸을 때 정보표기 -->
-<div id="destinationModal" class="modal">
+<!-- 마커 위 마우스를 올렸을 때 정보표기 모달 -->
+<div id="destinationInfoModal" class="modal">
   <div class="modal-header">
-    <!-- ✅ 좌측에 제목/사용자 정보 -->
     <span class="modal-title">📍 목적지 정보</span>
-    <!-- ✅ 우측에 닫기 버튼 -->
-    <button class="close-btn" onclick="closeModal('destinationModal')">×</button>
+    <button class="close-btn" onclick="closeModal('destinationInfoModal')">×</button>
   </div>
-
-  <div class="modal-body" id="destinationResult">
+  <div class="modal-body" id="destinationInfoResult">
     <!-- 목적지 내용이 동적으로 들어옴 -->
   </div>
 </div>
+
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
@@ -1690,42 +1688,42 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map.setZoom(7);
   });
 
-  // ---------------------- InfoWindow ----------------------
-  const infoWindow = new google.maps.InfoWindow({
-    content: `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`
-  });
+// ---------------------- InfoWindow ----------------------
+const infoWindow = new google.maps.InfoWindow({
+  content: `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`
+});
 
-  destinationMarker.addListener("mouseover", () => {
-    infoWindow.open(map, destinationMarker);
-  });
+destinationMarker.addListener("mouseover", () => {
+  infoWindow.open(map, destinationMarker);
+});
 
-  destinationMarker.addListener("mouseout", () => {
-    infoWindow.close();
-  });
+destinationMarker.addListener("mouseout", () => {
+  infoWindow.close();
+});
 
-  // ---------------------- 마커 클릭 이벤트 ----------------------
-  destinationMarker.addListener("click", () => {
-    map.setCenter(pos);
-    map.setZoom(18);
+// ---------------------- 마커 클릭 이벤트 ----------------------
+destinationMarker.addListener("click", () => {
+  map.setCenter(pos);
+  map.setZoom(18);
 
-    // ✅ 모달창에 정보 표시
-    document.getElementById("destinationResult").innerHTML = `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`;
+  // ✅ 마커 정보 모달에 표시
+  document.getElementById("destinationInfoResult").innerHTML = `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`;
 
-    openModal(document.getElementById("destinationModal"));
+  openModal(document.getElementById("destinationInfoModal"));
 
-    // ✅ 경로 안내 호출
-    showRouteToDestination({ lat, lng });
-  });
+  // ✅ 경로 안내 호출
+  showRouteToDestination({ lat, lng });
+});
 }
 
 
