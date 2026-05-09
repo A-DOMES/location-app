@@ -117,9 +117,10 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
 #searchResultPanel {
-  position: absolute;
-  top: 70px;            /* 초기 위치 */
-  left: 180px;           /* 좌측 정렬 */
+  position: fixed;       /* 화면 전체 기준 */
+  top: 70%;              /* 세로 중앙 */
+  left: 50%;             /* 가로 중앙 */
+  transform: translate(-50%, -50%); /* 정확히 중앙에 맞춤 */
   width: 320px;
   max-height: 600px;
   overflow-y: auto;
