@@ -1519,60 +1519,61 @@ async function findDestination(inputName) {
     return Promise.resolve(true); // ✅ 성공 반환
   }
 
-  // 2️⃣ 외부 API 검색
-  const service = new google.maps.places.PlacesService(map);
-  return new Promise((resolve) => {
-    service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
-      const panel = document.getElementById("searchResultPanel");
-      const body = panel.querySelector(".search-body");
+// 2️⃣ 외부 API 검색
+const service = new google.maps.places.PlacesService(map);
+return new Promise((resolve) => {
+  service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
+    const panel = document.getElementById("searchResultPanel");
+    const body = panel.querySelector(".search-body");
 
-      if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-        let html = "";
-        let pending = results.length;
+    if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+      let html = "";
+      let pending = results.length;
 
-        results.forEach(r => {
-          service.getDetails({
-            placeId: r.place_id,
-            fields: ["name","formatted_address","formatted_phone_number","website","opening_hours","rating"]
-          }, (place, detailStatus) => {
-            if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-              html += `
-                <div class="search-item" data-name="${place.name}">
-                  <div class="search-title">📍 ${place.name}</div>
-                  <div class="search-address">🏠 ${place.formatted_address}</div>
-                  ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                  ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                  ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                  ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                </div>
-              `;
-            }
-            pending--;
-            if (pending === 0) {
-              body.innerHTML = html || "<div>검색 결과가 없습니다.</div>";
-              panel.style.display = "block";
+      results.forEach(r => {
+        service.getDetails({
+          placeId: r.place_id,
+          fields: ["name","formatted_address","formatted_phone_number","website","opening_hours","rating","types"]
+        }, (place, detailStatus) => {
+          if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
+            html += `
+              <div class="search-item" data-name="${place.name}">
+                <div class="search-title">📍 ${place.name}</div>
+                <div class="search-address">🏠 ${place.formatted_address}</div>
+                ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
+                ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
+                ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
+                ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
+                ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
+              </div>
+            `;
+          }
+          pending--;
+          if (pending === 0) {
+            body.innerHTML = html || "<div>검색 결과가 없습니다.</div>";
+            panel.style.display = "block";
 
-              // 결과 클릭 시 입력창 반영 + 지도 표시
-              body.querySelectorAll(".search-item").forEach((item, idx) => {
-                item.addEventListener("click", () => {
-                  const p = results[idx].geometry.location;
-                  showDestinationOnMap(results[idx].name, p.lat(), p.lng(), results[idx].formatted_address);
-                  document.getElementById("destinationInput").value = results[idx].name;
-                  panel.style.display = "none";
-                });
+            // 결과 클릭 시 입력창 반영 + 지도 표시
+            body.querySelectorAll(".search-item").forEach((item, idx) => {
+              item.addEventListener("click", () => {
+                const p = results[idx].geometry.location;
+                showDestinationOnMap(results[idx].name, p.lat(), p.lng(), results[idx].formatted_address);
+                document.getElementById("destinationInput").value = results[idx].name;
+                panel.style.display = "none";
               });
-              resolve(true);
-            }
-          });
+            });
+            resolve(true);
+          }
         });
-      } else {
-        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-        panel.style.display = "block";
-        resolve(false);
-      }
-    });
+      });
+    } else {
+      body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+      panel.style.display = "block";
+      resolve(false);
+    }
   });
-}
+});
+
 
 
 
