@@ -194,9 +194,43 @@ button:hover {
 }
 
 /* ---------------------- 토글 버튼 ( 사람중심 / 지도중심 ) ---------------------- */
-#toggleFollowBtn { position:absolute; left:5px; top:360px; display:flex; flex-direction:row; align-items:center; justify-content:center; width:135px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; font-family:"맑은 고딕","Malgun Gothic",sans-serif; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0 11px; }
-#toggleFollowBtn:hover { background:#e3f2fd; transform:scale(1.1); }
-#toggleFollowBtn:active { transform:scale(0.95); }
+#toggleFollowBtn {
+  position:absolute;
+  left:5px;
+  top:360px;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center; /* 전체는 중앙정렬 */
+  width:160px;
+  height:50px;
+  line-height:50px;
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:2px solid #1976d2;
+  border-radius:999px;
+  font-size:20px;
+  font-weight:700;
+  color:#1976d2;
+  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  z-index:9999;
+  white-space:nowrap;
+  transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
+  padding:0 12px;
+}
+
+#toggleFollowBtn .icon {
+  margin-right:6px;   /* 아이콘과 글씨 사이 간격 */
+  margin-left:-10px;  /* 아이콘을 살짝 왼쪽으로 당김 */
+}
+
+#toggleFollowBtn .label {
+  text-align:left;    /* 글씨는 좌측 기준 */
+}
+
 
 
 </style>
