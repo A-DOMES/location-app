@@ -438,23 +438,6 @@ function updateLocationDisplay(lat, lng, heading) {
     `현재 위치: (${lat.toFixed(5)}, ${lng.toFixed(5)}) / 방향: ${directionLabel}`;
 }
 
-// ---------------------- 사람/지도중심 모드 변환 색상 변경 (어두울때/ 밝을때) ----------------------  
-const toggleBtn = document.getElementById("toggleFollowBtn");
-
-// 초기값: 흰색 글씨
-toggleBtn.style.color = "#ffffff";
-
-// 드래그 종료 시 글씨를 파란색으로 변경
-toggleBtn.addEventListener("mouseup", () => {
-  toggleBtn.style.color = "#1976d2";
-});
-
-// 터치 드래그 종료(모바일 대응)
-toggleBtn.addEventListener("touchend", () => {
-  toggleBtn.style.color = "#1976d2";
-});
-
-  
 function makeDraggableAndResizable(element) {
   let isDragging = false, offsetX, offsetY;
 
@@ -685,6 +668,22 @@ function startTracking() {
   });
 }
 
+// ---------------------- 사람/지도중심 모드 변환 색상 변경 (어두울때/ 밝을때) ----------------------  
+const toggleBtn = document.getElementById("toggleFollowBtn");
+
+// 초기값: 흰색 글씨
+toggleBtn.style.color = "#ffffff";
+
+// 드래그 종료 시 글씨를 파란색으로 변경
+toggleBtn.addEventListener("mouseup", () => {
+  toggleBtn.style.color = "#1976d2";
+});
+
+// 터치 드래그 종료(모바일 대응)
+toggleBtn.addEventListener("touchend", () => {
+  toggleBtn.style.color = "#1976d2";
+});
+  
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
 
@@ -694,7 +693,6 @@ toggleBtn.addEventListener("click", () => {
   toggleBtn.innerText = followUser ? "👤중심모드" : "🗺️중심모드";
 });
 
-  
 // ---------------------- 드래그 가능하게 적용 ----------------------
 makeDraggableAndResizable(toggleBtn);
 
