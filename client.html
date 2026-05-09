@@ -139,17 +139,19 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
 #searchResultPanel .search-header {
   display: flex;
-  justify-content: center;   /* ✅ 가운데 정렬 */
+  justify-content: space-between; /* 좌측-중앙-우측 배치 */
   align-items: center;
-  font-weight: bold;
   margin-bottom: 10px;
 }
 
-#searchResultPanel .search-header span {
-  font-size: 18px;           /* ✅ 글씨 크기 확대 */
-  color: #1976d2;            /* 강조 색상 */
+#searchResultPanel .search-title {
+  flex: 1;                  /* 남은 공간 차지 */
+  text-align: center;       /* ✅ 타이틀 중앙 정렬 */
+  font-weight: bold;
+  font-size: 18px;          /* ✅ 글씨 크기 확대 */
+  color: #1976d2;           /* 강조 색상 */
 }
-  
+
 #searchResultPanel .close {
   cursor: pointer;
   font-size: 16px;
@@ -181,6 +183,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   font-size: 13px;
   color: #555;
 }
+
 
 
   
