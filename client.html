@@ -1026,6 +1026,12 @@ function drawMultipleCircles(myPos) {
         fillOpacity: 0,
         map
       });
+
+      // ✅ 내 위치 원형에서도 우클릭 시 레벨 7 복귀
+      circle.addListener("rightclick", () => {
+        map.setZoom(7);
+      });
+      
       circles.push(circle);
     });
   } else {
@@ -1611,7 +1617,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setZoom(7);
 
   // 청색 원
-  new google.maps.Circle({
+  const circle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
     strokeWeight: 2,
@@ -1620,6 +1626,11 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map,
     center: pos,
     radius: 40
+  });
+
+  // ✅ 원형 우클릭 이벤트
+  circle.addListener("rightclick", () => {
+    map.setZoom(7);
   });
 
   // 붉은색 커스텀 마커
@@ -1637,6 +1648,11 @@ function showDestinationOnMap(title, lat, lng, address="") {
     },
     animation: google.maps.Animation.BOUNCE,
     title: title
+  });
+
+  // ✅ 마커 우클릭 이벤트
+  marker.addListener("rightclick", () => {
+    map.setZoom(7);
   });
 
   // ✅ InfoWindow 생성 (hover 시 표시)
@@ -1662,7 +1678,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map.setCenter(pos);
     map.setZoom(18);
 
-    // ✅ 기존 모달창 로직 유지 (절대 삭제하지 않음)
+    // ✅ 기존 모달창 로직 유지
     document.getElementById("destinationResult").innerHTML = `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
@@ -1676,7 +1692,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
     showRouteToDestination({ lat, lng });
   });
 }
-
 
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
