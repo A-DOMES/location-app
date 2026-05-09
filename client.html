@@ -1502,7 +1502,7 @@ async function findDestination(inputName) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
-  // 1️⃣ 서버 배열 검색
+  // 1️⃣ 서버 배열 검색 (내 서버 우선)
   if (Array.isArray(adminLocations)) {
     match = adminLocations.find(item =>
       item.phone.trim().toLowerCase().normalize("NFC") === name
@@ -1516,7 +1516,7 @@ async function findDestination(inputName) {
       parseFloat(match.lng),
       match.address
     );
-    return Promise.resolve(true);
+    return Promise.resolve(true); // ✅ 성공 반환
   }
 
   // 2️⃣ 외부 API 검색
@@ -1528,44 +1528,53 @@ async function findDestination(inputName) {
 
       if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
         let html = "";
-        let pending = results.length;
-
         results.forEach((r, idx) => {
-          service.getDetails({
-            placeId: r.place_id,
-            fields: ["name","formatted_address","formatted_phone_number","website","opening_hours","rating","types"]
-          }, (place, detailStatus) => {
-            if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-              html += `
-                <div class="search-item" data-name="${place.name}">
-                  <div class="search-title">📍 ${place.name}</div>
-                  <div class="search-address">🏠 ${place.formatted_address}</div>
+          html += `
+            <div class="search-item" data-index="${idx}">
+              <div class="search-title">📍 ${r.name}</div>
+              <div class="search-address">🏠 ${r.formatted_address}</div>
+            </div>
+          `;
+        });
+        body.innerHTML = html;
+        panel.style.display = "block";
+
+        // ✅ 클릭 시 지도 이동 + 세부 정보 로딩
+        body.querySelectorAll(".search-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const idx = item.dataset.index;
+            const r = results[idx];
+            const p = r.geometry.location;
+
+            // 지도 이동 (PC/모바일 모두 적용)
+            map.setCenter(p);
+            map.setZoom(16);
+            showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
+
+            // 입력창 반영
+            document.getElementById("destinationInput").value = r.name;
+            panel.style.display = "none";
+
+            // 세부 정보 로딩
+            service.getDetails({
+              placeId: r.place_id,
+              fields: ["formatted_phone_number","website","opening_hours","rating","types"]
+            }, (place, detailStatus) => {
+              if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
+                const infoPanel = document.getElementById("destinationResult");
+                infoPanel.innerHTML = `
                   ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
                   ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
                   ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
                   ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
                   ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                </div>
-              `;
-            }
-            pending--;
-            if (pending === 0) {
-              body.innerHTML = html || "<div>검색 결과가 없습니다.</div>";
-              panel.style.display = "block";
-
-              // ✅ 좌표는 textSearch 결과에서 가져오기
-              body.querySelectorAll(".search-item").forEach((item, idx) => {
-                item.addEventListener("click", () => {
-                  const p = results[idx].geometry.location;
-                  showDestinationOnMap(results[idx].name, p.lat(), p.lng(), results[idx].formatted_address);
-                  document.getElementById("destinationInput").value = results[idx].name;
-                  panel.style.display = "none";
-                });
-              });
-              resolve(true);
-            }
+                `;
+              }
+            });
           });
         });
+
+        resolve(true);
       } else {
         body.innerHTML = "<div>검색 결과가 없습니다.</div>";
         panel.style.display = "block";
@@ -1574,6 +1583,7 @@ async function findDestination(inputName) {
     });
   });
 }
+
 
 
 
