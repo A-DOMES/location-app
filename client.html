@@ -197,7 +197,7 @@ button:hover {
 #toggleFollowBtn {
   position:absolute;
   left:5px;
-  top:6px;
+  top:360px;
   display:flex;
   flex-direction:row;
   align-items:center;
@@ -231,12 +231,9 @@ button:hover {
   margin-left:2px;    /* 글씨를 살짝 오른쪽으로 이동 */
 }
 
-#toggleFollowBtn {    /* 글씨를 살짝 오른쪽으로 이동 */
-  /* 기존 스타일 유지 */
-  color:#1976d2; /* 기본 글씨색 */
-  mix-blend-mode: difference; /* 배경과 반전 효과 */
-}
-  
+
+
+
 </style>
   
 
@@ -668,22 +665,6 @@ function startTracking() {
   });
 }
 
-// ---------------------- 사람/지도중심 모드 변환 색상 변경 (어두울때/ 밝을때) ----------------------  
-const toggleBtn = document.getElementById("toggleFollowBtn");
-
-// 초기값: 흰색 글씨
-toggleBtn.style.color = "#ffffff";
-
-// 드래그 종료 시 글씨를 파란색으로 변경
-toggleBtn.addEventListener("mouseup", () => {
-  toggleBtn.style.color = "#1976d2";
-});
-
-// 터치 드래그 종료(모바일 대응)
-toggleBtn.addEventListener("touchend", () => {
-  toggleBtn.style.color = "#1976d2";
-});
-  
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
 
@@ -693,6 +674,7 @@ toggleBtn.addEventListener("click", () => {
   toggleBtn.innerText = followUser ? "👤중심모드" : "🗺️중심모드";
 });
 
+  
 // ---------------------- 드래그 가능하게 적용 ----------------------
 makeDraggableAndResizable(toggleBtn);
 
