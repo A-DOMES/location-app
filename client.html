@@ -120,8 +120,8 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   position:fixed;
   top:120px;       /* 모달과 비슷한 높이 */
   right:20px;      /* 화면 오른쪽에 붙임 */
-  width:300px;
-  max-height:400px;
+  width:360px;
+  max-height:500px;
   overflow-y:auto;
   background:rgba(255,255,255,0.95);
   border:2px solid #1976d2;
@@ -130,8 +130,10 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   padding:16px;
   font-size:14px;
   color:#333;
-  z-index:10000;   /* 모달보다 위에 표시 */
+  z-index:10000;
+  display:none;
 }
+
 
 /* ---------------------- 경로 안내 버튼 ---------------------- */
 #startRouteBtn {
@@ -1422,7 +1424,28 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // 목적지 검색 실행
+  // ✅ 구글 PlacesService를 이용해 독립적인 검색결과 패널에 표시
+  const service = new google.maps.places.PlacesService(map);
+  service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+      let html = "<h3>검색 결과</h3>";
+      results.forEach(r => {
+        html += `<div style="margin-bottom:8px;">
+          📍 ${r.name}<br>
+          🏠 ${r.formatted_address}
+        </div>`;
+      });
+      const panel = document.getElementById("searchResultPanel");
+      panel.innerHTML = html;
+      panel.style.display = "block"; // 우측 독립적인 창으로 표시
+    } else {
+      const panel = document.getElementById("searchResultPanel");
+      panel.innerHTML = "검색 결과가 없습니다.";
+      panel.style.display = "block";
+    }
+  });
+
+  // 기존 목적지 검색 실행 로직은 그대로 유지
   findDestination(inputName).then(success => {
     if (success) {
       // ✅ 검색 성공 시 경로 안내 버튼 표시
@@ -1473,6 +1496,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 // ---------------------- 목적지 자동완성 ----------------------
 function initAutocomplete() {
