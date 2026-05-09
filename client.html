@@ -1183,6 +1183,21 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     .catch(err => console.error(err));
 }  
 
+// ------------------------------- 목적지 찾기 창의 검색결과 보조함수-----------------------------------
+// 🔹 모달창 옆에 검색결과 패널 위치 잡기
+function setSearchPanelPosition() {
+  const destModal = document.getElementById("destinationModal");
+  const panel = document.getElementById("searchResultPanel");
+
+  if (destModal && panel) {
+    const rect = destModal.getBoundingClientRect();
+    panel.style.position = "absolute";
+    panel.style.top = rect.top + "px";
+    panel.style.left = (rect.right + 20) + "px"; // 모달 오른쪽 + 간격 20px
+  }
+}
+
+  
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
@@ -1207,6 +1222,9 @@ window.onload = async () => {
       return;
     }
 
+    // ✅ 위치 먼저 잡아주기
+    setSearchPanelPosition();
+    
     // 🔹 목적지 모달 위치 기준으로 검색결과 패널 위치 잡기
     const destModal = document.getElementById("destinationModal");
     const panel = document.getElementById("searchResultPanel");
