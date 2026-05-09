@@ -1191,8 +1191,8 @@ window.onload = async () => {
   makeDraggableModal(document.querySelector(".modal-content")); // 모달창 드래그 가능
 
   // ✅ 자동완성 초기화 호출
-  initAutocomplete();
-};
+ // initAutocomplete();
+ // };
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
@@ -1416,6 +1416,46 @@ function showDestinationOnMap(title, lat, lng, address="") {
 }
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
+
+// ✅ 입력하는 동안 자동검색 → 우측 패널에 표시
+document.getElementById("destinationInput").addEventListener("input", () => {
+  const inputName = document.getElementById("destinationInput").value;
+  if (!inputName) {
+    document.getElementById("searchResultPanel").style.display = "none";
+    return;
+  }
+
+  const service = new google.maps.places.PlacesService(map);
+  service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+      let html = "<h3>검색 결과</h3>";
+      results.forEach(r => {
+        html += `<div class="search-item" style="margin-bottom:8px; cursor:pointer;" 
+                   data-name="${r.name}">
+                   📍 ${r.name}<br>
+                   🏠 ${r.formatted_address}
+                 </div>`;
+      });
+      const panel = document.getElementById("searchResultPanel");
+      panel.innerHTML = html;
+      panel.style.display = "block";
+
+      // 결과 클릭 시 입력창에 반영
+      panel.querySelectorAll(".search-item").forEach(item => {
+        item.addEventListener("click", () => {
+          document.getElementById("destinationInput").value = item.dataset.name;
+          panel.style.display = "none"; // 선택 후 패널 닫기
+        });
+      });
+    } else {
+      const panel = document.getElementById("searchResultPanel");
+      panel.innerHTML = "검색 결과가 없습니다.";
+      panel.style.display = "block";
+    }
+  });
+});
+
+// ✅ 검색 버튼 클릭 시 기존 로직 유지
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
@@ -1424,28 +1464,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // ✅ 구글 PlacesService를 이용해 독립적인 검색결과 패널에 표시
-  const service = new google.maps.places.PlacesService(map);
-  service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-      let html = "<h3>검색 결과</h3>";
-      results.forEach(r => {
-        html += `<div style="margin-bottom:8px;">
-          📍 ${r.name}<br>
-          🏠 ${r.formatted_address}
-        </div>`;
-      });
-      const panel = document.getElementById("searchResultPanel");
-      panel.innerHTML = html;
-      panel.style.display = "block"; // 우측 독립적인 창으로 표시
-    } else {
-      const panel = document.getElementById("searchResultPanel");
-      panel.innerHTML = "검색 결과가 없습니다.";
-      panel.style.display = "block";
-    }
-  });
-
-  // 기존 목적지 검색 실행 로직은 그대로 유지
+  // 목적지 검색 실행
   findDestination(inputName).then(success => {
     if (success) {
       // ✅ 검색 성공 시 경로 안내 버튼 표시
@@ -1496,6 +1515,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 
 // ---------------------- 목적지 자동완성 ----------------------
