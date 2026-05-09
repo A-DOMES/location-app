@@ -116,26 +116,65 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
-#destinationModal .modal-content {
-  position: relative; /* 기준점 설정 */
-}
-
 #searchResultPanel {
-  position: absolute; /* 모달 콘텐츠 기준 */
-  top: 0;
-  left: 100%;         /* 모달 오른쪽에 붙임 */
-  margin-left: 20px;  /* 간격 */
-  width: 300px;
+  position: absolute;
+  top: 80px;            /* 초기 위치 */
+  left: 20px;           /* 좌측 정렬 */
+  width: 320px;
   max-height: 400px;
   overflow-y: auto;
-  background: #fff;
+  background: rgba(255,255,255,0.9); /* 반투명 */
   border: 2px solid #1976d2;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  padding: 16px;
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+  z-index: 10000;
   display: none;
   cursor: move;
 }
+
+#searchResultPanel .search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+#searchResultPanel .close {
+  cursor: pointer;
+  font-size: 16px;
+  color: #1976d2;
+}
+
+.search-item {
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.search-item:hover {
+  background: #f0f8ff;
+}
+
+.search-title {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #1976d2;
+}
+
+.search-address {
+  font-size: 13px;
+  color: #555;
+}
+
 
   
 /* ---------------------- 경로 안내 버튼 ---------------------- */
@@ -256,8 +295,6 @@ button:hover {
 }
 
 
-
-
 </style>
   
 
@@ -334,11 +371,18 @@ button:hover {
 
     <!-- 결과 영역 -->
     <div id="destinationResult"></div>
-
-    <!-- ✅ 검색결과 패널을 모달 콘텐츠 안에 배치 -->
-    <div id="searchResultPanel" style="display:none;"></div>
   </div>
 </div>
+
+<!-- ✅ 독립적인 검색결과 패널 -->
+<div id="searchResultPanel" style="display:none;">
+  <div class="search-header">
+    <span>검색 결과</span>
+    <span id="closeSearchPanel" class="close">✖</span>
+  </div>
+  <div class="search-body"></div>
+</div>
+
 
 
 
@@ -1185,7 +1229,7 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
 }  
 
 
- // ------------------------------- 초기화 -----------------------------------
+// ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
   await loadAdminLocations();
@@ -1199,45 +1243,58 @@ window.onload = async () => {
 
   // ✅ initAutocomplete(); 삭제
 
-  // ✅ 입력하는 동안 자동검색 → 우측 패널에 표시
+  // ✅ 입력하는 동안 자동검색 → 검색결과 패널에 표시
   const inputEl = document.getElementById("destinationInput");
   inputEl.addEventListener("input", () => {
     if (!map) return; // map 준비 안 됐으면 실행 안 함
     const inputName = inputEl.value;
+    const panel = document.getElementById("searchResultPanel");
+    const body = panel.querySelector(".search-body"); // 검색결과 내용 영역
+
     if (!inputName) {
-      document.getElementById("searchResultPanel").style.display = "none";
+      panel.style.display = "none";
       return;
     }
 
     const service = new google.maps.places.PlacesService(map);
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-        let html = "<h3>검색 결과</h3>";
+        let html = "";
         results.forEach(r => {
-          html += `<div class="search-item" style="margin-bottom:8px; cursor:pointer;" data-name="${r.name}">
-                     📍 ${r.name}<br>
-                     🏠 ${r.formatted_address}
-                   </div>`;
+          // ✅ 카드형으로 정리된 검색결과
+          html += `
+            <div class="search-item" data-name="${r.name}">
+              <div class="search-title">📍 ${r.name}</div>
+              <div class="search-address">🏠 ${r.formatted_address}</div>
+            </div>
+          `;
         });
-        const panel = document.getElementById("searchResultPanel");
-        panel.innerHTML = html;
+        body.innerHTML = html;
         panel.style.display = "block";
 
         // 결과 클릭 시 입력창에 반영
-        panel.querySelectorAll(".search-item").forEach(item => {
+        body.querySelectorAll(".search-item").forEach(item => {
           item.addEventListener("click", () => {
             inputEl.value = item.dataset.name;
             panel.style.display = "none";
           });
         });
       } else {
-        const panel = document.getElementById("searchResultPanel");
-        panel.innerHTML = "검색 결과가 없습니다.";
+        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
         panel.style.display = "block";
       }
     });
   });
+
+  // ✅ 닫기 버튼 이벤트 추가
+  document.getElementById("closeSearchPanel").addEventListener("click", () => {
+    document.getElementById("searchResultPanel").style.display = "none";
+  });
+
+  // ✅ 검색결과 패널도 독립적으로 드래그 가능
+  makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 };
+
 
   
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
