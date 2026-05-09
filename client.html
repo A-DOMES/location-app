@@ -439,30 +439,20 @@ function updateLocationDisplay(lat, lng, heading) {
 }
 
 // ---------------------- 사람/지도중심 모드 변환 색상 변경 (어두울때/ 밝을때) ----------------------  
-function adjustTextColor() {
-  const btn = document.getElementById("toggleFollowBtn");
-  const bgColor = window.getComputedStyle(btn).backgroundColor;
-
-  // RGB 값 추출
-  const rgb = bgColor.match(/\d+/g).map(Number);
-  const brightness = (rgb[0]*0.299 + rgb[1]*0.587 + rgb[2]*0.114);
-
-  // 밝기 기준으로 글씨색 변경
-  if (brightness < 128) {
-    btn.style.color = "#ffffff"; // 어두운 배경 → 흰색
-  } else {
-    btn.style.color = "#1976d2"; // 밝은 배경 → 파란색
-  }
-}
-
-// 초기 실행
 const toggleBtn = document.getElementById("toggleFollowBtn");
-toggleBtn.style.color = "#ffffff"; // 초기값 흰색
-adjustTextColor();
 
-// 필요할 때마다 실행 (예: 윈도우 리사이즈, 배경 변경 시)
-window.addEventListener("resize", adjustTextColor);
+// 초기값: 흰색 글씨
+toggleBtn.style.color = "#ffffff";
 
+// 드래그 종료 시 글씨를 파란색으로 변경
+toggleBtn.addEventListener("mouseup", () => {
+  toggleBtn.style.color = "#1976d2";
+});
+
+// 터치 드래그 종료(모바일 대응)
+toggleBtn.addEventListener("touchend", () => {
+  toggleBtn.style.color = "#1976d2";
+});
 
   
 function makeDraggableAndResizable(element) {
