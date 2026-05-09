@@ -145,7 +145,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   margin-bottom: 10px;
 }
 
-#searchResultPanel .search-header .search-title {
+#searchResultPanel .search-header span {
   font-size: 18px;           /* ✅ 글씨 크기 확대 */
   color: #1976d2;            /* 강조 색상 */
 }
@@ -165,13 +165,14 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   margin-bottom: 10px;
   transition: background 0.2s;
   cursor: pointer;
+  text-align: left;          /* ✅ 리스트 전체 좌측 정렬 */
 }
 
 .search-item:hover {
   background: #f0f8ff;
 }
 
-.search-item .search-title {
+.search-title {
   font-weight: bold;
   font-size: 15px;
   margin-bottom: 4px;
@@ -179,7 +180,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   text-align: left;          /* ✅ 리스트 제목 좌측 정렬 */
 }
 
-.search-item .search-address {
+.search-address {
   font-size: 13px;
   color: #555;
   text-align: left;          /* ✅ 리스트 주소 좌측 정렬 */
