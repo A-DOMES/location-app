@@ -1392,44 +1392,40 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
   
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
-  // 경로 초기화
+  // ---------------------- 경로 초기화 ----------------------
   pathCoords = [];
   pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 
-  // 이동정보 초기화
+  // ---------------------- 이동정보 초기화 ----------------------
   speedHistory = [];
   startTime = Date.now();
   destinationLat = null;
   destinationLng = null;
 
-  // 목적지 관련 초기화
+  // ---------------------- 목적지 관련 초기화 ----------------------
   if (destinationCircle) {
-    destinationCircle.setMap(null);
+    destinationCircle.setMap(null);   // 목적지 원형 제거
     destinationCircle = null;
   }
   if (destinationMarker) {
-    destinationMarker.setMap(null);
+    destinationMarker.setMap(null);   // 목적지 마커 제거
     destinationMarker = null;
   }
 
-  // ✅ 내 위치 마커 제거
-  if (myMarker) {
-    myMarker.setMap(null);
-    myMarker = null;
-  }
+  // ❌ 내 위치 마커(myMarker)는 유지 (삭제 코드 제거)
 
-  // ✅ 상대방 마커 제거
+  // ---------------------- 상대방 마커 제거 ----------------------
   if (otherMarker) {
     otherMarker.setMap(null);
     otherMarker = null;
   }
 
-  // ✅ 원형 표시 제거
+  // ---------------------- 내 위치 주변 원형 제거 ----------------------
   circles.forEach(circle => circle.setMap(null));
   circles = [];
 
-  // 모달 내용 초기화 (직선 거리 & ETA 포함)
+  // ---------------------- 모달 내용 초기화 ----------------------
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: <span class="highlight">0 km/h</span><br>
     📊 평균 속도: <span class="highlight">0 km/h</span><br>
@@ -1440,10 +1436,10 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
   `;
 
-  // 목적지 결과창도 초기화
+  // ---------------------- 목적지 결과창 초기화 ----------------------
   document.getElementById("destinationResult").innerHTML = "";
 
-  // 알림 모달 자동 닫힘
+  // ---------------------- 알림 모달 자동 닫힘 ----------------------
   openPopupModal(document.getElementById("popupModal"));
 });
 
@@ -1616,8 +1612,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setCenter(pos);
   map.setZoom(7);
 
-  // 청색 원
-  const circle = new google.maps.Circle({
+  // ---------------------- 목적지 원형 ----------------------
+  destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
     strokeWeight: 2,
@@ -1629,12 +1625,13 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 
   // ✅ 원형 우클릭 이벤트
-  circle.addListener("rightclick", () => {
+  destinationCircle.addListener("rightclick", () => {
     map.setZoom(7);
   });
 
-  // 붉은색 커스텀 마커
-  const marker = new google.maps.Marker({
+  // ---------------------- 목적지 마커 ----------------------
+  // ⚠️ 지역 변수 대신 전역 변수 destinationMarker에 담음
+  destinationMarker = new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1651,11 +1648,11 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 
   // ✅ 마커 우클릭 이벤트
-  marker.addListener("rightclick", () => {
+  destinationMarker.addListener("rightclick", () => {
     map.setZoom(7);
   });
 
-  // ✅ InfoWindow 생성 (hover 시 표시)
+  // ---------------------- InfoWindow ----------------------
   const infoWindow = new google.maps.InfoWindow({
     content: `
       <div style="text-align:left">
@@ -1665,20 +1662,20 @@ function showDestinationOnMap(title, lat, lng, address="") {
       </div>`
   });
 
-  marker.addListener("mouseover", () => {
-    infoWindow.open(map, marker);
+  destinationMarker.addListener("mouseover", () => {
+    infoWindow.open(map, destinationMarker);
   });
 
-  marker.addListener("mouseout", () => {
+  destinationMarker.addListener("mouseout", () => {
     infoWindow.close();
   });
 
-  // ✅ 마커 클릭 시 해당 위치로 이동 + 줌 레벨 18
-  marker.addListener("click", () => {
+  // ---------------------- 마커 클릭 이벤트 ----------------------
+  destinationMarker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
 
-    // ✅ 기존 모달창 로직 유지
+    // ✅ 모달창에 정보 표시
     document.getElementById("destinationResult").innerHTML = `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
@@ -1688,7 +1685,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
     openModal(document.getElementById("destinationModal"));
 
-    // 경로 안내 호출
+    // ✅ 경로 안내 호출
     showRouteToDestination({ lat, lng });
   });
 }
