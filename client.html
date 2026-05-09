@@ -1516,7 +1516,7 @@ async function findDestination(inputName) {
       parseFloat(match.lng),
       match.address
     );
-    return Promise.resolve(true); // ✅ 성공 반환
+    return Promise.resolve(true);
   }
 
   // 2️⃣ 외부 API 검색
@@ -1553,10 +1553,10 @@ async function findDestination(inputName) {
               body.innerHTML = html || "<div>검색 결과가 없습니다.</div>";
               panel.style.display = "block";
 
-              // 결과 클릭 시 입력창 반영 + 지도 표시
+              // ✅ 좌표는 textSearch 결과에서 가져오기
               body.querySelectorAll(".search-item").forEach((item, idx) => {
                 item.addEventListener("click", () => {
-                  const p = results[idx].geometry.location; // 좌표는 textSearch 결과에서
+                  const p = results[idx].geometry.location;
                   showDestinationOnMap(results[idx].name, p.lat(), p.lng(), results[idx].formatted_address);
                   document.getElementById("destinationInput").value = results[idx].name;
                   panel.style.display = "none";
@@ -1574,8 +1574,6 @@ async function findDestination(inputName) {
     });
   });
 }
-
-
 
 
 
