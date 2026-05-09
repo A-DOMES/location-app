@@ -220,7 +220,7 @@ button:hover {
   text-align:left; /* 글씨 좌측 정렬 */
   white-space:nowrap;
   transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  padding-left:10px; /* 좌측에서 1px 더 띄움 */
+  padding-left:12px; /* 좌측에서 1px 더 띄움 */
 }
 #toggleFollowBtn:hover { background:#e3f2fd; transform:scale(1.1); }
 #toggleFollowBtn:active { transform:scale(0.95); }
@@ -660,7 +660,7 @@ const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 �
 toggleBtn.addEventListener("click", () => {
   followUser = !followUser;
   // 👤 사람 아이콘 / 🗺️ 지도 아이콘으로 표시
-  toggleBtn.innerText = followUser ? "👤 중심모드" : "🗺️ 중심모드";
+  toggleBtn.innerText = followUser ? "👤  중심모드" : "🗺️  중심모드";
 });
 
   
