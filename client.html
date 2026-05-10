@@ -1649,6 +1649,12 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setCenter(pos);
   map.setZoom(7);
 
+  // ---------------------- 기존 마커 제거 (추가된 부분) ----------------------
+  if (destinationMarker) {
+    destinationMarker.setMap(null);
+    destinationMarker = null;
+  }
+
   // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
@@ -1661,16 +1667,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ✅ 배열에 추가 (전역 변수 destinationMarkers 사용)
-  destinationMarkers.push(marker);
-  
-  // ✅ 원형 우클릭 이벤트
-  destinationCircle.addListener("rightclick", () => {
-    map.setZoom(7);
-  });
-
   // ---------------------- 목적지 마커 ----------------------
-  // ⚠️ 지역 변수 대신 전역 변수 destinationMarker에 담음
   destinationMarker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1687,53 +1684,61 @@ function showDestinationOnMap(title, lat, lng, address="") {
     title: title
   });
 
+  // ✅ 배열에 추가 (전역 변수 destinationMarkers 사용)
+  destinationMarkers.push(destinationMarker);
+
   // ✅ 마커 우클릭 이벤트
   destinationMarker.addListener("rightclick", () => {
     map.setZoom(7);
   });
 
-// ---------------------- InfoWindow ----------------------
-const infoWindow = new google.maps.InfoWindow({
-  content: `
-    <div style="text-align:left">
-      📍 목적지: ${title}<br>
-      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-      🏠 주소: ${address}
-    </div>`
-});
+  // ---------------------- InfoWindow ----------------------
+  const infoWindow = new google.maps.InfoWindow({
+    content: `
+      <div style="text-align:left">
+        📍 목적지: ${title}<br>
+        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+        🏠 주소: ${address}
+      </div>`
+  });
 
-destinationMarker.addListener("mouseover", () => {
-  infoWindow.open(map, destinationMarker);
-});
+  destinationMarker.addListener("mouseover", () => {
+    infoWindow.open(map, destinationMarker);
+  });
 
-destinationMarker.addListener("mouseout", () => {
-  infoWindow.close();
-});
+  destinationMarker.addListener("mouseout", () => {
+    infoWindow.close();
+  });
 
-// ---------------------- 마커 클릭 이벤트 ----------------------
-destinationMarker.addListener("click", () => {
-  map.setCenter(pos);
-  map.setZoom(18);
+  // ---------------------- 마커 클릭 이벤트 ----------------------
+  destinationMarker.addListener("click", () => {
+    map.setCenter(pos);
+    map.setZoom(18);
 
-  // ✅ 마커 정보 모달에 표시
-  document.getElementById("destinationInfoResult").innerHTML = `
-    <div style="text-align:left">
-      📍 목적지: ${title}<br>
-      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-      🏠 주소: ${address}
-    </div>`;
+    // ✅ 마커 정보 모달에 표시
+    document.getElementById("destinationInfoResult").innerHTML = `
+      <div style="text-align:left">
+        📍 목적지: ${title}<br>
+        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+        🏠 주소: ${address}
+      </div>`;
 
-  openModal(document.getElementById("destinationInfoModal"));
+    openModal(document.getElementById("destinationInfoModal"));
 
-  // ✅ 경로 안내 호출
-  showRouteToDestination({ lat, lng });
-});
+    // ✅ 경로 안내 호출
+    showRouteToDestination({ lat, lng });
+  });
+
+  // ✅ 검색 결과 텍스트 표시
+  document.getElementById("destinationResult").innerText =
+    `📍 ${title} (${address})`;
+
+  // ✅ 경로 안내 버튼 표시
+  document.getElementById("startRouteBtn").style.display = "inline-block";
 }
 
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// ✅ 검색 버튼 클릭 시 기존 로직 유지
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
@@ -1745,13 +1750,11 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   // 목적지 검색 실행
   findDestination(inputName).then(success => {
     if (success) {
-      // ✅ 검색 성공 시 경로 안내 버튼 표시
       document.getElementById("startRouteBtn").style.display = "inline-block";
     }
   });
 });
 
-// 경로 안내 버튼 이벤트
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
@@ -1773,7 +1776,7 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 초기화
   pathCoords = [];
-  pathPolyline.setPath([]);
+  if (pathPolyline) pathPolyline.setPath([]);
   document.getElementById("resetPathBtn").style.display = "none";
 
   // 목적지 관련 초기화
@@ -1793,6 +1796,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 알림 모달 자동 닫힘
   openPopupModal(document.getElementById("popupModal"));
 });
+
 
 
 // ---------------------- 목적지 자동완성 ----------------------
