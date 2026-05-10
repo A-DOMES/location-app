@@ -1663,6 +1663,19 @@ async function findDestination(inputName) {
 }
 
 
+/* ---------------------- 현재 위치 추적 ---------------------- */
+navigator.geolocation.watchPosition(
+  (pos) => {
+    currentLat = pos.coords.latitude;
+    currentLng = pos.coords.longitude;
+    console.log("📍 현재 위치 갱신:", currentLat, currentLng);
+  },
+  (err) => {
+    console.error("위치 추적 오류:", err);
+  },
+  { enableHighAccuracy: true }
+);
+
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   // ✅ 좌표 저장
@@ -1730,11 +1743,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
       </div>`;
 
     openModal(document.getElementById("destinationModal"));
-    showRouteToDestination({ lat, lng });
   });
 }
-
-  
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
@@ -1794,7 +1804,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   openPopupModal(document.getElementById("popupModal"));
 });
-
 
 /* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
@@ -1874,8 +1883,8 @@ function showRouteToDestination(destination) {
   });
 
   const request = {
-    origin: { lat: currentLat, lng: currentLng },
-    destination,
+    origin: { lat: Number(currentLat), lng: Number(currentLng) }, // ✅ 숫자로 변환
+    destination: { lat: Number(destination.lat), lng: Number(destination.lng) }, // ✅ 숫자로 변환
     travelMode: google.maps.TravelMode.DRIVING
   };
 
