@@ -471,24 +471,31 @@ button:hover {
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;
 let pathCoords = [];
+
 let lastGeocodeTime = 0;
 let geocodeInterval = 60000;
+
 let radarPolygon = null;
 let radarRadiusMeters = 100;   // 기본 레이더 반경 (100m)
 let radarEnabled = true;
+
 let lastHeading = null;
 let poiMarkers = [];
 let compassMarkers = [];
 let infoWindow;
+
 let directionsService, directionsRenderer;  // 기존 경로 안내용 (일반 목적)
-let currentLat, currentLng;
+
+let currentLat, currentLng;   // 현재 위치 좌표
 let otherMarker;
 let circles = [];
+
 let totalDistance = 0;
+
 let modalQueue = [];
 let modalTimer = null;
 
-// 최근 알림 시간을 저장할 변수
+// 최근 알림 시간
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
 let lastSpeedLimitAlertTime = 0;
@@ -503,18 +510,24 @@ let livePathRenderer = null;
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
 
-// 속도 거리 측정 전역 변수
+// 목적지 좌표
 let destinationLat = null;
 let destinationLng = null;
 
-// 🚗 서버에서 가져온 차량 위치 데이터 저장  
+// 속도 관련 변수
+let currentSpeed = 0;       // 현재 속도 (km/h)
+let lastPosition = null;    // 이전 위치 저장
+let lastTimestamp = null;   // 이전 위치 시간 저장
+
+// 🚗 서버에서 가져온 차량 위치 데이터
 let adminLocations = []; 
 
 // 기본값: 사람 중심 모드
 let followUser = true; 
 
-//마커 배열 선언
-let destinationMarkers = []; // 목적지 마커들을 담을 배열  
+// 목적지 마커 배열
+let destinationMarkers = []; 
+
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -843,12 +856,51 @@ function updatePathPolyline(lat, lng) {
 }
 
 
+// ---------------------- 거리 계산 함수 ----------------------
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // 지구 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // km
+}
+
+
+// ---------------------- GPS 기반 속도 계산 ----------------------
+function computeSpeedFromGPS(lat, lng, timestamp) {
+  if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
+    const distance = getDistanceFromLatLonInKm(lastLat, lastLng, lat, lng) * 1000; // m 단위
+    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초
+    if (timeElapsed > 0) {
+      currentSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
+    }
+  }
+  lastLat = lat;
+  lastLng = lng;
+  lastTimestamp = timestamp;
+}
+
+// ---------------------- 스무딩 함수 ----------------------
+function getSmoothedSpeed(history, windowSize = 5) {
+  if (history.length === 0) return 0;
+  const recent = history.slice(-windowSize);
+  const sum = recent.reduce((a, b) => a + b, 0);
+  return sum / recent.length;
+}
+
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
   const totalDistance = computeTotalDistance(pathCoords);
 
   // ✅ 속도 히스토리 관리
   speedHistory.push(currentSpeed);
+
+  // ✅ 스무딩된 현재 속도
+  const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
   // ✅ 평균 속도 계산
   const avgSpeed = speedHistory.length > 0 
@@ -859,7 +911,7 @@ function updateTravelStats() {
   const maxSpeed = speedHistory.length > 0 ? Math.max(...speedHistory) : 0;
 
   // ✅ 주행 시간 계산 (분 단위)
-  const elapsedTime = (Date.now() - startTime) / 1000; // 초 단위
+  const elapsedTime = (Date.now() - startTime) / 1000; // 초
   const elapsedMinutes = (elapsedTime / 60).toFixed(1);
 
   // ✅ ETA 계산 (목적지가 있을 때만)
@@ -868,13 +920,13 @@ function updateTravelStats() {
     const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
     const currentPos = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
-    const etaMinutes = (straightDistance / 1000) / avgSpeed * 60; // 분 단위
+    const etaMinutes = (straightDistance / 1000) / avgSpeed * 60;
     etaMessage = `${etaMinutes.toFixed(1)} 분 후 도착 예상`;
   }
 
   // ✅ 모달창 업데이트
   document.getElementById("travelStatsContent").innerHTML = `
-    🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
+    🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
     ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
     ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
