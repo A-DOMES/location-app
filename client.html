@@ -142,15 +142,20 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* ---------------------- 검색결과 헤더 ---------------------- */
 #searchResultPanel .search-header {
   display: flex;
-  justify-content: center;   /* ✅ 타이틀만 가운데 정렬 */
+  justify-content: center;   /* ✅ 타이틀 가운데 정렬 */
   align-items: center;
   font-weight: bold;
   margin-bottom: 10px;
 }
 
+#searchResultPanel .search-header span::before {
+  content: "🔍 ";   /* ✅ 타이틀 앞에 아이콘 추가 */
+  font-size: 20px;  /* ✅ 아이콘 크기 맞춤 */
+}
+
 #searchResultPanel .search-header span {
-  font-size: 20px;           /* ✅ 글씨 크기 확대 */
-  color: #1976d2;            /* 강조 색상 */
+  font-size: 20px;  /* ✅ 기존 18px → 20px 확대 */
+  color: #1976d2;
 }
   
 #searchResultPanel .close {
