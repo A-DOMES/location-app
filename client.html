@@ -1782,20 +1782,20 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 function showRouteToDestination(destination) {
   console.log("📍 showRouteToDestination 실행:", destination);
 
-  // ✅ 위치 추적 시작
+  // ✅ 위치 추적 시작 (사용자의 현재 위치를 계속 업데이트)
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
 
-      // ✅ 실시간 주행 경로 업데이트
+      // ✅ 실시간 주행 경로를 파란색 선으로 표시
       pathCoords.push({ lat: currentLat, lng: currentLng });
       if (pathPolyline) {
         pathPolyline.setPath(pathCoords);
       } else {
         pathPolyline = new google.maps.Polyline({
           path: pathCoords,
-          strokeColor: "#0000FF",
+          strokeColor: "#0000FF", // 파란색
           strokeWeight: 4,
           strokeOpacity: 0.8,
           map: map
@@ -1806,36 +1806,40 @@ function showRouteToDestination(destination) {
     { enableHighAccuracy: true }
   );
 
-  // 기존 안내선 제거
+  // ✅ 기존 안내선 제거 (새 경로 안내를 위해 초기화)
   if (destinationRenderer) {
     destinationRenderer.setMap(null);
     destinationRenderer = null;
   }
 
-  // ✅ computeRoutes 직접 호출
+  // ✅ RouteService 객체 생성 (DirectionsService와 유사)
+  const routeService = new google.maps.routes.RouteService();
+
+  // ✅ 출발지와 목적지 설정
   const request = {
     origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
     destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
-    travelMode: "DRIVE"
+    travelMode: "DRIVE" // 운전 모드
   };
 
-  google.maps.routes.computeRoutes(request).then((response) => {
+  // ✅ computeRoutes 메서드 호출
+  routeService.computeRoutes(request).then((response) => {
     if (response.routes && response.routes.length > 0) {
       const route = response.routes[0];
 
-      // ✅ 안내선 표시
+      // ✅ 안내선(경로) 표시 - 초록색 굵은 선
       if (route.polyline?.encodedPolyline) {
         const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
         destinationRenderer = new google.maps.Polyline({
           path: decodedPath,
-          strokeColor: "#008000",
+          strokeColor: "#008000", // 초록색
           strokeWeight: 6,
           strokeOpacity: 1.0,
           map: map
         });
       }
 
-      // ✅ 목적지 마커 표시
+      // ✅ 목적지 마커 표시 (AdvancedMarkerElement 사용)
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map,
         position: { lat: destination.lat, lng: destination.lng },
@@ -1843,7 +1847,7 @@ function showRouteToDestination(destination) {
       });
       destinationMarkers.push(marker);
 
-      // ✅ 안내 단계별 메시지
+      // ✅ 안내 단계별 메시지 (음성 안내 포함)
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       route.legs[0].steps.forEach((step, idx) => {
         const text = step.navigationInstruction?.instructions || "안내 없음";
