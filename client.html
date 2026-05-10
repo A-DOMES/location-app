@@ -1663,9 +1663,9 @@ async function findDestination(inputName) {
 }
 
 
-
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
+  // ✅ 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
 
@@ -1686,10 +1686,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  destinationCircle.addListener("rightclick", () => {
-    map.setZoom(7);
-  });
-
   // ---------------------- 목적지 마커 ----------------------
   const marker = new google.maps.Marker({
     position: pos,
@@ -1707,12 +1703,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     title: title
   });
 
-  // ✅ 배열에 추가
   destinationMarkers.push(marker);
-
-  marker.addListener("rightclick", () => {
-    map.setZoom(7);
-  });
 
   const infoWindow = new google.maps.InfoWindow({
     content: `
@@ -1726,6 +1717,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
+  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -1738,10 +1730,10 @@ function showDestinationOnMap(title, lat, lng, address="") {
       </div>`;
 
     openModal(document.getElementById("destinationModal"));
-    showRouteToDestination({ lat, lng });
   });
 }
 
+  
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
