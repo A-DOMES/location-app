@@ -116,41 +116,42 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
+/* ---------------------- 독립적인 검색결과 창 ---------------------- */
 #searchResultPanel {
   position: fixed;
   top: 49%;
   left: 68%;
   transform: translate(-50%, -50%);
   width: 320px;
-  height: 800px;          /* ✅ 고정 높이 */
-  overflow-y: auto;       /* 내용이 많으면 스크롤 */
-  background: rgba(255,255,255,0.25);  /* ✅ 반투명 */
-  backdrop-filter: blur(10px);         /* ✅ 블러 효과 */
-  -webkit-backdrop-filter: blur(10px); /* ✅ 크로스 브라우저 */
+  height: 800px;          
+  overflow-y: auto;       
+  background: rgba(255,255,255,0.35);   /* ✅ 조금 더 흰색 강조 → 가독성 */
+  backdrop-filter: blur(10px);         
+  -webkit-backdrop-filter: blur(10px); 
   border: 2px solid #1976d2;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  padding: 12px;
-  font-size: 14px;
+  border-radius: 16px;                  /* ✅ 둥근 모서리 → 명함 느낌 */
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25); /* ✅ 그림자 → 카드 입체감 */
+  padding: 16px;                        /* ✅ 여백 넉넉하게 */
+  font-size: 15px;                      /* ✅ 글씨 조금 키움 */
   color: #333;
+  line-height: 1.6;                     /* ✅ 줄 간격 넉넉하게 */
   z-index: 10000;
   display: none;
   cursor: move;
 }
 
-
 /* ---------------------- 검색결과 헤더 ---------------------- */
 #searchResultPanel .search-header {
   display: flex;
-  justify-content: center;   /* ✅ 타이틀만 가운데 정렬 */
+  justify-content: center;   
   align-items: center;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 14px;       /* ✅ 헤더와 리스트 간격 확보 */
 }
 
 #searchResultPanel .search-header span {
-  font-size: 18px;           /* ✅ 글씨 크기 확대 */
-  color: #1976d2;            /* 강조 색상 */
+  font-size: 18px;           
+  color: #1976d2;            
 }
   
 #searchResultPanel .close {
@@ -158,6 +159,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   font-size: 16px;
   color: #1976d2;
 }
+
 
 /* ---------------------- 검색결과 리스트 ---------------------- */
 .search-item { background:rgba(255,255,255,0.35); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:8px; padding:12px; margin-bottom:12px; transition:background 0.2s; cursor:pointer; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1.6; }
