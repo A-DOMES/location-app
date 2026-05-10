@@ -1812,15 +1812,14 @@ function showRouteToDestination(destination) {
     destinationRenderer = null;
   }
 
-  // ✅ computeRoutes 사용
-  const routeService = google.maps.routes.RouteService();
+  // ✅ computeRoutes 직접 호출
   const request = {
     origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
     destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
     travelMode: "DRIVE"
   };
 
-  routeService.computeRoutes(request).then((response) => {
+  google.maps.routes.computeRoutes(request).then((response) => {
     if (response.routes && response.routes.length > 0) {
       const route = response.routes[0];
 
