@@ -1813,7 +1813,7 @@ function showRouteToDestination(destination) {
   }
 
   // ✅ computeRoutes 사용
-  const routeService = new google.maps.routes.RouteService();
+  const routeService = google.maps.routes.RouteService();
   const request = {
     origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
     destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
