@@ -118,13 +118,15 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* 독립적인 검색결과 창 */
 #searchResultPanel {
   position: fixed;
-  top: 49%;              
+  top: 49%;
   left: 68%;
   transform: translate(-50%, -50%);
   width: 320px;
   height: 800px;          /* ✅ 고정 높이 */
   overflow-y: auto;       /* 내용이 많으면 스크롤 */
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.25);  /* ✅ 반투명 */
+  backdrop-filter: blur(10px);         /* ✅ 블러 효과 */
+  -webkit-backdrop-filter: blur(10px); /* ✅ 크로스 브라우저 */
   border: 2px solid #1976d2;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -135,6 +137,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   display: none;
   cursor: move;
 }
+
 
 /* ---------------------- 검색결과 헤더 ---------------------- */
 #searchResultPanel .search-header {
@@ -157,69 +160,17 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 }
 
 /* ---------------------- 검색결과 리스트 ---------------------- */
-.search-item {
-  background: rgba(255,255,255,0.95);
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 10px;
-  transition: background 0.2s;
-  cursor: pointer;
-  text-align: left;          /* ✅ 리스트 전체 좌측 정렬 */
-}
+.search-item { background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:8px; padding:12px; margin-bottom:12px; transition:background 0.2s; cursor:pointer; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1.6; }
+.search-item:hover { background:rgba(255,255,255,0.35); }
 
-.search-item:hover {
-  background: #f0f8ff;
-}
+.search-title { font-weight:bold; font-size:16px; margin-bottom:6px; color:#1976d2; text-align:left; line-height:1.6; }
+.search-address { font-size:14px; color:#555; text-align:left; line-height:1.6; }
+.search-type { font-size:13px; color:#777; text-align:left; margin-top:4px; line-height:1.6; }
+.search-phone { font-size:14px; color:#333; text-align:left; margin-top:4px; line-height:1.6; }
+.search-rating { font-size:14px; color:#444; text-align:left; margin-top:4px; line-height:1.6; }
+.search-website { font-size:13px; color:#1976d2; text-align:left; margin-top:4px; line-height:1.6; }
+.search-hours { font-size:13px; color:#777; text-align:left; margin-top:4px; line-height:1.6; }
 
-.search-title {
-  font-weight: bold;
-  font-size: 15px;
-  margin-bottom: 4px;
-  color: #1976d2;
-  text-align: left;          /* ✅ 리스트 제목 좌측 정렬 */
-}
-
-.search-address {
-  font-size: 13px;
-  color: #555;
-  text-align: left;          /* ✅ 리스트 주소 좌측 정렬 */
-}
-
-.search-type {
-  font-size: 12px;
-  color: #777;
-  text-align: left;
-  margin-top: 2px;
-}
-
-.search-phone {
-  font-size: 13px;
-  color: #333;
-  text-align: left;
-  margin-top: 2px;
-}
-
-.search-rating {
-  font-size: 13px;
-  color: #444;
-  text-align: left;
-  margin-top: 2px;
-}
-
-.search-website {
-  font-size: 12px;
-  color: #1976d2;
-  text-align: left;
-  margin-top: 2px;
-}
-
-.search-hours {
-  font-size: 12px;
-  color: #777;
-  text-align: left;
-  margin-top: 2px;
-}
 
 
 
@@ -1955,3 +1906,4 @@ document.addEventListener('keydown', e => {
 </script>
 </body>
 </html>
+
