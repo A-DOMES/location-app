@@ -1730,6 +1730,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
       </div>`;
 
     openModal(document.getElementById("destinationModal"));
+    showRouteToDestination({ lat, lng });
   });
 }
 
