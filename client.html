@@ -1930,13 +1930,14 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const totalDistance = computeTotalDistance(pathCoords);
 
   return `
-    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span><br>
-    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span><br>
-    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span><br>
-    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span><br>
-    📏 총 이동 거리: <span class="highlight">${totalDistance} km</span><br>
+    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span> |
+    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span> |
+    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span> |
+    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span> |
+    📏 총 이동 거리: <span class="highlight">${totalDistance} km</span>
   `;
 }
+
 
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function showQueuedModal(title, content) {
