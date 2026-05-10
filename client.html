@@ -148,23 +148,26 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
   margin-bottom: 10px;
 }
 
-#searchResultPanel .search-header span::before {
-  content: "🔍 ";   /* ✅ 타이틀 앞에 아이콘 추가 */
-  font-size: 20px;  /* ✅ 아이콘 크기 맞춤 */
-  color: #1976d2;   /* ✅ 글씨 색상과 통일 */
-}
-
-#searchResultPanel .search-header span {
-  font-size: 20px;  /* ✅ 기존 18px → 20px 확대 */
+/* 타이틀 앞에만 🔍 아이콘 추가 */
+#searchResultPanel .search-header .search-title::before {
+  content: "🔍 ";
+  font-size: 20px;
   color: #1976d2;
 }
 
-  
-#searchResultPanel .close {
+/* 타이틀 글씨 크기 확대 */
+#searchResultPanel .search-header .search-title {
+  font-size: 20px;   /* ✅ 기존 18px → 20px */
+  color: #1976d2;
+}
+
+/* 닫기 버튼은 아이콘 없이 유지 */
+#searchResultPanel .search-header .close {
   cursor: pointer;
   font-size: 16px;
   color: #1976d2;
 }
+
 
 /* ---------------------- 검색결과 리스트 ---------------------- */
 .search-item { background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:8px; padding:12px; margin-bottom:12px; transition:background 0.2s; cursor:pointer; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1.6; }
