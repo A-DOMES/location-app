@@ -1435,7 +1435,10 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // ---------------------- 경로 초기화 ----------------------
   pathCoords = [];
-  pathPolyline.setPath([]);
+  if (pathPolyline) {
+    pathPolyline.setMap(null);   // 지도에서 제거
+    pathPolyline = null;
+  }
   document.getElementById("resetPathBtn").style.display = "none";
 
   // ---------------------- 이동정보 초기화 ----------------------
@@ -1446,15 +1449,15 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   // ---------------------- 목적지 관련 초기화 ----------------------
   if (destinationCircle) {
-    destinationCircle.setMap(null);   // 목적지 원형 제거
+    destinationCircle.setMap(null);
     destinationCircle = null;
   }
 
   // ✅ 모든 목적지 마커 제거
   destinationMarkers.forEach(marker => marker.setMap(null));
-  destinationMarkers = []; // 배열 비우기
+  destinationMarkers = [];
 
-  // ❌ 내 위치 마커(myMarker)는 유지 (삭제 코드 제거)
+  // ❌ 내 위치 마커(myMarker)는 유지
 
   // ---------------------- 상대방 마커 제거 ----------------------
   if (otherMarker) {
