@@ -1581,6 +1581,11 @@ async function findDestination(inputName) {
       parseFloat(match.lng),
       match.address
     );
+
+    // ✅ 좌표 저장
+    destinationLat = parseFloat(match.lat);
+    destinationLng = parseFloat(match.lng);
+
     return Promise.resolve(true);
   }
 
@@ -1615,6 +1620,10 @@ async function findDestination(inputName) {
               map.setZoom(16);
               showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
 
+              // ✅ 좌표 저장
+              destinationLat = p.lat();
+              destinationLng = p.lng();
+
               document.getElementById("destinationInput").value = r.name;
               panel.style.display = "none";
 
@@ -1633,6 +1642,9 @@ async function findDestination(inputName) {
                   `;
                 }
               });
+
+              // ✅ 경로 안내 버튼 표시
+              document.getElementById("startRouteBtn").style.display = "inline-block";
             });
           });
 
