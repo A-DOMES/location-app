@@ -1795,7 +1795,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 });
 
 
-// ---------------------- 목적지 자동완성 ----------------------
+/* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
   const input = document.getElementById("destinationInput");
   const autocomplete = new google.maps.places.Autocomplete(input, {
@@ -1815,6 +1815,8 @@ function initAutocomplete() {
     const lng = place.geometry.location.lng();
     const address = place.formatted_address || "";
 
+    console.log("✅ 자동완성 선택됨:", place.name, lat, lng);
+
     showDestinationOnMap(place.name, lat, lng, address);
 
     // ✅ 검색 성공 시 경로 안내 버튼 표시
@@ -1831,6 +1833,10 @@ function speakMessage(message) {
 
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
+  console.log("🚗 경로 안내 버튼 클릭됨");
+  console.log("출발지:", currentLat, currentLng);
+  console.log("목적지:", destinationLat, destinationLng);
+
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
     return;
@@ -1840,6 +1846,8 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
 /* ---------------------- 경로 안내 함수 ---------------------- */
 function showRouteToDestination(destination) {
+  console.log("📍 showRouteToDestination 실행:", destination);
+
   if (!directionsService) directionsService = new google.maps.DirectionsService();
 
   // 기존 주행 경로 선 제거
@@ -1870,8 +1878,13 @@ function showRouteToDestination(destination) {
     travelMode: google.maps.TravelMode.DRIVING
   };
 
+  console.log("📤 Directions API 요청:", request);
+
   directionsService.route(request, (result, status) => {
+    console.log("📥 Directions API 응답 상태:", status);
+
     if (status === google.maps.DirectionsStatus.OK) {
+      console.log("✅ 경로 결과:", result);
       destinationRenderer.setDirections(result);
 
       // 화면에 내 위치와 목적지를 동시에 표시
@@ -1898,9 +1911,12 @@ function showRouteToDestination(destination) {
       // 목적지 도착 시 음성 안내
       const arrivalMessage = "목적지에 도착했습니다!";
       setTimeout(() => speakMessage(arrivalMessage), result.routes[0].legs[0].duration.value * 1000);
+    } else {
+      console.error("❌ 경로 요청 실패:", status);
     }
   });
 }
+
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
