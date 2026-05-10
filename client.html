@@ -1781,12 +1781,11 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 function showRouteToDestination(destination) {
   console.log("📍 showRouteToDestination 실행:", destination);
 
-  // ✅ 경로 안내 시작 시 위치 추적 켜기
+  // ✅ 위치 추적 시작
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
-      console.log("📍 추적 위치:", currentLat, currentLng);
 
       // ✅ 실시간 주행 경로 업데이트
       pathCoords.push({ lat: currentLat, lng: currentLng });
@@ -1795,8 +1794,8 @@ function showRouteToDestination(destination) {
       } else {
         pathPolyline = new google.maps.Polyline({
           path: pathCoords,
-          strokeColor: "#0000FF",   // 주행 경로 색상 (파란색)
-          strokeWeight: 4,          // 두께
+          strokeColor: "#0000FF",   // 파란색 주행 경로
+          strokeWeight: 4,
           strokeOpacity: 0.8,
           map: map
         });
@@ -1806,52 +1805,37 @@ function showRouteToDestination(destination) {
     { enableHighAccuracy: true }
   );
 
-  // 기존 목적지 안내선 제거
+  // 기존 안내선 제거
   if (destinationRenderer) {
     destinationRenderer.setMap(null);
     destinationRenderer = null;
   }
 
-  // 새로운 RouteService 사용
+  // ✅ computeRoutes 사용
   const routeService = new google.maps.routes.RouteService();
-
   const request = {
-    origin: {
-      location: { latLng: { latitude: Number(currentLat), longitude: Number(currentLng) } }
-    },
-    destination: {
-      location: { latLng: { latitude: Number(destination.lat), longitude: Number(destination.lng) } }
-    },
+    origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
+    destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
     travelMode: "DRIVE"
   };
 
-  console.log("📤 computeRoutes 요청:", request);
-
   routeService.computeRoutes(request).then((response) => {
-    console.log("📥 computeRoutes 응답:", response);
-
     if (response.routes && response.routes.length > 0) {
       const route = response.routes[0];
 
-      // 화면에 내 위치와 목적지를 동시에 표시
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(new google.maps.LatLng(currentLat, currentLng));
-      bounds.extend(new google.maps.LatLng(destination.lat, destination.lng));
-      map.fitBounds(bounds);
-
-      // ✅ 목적지 안내선 그리기 (Polyline 사용)
-      if (route.polyline && route.polyline.encodedPolyline) {
+      // ✅ 안내선 표시
+      if (route.polyline?.encodedPolyline) {
         const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
         destinationRenderer = new google.maps.Polyline({
           path: decodedPath,
-          strokeColor: "#008000",   // 안내선 색상 (진한 초록색)
-          strokeWeight: 6,          // 두께
+          strokeColor: "#008000",   // 초록색 안내선
+          strokeWeight: 6,
           strokeOpacity: 1.0,
           map: map
         });
       }
 
-      // ✅ 목적지 마커 표시 (AdvancedMarkerElement 사용)
+      // ✅ 목적지 마커 표시
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map,
         position: { lat: destination.lat, lng: destination.lng },
@@ -1859,7 +1843,7 @@ function showRouteToDestination(destination) {
       });
       destinationMarkers.push(marker);
 
-      // 안내 단계별 메시지 + 음성 안내
+      // ✅ 안내 단계별 메시지
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       route.legs[0].steps.forEach((step, idx) => {
         const text = step.navigationInstruction?.instructions || "안내 없음";
@@ -1868,37 +1852,44 @@ function showRouteToDestination(destination) {
       });
       instructions += "</div>";
 
-      // 이동정보 모달 업데이트
-      const statsMessage = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-      document.getElementById("travelStatsContent").innerHTML = statsMessage;
-
       showQueuedModal("경로 안내", instructions);
 
-      // 목적지 도착 시 음성 안내 + 추적 종료
-      const arrivalMessage = "목적지에 도착했습니다!";
+      // ✅ 도착 시 안내 종료
       setTimeout(() => {
-        speakMessage(arrivalMessage);
+        speakMessage("목적지에 도착했습니다!");
         if (watchId) {
           navigator.geolocation.clearWatch(watchId);
           watchId = null;
-          console.log("🛑 위치 추적 종료");
         }
       }, (route.duration?.seconds || 0) * 1000);
-    } else {
-      console.error("❌ 경로 요청 실패: 결과 없음");
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
+    }
+  }).catch(err => console.error("❌ computeRoutes 오류:", err));
+}
+
+/* ---------------------- 장소 검색 함수 (PlacesService 사용) ---------------------- */
+function findDestination(placeId) {
+  const service = new google.maps.places.PlacesService(map);
+
+  service.getDetails(
+    {
+      placeId: placeId,
+      fields: ["name", "geometry"]
+    },
+    (result, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        console.log("✅ 장소 정보:", result);
+
+        const destinationLat = result.geometry.location.lat();
+        const destinationLng = result.geometry.location.lng();
+
+        showRouteToDestination({ lat: destinationLat, lng: destinationLng });
+      } else {
+        console.error("❌ 장소 검색 오류:", status);
       }
     }
-  }).catch((err) => {
-    console.error("❌ computeRoutes 오류:", err);
-    if (watchId) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
-  });
+  );
 }
+
 
 /* ---------------------- 장소 검색 함수 (Place API 사용) ---------------------- */
 function findDestination(placeId) {
