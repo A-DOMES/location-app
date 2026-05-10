@@ -228,16 +228,46 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #openTravelStatsModal:active { transform:scale(0.95); }
 
 /* ---------------------- 이동정보 모달 내용 ---------------------- */
-#travelStatsContent { margin-top:10px; font-size:20px; color:#111; font-weight:600; font-family:"맑은 고딕","Malgun Gothic",sans-serif; display:flex; flex-direction:column; align-items:flex-start; gap:10px; text-align:left; }
-#travelStatsContent span { display:flex; align-items:center; gap:6px; font-size:24px; font-weight:700; color:#000; font-family:"맑은 고딕","Malgun Gothic",sans-serif; }
-#travelStatsModal .modal-content {
-  min-width: 500px; /* ✅ 이동정보 모달만 최소 폭 확보 */
+#travelStatsContent {
+  margin-top:12px;
+  font-size:22px; /* ✅ 기본 글씨 크기 조금 키움 */
+  color:#111;
+  font-weight:600;
+  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
+  display:flex;
+  flex-direction:column;   /* ✅ 항목은 세로로 나열 */
+  align-items:flex-start;
+  gap:14px;                /* ✅ 항목 간격 넉넉히 */
+  text-align:left;
 }
+
+#travelStatsContent span {
+  display:inline-block;    /* ✅ 항목 내부는 한 줄 유지 */
+  white-space:nowrap;      /* ✅ 줄바꿈 방지 */
+  font-size:26px;          /* ✅ 항목 글씨 크게 */
+  font-weight:700;
+  color:#000;
+  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
+}
+
+#travelStatsModal .modal-content {
+  min-width: 300px; /* ✅ 이동정보 모달만 최소 폭 확보 */
+}
+
 /* ---------------------- 숫자 강조 ---------------------- */
-#travelStatsContent .highlight { font-size:22px; font-weight:800; color:#1976d2; }
+#travelStatsContent .highlight {
+  font-size:26px;   /* ✅ 강조 숫자도 크게 */
+  font-weight:800;
+  color:#1976d2;
+}
 
 /* ---------------------- 직선 거리 & ETA 강조 ---------------------- */
-#travelStatsContent .eta-highlight { font-size:22px; font-weight:800; color:#2e7d32; }
+#travelStatsContent .eta-highlight {
+  font-size:26px;   /* ✅ ETA 강조도 크게 */
+  font-weight:800;
+  color:#2e7d32;
+}
+
 
 /* ---------------------- 목적지 검색 성공 startRouteBtn 보이도록 버튼 스타일 처리 ---------------------- */ 
 button {
