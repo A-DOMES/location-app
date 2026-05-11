@@ -24,9 +24,12 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 
 /* ---------------------- 현재 좌표창 스타일 ---------------------- */
 #locationContent{font-family:'Segoe UI',Arial,sans-serif;color:#333;text-align:left;}
-#latBox,#lngBox{display:block;font-size:19px;font-weight:bold;color:#d32f2f;margin-top:5px;}
-#directionBox,#timeBox{display:block;font-size:17px;font-weight:bold;color:#555;margin-top:8px;}
-#addressBox{font-size:15px;font-weight:bold;color:#333;margin-top:10px;}
+
+/* ✅ 글씨 크기 조금 더 키움 */
+#latBox,#lngBox{display:block;font-size:21px;font-weight:bold;color:#d32f2f;margin-top:5px;}
+#directionBox,#timeBox{display:block;font-size:19px;font-weight:bold;color:#555;margin-top:8px;}
+#addressBox{font-size:17px;font-weight:bold;color:#333;margin-top:10px;}
+
 
 /* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
 #reopenBtn { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; padding:10px 22px; font-size:18px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; }
