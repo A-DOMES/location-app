@@ -189,6 +189,44 @@ button:hover{background-color:#1565c0;}
 #destinationInfoModal .modal-title{font-size:16px;color:#fff;display:inline-block;}
 #destinationInfoModal .close-btn{background:none;border:none;font-size:20px;color:#fff;cursor:pointer;}
 
+/* ---------------------- 현재 좌표창 헤더 박스 ---------------------- */
+#locationHeader {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  padding:10px 14px;              /* ✅ 내부 여백 */
+  background:rgba(25,118,210,0.1);/* ✅ 살짝 파란 배경 */
+  border-radius:8px;              /* ✅ 모서리 둥글게 */
+  border:1px solid #1976d2;       /* ✅ 테두리 */
+}
+
+/* 타이틀 */
+#locationHeader h3 {
+  font-size:26px;
+  font-weight:bold;
+  color:#1976d2;
+  margin:0;
+}
+
+/* 닫기 버튼 */
+#closeBtn {
+  background:white;
+  border:2px solid #1976d2;
+  border-radius:50%;
+  width:40px;
+  height:40px;
+  font-size:22px;
+  font-weight:bold;
+  cursor:pointer;
+  color:#1976d2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  transition:transform 0.2s ease,background 0.3s ease;
+}
+#closeBtn:hover {background:#f0f4f8;transform:scale(1.1);}
 
   
 </style>
