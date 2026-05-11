@@ -197,40 +197,24 @@ body {
   background: linear-gradient(135deg, #74ebd5, #ACB6E5);
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* ✅ 상단부터 시작 */
-  min-height: 100vh;       /* 화면 최소 높이 */
+  align-items: flex-start;
+  min-height: 100vh;
   margin:0;
-  overflow-y:auto;         /* ✅ 스크롤 가능 */
+  overflow-y:auto;
 }
 
 .register-box {
   position: relative;
   background: #fff;
   padding: 30px 20px;
-  border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-  width: 95%;              /* ✅ 모바일에서 거의 꽉 차게 */
-  max-width: 420px;        /* 데스크톱에서는 제한 */
+  border-radius: 20px;              /* ✅ 카드 모양 */
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2); /* ✅ 카드 그림자 */
+  width: 90%;                       /* ✅ 모바일에서 크게 보이도록 */
+  max-width: 420px;                 /* 데스크톱에서는 제한 */
   text-align: center;
   animation: fadeIn 1s ease-in-out;
   box-sizing: border-box;
-  margin:20px auto;        /* ✅ 위아래 여백 */
-}
-
-/* 모바일 최적화 */
-@media (max-width: 600px) {
-  .register-box {
-    width:95%;
-    padding:20px;
-    border-radius:12px;
-    margin:15px auto;
-  }
-  .register-box h2 {
-    font-size:22px;
-  }
-  .register-box p {
-    font-size:13px;
-  }
+  margin: 20px auto;                /* ✅ 화면 중앙 배치 */
 }
 
     
