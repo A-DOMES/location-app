@@ -1181,6 +1181,7 @@ function showRouteToDestination(destination) {
 
   
 // ---------------------- 속도 제한 관련 ----------------------
+
 // 어린이 보호구역
 function checkSchoolZones(currentLat, currentLng) {
   const service = new google.maps.places.PlacesService(map);
@@ -1196,7 +1197,17 @@ function checkSchoolZones(currentLat, currentLng) {
           new google.maps.LatLng(currentLat, currentLng),
           zoneCenter
         );
+
+        // ✅ 모달 메시지 줄바꿈 적용
+        const message = `
+          어린이 보호구역입니다.<br>
+          제한 속도는 30 km/h 입니다.
+        `;
         showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
+        showQueuedModal("학교 앞 경고", message);
+
+        // ✅ 음성 안내
+        speakMessage("어린이 보호구역입니다. 제한 속도는 30 km/h 입니다.");
       });
     }
   });
@@ -1214,7 +1225,17 @@ async function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
         const zoneLat = parseFloat(zone.lat);
         const zoneLng = parseFloat(zone.lng);
         const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
+
+        // ✅ 모달 메시지 줄바꿈 적용
+        const message = `
+          동적 제한 구역입니다.<br>
+          제한 속도는 ${limit} km/h 입니다.
+        `;
         showZoneAlert("속도 제한 구역", distance, limit, currentKmh, lastDynamicZoneAlertTime);
+        showQueuedModal("동적 제한 안내", message);
+
+        // ✅ 음성 안내
+        speakMessage(`동적 제한 구역입니다. 제한 속도는 ${limit} km/h 입니다.`);
       });
     }
   } catch (err) {
@@ -1238,12 +1259,21 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
       if (limitData.speedLimits?.length > 0) {
         const limit = limitData.speedLimits[0].speedLimit;
         const currentKmh = currentSpeed * 3.6;
-        // 거리 정보가 없으므로 distance를 20 이하로 가정해 진입 알림만 표시
+
+        // ✅ 모달 메시지 줄바꿈 적용
+        const message = `
+          속도 제한 구역입니다.<br>
+          제한 속도는 ${limit} km/h 입니다.
+        `;
         showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
+        showQueuedModal("속도 제한 안내", message);
+
+        // ✅ 음성 안내
+        speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} km/h 입니다.`);
       }
     })
     .catch(err => console.error(err));
-}  
+}
 
 
 // ------------------------------- 초기화 -----------------------------------
@@ -1828,12 +1858,12 @@ function showRouteToDestination(destination) {
       route.legs[0].steps.forEach((step, idx) => {
         const text = step.navigationInstruction?.instructions || "안내 없음";
         instructions += `<p>${idx + 1}. ${text} (${(step.distanceMeters/1000).toFixed(2)} km)</p>`;
-        speakMessage(`${idx + 1}번 안내: ${text}`);
+        speakMessage(`${idx + 1}번 안내: ${text}`);   // ✅ 공통 음성 함수 사용
       });
       instructions += "</div>";
-
+      
       showQueuedModal("경로 안내", instructions);
-
+      
       // ✅ 도착 시 안내 종료
       setTimeout(() => {
         speakMessage("목적지에 도착했습니다!");
