@@ -230,9 +230,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 /* ---------------------- 이동정보 모달 내용 ---------------------- */
 #travelStatsContent { margin-top:10px; font-size:20px; color:#111; font-weight:600; font-family:"맑은 고딕","Malgun Gothic",sans-serif; display:flex; flex-direction:column; align-items:flex-start; gap:10px; text-align:left; }
 #travelStatsContent span { display:flex; align-items:center; gap:6px; font-size:24px; font-weight:700; color:#000; font-family:"맑은 고딕","Malgun Gothic",sans-serif; }
-#travelStatsModal .modal-content {
-  min-width: 500px; /* ✅ 이동정보 모달만 최소 폭 확보 */
-}
+
 /* ---------------------- 숫자 강조 ---------------------- */
 #travelStatsContent .highlight { font-size:22px; font-weight:800; color:#1976d2; }
 
@@ -1940,11 +1938,11 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const totalDistance = computeTotalDistance(pathCoords);
 
   return `
-    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span>
-    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span>
-    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span>
-    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span>
-    📏 총 이동 거리: <span class="highlight">${totalDistance} km</span>
+  🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span><br>
+  📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span><br>
+  ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span><br>
+  ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span><br>
+  📏 총 이동 거리: <span class="highlight">${totalDistance} km</span>
   `;
 }
 
