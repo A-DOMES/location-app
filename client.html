@@ -714,7 +714,11 @@ function startTracking() {
     // ✅ 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    currentSpeed = pos.coords.speed || 0;  // 속도도 저장
+    const timestamp = Date.now();
+
+    // ✅ 수정: GPS 기반 속도 계산 호출
+    computeSpeedFromGPS(currentLat, currentLng, timestamp);
+
     let heading = pos.coords.heading || 0;
     const myPos = { lat: currentLat, lng: currentLng };
 
@@ -735,14 +739,14 @@ function startTracking() {
     const now = new Date();
     const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // ✅ 현재 위치 창 업데이트 (좌표/방향/시간은 즉시 표시)
+    // ✅ 현재 위치 창 업데이트
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
     document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 주소 갱신 (비동기 요청, 즉시 "불러오는 중..." 표시)
+    // ✅ 주소 갱신
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
       geocoder.geocode({ location: myPos }, (results, status) => {
@@ -804,6 +808,7 @@ function startTracking() {
     timeout: 5000 // ✅ 응답 지연 최소화
   });
 }
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
@@ -1083,41 +1088,6 @@ function showQueuedModal(title, message, actions = []) {
 }
 
 
-function showTravelStats(speed, totalDistance) {
-  speedHistory.push(speed * 3.6);
-
-  const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-  const maxSpeed = Math.max(...speedHistory);
-  const elapsedTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
-
-  // 직선 거리 & ETA 계산
-  let directDistance = 0, eta = "계산 불가";
-  if (destinationLat && destinationLng) {
-    const current = new google.maps.LatLng(currentLat, currentLng);
-    const destination = new google.maps.LatLng(destinationLat, destinationLng);
-    directDistance = google.maps.geometry.spherical.computeDistanceBetween(current, destination);
-    if (avgSpeed > 0) {
-      const distanceKm = directDistance / 1000;
-      const hours = distanceKm / avgSpeed;
-      eta = (hours * 60).toFixed(1) + " 분";
-    }
-  }
-
-  const message = `<div class="data-message">
-    <span>🚗 현재 속도: <span class="highlight">${(speed * 3.6).toFixed(1)} km/h</span></span>
-    <span>📊 평균 속도: <span class="highlight">${avgSpeed.toFixed(1)} km/h</span></span>
-    <span>⚡ 최고 속도: <span class="highlight">${maxSpeed.toFixed(1)} km/h</span></span>
-    <span>⏱️ 주행 시간: <span class="highlight">${elapsedTime} 분</span></span>
-    <span>📏 총 이동 거리: <span class="highlight">${(totalDistance/1000).toFixed(2)} km</span></span>
-    <span>📐 직선 거리: <span class="eta-highlight">${(directDistance/1000).toFixed(2)} km</span></span>
-    <span>🕒 예상 도착 시간: <span class="eta-highlight">${eta}</span></span>
-  </div>`;
-
-  document.getElementById("travelStatsContent").innerHTML = message;
-}
-
-
-
 // ---------------------- 보호구역/속도 제한 알림 ----------------------
 function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) {
   const now = Date.now();
@@ -1363,6 +1333,11 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   startTime = Date.now();
   destinationLat = null;
   destinationLng = null;
+
+  // ✅ 좌표 관련 변수도 초기화 (추가된 부분)
+  lastLat = null;
+  lastLng = null;
+  lastTimestamp = null;
 
   // ---------------------- 목적지 관련 초기화 ----------------------
   if (destinationCircle) {
