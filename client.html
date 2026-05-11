@@ -266,6 +266,35 @@ button:hover{background-color:#1565c0;}
   border:none;
 }
 
+/* ---------------------- 이동정보 모달창 헤더 ---------------------- */
+#moveInfoModal .modal-header {
+  display:flex;
+  justify-content:space-between;   /* 타이틀 왼쪽, 닫기 버튼 오른쪽 */
+  align-items:center;
+  padding:10px 14px;
+  margin-bottom:12px;
+  background:rgba(25,118,210,0.08); /* 은은한 파란 배경 */
+  border:1px solid #1976d2;        /* 테두리 */
+  border-radius:8px;
+}
+
+/* 타이틀 글씨 (현재좌표와 동일 크기) */
+#moveInfoModal .modal-header .title {
+  font-size:26px;                  /* 현재좌표, 목적지 찾기와 동일 */
+  font-weight:bold;
+  color:#1976d2;
+  margin:0;
+}
+
+/* 닫기 버튼 */
+#moveInfoModal .modal-header .close {
+  cursor:pointer;
+  font-size:18px;
+  font-weight:bold;
+  color:#1976d2;
+  background:none;
+  border:none;
+}
 
   
 </style>
