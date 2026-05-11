@@ -13,7 +13,7 @@ body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; 
 header { padding:15px; text-align:center; background:#1976d2; color:white; font-size:26px; font-weight:bold; }
 
 /* ---------------------- 좌표창 박스 ---------------------- */
-#locationBox { position:absolute; top:80px; right:20px; width:260px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:15px 20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:16px; color:#333; text-align:left; z-index:9999; border:2px solid #1976d2; transition:transform 0.3s ease, background 0.3s ease; }
+#locationBox { position:absolute; top:80px; right:20px; width:260px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:15px 20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:18px; color:#333; text-align:left; z-index:9999; border:2px solid #1976d2; transition:transform 0.3s ease, background 0.3s ease; }
 #locationBox:hover { transform:scale(1.02); background:rgba(255,255,255,0.35); }
 #locationHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
 #locationHeader h3 { font-size:26px; font-weight:bold; color:#1976d2; margin:0; }
@@ -29,7 +29,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #addressBox{font-size:15px;font-weight:bold;color:#333;margin-top:10px;}
 
 /* ---------------------- 현재 좌표 열기 버튼 ---------------------- */
-#reopenBtn { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; padding:10px 22px; font-size:20px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; }
+#reopenBtn { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; padding:10px 22px; font-size:18px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; }
 #reopenBtn:hover { background:#e3f2fd; transform:translateX(-50%) scale(1.1); animation:bounce 0.3s; }
 #reopenBtn:active { transform:translateX(-50%) scale(0.95); }
 #reopenBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
@@ -438,7 +438,7 @@ button:hover {
 <div id="travelStatsModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="modal-title">이동정보</h2>
+      <h2 class="modal-title">이 동 정 보</h2>
       <span id="closeTravelStatsModal" class="close">✖</span>
     </div>
 
