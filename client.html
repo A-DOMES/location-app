@@ -269,31 +269,64 @@ button:hover{background-color:#1565c0;}
 /* ---------------------- 이동정보 모달창 헤더 ---------------------- */
 #moveInfoModal .modal-header {
   display:flex;
-  justify-content:space-between;   /* 타이틀 왼쪽, 닫기 버튼 오른쪽 */
+  justify-content:space-between;
   align-items:center;
   padding:10px 14px;
   margin-bottom:12px;
-  background:rgba(25,118,210,0.08); /* 은은한 파란 배경 */
-  border:1px solid #1976d2;        /* 테두리 */
+  background:rgba(25,118,210,0.08);
+  border:1px solid #1976d2;
   border-radius:8px;
 }
 
-/* 타이틀 글씨 (현재좌표와 동일 크기) */
 #moveInfoModal .modal-header .title {
-  font-size:26px;                  /* 현재좌표, 목적지 찾기와 동일 */
+  font-size:26px;
   font-weight:bold;
   color:#1976d2;
   margin:0;
 }
 
-/* 닫기 버튼 */
 #moveInfoModal .modal-header .close {
   cursor:pointer;
-  font-size:18px;
+  font-size:20px;
   font-weight:bold;
   color:#1976d2;
   background:none;
-  border:none;
+  border:1px solid #1976d2;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:transform 0.2s ease, background 0.3s ease;
+}
+#moveInfoModal .modal-header .close:hover {
+  transform:scale(1.1);
+  background:rgba(25,118,210,0.1);
+}
+
+/* ---------------------- 이동정보 모달 내용 ---------------------- */
+#travelStatsContent {
+  margin-top:10px;
+  font-size:20px;
+  color:#111;
+  font-weight:600;
+  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+  text-align:left;
+}
+#travelStatsContent span {
+  display:inline-block;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  font-size:20px;
+  font-weight:700;
+  color:#000;
+  font-family:"맑은 고딕","Malgun Gothic",sans-serif;
 }
 
   
