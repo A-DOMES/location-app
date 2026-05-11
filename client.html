@@ -13,7 +13,7 @@ body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; 
 header { padding:15px; text-align:center; background:#1976d2; color:white; font-size:26px; font-weight:bold; }
 
 /* ---------------------- 좌표창 박스 ---------------------- */
-#locationBox { position:absolute; top:80px; right:20px; width:260px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:15px 20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:18px; color:#333; text-align:left; z-index:9999; border:2px solid #1976d2; transition:transform 0.3s ease, background 0.3s ease; }
+#locationBox { position:absolute; top:80px; right:20px; width:260px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); padding:15px 20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.25); font-size:16px; color:#333; text-align:left; z-index:9999; border:2px solid #1976d2; transition:transform 0.3s ease, background 0.3s ease; }
 #locationBox:hover { transform:scale(1.02); background:rgba(255,255,255,0.35); }
 #locationHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
 #locationHeader h3 { font-size:26px; font-weight:bold; color:#1976d2; margin:0; }
@@ -74,7 +74,6 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #modalActions button { margin:6px; padding:8px 14px; background:#1976d2; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:transform 0.2s ease, background 0.3s ease; }
 #modalActions button:hover { background:#1565c0; transform:scale(1.05); }
 
-
 /* ---------------------- 지도/위성 모드 대응 ---------------------- */
 .map-satellite #popupModal .modal-content { background:rgba(0,0,0,0.6); border:2px solid #fff; color:#fff; }
 .map-satellite #popupModal .modal-title, .map-satellite #popupModal #modalMessage { color:#fff; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
@@ -99,250 +98,17 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 .alert-message p { margin:8px 0; }
 .speed-warning { color:red; font-weight:bold; }
 
-/* ---------------------- 경로 초기화 & 목적지 찾기 버튼 ---------------------- */
-#resetPathBtn, #openDestinationModal { position:absolute; left:5px; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0; }
-#resetPathBtn { top:168px; display:none; }
-#openDestinationModal { top:230px; }
-#resetPathBtn:hover, #openDestinationModal:hover { background:#e3f2fd; transform:scale(1.1); }
-#resetPathBtn:active, #openDestinationModal:active { transform:scale(0.95); }
-
-/* ---------------------- 목적지 모달 입력창 1 ---------------------- */
-#destinationInput { width:90%; padding:12px; margin:10px 0; border:1px solid #1976d2; border-radius:6px; font-size:14px; }
-#searchDestinationBtn { width:90%; padding:12px; margin-top:10px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:18px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; }
-#searchDestinationBtn:hover { background:#e3f2fd; transform:scale(1.1); animation:bounce 0.3s; }
-#searchDestinationBtn:active { transform:scale(0.95); }
-#searchDestinationBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
-@keyframes bounce { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1.1);} }
-#destinationResult { margin-top:10px; font-size:14px; color:#333; }
-
-/* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
-/* 독립적인 검색결과 창 */
-#searchResultPanel {
-  position: fixed;
-  top: 49%;
-  left: 68%;
-  transform: translate(-50%, -50%);
-  width: 320px;
-  height: 800px;          /* ✅ 고정 높이 */
-  overflow-y: auto;       /* 내용이 많으면 스크롤 */
-  background: rgba(255,255,255,0.25);  /* ✅ 반투명 */
-  backdrop-filter: blur(10px);         /* ✅ 블러 효과 */
-  -webkit-backdrop-filter: blur(10px); /* ✅ 크로스 브라우저 */
-  border: 2px solid #1976d2;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  padding: 12px;
-  font-size: 14px;
-  color: #333;
-  z-index: 10000;
-  display: none;
-  cursor: move;
-}
-
-
-/* ---------------------- 검색결과 헤더 ---------------------- */
-#searchResultPanel .search-header {
-  display: flex;
-  justify-content: center;   /* ✅ 타이틀 가운데 정렬 */
-  align-items: center;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-/* 타이틀 앞에만 🔍 아이콘 추가 */
-#searchResultPanel .search-header .search-title::before {
-  content: "🔍 ";
-  font-size: 20px;
-  color: #1976d2;
-}
-
-/* 타이틀 글씨 크기 확대 */
-#searchResultPanel .search-header .search-title {
-  font-size: 20px;   /* ✅ 기존 18px → 20px */
-  color: #1976d2;
-}
-
-/* 닫기 버튼은 아이콘 없이 유지 */
-#searchResultPanel .search-header .close {
-  cursor: pointer;
-  font-size: 16px;
-  color: #1976d2;
-}
-
-
-/* ---------------------- 검색결과 리스트 ---------------------- */
-.search-item { background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:8px; padding:12px; margin-bottom:12px; transition:background 0.2s; cursor:pointer; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1.6; }
-.search-item:hover { background:rgba(255,255,255,0.35); }
-
-.search-title { font-weight:bold; font-size:16px; margin-bottom:6px; color:#1976d2; text-align:left; line-height:1.6; }
-.search-address { font-size:14px; color:#555; text-align:left; line-height:1.6; }
-.search-type { font-size:13px; color:#777; text-align:left; margin-top:4px; line-height:1.6; }
-.search-phone { font-size:14px; color:#333; text-align:left; margin-top:4px; line-height:1.6; }
-.search-rating { font-size:14px; color:#444; text-align:left; margin-top:4px; line-height:1.6; }
-.search-website { font-size:13px; color:#1976d2; text-align:left; margin-top:4px; line-height:1.6; }
-.search-hours { font-size:13px; color:#777; text-align:left; margin-top:4px; line-height:1.6; }
-
- 
-/* ---------------------- 경로 안내 버튼 ---------------------- */
-#startRouteBtn {
-  width:90%; /* ✅ 검색 버튼과 동일한 너비 */
-  padding:12px;
-  margin-top:10px;
-  background:rgba(255,255,255,0.25);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border:2px solid #1976d2;
-  border-radius:999px;
-  font-size:18px; /* ✅ 글씨 크기 +2px */
-  font-weight:700;
-  color:#1976d2;
-  cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
-  transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  display:none; /* 기본은 숨김, 검색 성공 시 JS에서 표시 */
-}
-#startRouteBtn:hover {
-  background:#e3f2fd;
-  transform:scale(1.1);
-  animation:bounce 0.3s;
-}
-#startRouteBtn:active {
-  transform:scale(0.95);
-}
-#startRouteBtn:focus {
-  outline:none;
-  box-shadow:0 0 0 3px rgba(25,118,210,0.4);
-}
-
-/* ---------------------- 검색 결과 글씨 개선 ---------------------- */
-#destinationResult {
-  margin-top:12px;
-  font-size:16px; /* ✅ 기존보다 +2px */
-  line-height:1.5; /* ✅ 줄 간격 넉넉하게 */
-  color:#333;
-}
-
-/* ---------------------- 이동정보 버튼 ---------------------- */
-#openTravelStatsModal { position:absolute; left:5px; top:295px; display:flex; flex-direction:row; align-items:center; justify-content:center; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; font-family:"맑은 고딕","Malgun Gothic",sans-serif; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0 12px; }
-#openTravelStatsModal:hover { background:#e3f2fd; transform:scale(1.1); }
-#openTravelStatsModal:active { transform:scale(0.95); }
-
-/* ---------------------- 이동정보 모달 내용 ---------------------- */
-#travelStatsContent { margin-top:10px; font-size:20px; color:#111; font-weight:600; font-family:"맑은 고딕","Malgun Gothic",sans-serif; display:flex; flex-direction:column; align-items:flex-start; gap:10px; text-align:left; }
-#travelStatsContent span { display:inline-block; align-items:center; gap:6px; white-space: nowrap; font-size:20px; font-weight:700; color:#000; font-family:"맑은 고딕","Malgun Gothic",sans-serif; }
-
-/* ---------------------- 숫자 강조 ---------------------- */
-#travelStatsContent .highlight { font-size:22px; font-weight:800; color:#1976d2; }
-
-/* ---------------------- 직선 거리 & ETA 강조 ---------------------- */
-#travelStatsContent .eta-highlight { font-size:22px; font-weight:800; color:#2e7d32; }
-
-/* ---------------------- 직선 거리 & ETA 강조 ---------------------- */
-#travelStatsContent .eta-highlight {
-  font-size:26px;   /* ✅ ETA 강조도 크게 */
-  font-weight:800;
-  color:#2e7d32;
-}
-
-
-/* ---------------------- 목적지 검색 성공 startRouteBtn 보이도록 버튼 스타일 처리 ---------------------- */ 
-button {
-  padding: 8px 14px;
-  border-radius: 6px;
-  background-color: #1976d2;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: 0.3s;
-}
-button:hover {
-  background-color: #1565c0;
-}
-
-
-/* ---------------------레이더 탐지, 속도 제한 알림 ------------------*/
-.alert-message {
-  background: #fff3cd;
-  border: 1px solid #ffeeba;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #856404;
-}
-
-/* ---------------------- 토글 버튼 ( 사람중심 / 지도중심 ) ---------------------- */
-#toggleFollowBtn {
-  position: absolute;
-  left: 5px;
-  top: 360px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center; /* 버튼 전체는 중앙정렬 */
-  width: 135px;
-  height: 45px;
-  line-height: 50px;
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid #1976d2;
-  border-radius: 999px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1976d2;
-  font-family: "맑은 고딕","Malgun Gothic",sans-serif;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  z-index: 9999;
-  white-space: nowrap;
-  transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease;
-  padding: 0 12px;
-  will-change: transform;   /* ✅ 애니메이션 최적화 */
-}
-
-#toggleFollowBtn:hover {
-  background: #e3f2fd;
-  transform: scale(1.1);    /* ✅ hover 시 커짐 */
-}
-
-#toggleFollowBtn:active {
-  transform: scale(0.95);   /* ✅ 클릭 시 살짝 줄어듦 */
-}
-
-#toggleFollowBtn .icon {
-  margin-right: 4px;   /* 아이콘과 글씨 사이 간격 */
-  margin-left: -10px;  /* 아이콘을 살짝 왼쪽으로 이동 */
-}
-
-#toggleFollowBtn .label {
-  margin-left: 2px;    /* 글씨를 살짝 오른쪽으로 이동 */
-}
-
-
 /* ---------------------- 마우스를 마커위에 올렸을 때 마커 정보 모달 전용 ---------------------- */
-#destinationInfoModal .modal-header {
-  display: flex;
-  justify-content: space-between; /* 좌측 제목, 우측 닫기 버튼 */
-  align-items: center;
-  padding: 10px;
-  background-color: #1976d2; /* 파란색 헤더 */
-  color: #fff;
-  font-weight: bold;
-}
+#destinationInfoModal .modal-header { display:flex; justify-content:space-between; align-items:center; padding:10px; background-color:#1976d2; color:#fff; font-weight:bold; }
+#destinationInfoModal .modal-title { font-size:16px; color:#fff; display:inline-block; }
+#destinationInfoModal .close-btn { background:none; border:none; font-size:20px; color:#fff; cursor:pointer; }
 
-#destinationInfoModal .modal-title {
-  font-size: 16px;
-  color: #fff; /* 배경색 대비되는 색상 */
-  display: inline-block; /* 혹시 다른 스타일에 의해 숨겨지지 않도록 */
-}
+                
+/* ---------------------- 마우스를 마커위에 올렸을 때 마커 정보 모달 전용 ---------------------- */
+#destinationInfoModal .modal-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background-color:#1976d2;color:#fff;font-weight:bold;}
+#destinationInfoModal .modal-title{font-size:16px;color:#fff;display:inline-block;}
+#destinationInfoModal .close-btn{background:none;border:none;font-size:20px;color:#fff;cursor:pointer;}
 
-#destinationInfoModal .close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #fff;
-  cursor: pointer;
-}
 
   
 </style>
