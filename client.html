@@ -1938,11 +1938,11 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const totalDistance = computeTotalDistance(pathCoords);
 
   return `
-    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span>
-    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span>
-    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span>
-    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span>
-    📏 총   거리: <span class="highlight">${totalDistance} km</span> 
+    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
+    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
+    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
+    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
   `;
 }
 
