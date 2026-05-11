@@ -197,12 +197,13 @@ body {
   background: linear-gradient(135deg, #74ebd5, #ACB6E5);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-start; /* 상단부터 시작 */
   min-height: 100vh;
   margin:0;
-  overflow-y:auto; /* ✅ 스크롤 가능 */
+  overflow-y:auto;         /* 스크롤 가능 */
 }
 
+/* 카드형 회원가입 박스 */
 .register-box {
   position: relative;
   background: #fff;
@@ -215,7 +216,71 @@ body {
   animation: fadeIn 1s ease-in-out;
   box-sizing: border-box;
   margin: 20px auto;                /* ✅ 화면 중앙 배치 */
+  display:flex;
+  flex-direction:column;
 }
+
+/* 상단 헤더 */
+.register-box h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* 입력 필드 */
+.register-box input {
+  width: 100%;
+  padding: 14px;
+  margin: 12px 0;
+  border: 1.5px solid #bdc3c7;
+  border-radius: 10px;
+  font-size: 15px;
+  background-color: #f0f8ff;
+  box-sizing:border-box;
+}
+
+/* 버튼 그룹 */
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.btn-group button {
+  flex: 1;
+  margin: 0 5px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.primary-btn {
+  background: linear-gradient(to right, #3498db, #2980b9);
+  color: #fff;
+}
+.secondary-btn {
+  background: #bdc3c7;
+  color: #2c3e50;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 600px) {
+  .register-box {
+    width:95%;
+    padding:20px;
+    border-radius:12px;
+  }
+  .register-box h2 {
+    font-size:22px;
+  }
+  .register-box p {
+    font-size:13px;
+  }
+}
+
 
     
   </style>
