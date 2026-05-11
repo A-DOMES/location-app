@@ -1138,8 +1138,8 @@ function showRouteToDestination(destination) {
 
   const request = {
     origin: { lat: currentLat, lng: currentLng },
-    destination,
-    travelMode: google.maps.TravelMode.WALKING
+    destination: destination,
+    travelMode: google.maps.TravelMode.DRIVING   // 🚗 운전 모드로 변경
   };
 
   directionsService.route(request, (result, status) => {
@@ -1151,6 +1151,7 @@ function showRouteToDestination(destination) {
       destinationLat = destLeg.end_location.lat();
       destinationLng = destLeg.end_location.lng();
 
+      // 단계별 안내 메시지
       const steps = destLeg.steps;
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       steps.forEach((step, idx) => {
@@ -1159,9 +1160,12 @@ function showRouteToDestination(destination) {
       instructions += "</div>";
 
       showQueuedModal("경로 안내", instructions);
+    } else {
+      console.error("경로 안내 실패:", status);
     }
   });
 }
+
   
 // ---------------------- 속도 제한 관련 ----------------------
 // 어린이 보호구역
