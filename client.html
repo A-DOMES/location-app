@@ -1504,6 +1504,40 @@ async function loadAdminLocations() {
   }
 }
 
+/* ---------------------- 추적 중인 목적지 관리 ---------------------- */
+let trackedDestinations = []; // ✅ 여러 명을 관리하는 배열
+
+function startTrackingDestination(phone, marker) {
+  // 이미 등록된 사람인지 확인 후 없으면 추가
+  const exists = trackedDestinations.find(d => d.phone === phone);
+  if (!exists) {
+    trackedDestinations.push({ phone, marker });
+  }
+}
+
+/* ---------------------- 5분마다 서버 위치 확인 ---------------------- */
+setInterval(async () => {
+  await loadAdminLocations(); // 서버에서 최신 위치 가져오기
+
+  if (Array.isArray(adminLocations)) {
+    trackedDestinations.forEach(dest => {
+      const match = adminLocations.find(item => item.phone === dest.phone);
+      if (match) {
+        const newLat = parseFloat(match.lat);
+        const newLng = parseFloat(match.lng);
+        const pos = new google.maps.LatLng(newLat, newLng);
+
+        // 위치가 바뀌었으면 마커 갱신
+        if (dest.marker.getPosition().lat() !== newLat ||
+            dest.marker.getPosition().lng() !== newLng) {
+          dest.marker.setPosition(pos);
+          console.log(`📍 ${dest.phone} 위치 갱신:`, newLat, newLng);
+        }
+      }
+    });
+  }
+}, 5 * 60 * 1000); // ✅ 5분마다 실행
+
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
@@ -1517,7 +1551,167 @@ async function findDestination(inputName, showPanel = true) {
   }
 
   if (match) {
-    showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
+    // ✅ 마커 생성 후 반환
+    const marker = showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
+
+    // ✅ 추적 배열에 등록 (여러 명 가능)
+    startTrackingDestination(match.phone, marker);
+
+    destinationLat = parseFloat(match.lat);
+    destinationLng = parseFloat(match.lng);
+    document.getElementById("startRouteBtn").style.display = "inline-block";
+    return Promise.resolve(true);
+  }
+
+  // 2️⃣ 외부 API 검색 (전역 변수 활용)
+  const service = new google.maps.places.PlacesService(map);
+  return new Promise((resolve) => {
+    service.textSearch(
+      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
+      (results, status) => {
+        const panel = document.getElementById("searchResultPanel");
+        const body = panel.querySelector(".search-body");
+
+        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+          let html = results.map((r, idx) => `
+            <div class="search-item" data-index="${idx}">
+              <div class="search-title">📍 ${r.name}</div>
+              <div class="search-address">🏠 ${r.formatted_address}</div>
+            </div>
+          `).join("");
+
+          body.innerHTML = html;
+          if (showPanel) panel.style.display = "block";
+
+          // ✅ 첫 번째 결과를 자동으로 지도에 표시 (레벨 7 복구)
+          const first = results[0];
+          const p = first.geometry.location;
+          map.setCenter(p);
+          map.setZoom(7); // ← 복구된 부분
+          showDestinationOnMap(first.name, p.lat(), p.lng(), first.formatted_address);
+
+          destinationLat = p.lat();
+          destinationLng = p.lng();
+          document.getElementById("destinationInput").value = first.name;
+          document.getElementById("startRouteBtn").style.display = "inline-block";
+
+          // ✅ 검색결과 창 닫기
+          panel.style.display = "none";
+
+          // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
+          body.querySelectorAll(".search-item").forEach((item) => {
+            item.addEventListener("click", () => {
+              const idx = item.dataset.index;
+              const r = results[idx];
+              const p = r.geometry.location;
+
+              map.setCenter(p);
+              map.setZoom(16); // 상세 보기 확대
+              showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
+
+              destinationLat = p.lat();
+              destinationLng = p.lng();
+
+              document.getElementById("destinationInput").value = r.name;
+              panel.style.display = "none";
+
+              service.getDetails({
+                placeId: r.place_id,
+                fields: ["formatted_phone_number","website","opening_hours","rating","types"]
+              }, (place, detailStatus) => {
+                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
+                  const infoPanel = document.getElementById("destinationResult");
+                  infoPanel.innerHTML = `
+                    ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
+                    ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
+                    ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
+                    ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
+                    ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
+                  `;
+                }
+              });
+
+              document.getElementById("startRouteBtn").style.display = "inline-block";
+            });
+          });
+
+          resolve(true);
+        } else {
+          if (showPanel) {
+            body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+            panel.style.display = "block";
+          }
+          resolve(false);
+        }
+      }
+    );
+  });
+}
+
+
+/* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
+async function loadAdminLocations() {
+  try {
+    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
+    adminLocations = await res.json(); // 배열 저장
+    console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+  } catch (err) {
+    console.error("사용자 서버 호출 오류:", err);
+  }
+}
+
+/* ---------------------- 추적 중인 목적지 관리 ---------------------- */
+let trackedDestinations = []; // ✅ 여러 명을 관리하는 배열
+
+function startTrackingDestination(phone, marker) {
+  // 이미 등록된 사람인지 확인 후 없으면 추가
+  const exists = trackedDestinations.find(d => d.phone === phone);
+  if (!exists) {
+    trackedDestinations.push({ phone, marker });
+  }
+}
+
+/* ---------------------- 5분마다 서버 위치 확인 ---------------------- */
+setInterval(async () => {
+  await loadAdminLocations(); // 서버에서 최신 위치 가져오기
+
+  if (Array.isArray(adminLocations)) {
+    trackedDestinations.forEach(dest => {
+      const match = adminLocations.find(item => item.phone === dest.phone);
+      if (match) {
+        const newLat = parseFloat(match.lat);
+        const newLng = parseFloat(match.lng);
+        const pos = new google.maps.LatLng(newLat, newLng);
+
+        // 위치가 바뀌었으면 마커 갱신
+        if (dest.marker.getPosition().lat() !== newLat ||
+            dest.marker.getPosition().lng() !== newLng) {
+          dest.marker.setPosition(pos);
+          console.log(`📍 ${dest.phone} 위치 갱신:`, newLat, newLng);
+        }
+      }
+    });
+  }
+}, 5 * 60 * 1000); // ✅ 5분마다 실행
+
+/* ---------------------- 목적지 검색 기능 ---------------------- */
+async function findDestination(inputName, showPanel = true) {
+  const name = inputName.trim().toLowerCase().normalize("NFC");
+  let match = null;
+
+  // 1️⃣ 서버 배열 검색 (내 서버 우선)
+  if (Array.isArray(adminLocations)) {
+    match = adminLocations.find(item =>
+      item.phone.trim().toLowerCase().normalize("NFC") === name
+    );
+  }
+
+  if (match) {
+    const marker = showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
+
+    // ✅ 추적 배열에 등록 (여러 명 가능)
+    startTrackingDestination(match.phone, marker);
+
     destinationLat = parseFloat(match.lat);
     destinationLng = parseFloat(match.lng);
     document.getElementById("startRouteBtn").style.display = "inline-block";
@@ -1695,7 +1889,11 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
     openModal(document.getElementById("destinationModal"));
   });
+
+  // ✅ 마커 반환 (추적 등록에 필요)
+  return marker;
 }
+
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
