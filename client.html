@@ -516,8 +516,12 @@ let destinationMarkers = [];
 
 // 초기화시 발생된 위도/ 경도값 저장변수
 let watchId = null;  
+  
+// 목적지 관련변수
 let lastLat = null;
 let lastLng = null;
+
+  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -1800,7 +1804,7 @@ function speakMessage(message) {
 }
 
 /* ---------------------- 경로 초기화 함수 ---------------------- */
-function resetNavigation() {
+function resetNavigation(fullStop = false) {
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
@@ -1818,12 +1822,6 @@ function resetNavigation() {
   destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
-  destinationLat = null;
-  destinationLng = null;
-  lastLat = null;
-  lastLng = null;
-  lastTimestamp = null;
-
   if (destinationCircle) {
     destinationCircle.setMap(null);
     destinationCircle = null;
@@ -1833,8 +1831,18 @@ function resetNavigation() {
     otherMarker = null;
   }
 
+  lastLat = null;
+  lastLng = null;
+  lastTimestamp = null;
+
   followUser = true; // 사람중심 모드로 복귀
   speakMessage("경로 안내가 중단되었습니다.");
+
+  // ✅ 완전 종료일 때만 좌표 초기화
+  if (fullStop) {
+    destinationLat = null;
+    destinationLng = null;
+  }
 }
 
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
@@ -1847,18 +1855,20 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
     alert("먼저 목적지를 검색하세요!");
     return;
   }
-  showRouteToDestination({ lat: destinationLat, lng: destinationLng });
-});
-
-/* ---------------------- 경로 안내 함수 (computeRoutes 버전) ---------------------- */
-function showRouteToDestination(destination) {
-  console.log("📍 showRouteToDestination 실행:", destination);
-
-  // ✅ 이전 안내 초기화
-  resetNavigation();
 
   // ✅ 안내 시작 음성
   speakMessage("경로 안내를 시작합니다.");
+
+  // ✅ 실제 안내 실행
+  showRouteToDestination({ lat: destinationLat, lng: destinationLng });
+});
+
+/* ---------------------- 경로 안내 함수 ---------------------- */
+function showRouteToDestination(destination) {
+  console.log("📍 showRouteToDestination 실행:", destination);
+
+  // ✅ 이전 안내 초기화 (좌표는 유지)
+  resetNavigation(false);
 
   // ✅ 위치 추적 시작
   watchId = navigator.geolocation.watchPosition(
@@ -1879,7 +1889,6 @@ function showRouteToDestination(destination) {
         });
       }
 
-      // 사람중심 모드일 때만 지도 중심 이동
       if (followUser) {
         map.setCenter({ lat: currentLat, lng: currentLng });
       }
@@ -1931,16 +1940,16 @@ function showRouteToDestination(destination) {
 
       showQueuedModal("경로 안내", instructions);
 
-      // ✅ 도착 시 안내 종료 및 초기화
+      // ✅ 도착 시 안내 종료 및 완전 초기화
       setTimeout(() => {
         speakMessage("목적지에 도착했습니다!");
-        resetNavigation();
+        resetNavigation(true); // 도착 시 좌표까지 초기화
       }, (route.duration?.seconds || 0) * 1000);
     }
   }).catch(err => console.error("❌ computeRoutes 오류:", err));
 }
 
-  
+
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
   const service = new google.maps.places.PlacesService(map);
@@ -1974,6 +1983,7 @@ function checkRadarPOIs(myPos) {
     }
   });
 }
+
 
 /* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats() {
