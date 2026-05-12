@@ -1540,7 +1540,7 @@ async function findDestination(inputName) {
               destinationLng = p.lng();
 
               document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none";
+              panel.style.display = "none"; // ✅ 모달 닫기
 
               service.getDetails({
                 placeId: r.place_id,
@@ -1668,9 +1668,12 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
+  // ✅ 수정된 부분: 모달을 다시 띄우지 않고 검색만 실행
   findDestination(inputName).then(success => {
     if (success) {
-      document.getElementById("startRouteBtn").style.display = "inline-block";
+      console.log("검색 성공: 결과 선택 시 지도 반영됨");
+    } else {
+      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
     }
   });
 });
@@ -1717,6 +1720,8 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   openPopupModal(document.getElementById("popupModal"));
 });
+
+  
 
 /* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
