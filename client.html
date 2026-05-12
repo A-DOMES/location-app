@@ -764,6 +764,7 @@ function startTracking() {
     // ✅ 주소는 별도 영역에서만 비동기 처리
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
       document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
+      
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
           let address = results[0].formatted_address
@@ -774,7 +775,7 @@ function startTracking() {
       });
       lastGeocodeTime = Date.now();
     }
-    
+  
     // ✅ 위치 표시 갱신
     updateLocationDisplay(currentLat, currentLng, heading);
 
