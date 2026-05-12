@@ -1348,13 +1348,15 @@ function resetNavigation() {
   destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
-  // 이동정보 변수 초기화 (핵심!)
+  // 이동정보 관련 모든 변수 초기화
   speedHistory = [];
   totalDistance = 0;
   avgSpeed = 0;
   maxSpeed = 0;
   currentSpeed = 0;
-  startTime = null;   // ⬅️ 주행 시간 기준을 완전히 끊어야 함
+  elapsedMinutes = 0;
+  smoothedSpeed = 0;
+  startTime = null;        // ⬅️ 주행 시간 기준 끊기
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
@@ -1407,6 +1409,30 @@ function resetNavigation() {
   if (popupModal) openPopupModal(popupModal);
 }
 
+/* ---------------------- 이동정보 업데이트 함수 ---------------------- */
+function updateTravelStats() {
+  // 초기화 상태면 계산하지 않고 0 값 유지
+  if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
+    document.getElementById("travelStatsContent").innerHTML = `
+      🚗 현재 속도: 0 km/h<br>
+      📊 평균 속도: 0 km/h<br>
+      ⚡ 최고 속도: 0 km/h<br>
+      ⏱️ 주행 시간: 0 분<br>
+      📏 총 이동 거리: 0 km<br>
+    `;
+    return;
+  }
+
+  // 기존 계산 로직…
+  document.getElementById("travelStatsContent").innerHTML = `
+    🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
+    📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
+    ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
+    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+    📏 총 이동 거리: ${totalDistance} km<br>
+    ${etaLine}
+  `;
+}
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 const resetBtn = document.getElementById("resetPathBtn");
