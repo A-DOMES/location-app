@@ -1608,7 +1608,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setZoom(7);
 
   // ✅ 목적지를 찍으면 지도중심모드로 전환
-  // followUser = false;  
+  followUser = false;  
   
   // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
@@ -1992,8 +1992,8 @@ function openModal(modal) {
   modal.style.display = 'block';
 
   // ✅ 중앙 정렬 보정
- // modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
-// }
+ modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
+ }
 
 function closeModal(modal) {
   modal.style.display = 'none';
