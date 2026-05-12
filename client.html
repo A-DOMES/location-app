@@ -5,7 +5,8 @@
   <title>내 위치 지도</title>
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places"></script>
+/* <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script> */
 
 <style>
 /* ---------------------- 기본 페이지 스타일 ---------------------- */
@@ -1367,21 +1368,30 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
   
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
+  // ---------------------- 위치 추적 중단 ----------------------
+  if (watchId) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+
   // ---------------------- 경로 초기화 ----------------------
   pathCoords = [];
   if (pathPolyline) {
     pathPolyline.setMap(null);   // 지도에서 제거
     pathPolyline = null;
   }
-  document.getElementById("resetPathBtn").style.display = "none";
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  destinationMarkers.forEach(marker => marker.setMap(null));
+  destinationMarkers = [];
 
   // ---------------------- 이동정보 초기화 ----------------------
   speedHistory = [];
   startTime = Date.now();
   destinationLat = null;
   destinationLng = null;
-
-  // ✅ 좌표 관련 변수도 초기화 (추가된 부분)
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
@@ -1391,12 +1401,6 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     destinationCircle.setMap(null);
     destinationCircle = null;
   }
-
-  // ✅ 모든 목적지 마커 제거
-  destinationMarkers.forEach(marker => marker.setMap(null));
-  destinationMarkers = [];
-
-  // ❌ 내 위치 마커(myMarker)는 유지
 
   // ---------------------- 상대방 마커 제거 ----------------------
   if (otherMarker) {
@@ -1414,16 +1418,22 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
     📐 직선 거리: <span class="eta-highlight">0 km</span><br>
     🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
   `;
-
-  // ---------------------- 목적지 결과창 초기화 ----------------------
   document.getElementById("destinationResult").innerHTML = "";
+
+  // ---------------------- 모드 복귀 ----------------------
+  followUser = true; // 초기화 시 사람중심 모드로 복귀
+
+  // ---------------------- 음성 안내 중단 ----------------------
+  speakMessage("경로 안내가 중단되었습니다.");
+
+  // ---------------------- 버튼 상태 ----------------------
+  document.getElementById("resetPathBtn").style.display = "none";
 
   // ---------------------- 알림 모달 자동 닫힘 ----------------------
   openPopupModal(document.getElementById("popupModal"));
 });
 
-
-// ---------------------- 좌표 박스 닫기/재열기 버튼 ----------------------
+/* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
 document.getElementById("closeBtn").addEventListener("click", () => {
   document.getElementById("locationBox").style.display = "none";
   document.getElementById("reopenBtn").style.display = "block";
@@ -1433,6 +1443,7 @@ document.getElementById("reopenBtn").addEventListener("click", () => {
   document.getElementById("locationBox").style.display = "block";
   document.getElementById("reopenBtn").style.display = "none";
 });
+
 
 // ---------------------- 모달창 드래그 가능하게 만들기 ----------------------
 function makeDraggableModal(element) {
@@ -1770,6 +1781,44 @@ function speakMessage(message) {
   speechSynthesis.speak(utterance);
 }
 
+/* ---------------------- 경로 초기화 함수 ---------------------- */
+function resetNavigation() {
+  if (watchId) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+
+  pathCoords = [];
+  if (pathPolyline) {
+    pathPolyline.setMap(null);
+    pathPolyline = null;
+  }
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  destinationMarkers.forEach(marker => marker.setMap(null));
+  destinationMarkers = [];
+
+  destinationLat = null;
+  destinationLng = null;
+  lastLat = null;
+  lastLng = null;
+  lastTimestamp = null;
+
+  if (destinationCircle) {
+    destinationCircle.setMap(null);
+    destinationCircle = null;
+  }
+  if (otherMarker) {
+    otherMarker.setMap(null);
+    otherMarker = null;
+  }
+
+  followUser = true; // 사람중심 모드로 복귀
+  speakMessage("경로 안내가 중단되었습니다.");
+}
+
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   console.log("🚗 경로 안내 버튼 클릭됨");
@@ -1783,69 +1832,69 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 });
 
-
 /* ---------------------- 경로 안내 함수 (computeRoutes 버전) ---------------------- */
 function showRouteToDestination(destination) {
   console.log("📍 showRouteToDestination 실행:", destination);
 
-  // ✅ 위치 추적 시작 (사용자의 현재 위치를 계속 업데이트)
+  // ✅ 이전 안내 초기화
+  resetNavigation();
+
+  // ✅ 안내 시작 음성
+  speakMessage("경로 안내를 시작합니다.");
+
+  // ✅ 위치 추적 시작
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
 
-      // ✅ 실시간 주행 경로를 파란색 선으로 표시
       pathCoords.push({ lat: currentLat, lng: currentLng });
       if (pathPolyline) {
         pathPolyline.setPath(pathCoords);
       } else {
         pathPolyline = new google.maps.Polyline({
           path: pathCoords,
-          strokeColor: "#0000FF", // 파란색
+          strokeColor: "#0000FF",
           strokeWeight: 4,
           strokeOpacity: 0.8,
           map: map
         });
+      }
+
+      // 사람중심 모드일 때만 지도 중심 이동
+      if (followUser) {
+        map.setCenter({ lat: currentLat, lng: currentLng });
       }
     },
     (err) => console.error("위치 추적 오류:", err),
     { enableHighAccuracy: true }
   );
 
-  // ✅ 기존 안내선 제거 (새 경로 안내를 위해 초기화)
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
-  }
-
-  // ✅ RouteService 객체 생성 (DirectionsService와 유사)
+  // ✅ RouteService 호출
   const routeService = new google.maps.routes.RouteService();
-
-  // ✅ 출발지와 목적지 설정
   const request = {
     origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
     destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
-    travelMode: "DRIVE" // 운전 모드
+    travelMode: "DRIVE"
   };
 
-  // ✅ computeRoutes 메서드 호출
   routeService.computeRoutes(request).then((response) => {
     if (response.routes && response.routes.length > 0) {
       const route = response.routes[0];
 
-      // ✅ 안내선(경로) 표시 - 초록색 굵은 선
+      // ✅ 안내선 표시
       if (route.polyline?.encodedPolyline) {
         const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
         destinationRenderer = new google.maps.Polyline({
           path: decodedPath,
-          strokeColor: "#008000", // 초록색
+          strokeColor: "#008000",
           strokeWeight: 6,
           strokeOpacity: 1.0,
           map: map
         });
       }
 
-      // ✅ 목적지 마커 표시 (AdvancedMarkerElement 사용)
+      // ✅ 목적지 마커 표시
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map,
         position: { lat: destination.lat, lng: destination.lng },
@@ -1853,29 +1902,25 @@ function showRouteToDestination(destination) {
       });
       destinationMarkers.push(marker);
 
-      // ✅ 안내 단계별 메시지 (음성 안내 포함)
+      // ✅ 안내 단계별 메시지
       let instructions = "<div style='text-align:left; font-size:14px;'>";
       route.legs[0].steps.forEach((step, idx) => {
         const text = step.navigationInstruction?.instructions || "안내 없음";
         instructions += `<p>${idx + 1}. ${text} (${(step.distanceMeters/1000).toFixed(2)} km)</p>`;
-        speakMessage(`${idx + 1}번 안내: ${text}`);   // ✅ 공통 음성 함수 사용
+        speakMessage(`${idx + 1}번 안내: ${text}`);
       });
       instructions += "</div>";
-      
+
       showQueuedModal("경로 안내", instructions);
-      
-      // ✅ 도착 시 안내 종료
+
+      // ✅ 도착 시 안내 종료 및 초기화
       setTimeout(() => {
         speakMessage("목적지에 도착했습니다!");
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
+        resetNavigation();
       }, (route.duration?.seconds || 0) * 1000);
     }
   }).catch(err => console.error("❌ computeRoutes 오류:", err));
 }
-
 
   
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
