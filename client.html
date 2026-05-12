@@ -760,12 +760,10 @@ function startTracking() {
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-
-    // ✅ 주소는 별도 영역에서 비동기로 갱신
+    
+    // ✅ 주소는 별도 영역에서만 비동기 처리
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
-      // 주소 영역만 "불러오는 중..." 표시
       document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
-      
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
           let address = results[0].formatted_address
@@ -776,7 +774,7 @@ function startTracking() {
       });
       lastGeocodeTime = Date.now();
     }
-
+    
     // ✅ 위치 표시 갱신
     updateLocationDisplay(currentLat, currentLng, heading);
 
