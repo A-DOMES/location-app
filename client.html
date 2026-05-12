@@ -725,20 +725,20 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
-  // ✅ watchPosition으로 실시간 추적 (1~2초 단위 갱신)
+  // ✅ watchPosition으로 실시간 추적
   navigator.geolocation.watchPosition(pos => {
     // ✅ 좌표값 갱신
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
     const timestamp = Date.now();
 
-    // ✅ 수정: GPS 기반 속도 계산 호출
+    // ✅ 속도 계산
     computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
     let heading = pos.coords.heading || 0;
     const myPos = { lat: currentLat, lng: currentLng };
 
-    // ✅ 방향 계산 및 변환 (초기값 없을 때 보정)
+    // ✅ 방향 보정
     if (!heading || heading === 0) {
       if (pathCoords.length > 1) {
         const last = pathCoords[pathCoords.length - 1];
@@ -755,16 +755,17 @@ function startTracking() {
     const now = new Date();
     const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 
-    // ✅ 현재 위치 창 업데이트
+    // ✅ 현재 위치 정보 즉시 표시
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-    document.getElementById("shareBtn").onclick = showPopup;
 
-    // ✅ 주소 갱신
+    // ✅ 주소는 별도 영역에서 비동기로 갱신
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
+      // 주소 영역만 "불러오는 중..." 표시
       document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
+      
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
           let address = results[0].formatted_address
@@ -786,11 +787,11 @@ function startTracking() {
       myMarker.setPosition(myPos);
     }
 
-    // ✅ 토글 상태에 따라 지도 중심 이동 여부 결정
+    // ✅ 지도 중심 이동 여부
     if (followUser) {
       map.setCenter(myPos);
     }
-    
+
     // ✅ 원형 표시
     drawMultipleCircles(myPos);
 
@@ -821,7 +822,7 @@ function startTracking() {
   }, {
     enableHighAccuracy: true,
     maximumAge: 0,
-    timeout: 5000 // ✅ 응답 지연 최소화
+    timeout: 5000
   });
 }
 
