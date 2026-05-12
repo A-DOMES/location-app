@@ -905,46 +905,50 @@ function getSmoothedSpeed(history, windowSize = 5) {
 function updateTravelStats() {
   const totalDistance = computeTotalDistance(pathCoords);
 
-  // ✅ 속도 히스토리 관리
   speedHistory.push(currentSpeed);
-
-  // ✅ 스무딩된 현재 속도
   const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
-  // ✅ 평균 속도 계산
   const avgSpeed = speedHistory.length > 0 
     ? speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length 
     : 0;
 
-  // ✅ 최고 속도 계산
   const maxSpeed = speedHistory.length > 0 ? Math.max(...speedHistory) : 0;
 
-  // ✅ 주행 시간 계산 (분 단위)
-  const elapsedTime = (Date.now() - startTime) / 1000; // 초
+  const elapsedTime = (Date.now() - startTime) / 1000;
   const elapsedMinutes = (elapsedTime / 60).toFixed(1);
 
-  // ✅ ETA 계산 (목적지가 있을 때만)
-  let etaMessage = "계산 불가";
+  // ETA 계산 (목적지가 있을 때만)
+  let etaLine = "";
   if (destinationLat && destinationLng && avgSpeed > 0) {
     const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
     const currentPos = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
     const etaMinutes = (straightDistance / 1000) / avgSpeed * 60;
-    etaMessage = `${etaMinutes.toFixed(1)} 분 후 도착 예상`;
+    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
-  // ✅ 모달창 업데이트
+  // 모달창 업데이트 (ETA는 조건부로 추가)
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
     ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
     ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
     📏 총 이동 거리: ${(totalDistance / 1000).toFixed(2)} km<br>
-    🕒 예상 도착 시간: <span class="eta-highlight">${etaMessage}</span>
+    ${etaLine}
   `;
 }
 
 
+/* ---------------------- 총 이동거리 계산 ---------------------- */
+function computeTotalDistance(coords) {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) {
+    total += google.maps.geometry.spherical.computeDistanceBetween(coords[i - 1], coords[i]);
+  }
+  return (total / 1000).toFixed(2); // km 단위
+}
+
+  
 // ---------------------- 위치 공유 ----------------------
 function shareLocation() {
   if (!currentLat || !currentLng) {
@@ -1942,17 +1946,6 @@ function checkRadarPOIs(myPos) {
 }
 
 
-/* ---------------------- 이동정보 업데이트 ---------------------- */
-
-
-/* ---------------------- 총 이동거리 계산 ---------------------- */
-function computeTotalDistance(coords) {
-  let total = 0;
-  for (let i = 1; i < coords.length; i++) {
-    total += google.maps.geometry.spherical.computeDistanceBetween(coords[i - 1], coords[i]);
-  }
-  return (total / 1000).toFixed(2); // km 단위
-}
 
 /* ---------------------- 이동정보 메시지 빌드 ---------------------- */
 function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
