@@ -1366,8 +1366,8 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
 
 
   
-/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
-document.getElementById("resetPathBtn").addEventListener("click", () => {
+/* ---------------------- 경로 초기화 함수 ---------------------- */
+function resetNavigation() {
   // ---------------------- 위치 추적 중단 ----------------------
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
@@ -1431,6 +1431,11 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   // ---------------------- 알림 모달 자동 닫힘 ----------------------
   openPopupModal(document.getElementById("popupModal"));
+}
+
+/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
+document.getElementById("resetPathBtn").addEventListener("click", () => {
+  resetNavigation();
 });
 
 /* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
@@ -1444,8 +1449,7 @@ document.getElementById("reopenBtn").addEventListener("click", () => {
   document.getElementById("reopenBtn").style.display = "none";
 });
 
-
-// ---------------------- 모달창 드래그 가능하게 만들기 ----------------------
+/* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
   let isDragging = false, offsetX, offsetY;
 
@@ -1459,8 +1463,15 @@ function makeDraggableModal(element) {
 
   document.addEventListener('mousemove', e => {
     if (isDragging) {
-      element.style.left = (e.clientX - offsetX) + 'px';
-      element.style.top = (e.clientY - offsetY) + 'px';
+      let newLeft = e.clientX - offsetX;
+      let newTop = e.clientY - offsetY;
+
+      // 화면 밖으로 못 나가게 제한
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
+      newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+
+      element.style.left = newLeft + 'px';
+      element.style.top = newTop + 'px';
     }
   });
 
@@ -1480,8 +1491,15 @@ function makeDraggableModal(element) {
   document.addEventListener('touchmove', e => {
     if (isDragging) {
       const touch = e.touches[0];
-      element.style.left = (touch.clientX - offsetX) + 'px';
-      element.style.top = (touch.clientY - offsetY) + 'px';
+      let newLeft = touch.clientX - offsetX;
+      let newTop = touch.clientY - offsetY;
+
+      // 화면 밖으로 못 나가게 제한
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
+      newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+
+      element.style.left = newLeft + 'px';
+      element.style.top = newTop + 'px';
     }
   });
 
