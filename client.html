@@ -1421,9 +1421,9 @@ function makeDraggableModal(element) {
       let newLeft = e.clientX - offsetX;
       let newTop = e.clientY - offsetY;
 
-      // 화면 밖으로 못 나가게 제한
-      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
-      newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+      // ✅ 화면 밖으로 절반 정도는 나갈 수 있게 허용
+      newLeft = Math.max(-element.offsetWidth / 2, Math.min(newLeft, window.innerWidth - element.offsetWidth / 2));
+      newTop = Math.max(-element.offsetHeight / 2, Math.min(newTop, window.innerHeight - element.offsetHeight / 2));
 
       element.style.left = newLeft + 'px';
       element.style.top = newTop + 'px';
@@ -1449,9 +1449,9 @@ function makeDraggableModal(element) {
       let newLeft = touch.clientX - offsetX;
       let newTop = touch.clientY - offsetY;
 
-      // 화면 밖으로 못 나가게 제한
-      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
-      newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+      // ✅ 화면 밖으로 절반 정도는 나갈 수 있게 허용
+      newLeft = Math.max(-element.offsetWidth / 2, Math.min(newLeft, window.innerWidth - element.offsetWidth / 2));
+      newTop = Math.max(-element.offsetHeight / 2, Math.min(newTop, window.innerHeight - element.offsetHeight / 2));
 
       element.style.left = newLeft + 'px';
       element.style.top = newTop + 'px';
@@ -1462,6 +1462,7 @@ function makeDraggableModal(element) {
     isDragging = false;
   });
 }
+
 
 
 /* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
