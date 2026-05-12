@@ -7,6 +7,7 @@
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes" async defer></script>
 
+
 <style>
 /* ---------------------- 기본 페이지 스타일 ---------------------- */
 body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; }
@@ -1857,34 +1858,44 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 });
 
 
-// ---------------------- 경로 안내 함수 ----------------------  
-function showRouteToDestination(destination) {
-  if (!directionsService) directionsService = new google.maps.DirectionsService();
-
+// ---------------------- 경로 안내 함수 ----------------------
+async function showRouteToDestination(destination) {
+  // 기존 렌더러 제거
   if (destinationRenderer) {
     destinationRenderer.setMap(null);
     destinationRenderer = null;
   }
-  destinationRenderer = new google.maps.DirectionsRenderer({ 
-    map, 
-    suppressMarkers: true 
+
+  // 새 렌더러 준비 (폴리라인 직접 그리기)
+  destinationRenderer = new google.maps.Polyline({
+    strokeColor: "#0000FF",
+    strokeWeight: 4,
+    strokeOpacity: 0.8,
+    map: map
   });
 
-  const request = {
-    origin: { lat: currentLat, lng: currentLng },   // ✅ 초기화된 좌표값 사용
-    destination: destination,
-    travelMode: google.maps.TravelMode.DRIVING
-  };
+  try {
+    const routeService = new google.maps.routes.RouteService();
 
-  directionsService.route(request, (result, status) => {
-    if (status === google.maps.DirectionsStatus.OK) {
-      destinationRenderer.setDirections(result);
+    const result = await routeService.computeRoutes({
+      origin: {
+        location: { latLng: { latitude: currentLat, longitude: currentLng } }
+      },
+      destination: {
+        location: { latLng: { latitude: destination.lat, longitude: destination.lng } }
+      },
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE"
+    });
 
-      const destLeg = result.routes[0].legs[0];
-      destinationLat = destLeg.end_location.lat();
-      destinationLng = destLeg.end_location.lng();
+    if (result.routes && result.routes.length > 0) {
+      const route = result.routes[0];
 
-      // ✅ 목적지 마커 표시
+      // 목적지 좌표 저장
+      destinationLat = destination.lat;
+      destinationLng = destination.lng;
+
+      // 목적지 마커 표시
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map,
         position: { lat: destinationLat, lng: destinationLng },
@@ -1892,48 +1903,63 @@ function showRouteToDestination(destination) {
       });
       destinationMarkers.push(marker);
 
-      // ✅ 안내 단계별 메시지
+      // 경로 폴리라인 표시
+      const path = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
+      destinationRenderer.setPath(path);
+
+      // 안내 메시지 (예상 거리/시간 + 실제 누적 거리)
       let instructions = "<div style='text-align:left; font-size:14px;'>";
-      destLeg.steps.forEach((step, idx) => {
-        instructions += `<p>${idx + 1}. ${step.instructions} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
-        speakMessage(`${idx + 1}번 안내: ${step.instructions}`);
-      });
+      instructions += `<p>총 거리(예상): ${(route.distanceMeters / 1000).toFixed(2)} km</p>`;
+      instructions += `<p>예상 소요 시간: ${(route.duration.seconds / 60).toFixed(0)} 분</p>`;
+      instructions += `<p>현재까지 이동 거리: ${totalDistance} km</p>`;
       instructions += "</div>";
 
-      // ✅ 경로 안내 모달 표시 (queuedModal 활용)
       showQueuedModal("경로 안내", instructions);
-
-      // ✅ 도착 시 안내 종료 및 초기화
-      const duration = destLeg.duration.value; // 초 단위
-      setTimeout(() => {
-        speakMessage("목적지에 도착했습니다!");
-        resetNavigation(true);
-      }, duration * 1000);
+      speakMessage("경로 안내를 시작합니다.");
 
     } else {
-      console.error("경로 안내 실패:", status);
-      showQueuedModal("경로 안내 오류", `<p>경로를 찾을 수 없습니다. (${status})</p>`);
+      console.error("경로 안내 실패: 결과 없음");
+      showQueuedModal("경로 안내 오류", `<p>경로를 찾을 수 없습니다.</p>`);
       speakMessage("경로를 찾을 수 없습니다.");
     }
-  });
+  } catch (error) {
+    console.error("경로 안내 오류:", error);
+    showQueuedModal("경로 안내 오류", `<p>경로 안내 중 오류가 발생했습니다.</p>`);
+    speakMessage("경로 안내 중 오류가 발생했습니다.");
+  }
 
-  // ✅ 실시간 이동 경로 추적
+  // ✅ 실시간 이동 경로 추적 + 총 이동 거리 계산 + 목적지 반경 체크
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
 
-      pathCoords.push({ lat: currentLat, lng: currentLng });
-      if (pathPolyline) {
-        pathPolyline.setPath(pathCoords);
-      } else {
-        pathPolyline = new google.maps.Polyline({
-          path: pathCoords,
-          strokeColor: "#0000FF",
-          strokeWeight: 4,
-          strokeOpacity: 0.8,
-          map: map
-        });
+      // 경로 보정 함수 활용
+      updatePathPolyline(currentLat, currentLng);
+
+      // 총 이동 거리 계산
+      totalDistance = computeTotalDistance(pathCoords);
+
+      // 화면에 표시 (예시)
+      const travelStatsEl = document.getElementById("travelStatsContent");
+      if (travelStatsEl) {
+        travelStatsEl.innerHTML = `
+          🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
+          📏 총 이동 거리: ${totalDistance} km
+        `;
+      }
+
+      // ✅ 목적지 반경 체크 (15m 이내 도착 시 안내 종료)
+      if (destinationLat && destinationLng) {
+        const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
+        const currPoint = new google.maps.LatLng(currentLat, currentLng);
+        const distanceToDest = google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint);
+
+        if (distanceToDest <= 15) { // 15m 반경
+          speakMessage("목적지에 도착했습니다!");
+          resetNavigation(true);
+          navigator.geolocation.clearWatch(watchId); // 추적 종료
+        }
       }
 
       if (followUser) {
@@ -1944,8 +1970,6 @@ function showRouteToDestination(destination) {
     { enableHighAccuracy: true }
   );
 }
-
-
 
 
 
