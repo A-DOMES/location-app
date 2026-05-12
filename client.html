@@ -1527,6 +1527,9 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
+          // ✅ 검색결과 창 닫기
+          panel.style.display = "none";
+
           // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", () => {
