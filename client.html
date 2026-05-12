@@ -1476,7 +1476,7 @@ async function loadAdminLocations() {
 }
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
-async function findDestination(inputName) {
+async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
 
@@ -1488,20 +1488,10 @@ async function findDestination(inputName) {
   }
 
   if (match) {
-    showDestinationOnMap(
-      match.phone,
-      parseFloat(match.lat),
-      parseFloat(match.lng),
-      match.address
-    );
-
-    // ✅ 좌표 저장
+    showDestinationOnMap(match.phone, parseFloat(match.lat), parseFloat(match.lng), match.address);
     destinationLat = parseFloat(match.lat);
     destinationLng = parseFloat(match.lng);
-
-    // ✅ 경로 안내 버튼 표시
     document.getElementById("startRouteBtn").style.display = "inline-block";
-
     return Promise.resolve(true);
   }
 
@@ -1509,7 +1499,7 @@ async function findDestination(inputName) {
   const service = new google.maps.places.PlacesService(map);
   return new Promise((resolve) => {
     service.textSearch(
-      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 }, // ✅ 수정된 부분
+      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
       (results, status) => {
         const panel = document.getElementById("searchResultPanel");
         const body = panel.querySelector(".search-body");
@@ -1523,13 +1513,13 @@ async function findDestination(inputName) {
           `).join("");
 
           body.innerHTML = html;
-          panel.style.display = "block";
+          if (showPanel) panel.style.display = "block";
 
-          // ✅ 첫 번째 결과를 자동으로 지도에 표시
+          // ✅ 첫 번째 결과를 자동으로 지도에 표시 (레벨 7 복구)
           const first = results[0];
           const p = first.geometry.location;
           map.setCenter(p);
-          map.setZoom(16);
+          map.setZoom(7); // ← 복구된 부분
           showDestinationOnMap(first.name, p.lat(), p.lng(), first.formatted_address);
 
           destinationLat = p.lat();
@@ -1537,7 +1527,7 @@ async function findDestination(inputName) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 클릭 시 다른 결과 선택 가능
+          // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", () => {
               const idx = item.dataset.index;
@@ -1545,10 +1535,9 @@ async function findDestination(inputName) {
               const p = r.geometry.location;
 
               map.setCenter(p);
-              map.setZoom(16);
+              map.setZoom(16); // 상세 보기 확대
               showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
 
-              // ✅ 좌표 저장
               destinationLat = p.lat();
               destinationLng = p.lng();
 
@@ -1571,21 +1560,23 @@ async function findDestination(inputName) {
                 }
               });
 
-              // ✅ 경로 안내 버튼 표시
               document.getElementById("startRouteBtn").style.display = "inline-block";
             });
           });
 
           resolve(true);
         } else {
-          body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-          panel.style.display = "block";
+          if (showPanel) {
+            body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+            panel.style.display = "block";
+          }
           resolve(false);
         }
       }
     );
   });
 }
+
 
   
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
