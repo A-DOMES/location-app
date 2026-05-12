@@ -683,7 +683,7 @@ function initMap() {
         map.setCenter(userPos);
 
         // ✅ 내 위치 마커 생성
-        myMarker = new google.maps.marker.AdvancedMarkerElement({
+        myMarker = new google.maps.Marker({
           position: userPos,
           map,
           title: "내 위치"
@@ -779,17 +779,12 @@ function startTracking() {
     // ✅ 위치 표시 갱신
     updateLocationDisplay(currentLat, currentLng, heading);
 
-    // ✅ 마커 이동 (새 방식)
+    // ✅ 마커 이동
     if (!myMarker) {
-      myMarker = new google.maps.marker.AdvancedMarkerElement({
-        position: myPos,
-        map,
-        title: "내 위치"
-      });
+      myMarker = new google.maps.Marker({ position: myPos, map, title: "내 위치" });
     } else {
-      myMarker.position = myPos; // AdvancedMarkerElement는 setPosition 대신 속성으로 위치 변경
+      myMarker.setPosition(myPos);
     }
-
 
     // ✅ 토글 상태에 따라 지도 중심 이동 여부 결정
     if (followUser) {
@@ -955,19 +950,7 @@ function computeTotalDistance(coords) {
 
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
-    let prev, curr;
-
-    if (coords[i - 1] instanceof google.maps.LatLng) {
-      // LatLng 객체 배열
-      prev = coords[i - 1];
-      curr = coords[i];
-    } else {
-      // {lat, lng} 객체 배열
-      prev = new google.maps.LatLng(coords[i - 1].lat, coords[i - 1].lng);
-      curr = new google.maps.LatLng(coords[i].lat, coords[i].lng);
-    }
-
-    total += google.maps.geometry.spherical.computeDistanceBetween(prev, curr);
+    total += google.maps.geometry.spherical.computeDistanceBetween(coords[i - 1], coords[i]);
   }
   return (total / 1000).toFixed(2); // km 단위
 }
@@ -1159,13 +1142,13 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
   
 // ---------------------- 어린이 보호구역 ----------------------
 function checkSchoolZones(currentLat, currentLng) {
-  const service = new google.maps.places.Place(map);
+  const service = new google.maps.places.PlacesService(map);
   service.nearbySearch({
     location: { lat: currentLat, lng: currentLng },
     radius: 5,
     type: 'school'
   }, (results, status) => {
-    if (status === google.maps.places.PlaceStatus.OK) {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
       results.forEach(school => {
         const zoneCenter = school.geometry.location;
         const distance = google.maps.geometry.spherical.computeDistanceBetween(
@@ -1288,9 +1271,9 @@ window.onload = async () => {
       return;
     }
 
-    const service = new google.maps.places.Place(map);
+    const service = new google.maps.places.PlacesService(map);
     service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
-      if (status === google.maps.places.PlaceStatus.OK && results.length > 0) {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
         let html = "";
         results.forEach(r => {
           // ✅ 카드형으로 정리된 검색결과
@@ -1411,7 +1394,7 @@ function resetNavigation() {
   followUser = true; // 초기화 시 사람중심 모드로 복귀
 
   // ---------------------- 음성 안내 중단 ----------------------
-  speakMessage("경로 설정이 초기화 되었습니다.");
+  speakMessage("경로 안내가 중단되었습니다.");
 
   // ---------------------- 버튼 상태 ----------------------
   const resetBtn = document.getElementById("resetPathBtn");
@@ -1542,7 +1525,7 @@ async function findDestination(inputName, showPanel = true) {
   }
 
   // 2️⃣ 외부 API 검색 (전역 변수 활용)
-  const service = new google.maps.places.Place(map);
+  const service = new google.maps.places.PlacesService(map);
   return new Promise((resolve) => {
     service.textSearch(
       { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
@@ -1550,7 +1533,7 @@ async function findDestination(inputName, showPanel = true) {
         const panel = document.getElementById("searchResultPanel");
         const body = panel.querySelector(".search-body");
 
-        if (status === google.maps.places.PlaceStatus.OK && results.length > 0) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
           let html = results.map((r, idx) => `
             <div class="search-item" data-index="${idx}">
               <div class="search-title">📍 ${r.name}</div>
@@ -1597,7 +1580,7 @@ async function findDestination(inputName, showPanel = true) {
                 placeId: r.place_id,
                 fields: ["formatted_phone_number","website","opening_hours","rating","types"]
               }, (place, detailStatus) => {
-                if (detailStatus === google.maps.places.PlaceStatus.OK) {
+                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
                   const infoPanel = document.getElementById("destinationResult");
                   infoPanel.innerHTML = `
                     ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
@@ -1668,7 +1651,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 
   // ---------------------- 목적지 마커 ----------------------
-  const marker = new google.maps.marker.AdvancedMarkerElement({
+  const marker = new google.maps.Marker({
     position: pos,
     map: map,
     icon: {
@@ -1992,14 +1975,14 @@ async function showRouteToDestination(destination) {
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
 function checkRadarPOIs(myPos) {
-  const service = new google.maps.places.Place(map);
+  const service = new google.maps.places.PlacesService(map);
 
   service.nearbySearch({
     location: myPos,
     radius: radarRadiusMeters,
     type: ["cafe", "restaurant", "pharmacy", "gas_station"]
   }, (results, status) => {
-    if (status === google.maps.places.PlaceStatus.OK) {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
       results.forEach(place => {
         const poiPos = place.geometry.location;
         const distance = google.maps.geometry.spherical.computeDistanceBetween(
