@@ -1299,28 +1299,23 @@ document.getElementById("closeSearchPanel").addEventListener("click", () => {
   document.getElementById("destinationInput").value = ""; // 입력값 초기화
 });
 
-// ✅ 목적지 모달 닫기 버튼 이벤트
+// ✅ 목적지 모달 닫기 버튼 이벤트 (중복 제거 + 결과 모달 닫기 추가)
 document.getElementById("closeDestinationModal").addEventListener("click", () => {
-  // 모달 닫기
+  // 목적지 모달 닫기
   document.getElementById("destinationModal").style.display = "none";
 
-  // 검색결과 패널도 같이 닫기
+  // 검색결과 패널 닫기
   document.getElementById("searchResultPanel").style.display = "none";
+
+  // 목적지 결과 모달도 같이 닫기
+  document.getElementById("destinationResultModal").style.display = "none";
 
   // 입력값 초기화
   document.getElementById("destinationInput").value = "";
 });
-  
-// ✅ 목적지 모달 닫을 때도 입력값 초기화
-document.getElementById("closeDestinationModal").addEventListener("click", () => {
-  document.getElementById("destinationModal").style.display = "none";
-  document.getElementById("searchResultPanel").style.display = "none";
-  document.getElementById("destinationInput").value = ""; // 입력값 초기화
-});
 
-
-  // ✅ 검색결과 패널도 독립적으로 드래그 가능
-  makeDraggableAndResizable(document.getElementById("searchResultPanel"));
+// ✅ 검색결과 패널도 독립적으로 드래그 가능
+makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 };
 
 
@@ -1407,6 +1402,8 @@ document.getElementById("reopenBtn").addEventListener("click", () => {
   document.getElementById("locationBox").style.display = "block";
   document.getElementById("reopenBtn").style.display = "none";
 });
+
+ 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
