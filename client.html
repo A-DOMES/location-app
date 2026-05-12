@@ -1132,58 +1132,6 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
   }
 }
 
-// ---------------------- 직선거리/에상 도착 계산 ----------------------  
-function showRouteToDestination(destination) {
-  if (!directionsService) directionsService = new google.maps.DirectionsService();
-
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
-  }
-  destinationRenderer = new google.maps.DirectionsRenderer({ map });
-
-  const request = {
-    origin: { lat: currentLat, lng: currentLng },
-    destination: destination,
-    travelMode: google.maps.TravelMode.DRIVING
-  };
-
-  directionsService.route(request, (result, status) => {
-    if (status === google.maps.DirectionsStatus.OK) {
-      destinationRenderer.setDirections(result);
-
-      const destLeg = result.routes[0].legs[0];
-      destinationLat = destLeg.end_location.lat();
-      destinationLng = destLeg.end_location.lng();
-
-      const steps = destLeg.steps;
-      let instructions = "<div style='text-align:left; font-size:14px;'>";
-      steps.forEach((step, idx) => {
-        instructions += `<p>${idx + 1}. ${step.instructions} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
-      });
-      instructions += "</div>";
-
-      // ✅ 모달창 표시
-      showQueuedModal("경로 안내", instructions);
-
-      // ✅ 음성 안내 추가
-      let speechText = "경로 안내를 시작합니다. ";
-      steps.forEach((step, idx) => {
-        speechText += `${idx + 1}번 지시. ${step.instructions}. `;
-      });
-
-      const utterance = new SpeechSynthesisUtterance(speechText);
-      utterance.lang = "ko-KR";   // 한국어 음성
-      speechSynthesis.speak(utterance);
-
-    } else {
-      console.error("경로 안내 실패:", status);
-      showQueuedModal("경로 안내 오류", `<p>경로를 찾을 수 없습니다. (${status})</p>`);
-    }
-  });
-}
-
-
   
 // ---------------------- 속도 제한 관련 ----------------------
 
@@ -1863,17 +1811,66 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 });
 
-/* ---------------------- 경로 안내 함수 ---------------------- */
+// ---------------------- 경로 안내 함수 ----------------------
 function showRouteToDestination(destination) {
-  console.log("📍 showRouteToDestination 실행:", destination);
+  // ✅ DirectionsService/DirectionsRenderer 준비
+  if (!directionsService) directionsService = new google.maps.DirectionsService();
 
-  // ✅ 이전 안내 초기화 (좌표는 유지)
-  resetNavigation(false);
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  destinationRenderer = new google.maps.DirectionsRenderer({ 
+    map, 
+    suppressMarkers: true // 기본 마커 숨기고 커스텀 마커 사용
+  });
 
-  // ✅ 안내 시작 음성
-  speakMessage("경로 안내를 시작합니다.");
+  const request = {
+    origin: { lat: currentLat, lng: currentLng },   // ✅ 초기화된 좌표값 사용
+    destination: destination,
+    travelMode: google.maps.TravelMode.DRIVING
+  };
 
-  // ✅ 위치 추적 시작
+  directionsService.route(request, (result, status) => {
+    if (status === google.maps.DirectionsStatus.OK) {
+      destinationRenderer.setDirections(result);
+
+      const destLeg = result.routes[0].legs[0];
+      destinationLat = destLeg.end_location.lat();
+      destinationLng = destLeg.end_location.lng();
+
+      // ✅ 목적지 마커 표시
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: destinationLat, lng: destinationLng },
+        title: "목적지"
+      });
+      destinationMarkers.push(marker);
+
+      // ✅ 안내 단계별 메시지
+      let instructions = "<div style='text-align:left; font-size:14px;'>";
+      destLeg.steps.forEach((step, idx) => {
+        instructions += `<p>${idx + 1}. ${step.instructions} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
+        speakMessage(`${idx + 1}번 안내: ${step.instructions}`);
+      });
+      instructions += "</div>";
+
+      showQueuedModal("경로 안내", instructions);
+
+      // ✅ 도착 시 안내 종료 및 완전 초기화
+      const duration = destLeg.duration.value; // 초 단위
+      setTimeout(() => {
+        speakMessage("목적지에 도착했습니다!");
+        resetNavigation(true);
+      }, duration * 1000);
+
+    } else {
+      console.error("경로 안내 실패:", status);
+      showQueuedModal("경로 안내 오류", `<p>경로를 찾을 수 없습니다. (${status})</p>`);
+    }
+  });
+
+  // ✅ 실시간 이동 경로 추적
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
@@ -1899,53 +1896,9 @@ function showRouteToDestination(destination) {
     (err) => console.error("위치 추적 오류:", err),
     { enableHighAccuracy: true }
   );
-
-  // ✅ DirectionsService 호출
-  const directionsService = new google.maps.DirectionsService();
-  const directionsRenderer = new google.maps.DirectionsRenderer({
-    map: map,
-    suppressMarkers: true // 기본 마커 숨기고 커스텀 마커 사용
-  });
-
-  directionsService.route({
-    origin: { lat: currentLat, lng: currentLng },
-    destination: { lat: destination.lat, lng: destination.lng },
-    travelMode: google.maps.TravelMode.DRIVING
-  }, (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
-
-      // ✅ 목적지 마커 표시
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: destination.lat, lng: destination.lng },
-        title: "목적지"
-      });
-      destinationMarkers.push(marker);
-
-      // ✅ 안내 단계별 메시지
-      let instructions = "<div style='text-align:left; font-size:14px;'>";
-      result.routes[0].legs[0].steps.forEach((step, idx) => {
-        const text = step.instructions || "안내 없음";
-        instructions += `<p>${idx + 1}. ${text} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
-        speakMessage(`${idx + 1}번 안내: ${text}`);
-      });
-      instructions += "</div>";
-
-      showQueuedModal("경로 안내", instructions);
-
-      // ✅ 도착 시 안내 종료 및 완전 초기화
-      const duration = result.routes[0].legs[0].duration.value; // 초 단위
-      setTimeout(() => {
-        speakMessage("목적지에 도착했습니다!");
-        resetNavigation(true); // 도착 시 좌표까지 초기화
-      }, duration * 1000);
-    } else {
-      console.error("❌ DirectionsService 오류:", status);
-      speakMessage("경로 안내를 시작할 수 없습니다.");
-    }
-  });
 }
+
+
 
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
