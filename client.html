@@ -1329,16 +1329,16 @@ makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 
 /* ---------------------- 경로 초기화 함수 ---------------------- */
 function resetNavigation() {
-  // ---------------------- 위치 추적 중단 ----------------------
+  // 위치 추적 중단
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
 
-  // ---------------------- 경로 초기화 ----------------------
+  // 경로 초기화
   pathCoords = [];
   if (pathPolyline) {
-    pathPolyline.setMap(null);   // 지도에서 제거
+    pathPolyline.setMap(null);
     pathPolyline = null;
   }
   if (destinationRenderer) {
@@ -1348,28 +1348,30 @@ function resetNavigation() {
   destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
-  // ---------------------- 이동정보 초기화 ----------------------
+  // 이동정보 변수 초기화 (핵심!)
   speedHistory = [];
-  startTime = Date.now();
-  destinationLat = null;
-  destinationLng = null;
+  totalDistance = 0;
+  avgSpeed = 0;
+  maxSpeed = 0;
+  currentSpeed = 0;
+  startTime = null;   // ⬅️ 주행 시간 기준을 완전히 끊어야 함
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
+  destinationLat = null;
+  destinationLng = null;
 
-  // ---------------------- 목적지 관련 초기화 ----------------------
+  // 목적지 관련 초기화
   if (destinationCircle) {
     destinationCircle.setMap(null);
     destinationCircle = null;
   }
-
-  // ---------------------- 상대방 마커 제거 ----------------------
   if (otherMarker) {
     otherMarker.setMap(null);
     otherMarker = null;
   }
 
-  // ---------------------- 평상시 주행 모달 초기화 (존재할 때만) ----------------------
+  // 평상시 주행 모달 초기화
   const travelStatsEl = document.getElementById("travelStatsContent");
   if (travelStatsEl) {
     travelStatsEl.innerHTML = `
@@ -1381,7 +1383,7 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- 목적지 안내 모달 초기화 (존재할 때만) ----------------------
+  // 목적지 안내 모달 초기화
   const destinationEl = document.getElementById("destinationResult");
   if (destinationEl) {
     destinationEl.innerHTML = `
@@ -1390,20 +1392,21 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- 모드 복귀 ----------------------
-  followUser = true; // 초기화 시 사람중심 모드로 복귀
+  // 모드 복귀
+  followUser = true;
 
-  // ---------------------- 음성 안내 중단 ----------------------
+  // 음성 안내
   speakMessage("경로가 초기화 되었습니다.");
 
-  // ---------------------- 버튼 상태 ----------------------
+  // 버튼 상태
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
 
-  // ---------------------- 알림 모달 자동 닫힘 ----------------------
+  // 알림 모달 자동 닫힘
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
 }
+
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 const resetBtn = document.getElementById("resetPathBtn");
