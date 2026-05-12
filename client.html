@@ -761,12 +761,10 @@ function startTracking() {
     document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
     document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
     
-    // ✅ 주소 영역은 살짝 늦게 초기화
+    // ✅ 주소는 별도 영역에서만 비동기 처리
     if (Date.now() - lastGeocodeTime > geocodeInterval) {
-      setTimeout(() => {
-        document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
-      }, 100); // 좌표 표시 후 약간 늦게 실행
-    
+      document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
+      
       geocoder.geocode({ location: myPos }, (results, status) => {
         if (status === "OK" && results[0]) {
           let address = results[0].formatted_address
