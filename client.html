@@ -1870,6 +1870,9 @@ function showRouteToDestination(destination) {
   // ✅ 이전 안내 초기화 (좌표는 유지)
   resetNavigation(false);
 
+  // ✅ 안내 시작 음성
+  speakMessage("경로 안내를 시작합니다.");
+
   // ✅ 위치 추적 시작
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
@@ -1897,29 +1900,20 @@ function showRouteToDestination(destination) {
     { enableHighAccuracy: true }
   );
 
-  // ✅ RouteService 호출
-  const routeService = new google.maps.routes.RouteService();
-  const request = {
-    origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
-    destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
-    travelMode: "DRIVE"
-  };
+  // ✅ DirectionsService 호출
+  const directionsService = new google.maps.DirectionsService();
+  const directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
+    suppressMarkers: true // 기본 마커 숨기고 커스텀 마커 사용
+  });
 
-  routeService.computeRoutes(request).then((response) => {
-    if (response.routes && response.routes.length > 0) {
-      const route = response.routes[0];
-
-      // ✅ 안내선 표시
-      if (route.polyline?.encodedPolyline) {
-        const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
-        destinationRenderer = new google.maps.Polyline({
-          path: decodedPath,
-          strokeColor: "#008000",
-          strokeWeight: 6,
-          strokeOpacity: 1.0,
-          map: map
-        });
-      }
+  directionsService.route({
+    origin: { lat: currentLat, lng: currentLng },
+    destination: { lat: destination.lat, lng: destination.lng },
+    travelMode: google.maps.TravelMode.DRIVING
+  }, (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
 
       // ✅ 목적지 마커 표시
       const marker = new google.maps.marker.AdvancedMarkerElement({
@@ -1931,9 +1925,9 @@ function showRouteToDestination(destination) {
 
       // ✅ 안내 단계별 메시지
       let instructions = "<div style='text-align:left; font-size:14px;'>";
-      route.legs[0].steps.forEach((step, idx) => {
-        const text = step.navigationInstruction?.instructions || "안내 없음";
-        instructions += `<p>${idx + 1}. ${text} (${(step.distanceMeters/1000).toFixed(2)} km)</p>`;
+      result.routes[0].legs[0].steps.forEach((step, idx) => {
+        const text = step.instructions || "안내 없음";
+        instructions += `<p>${idx + 1}. ${text} (${(step.distance.value/1000).toFixed(2)} km)</p>`;
         speakMessage(`${idx + 1}번 안내: ${text}`);
       });
       instructions += "</div>";
@@ -1941,12 +1935,16 @@ function showRouteToDestination(destination) {
       showQueuedModal("경로 안내", instructions);
 
       // ✅ 도착 시 안내 종료 및 완전 초기화
+      const duration = result.routes[0].legs[0].duration.value; // 초 단위
       setTimeout(() => {
         speakMessage("목적지에 도착했습니다!");
         resetNavigation(true); // 도착 시 좌표까지 초기화
-      }, (route.duration?.seconds || 0) * 1000);
+      }, duration * 1000);
+    } else {
+      console.error("❌ DirectionsService 오류:", status);
+      speakMessage("경로 안내를 시작할 수 없습니다.");
     }
-  }).catch(err => console.error("❌ computeRoutes 오류:", err));
+  });
 }
 
 
