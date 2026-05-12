@@ -1504,74 +1504,77 @@ async function findDestination(inputName) {
     return Promise.resolve(true);
   }
 
-  // 2️⃣ 외부 API 검색
-  const service = new google.maps.places.PlacesService(map);
-  return new Promise((resolve) => {
-    service.textSearch(
-      { query: inputName, location: map.getCenter(), radius: 5000 },
-      (results, status) => {
-        const panel = document.getElementById("searchResultPanel");
-        const body = panel.querySelector(".search-body");
+// 2️⃣ 외부 API 검색
+const service = new google.maps.places.PlacesService(map);
+return new Promise((resolve) => {
+  service.textSearch(
+    { 
+      query: inputName, 
+      location: { lat: currentLat, lng: currentLng }, // ✅ 전역 변수 활용
+      radius: 5000 
+    },
+    (results, status) => {
+      const panel = document.getElementById("searchResultPanel");
+      const body = panel.querySelector(".search-body");
 
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          let html = results.map((r, idx) => `
-            <div class="search-item" data-index="${idx}">
-              <div class="search-title">📍 ${r.name}</div>
-              <div class="search-address">🏠 ${r.formatted_address}</div>
-            </div>
-          `).join("");
+      if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+        let html = results.map((r, idx) => `
+          <div class="search-item" data-index="${idx}">
+            <div class="search-title">📍 ${r.name}</div>
+            <div class="search-address">🏠 ${r.formatted_address}</div>
+          </div>
+        `).join("");
 
-          body.innerHTML = html;
-          panel.style.display = "block";
+        body.innerHTML = html;
+        panel.style.display = "block";
 
-          // ✅ 클릭 시 지도 이동 + 세부 정보 로딩
-          body.querySelectorAll(".search-item").forEach((item) => {
-            item.addEventListener("click", () => {
-              const idx = item.dataset.index;
-              const r = results[idx];
-              const p = r.geometry.location;
+        // ✅ 클릭 시 지도 이동 + 세부 정보 로딩
+        body.querySelectorAll(".search-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const idx = item.dataset.index;
+            const r = results[idx];
+            const p = r.geometry.location;
 
-              map.setCenter(p);
-              map.setZoom(16);
-              showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
+            map.setCenter(p);
+            map.setZoom(16);
+            showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
 
-              // ✅ 좌표 저장
-              destinationLat = p.lat();
-              destinationLng = p.lng();
+            destinationLat = p.lat();
+            destinationLng = p.lng();
 
-              document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none"; // ✅ 모달 닫기
+            document.getElementById("destinationInput").value = r.name;
+            panel.style.display = "none";
 
-              service.getDetails({
-                placeId: r.place_id,
-                fields: ["formatted_phone_number","website","opening_hours","rating","types"]
-              }, (place, detailStatus) => {
-                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                  const infoPanel = document.getElementById("destinationResult");
-                  infoPanel.innerHTML = `
-                    ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                    ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                    ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                    ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                    ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                  `;
-                }
-              });
-
-              // ✅ 경로 안내 버튼 표시
-              document.getElementById("startRouteBtn").style.display = "inline-block";
+            // ✅ 상세정보 로딩
+            service.getDetails({
+              placeId: r.place_id,
+              fields: ["formatted_phone_number","website","opening_hours","rating","types"]
+            }, (place, detailStatus) => {
+              if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
+                const infoPanel = document.getElementById("destinationResult");
+                infoPanel.innerHTML = `
+                  ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
+                  ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
+                  ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
+                  ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
+                  ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
+                `;
+              }
             });
-          });
 
-          resolve(true);
-        } else {
-          body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-          panel.style.display = "block";
-          resolve(false);
-        }
+            document.getElementById("startRouteBtn").style.display = "inline-block";
+          });
+        });
+
+        resolve(true);
+      } else {
+        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+        panel.style.display = "block";
+        resolve(false);
       }
-    );
-  });
+    }
+  );
+});
 }
 
 
