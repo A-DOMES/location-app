@@ -1,3 +1,10 @@
+최종코드 완성본260513 수정7 새벽 2시 038분( 지도중심모드 처리가 된것 같음)
+260512 client.html최종본 현재까지 최종본 거의 대부분의 문제를 해결한 상태..
+기본베이스 코드로 사용할것, 모달창도 끝까지 이동이 가능함
+현재 이동정보모달과 목적지간련하여 경로초기화 방식 중 통합형+안정형으로 만든코드
+DirectionsService / DirectionsRenderer 방식에서 Routes API (google.maps.routes.RouteService) 바꾼코드
+내 서버의 사용자를 5분마다 검색해서 자동으로 지도에 띄워주는 코드, 지도로딩시 가장 빠른 위도경도값 받아오기 코드
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -72,7 +79,6 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 @keyframes modalFadeIn { from{opacity:0; transform:translate(-50%,-20%) scale(0.9);} to{opacity:1; transform:translate(-50%,0) scale(1);} }
 .modal-content { position:absolute; left:50%; top:7%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px; border-radius:12px; width:260px; text-align:center; border:2px solid #1976d2; box-shadow:0 4px 20px rgba(0,0,0,0.25); font-size:15px; font-weight:bold; animation:modalFadeIn 0.4s ease forwards; pointer-events:auto; }
 #popupModal .modal-content {width:420px; }  /* 이 모달만 폭을 넓힘 */
-.fadeIn {animation: modalFadeIn 0.4s ease forwards;}
 .drag-handle { cursor:move; background:#eee; padding:8px; border-radius:6px; }
 .close { margin-left:auto; font-size:20px; font-weight:bold; cursor:pointer; color:#d32f2f; background-color:#fff; border:2px solid #d32f2f; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s, color 0.2s, transform 0.2s; }
 .close:hover { background-color:#d32f2f; color:#fff; transform:scale(1.1); }
@@ -487,6 +493,7 @@ let currentLat, currentLng;   // 현재 위치 좌표
 let otherMarker;
 let circles = [];
 
+let totalDistance = 0;
 
 let modalQueue = [];
 let modalTimer = null;
@@ -901,25 +908,11 @@ function getSmoothedSpeed(history, windowSize = 5) {
   return sum / recent.length;
 }
 
- 
-/* ---------------------- 이동정보 업데이트 ---------------------- */
+// ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  const travelStatsEl = document.getElementById("travelStatsContent");
-
-  // ✅ 초기화 상태면 모달 내용을 0으로 갱신하고 종료
+  // ✅ 초기화 상태면 업데이트 중단
   if (speedHistory.length === 0 && pathCoords.length === 0) {
-    if (travelStatsEl) {
-      travelStatsEl.innerHTML = `
-        🚗 현재 속도: <span class="highlight">0 km/h</span><br>
-        📊 평균 속도: <span class="highlight">0 km/h</span><br>
-        ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
-        ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
-        📏 총 이동 거리: <span class="highlight">0 km</span><br>
-        📐 직선 거리: <span class="highlight">0 km</span><br>
-        🕒 예상 도착 시간: <span class="highlight">계산 불가</span>
-      `;
-    }
-    return; // ✅ 더 이상 계산하지 않고 종료
+    return;
   }
 
   const totalDistance = computeTotalDistance(pathCoords);
@@ -937,31 +930,25 @@ function updateTravelStats() {
   const elapsedMinutes = (elapsedTime / 60).toFixed(1);
 
   // ETA 계산 (목적지가 있을 때만)
-  let straightDistanceLine = "";
   let etaLine = "";
   if (destinationLat && destinationLng && avgSpeed > 0) {
     const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
     const currentPos = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
     const etaMinutes = (straightDistance / 1000) / avgSpeed * 60;
-    straightDistanceLine = `📐 직선 거리: <span class="highlight">${(straightDistance / 1000).toFixed(1)} km</span><br>`;
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
-  // ✅ 모달창 내용 갱신 (열기 X)
-  if (travelStatsEl) {
-    travelStatsEl.innerHTML = `
-      🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
-      📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
-      ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
-      ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
-      📏 총 이동 거리: ${totalDistance} km<br>
-      ${straightDistanceLine}
-      ${etaLine}
-    `;
-  }
+  // 모달창 업데이트
+  document.getElementById("travelStatsContent").innerHTML = `
+    🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
+    📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
+    ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
+    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+    📏 총 이동 거리: ${totalDistance} km<br>
+    ${etaLine}
+  `;
 }
-
 
 
 /* ---------------------- 총 이동거리 계산 ---------------------- */
@@ -1262,6 +1249,8 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     });
 }
 
+
+
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
@@ -1387,7 +1376,7 @@ function resetNavigation() {
     otherMarker = null;
   }
 
-  // ---------------------- 이동정보 모달 초기화 (공용) ----------------------
+  // ---------------------- 평상시 주행 모달 초기화 (존재할 때만) ----------------------
   const travelStatsEl = document.getElementById("travelStatsContent");
   if (travelStatsEl) {
     travelStatsEl.innerHTML = `
@@ -1396,8 +1385,15 @@ function resetNavigation() {
       ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
       ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
       📏 총 이동 거리: <span class="highlight">0 km</span><br>
+    `;
+  }
+
+  // ---------------------- 목적지 안내 모달 초기화 (존재할 때만) ----------------------
+  const destinationEl = document.getElementById("destinationResult");
+  if (destinationEl) {
+    destinationEl.innerHTML = `
       📐 직선 거리: <span class="highlight">0 km</span><br>
-      🕒 예상 도착 시간: <span class="highlight">계산 불가</span>
+      🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
     `;
   }
 
@@ -1440,6 +1436,8 @@ if (reopenBtn) {
     document.getElementById("reopenBtn").style.display = "none";
   });
 }
+
+ 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
@@ -1764,7 +1762,7 @@ document.getElementById("openDestinationModal").addEventListener("click", () => 
 
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
   const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-  document.getElementById("destinationResult").innerHTML = message;
+  document.getElementById("travelStatsContent").innerHTML = message;
   openModal(document.getElementById("travelStatsModal"));
 });
 
@@ -1864,7 +1862,7 @@ function resetNavigation(fullStop = false) {
   lastTimestamp = null;
 
   followUser = true; // 사람중심 모드로 복귀
-  speakMessage("경로 안내가 중단되었습니다.");
+  speakMessage("경로가 초기화 되엇습니다.");
 
   // ✅ 완전 종료일 때만 좌표 초기화
   if (fullStop) {
@@ -2051,25 +2049,12 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const elapsedMinutes = ((Date.now() - startTime) / 60000).toFixed(0);
   const totalDistance = computeTotalDistance(pathCoords);
 
-  // 목적지 관련 계산
-  let straightDistance = 0;
-  let etaText = "계산 불가";
-  if (destinationLat && destinationLng && avgSpeed > 0) {
-    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
-    const currentPos = new google.maps.LatLng(currentLat, currentLng);
-    straightDistance = (google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos) / 1000).toFixed(1);
-    const etaMinutes = (straightDistance / avgSpeed) * 60;
-    etaText = `${etaMinutes.toFixed(1)} 분 후 도착 예상`;
-  }
-
   return `
     <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
     <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
     <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
     <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
     <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
-    <div>📐 직선 거리: <span class="highlight">${straightDistance} km</span></div>
-    <div>🕒 예상 도착 시간: <span class="eta-highlight">${etaText}</span></div>
   `;
 }
 
@@ -2089,14 +2074,8 @@ function openModal(modal) {
   // ✅ 선택 모달 열기
   modal.style.display = 'block';
 
-  const content = modal.querySelector('.modal-content');
-  // 중앙 정렬 유지
-  content.style.transform = "translate(-50%, -50%)";
-
-  // ✅ 애니메이션 다시 적용 (처음과 동일한 모양 유지)
-  content.classList.remove("fadeIn");
-  void content.offsetWidth; // 강제 리플로우
-  content.classList.add("fadeIn");
+  // ✅ 중앙 정렬 보정
+  modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
 }
 
 function closeModal(modal) {
@@ -2109,6 +2088,7 @@ function openPopupModal(modal) {
   setTimeout(() => closeModal(modal), 3000);
 }
 
+  
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
   btn.addEventListener('click', () => {
