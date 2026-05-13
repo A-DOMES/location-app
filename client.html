@@ -964,9 +964,9 @@ function updateTravelStats() {
   const now             = Date.now();
   const elapsedMinutes  = Math.round((now - startTime) / 60000); // 주행 시간 (분)
   const smoothedSpeed   = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0; // 현재 속도 (스무딩)
-  const totalDistanceKm    = Math.round(totalDistance); // 누적 거리 (km) → addPathCoord에서 갱신
-  const avgSpeedValue   = avgSpeed; // addSpeed에서 갱신된 평균 속도
-  const maxSpeedValue   = maxSpeed; // addSpeed에서 갱신된 최고 속도
+  const totalDistanceKm = Math.round(totalDistance); // 누적 거리 (km)
+  const avgSpeedValue   = Math.round(avgSpeed); // 평균 속도 → 정수 변환
+  const maxSpeedValue   = Math.round(maxSpeed); // 최고 속도 → 정수 변환
 
   // ✅ ETA 계산
   let etaLine = "";
@@ -980,13 +980,14 @@ function updateTravelStats() {
 
   // ✅ 모달창 업데이트 (값이 변했을 때만)
   const newContent = `
-    🚗 현재 속도: ${smoothedSpeed} km/h<br>
-    📊 평균 속도: ${avgSpeedValue} km/h<br>
-    ⚡ 최고 속도: ${maxSpeedValue} km/h<br>
-    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
-    📏 총 이동 거리: ${totalDistance} km<br>
+    <p>🚗 현재 속도: ${smoothedSpeed} km/h</p>
+    <p>📊 평균 속도: ${avgSpeedValue} km/h</p>
+    <p>⚡ 최고 속도: ${maxSpeedValue} km/h</p>
+    <p>⏱️ 주행 시간: ${elapsedMinutes} 분</p>
+    <p>📏 총 이동 거리: ${totalDistanceKm} km</p>
     ${etaLine}
   `;
+
   const contentBox = document.getElementById("travelStatsContent");
   if (contentBox.innerHTML !== newContent) {
     contentBox.innerHTML = newContent;
@@ -2122,16 +2123,17 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const avgSpeed       = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeed       = speedHistory.length ? Math.round(Math.max(...speedHistory)) : 0;
   const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
-  const totalDistance  = Math.round(computeTotalDistance(pathCoords));
+  const totalDistanceKm = Math.round(computeTotalDistance(pathCoords) / 1000);
 
   return `
-    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span>
-    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span>
-    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span>
-    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span>
-    📏 총 이동 거리: <span class="highlight">${totalDistance} km</span>
+    <p>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></p>
+    <p>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></p>
+    <p>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></p>
+    <p>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></p>
+    <p>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></p>
   `;
 }
+
 
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function showQueuedModal(title, content) {
