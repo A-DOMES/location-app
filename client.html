@@ -531,7 +531,18 @@ let watchId = null;
 let lastLat = null;
 let lastLng = null;
 
-  
+// 트래픽 최적화를 위한 변수  
+let pathCoords       = [];
+let speedHistory     = [];
+let totalDistance    = 0;
+let avgSpeed         = 0;
+let maxSpeed         = 0;
+let startTime        = Date.now();
+
+let destinationLat   = null;
+let destinationLng   = null;
+let currentLat       = null;
+let currentLng       = null;  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -922,9 +933,30 @@ function getSmoothedSpeed(history, windowSize = 5) {
 }
 
 
+// ---------------------- 좌표 추가 ----------------------
+function addPathCoord(newCoord) {
+  if (pathCoords.length > 0) {
+    const lastCoord = pathCoords[pathCoords.length - 1];
+    totalDistance  += google.maps.geometry.spherical.computeDistanceBetween(lastCoord, newCoord) / 1000; // km 단위
+  }
+  pathCoords.push(newCoord);
+}
+
+// ---------------------- 속도 추가 ----------------------
+function addSpeed(newSpeed) {
+  speedHistory.push(newSpeed);
+
+  // 평균 속도 누적 갱신
+  avgSpeed = Math.round((avgSpeed * (speedHistory.length - 1) + newSpeed) / speedHistory.length);
+
+  // 최고 속도 갱신
+  if (newSpeed > maxSpeed) maxSpeed = newSpeed;
+}
+
+  
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  // ✅ 이동정보 버튼을 누르지 않았거나 초기화 상태면 0 값 유지
+  // ✅ 초기화 상태면 0 값 유지
   if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       🚗 현재 속도: 0 km/h<br>
@@ -936,33 +968,39 @@ function updateTravelStats() {
     return;
   }
 
-  // ✅ 이동정보 계산 (정수 변환 + const 행 단위 정리)
-  const totalDistance  = Math.round(computeTotalDistance(pathCoords)); // 총 이동 거리 (km)
-  const smoothedSpeed  = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0; // 현재 속도 (스무딩)
-  const avgSpeed       = speedHistory.length > 0 ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0; // 평균 속도
-  const maxSpeed       = speedHistory.length > 0 ? Math.round(Math.max(...speedHistory)) : 0; // 최고 속도
-  const elapsedMinutes = Math.round((Date.now() - startTime) / 60000); // 주행 시간 (분)
+  // ✅ 이동정보 계산 (정수 변환 + 행방향 정리)
+  const now             = Date.now();
+  const elapsedMinutes  = Math.round((now - startTime) / 60000); // 주행 시간 (분)
+  const smoothedSpeed   = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0; // 현재 속도 (스무딩)
+  const totalDistance   = Math.round(totalDistance); // 누적 거리 (km) → addPathCoord에서 갱신
+  const avgSpeedValue   = avgSpeed; // addSpeed에서 갱신된 평균 속도
+  const maxSpeedValue   = maxSpeed; // addSpeed에서 갱신된 최고 속도
 
-  // ✅ ETA 계산 (예상 도착 시간)
+  // ✅ ETA 계산
   let etaLine = "";
   if (destinationLat && destinationLng && smoothedSpeed > 0) {
-    const destinationPos   = new google.maps.LatLng(destinationLat, destinationLng); // 목적지 좌표
-    const currentPos       = new google.maps.LatLng(currentLat, currentLng);         // 현재 좌표
-    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos); // 직선 거리 (m)
-    const etaMinutes       = Math.round((straightDistance / 1000) / smoothedSpeed * 60); // ETA (분)
+    const destinationPos   = new google.maps.LatLng(destinationLat, destinationLng);
+    const currentPos       = new google.maps.LatLng(currentLat, currentLng);
+    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
+    const etaMinutes       = Math.round((straightDistance / 1000) / smoothedSpeed * 60);
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes} 분 후 도착 예상</span>`;
   }
 
-  // ✅ 모달창 업데이트
-  document.getElementById("travelStatsContent").innerHTML = `
+  // ✅ 모달창 업데이트 (값이 변했을 때만)
+  const newContent = `
     🚗 현재 속도: ${smoothedSpeed} km/h<br>
-    📊 평균 속도: ${avgSpeed} km/h<br>
-    ⚡ 최고 속도: ${maxSpeed} km/h<br>
+    📊 평균 속도: ${avgSpeedValue} km/h<br>
+    ⚡ 최고 속도: ${maxSpeedValue} km/h<br>
     ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
     📏 총 이동 거리: ${totalDistance} km<br>
     ${etaLine}
   `;
+  const contentBox = document.getElementById("travelStatsContent");
+  if (contentBox.innerHTML !== newContent) {
+    contentBox.innerHTML = newContent;
+  }
 }
+
 
 /* ---------------------- 총 이동거리 계산 ---------------------- */
 function computeTotalDistance(coords) {
@@ -1010,6 +1048,7 @@ if (reopenBtn) {
     document.getElementById("reopenBtn").style.display = "none";
   });
 }
+
 
   
 // ---------------------- 위치 공유 ----------------------
