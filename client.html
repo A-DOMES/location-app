@@ -1369,6 +1369,12 @@ function resetNavigation() {
     otherMarker = null;
   }
 
+  smoothedSpeed = 0;
+  avgSpeed = 0;
+  maxSpeed = 0;
+  elapsedMinutes = 0;
+  totalDistance = 0;
+  etaLine = "";
   // ---------------------- 평상시 주행 모달 초기화 (존재할 때만) ----------------------
   const travelStatsEl = document.getElementById("travelStatsContent");
   if (travelStatsEl) {
