@@ -879,17 +879,20 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 
 // ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
+  // ✅ 이동정보 버튼을 누르지 않았다면 계산 중단
+  if (!startTime) return;
+
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
-    const distance = getDistanceFromLatLonInKm(lastLat, lastLng, lat, lng) * 1000; // m 단위
+    const distance = getDistanceFromLatLonInKm(lastLat, lastLng, lat, lng) * 1000; // m
     const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초
 
     if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
+      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
 
       // ✅ 작은 이동 무시 (GPS 드리프트 제거)
       if (distance < 5) rawSpeed = 0;
 
-      // ✅ 비정상 값 필터링 (100km/h 이상 튀는 값은 무시)
+      // ✅ 비정상 값 필터링
       if (rawSpeed > 100) rawSpeed = smoothedSpeed;
 
       currentSpeed = rawSpeed;
@@ -898,7 +901,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       speedHistory.push(currentSpeed);
       smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
-      // ✅ 최고속도는 스무딩 값 기준으로만 갱신
+      // ✅ 최고속도 갱신
       if (smoothedSpeed > maxSpeed) {
         maxSpeed = smoothedSpeed;
       }
@@ -920,7 +923,7 @@ function getSmoothedSpeed(history, windowSize = 5) {
 
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  // ✅ 초기화 상태면 업데이트 중단
+  // ✅ 이동정보 버튼을 누르지 않았거나 초기화 상태면 0 값 유지
   if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       🚗 현재 속도: 0 km/h<br>
@@ -938,21 +941,17 @@ function updateTravelStats() {
   // ✅ 스무딩된 속도 계산 (최근 5개 평균)
   const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
-  // ✅ 평균 속도 (스무딩된 값 기준)
-  const avgSpeed = speedHistory.length > 0 
-    ? speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length 
-    : 0;
+  // ✅ 평균 속도
+  const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
 
-  // ✅ 최고 속도 (스무딩된 값 기준)
-  const maxSpeed = speedHistory.length > 0 
-    ? Math.max(...speedHistory.map(v => getSmoothedSpeed([v], 1))) 
-    : 0;
+  // ✅ 최고 속도
+  const maxSpeed = Math.max(...speedHistory);
 
   // ✅ 주행 시간 계산
   const elapsedTime = (Date.now() - startTime) / 1000;
   const elapsedMinutes = (elapsedTime / 60).toFixed(1);
 
-  // ✅ ETA 계산 (목적지가 있을 때만)
+  // ✅ ETA 계산
   let etaLine = "";
   if (destinationLat && destinationLng && smoothedSpeed > 0) {
     const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
@@ -962,7 +961,7 @@ function updateTravelStats() {
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
-  // ✅ 모달창 업데이트 (스무딩된 값 기준)
+  // ✅ 모달창 업데이트
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
@@ -1451,7 +1450,7 @@ function resetNavigation() {
 
 /* ---------------------- 이동정보 업데이트 함수 ---------------------- */
 function updateTravelStats() {
-  // 초기화 상태면 계산하지 않고 0 값 유지
+  // ✅ 이동정보 버튼을 누르지 않았거나 초기화 상태면 0 값 유지
   if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       🚗 현재 속도: 0 km/h<br>
@@ -1463,7 +1462,33 @@ function updateTravelStats() {
     return;
   }
 
-  // 기존 계산 로직…
+  // ✅ 총 이동 거리 계산
+  const totalDistance = computeTotalDistance(pathCoords);
+
+  // ✅ 스무딩된 속도 계산 (최근 5개 평균)
+  const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
+
+  // ✅ 평균 속도
+  const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+
+  // ✅ 최고 속도
+  const maxSpeed = Math.max(...speedHistory);
+
+  // ✅ 주행 시간 계산
+  const elapsedTime = (Date.now() - startTime) / 1000;
+  const elapsedMinutes = (elapsedTime / 60).toFixed(1);
+
+  // ✅ ETA 계산
+  let etaLine = "";
+  if (destinationLat && destinationLng && smoothedSpeed > 0) {
+    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
+    const currentPos = new google.maps.LatLng(currentLat, currentLng);
+    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
+    const etaMinutes = (straightDistance / 1000) / smoothedSpeed * 60;
+    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
+  }
+
+  // ✅ 모달창 업데이트
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
@@ -1472,6 +1497,25 @@ function updateTravelStats() {
     📏 총 이동 거리: ${totalDistance} km<br>
     ${etaLine}
   `;
+}
+
+/* ---------------------- 이동정보 버튼 이벤트 ---------------------- */
+const travelStatsBtn = document.getElementById("openTravelStatsModal");
+if (travelStatsBtn) {
+  travelStatsBtn.addEventListener("click", () => {
+    // ✅ 버튼을 누른 순간부터 기록 시작
+    startTime = Date.now();
+    speedHistory = [];
+    totalDistance = 0;
+    smoothedSpeed = 0;
+    avgSpeed = 0;
+    maxSpeed = 0;
+    elapsedMinutes = 0;
+    etaLine = "";
+
+    const travelStatsModal = document.getElementById("travelStatsModal");
+    if (travelStatsModal) travelStatsModal.style.display = "block";
+  });
 }
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
