@@ -2123,7 +2123,7 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const avgSpeed       = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeed       = speedHistory.length ? Math.round(Math.max(...speedHistory)) : 0;
   const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
-  const totalDistanceKm = Math.round(computeTotalDistance(pathCoords) / 1000);
+  const totalDistanceKm = (computeTotalDistance(pathCoords) / 1000).toFixed(1);
 
   return `
     <p>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></p>
