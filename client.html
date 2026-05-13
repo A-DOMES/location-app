@@ -1402,17 +1402,22 @@ function resetNavigation() {
   });
 }
 
+
+/* ---------------------- 이동정보 메시지 빌드 ---------------------- */
+function buildTravelStatsMessage(currentSpeed, avgSpeed, maxSpeed, elapsedMinutes, totalDistance) {
+  return `
+    🚗 현재 속도: ${currentSpeed} km/h<br>
+    📊 평균 속도: ${avgSpeed} km/h<br>
+    ⚡ 최고 속도: ${maxSpeed} km/h<br>
+    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+    📏 총 이동 거리: ${totalDistance} km<br>
+  `;
+}
+  
 /* ---------------------- 이동정보 업데이트 함수 ---------------------- */
 function updateTravelStats() {
-  // ✅ 초기화 상태면 0 값 유지
   if (!startTime) {
-    document.getElementById("travelStatsContent").innerHTML = `
-      🚗 현재 속도: 0 km/h<br>
-      📊 평균 속도: 0 km/h<br>
-      ⚡ 최고 속도: 0 km/h<br>
-      ⏱️ 주행 시간: 0 분<br>
-      📏 총 이동 거리: 0 km<br>
-    `;
+    document.getElementById("travelStatsContent").innerHTML = buildTravelStatsMessage(0,0,0,0,0);
     return;
   }
 
@@ -1422,19 +1427,18 @@ function updateTravelStats() {
   // ✅ 스무딩된 속도 계산
   const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
-  // ✅ 평균 속도 (빈 배열 방지)
+  // ✅ 평균 속도
   const avgSpeed = speedHistory.length > 0
-    ? speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length
+    ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length)
     : 0;
 
-  // ✅ 최고 속도 (빈 배열 방지)
+  // ✅ 최고 속도
   const maxSpeed = speedHistory.length > 0
-    ? Math.max(...speedHistory)
+    ? Math.round(Math.max(...speedHistory))
     : 0;
 
-  // ✅ 주행 시간 계산
-  const elapsedTime = (Date.now() - startTime) / 1000;
-  const elapsedMinutes = (elapsedTime / 60).toFixed(1);
+  // ✅ 주행 시간
+  const elapsedMinutes = Math.round((Date.now() - startTime) / 60000);
 
   // ✅ ETA 계산
   let etaLine = "";
@@ -1443,18 +1447,12 @@ function updateTravelStats() {
     const currentPos = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
     const etaMinutes = (straightDistance / 1000) / smoothedSpeed * 60;
-    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
+    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${Math.round(etaMinutes)} 분 후 도착 예상</span>`;
   }
 
   // ✅ 모달창 업데이트
-  document.getElementById("travelStatsContent").innerHTML = `
-    🚗 현재 속도: ${smoothedSpeed.toFixed(0)} km/h<br>
-    📊 평균 속도: ${avgSpeed.toFixed(0)} km/h<br>
-    ⚡ 최고 속도: ${maxSpeed.toFixed(0)} km/h<br>
-    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
-    📏 총 이동 거리: ${totalDistance} km<br>
-    ${etaLine}
-  `;
+  document.getElementById("travelStatsContent").innerHTML =
+    buildTravelStatsMessage(Math.round(smoothedSpeed), avgSpeed, maxSpeed, elapsedMinutes, totalDistance) + etaLine;
 }
 
 /* ---------------------- 이동정보 버튼 이벤트 ---------------------- */
@@ -2091,25 +2089,6 @@ function checkRadarPOIs(myPos) {
       });
     }
   });
-}
-
-
-
-/* ---------------------- 이동정보 메시지 빌드 ---------------------- */
-function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
-  const currentSpeed   = speedHistory.length ? Math.round(speedHistory[speedHistory.length - 1]) : 0;
-  const avgSpeed       = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
-  const maxSpeed       = speedHistory.length ? Math.round(Math.max(...speedHistory)) : 0;
-  const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
-  const totalDistance  = computeTotalDistance(pathCoords);
-
-  return `
-    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
-    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
-    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
-    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
-  `;
 }
 
 
