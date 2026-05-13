@@ -1424,6 +1424,13 @@ if (resetBtn) {
   });
 }
 
+  // ---------------------- 이동정보 모달 닫기 ----------------------
+  const travelStatsModal = document.getElementById("travelStatsModal");
+  if (travelStatsModal) {
+    travelStatsModal.style.display = "none"; // ✅ 모달 닫기
+  }
+}
+
 /* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
 const closeBtn = document.getElementById("closeBtn");
 if (closeBtn) {
