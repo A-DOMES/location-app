@@ -119,7 +119,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #searchDestinationBtn:active { transform:scale(0.95); }
 #searchDestinationBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
 @keyframes bounce { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1.1);} }
-#destinationResult { margin-top:10px; font-size:14px; color:#333; }
+#travelStatsContent { margin-top:10px; font-size:14px; color:#333; }
 
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
@@ -151,7 +151,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #startRouteBtn:focus{outline:none;box-shadow:0 0 0 3px rgba(25,118,210,0.4);}
 
 /* ---------------------- 검색 결과 글씨 개선 ---------------------- */
-#destinationResult{margin-top:12px;font-size:16px;line-height:1.5;color:#333;}
+#travelStatsContent{margin-top:12px;font-size:16px;line-height:1.5;color:#333;}
 
 
 /* ---------------------- 이동정보 버튼 ---------------------- */
@@ -398,7 +398,7 @@ button:hover{background-color:#1565c0;}
     <button id="startRouteBtn" style="display:none;">🚗 경로 안내</button>
 
     <!-- 결과 영역 -->
-    <div id="destinationResult"></div>
+    <div id="travelStatsContent"></div>
   </div>
 </div>
 
@@ -487,7 +487,6 @@ let currentLat, currentLng;   // 현재 위치 좌표
 let otherMarker;
 let circles = [];
 
-let totalDistance = 0;
 
 let modalQueue = [];
 let modalTimer = null;
@@ -905,9 +904,10 @@ function getSmoothedSpeed(history, windowSize = 5) {
  
 /* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats() {
+  const travelStatsEl = document.getElementById("travelStatsContent");
+
   // ✅ 초기화 상태면 모달 내용을 0으로 갱신하고 종료
   if (speedHistory.length === 0 && pathCoords.length === 0) {
-    const travelStatsEl = document.getElementById("travelStatsContent");
     if (travelStatsEl) {
       travelStatsEl.innerHTML = `
         🚗 현재 속도: <span class="highlight">0 km/h</span><br>
@@ -915,6 +915,8 @@ function updateTravelStats() {
         ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
         ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
         📏 총 이동 거리: <span class="highlight">0 km</span><br>
+        📐 직선 거리: <span class="highlight">0 km</span><br>
+        🕒 예상 도착 시간: <span class="highlight">계산 불가</span>
       `;
     }
     return; // ✅ 더 이상 계산하지 않고 종료
@@ -935,24 +937,29 @@ function updateTravelStats() {
   const elapsedMinutes = (elapsedTime / 60).toFixed(1);
 
   // ETA 계산 (목적지가 있을 때만)
+  let straightDistanceLine = "";
   let etaLine = "";
   if (destinationLat && destinationLng && avgSpeed > 0) {
     const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
     const currentPos = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
     const etaMinutes = (straightDistance / 1000) / avgSpeed * 60;
+    straightDistanceLine = `📐 직선 거리: <span class="highlight">${(straightDistance / 1000).toFixed(1)} km</span><br>`;
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
   // ✅ 모달창 내용 갱신 (열기 X)
-  document.getElementById("travelStatsContent").innerHTML = `
-    🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
-    📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
-    ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
-    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
-    📏 총 이동 거리: ${totalDistance} km<br>
-    ${etaLine}
-  `;
+  if (travelStatsEl) {
+    travelStatsEl.innerHTML = `
+      🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
+      📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
+      ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
+      ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+      📏 총 이동 거리: ${totalDistance} km<br>
+      ${straightDistanceLine}
+      ${etaLine}
+    `;
+  }
 }
 
 
@@ -1327,7 +1334,7 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
   document.getElementById("searchResultPanel").style.display = "none";
 
   // 목적지 결과 모달도 같이 닫기
-  document.getElementById("destinationResultModal").style.display = "none";
+  document.getElementById("travelStatsContentModal").style.display = "none";
 
   // 입력값 초기화
   document.getElementById("destinationInput").value = "";
@@ -1380,7 +1387,7 @@ function resetNavigation() {
     otherMarker = null;
   }
 
-  // ---------------------- 평상시 주행 모달 초기화 (존재할 때만) ----------------------
+  // ---------------------- 이동정보 모달 초기화 (공용) ----------------------
   const travelStatsEl = document.getElementById("travelStatsContent");
   if (travelStatsEl) {
     travelStatsEl.innerHTML = `
@@ -1389,15 +1396,8 @@ function resetNavigation() {
       ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
       ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
       📏 총 이동 거리: <span class="highlight">0 km</span><br>
-    `;
-  }
-
-  // ---------------------- 목적지 안내 모달 초기화 (존재할 때만) ----------------------
-  const destinationEl = document.getElementById("destinationResult");
-  if (destinationEl) {
-    destinationEl.innerHTML = `
       📐 직선 거리: <span class="highlight">0 km</span><br>
-      🕒 예상 도착 시간: <span class="eta-highlight">계산 불가</span>
+      🕒 예상 도착 시간: <span class="highlight">계산 불가</span>
     `;
   }
 
@@ -1423,13 +1423,6 @@ if (resetBtn) {
     resetNavigation();
   });
 }
-
-  // ---------------------- 이동정보 모달 닫기 ----------------------
-  const travelStatsModal = document.getElementById("travelStatsModal");
-  if (travelStatsModal) {
-    travelStatsModal.style.display = "none"; // ✅ 모달 닫기
-  }
-
 
 /* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
 const closeBtn = document.getElementById("closeBtn");
@@ -1597,7 +1590,7 @@ async function findDestination(inputName, showPanel = true) {
                 fields: ["formatted_phone_number","website","opening_hours","rating","types"]
               }, (place, detailStatus) => {
                 if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                  const infoPanel = document.getElementById("destinationResult");
+                  const infoPanel = document.getElementById("travelStatsContent");
                   infoPanel.innerHTML = `
                     ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
                     ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
@@ -1702,7 +1695,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map.setCenter(pos);
     map.setZoom(18);
 
-    document.getElementById("destinationResult").innerHTML = `
+    document.getElementById("travelStatsContent").innerHTML = `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
         🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
@@ -1742,7 +1735,7 @@ setInterval(async () => {
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
-    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
+    document.getElementById("travelStatsContent").innerText = "목적지를 입력하세요.";
     openModal(document.getElementById("destinationModal"));
     return;
   }
@@ -1752,7 +1745,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     if (success) {
       console.log("검색 성공: 결과 선택 시 지도 반영됨");
     } else {
-      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
+      document.getElementById("travelStatsContent").innerText = "검색 결과가 없습니다.";
     }
   });
 });
@@ -1794,7 +1787,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   destinationLat = null;
   destinationLng = null;
-  document.getElementById("destinationResult").innerHTML = "";
+  document.getElementById("travelStatsContent").innerHTML = "";
   document.getElementById("startRouteBtn").style.display = "none";
 
   openPopupModal(document.getElementById("popupModal"));
@@ -1814,7 +1807,7 @@ function initAutocomplete() {
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry) {
-      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
+      document.getElementById("travelStatsContent").innerText = "목적지를 찾을 수 없습니다.";
       return;
     }
 
@@ -2058,12 +2051,25 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const elapsedMinutes = ((Date.now() - startTime) / 60000).toFixed(0);
   const totalDistance = computeTotalDistance(pathCoords);
 
+  // 목적지 관련 계산
+  let straightDistance = 0;
+  let etaText = "계산 불가";
+  if (destinationLat && destinationLng && avgSpeed > 0) {
+    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
+    const currentPos = new google.maps.LatLng(currentLat, currentLng);
+    straightDistance = (google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos) / 1000).toFixed(1);
+    const etaMinutes = (straightDistance / avgSpeed) * 60;
+    etaText = `${etaMinutes.toFixed(1)} 분 후 도착 예상`;
+  }
+
   return `
     <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
     <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
     <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
     <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
     <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
+    <div>📐 직선 거리: <span class="highlight">${straightDistance} km</span></div>
+    <div>🕒 예상 도착 시간: <span class="eta-highlight">${etaText}</span></div>
   `;
 }
 
