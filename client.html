@@ -905,9 +905,19 @@ function getSmoothedSpeed(history, windowSize = 5) {
  
 /* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats() {
-  // ✅ 초기화 상태면 업데이트 중단
+  // ✅ 초기화 상태면 모달 내용을 0으로 갱신하고 종료
   if (speedHistory.length === 0 && pathCoords.length === 0) {
-    return;
+    const travelStatsEl = document.getElementById("travelStatsContent");
+    if (travelStatsEl) {
+      travelStatsEl.innerHTML = `
+        🚗 현재 속도: <span class="highlight">0 km/h</span><br>
+        📊 평균 속도: <span class="highlight">0 km/h</span><br>
+        ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
+        ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
+        📏 총 이동 거리: <span class="highlight">0 km</span><br>
+      `;
+    }
+    return; // ✅ 더 이상 계산하지 않고 종료
   }
 
   const totalDistance = computeTotalDistance(pathCoords);
@@ -934,7 +944,7 @@ function updateTravelStats() {
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
-  // ✅ 모달창 내용만 갱신 (열기 X)
+  // ✅ 모달창 내용 갱신 (열기 X)
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
@@ -944,6 +954,7 @@ function updateTravelStats() {
     ${etaLine}
   `;
 }
+
 
 
 /* ---------------------- 총 이동거리 계산 ---------------------- */
