@@ -1473,11 +1473,15 @@ function updateTravelStats() {
   // ✅ 스무딩된 속도 계산
   const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
-  // ✅ 평균 속도
-  const avgSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+  // ✅ 평균 속도 (빈 배열 방지)
+  const avgSpeed = speedHistory.length > 0
+    ? speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length
+    : 0;
 
-  // ✅ 최고 속도
-  const maxSpeed = Math.max(...speedHistory);
+  // ✅ 최고 속도 (빈 배열 방지)
+  const maxSpeed = speedHistory.length > 0
+    ? Math.max(...speedHistory)
+    : 0;
 
   // ✅ 주행 시간 계산
   const elapsedTime = (Date.now() - startTime) / 1000;
@@ -1503,7 +1507,6 @@ function updateTravelStats() {
     ${etaLine}
   `;
 }
-
 
 /* ---------------------- 이동정보 버튼 이벤트 ---------------------- */
 const travelStatsBtn = document.getElementById("openTravelStatsModal");
