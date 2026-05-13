@@ -1368,7 +1368,7 @@ function resetNavigation() {
   // ---------------------- 경로 초기화 ----------------------
   pathCoords = [];
   if (pathPolyline) {
-    pathPolyline.setMap(null);   // 지도에서 제거
+    pathPolyline.setMap(null);
     pathPolyline = null;
   }
   if (destinationRenderer) {
@@ -1380,7 +1380,7 @@ function resetNavigation() {
 
   // ---------------------- 이동정보 초기화 ----------------------
   speedHistory = [];
-  startTime = null;   // ⬅️ 주행 시간 끊기 (Date.now() 대신 null)
+  startTime = null;   // ✅ 주행 시간 끊기
   destinationLat = null;
   destinationLng = null;
   lastLat = null;
@@ -1407,18 +1407,6 @@ function resetNavigation() {
     otherMarker = null;
   }
 
-  // ---------------------- 평상시 주행 모달 초기화 ----------------------
-  const travelStatsEl = document.getElementById("travelStatsContent");
-  if (travelStatsEl) {
-    travelStatsEl.innerHTML = `
-      🚗 현재 속도: <span class="highlight">0 km/h</span><br>
-      📊 평균 속도: <span class="highlight">0 km/h</span><br>
-      ⚡ 최고 속도: <span class="highlight">0 km/h</span><br>
-      ⏱️ 주행 시간: <span class="highlight">0 분</span><br>
-      📏 총 이동 거리: <span class="highlight">0 km</span><br>
-    `;
-  }
-
   // ---------------------- 목적지 안내 모달 초기화 ----------------------
   const destinationEl = document.getElementById("destinationResult");
   if (destinationEl) {
@@ -1428,24 +1416,28 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- ✅ 모드 복귀 ----------------------
+  // ---------------------- 모드 복귀 ----------------------
   followUser = true;
 
-  // ---------------------- ✅ 음성 안내 ----------------------
+  // ---------------------- 음성 안내 ----------------------
   speakMessage("경로가 초기화 되었습니다.");
 
-  // ----------------------✅ 버튼 상태 ----------------------
+  // ---------------------- 버튼 상태 ----------------------
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
   
-  // ---------------------- ✅ 알림 모달 자동 닫힘 ----------------------
+  // ---------------------- 알림 모달 자동 닫힘 ----------------------
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
 
-  // ---------------------- ✅ 목적지 검색창 흔적 지우기 ----------------------
+  // ---------------------- 목적지 검색창 흔적 지우기 ----------------------
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
-} 
+
+  // ---------------------- 이동정보 모달 즉시 초기화 ----------------------
+  updateTravelStats();
+}
+
 
 
 /* ---------------------- 이동정보 업데이트 함수 ---------------------- */
