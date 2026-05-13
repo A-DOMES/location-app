@@ -921,6 +921,84 @@ function getSmoothedSpeed(history, windowSize = 5) {
   return sum / recent.length;
 }
 
+/* ---------------------- 이동정보 업데이트 함수 ---------------------- */
+function updateTravelStats() {
+  if (!startTime) {
+    document.getElementById("travelStatsContent").innerHTML = buildTravelStatsMessage(0,0,0,0,0);
+    return;
+  }
+
+  // ✅ 총 이동 거리 계산
+  const totalDistance = computeTotalDistance(pathCoords);
+
+  // ✅ 스무딩된 속도 계산
+  const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
+
+  // ✅ 평균 속도
+  const avgSpeed = speedHistory.length > 0
+    ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length)
+    : 0;
+
+  // ✅ 최고 속도
+  const maxSpeed = speedHistory.length > 0
+    ? Math.round(Math.max(...speedHistory))
+    : 0;
+
+  // ✅ 주행 시간
+  const elapsedMinutes = Math.round((Date.now() - startTime) / 60000);
+
+  // ✅ ETA 계산
+  let etaLine = "";
+  if (destinationLat && destinationLng && smoothedSpeed > 0) {
+    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
+    const currentPos = new google.maps.LatLng(currentLat, currentLng);
+    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
+    const etaMinutes = (straightDistance / 1000) / smoothedSpeed * 60;
+    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${Math.round(etaMinutes)} 분 후 도착 예상</span>`;
+  }
+
+  // ✅ 모달창 업데이트
+  document.getElementById("travelStatsContent").innerHTML =
+    buildTravelStatsMessage(Math.round(smoothedSpeed), avgSpeed, maxSpeed, elapsedMinutes, totalDistance) + etaLine;
+}
+
+/* ---------------------- 이동정보 버튼 이벤트 ---------------------- */
+const travelStatsBtn = document.getElementById("openTravelStatsModal");
+if (travelStatsBtn) {
+  travelStatsBtn.addEventListener("click", () => {
+    // ✅ 초기화는 하지 않고, 모달만 열기
+    const travelStatsModal = document.getElementById("travelStatsModal");
+    if (travelStatsModal) travelStatsModal.style.display = "block";
+  });
+}
+
+/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
+const resetBtn = document.getElementById("resetPathBtn");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    resetNavigation();
+  });
+}
+
+/* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
+const closeBtn = document.getElementById("closeBtn");
+if (closeBtn) {
+  closeBtn.addEventListener("click", () => {
+    document.getElementById("locationBox").style.display = "none";
+    document.getElementById("reopenBtn").style.display = "block";
+  });
+}
+
+const reopenBtn = document.getElementById("reopenBtn");
+if (reopenBtn) {
+  reopenBtn.addEventListener("click", () => {
+    document.getElementById("locationBox").style.display = "block";
+    document.getElementById("reopenBtn").style.display = "none";
+  });
+}
+
+
+  
 /* ---------------------- 총 이동거리 계산 ---------------------- */
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
@@ -1414,81 +1492,6 @@ function buildTravelStatsMessage(currentSpeed, avgSpeed, maxSpeed, elapsedMinute
   `;
 }
   
-/* ---------------------- 이동정보 업데이트 함수 ---------------------- */
-function updateTravelStats() {
-  if (!startTime) {
-    document.getElementById("travelStatsContent").innerHTML = buildTravelStatsMessage(0,0,0,0,0);
-    return;
-  }
-
-  // ✅ 총 이동 거리 계산
-  const totalDistance = computeTotalDistance(pathCoords);
-
-  // ✅ 스무딩된 속도 계산
-  const smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
-
-  // ✅ 평균 속도
-  const avgSpeed = speedHistory.length > 0
-    ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length)
-    : 0;
-
-  // ✅ 최고 속도
-  const maxSpeed = speedHistory.length > 0
-    ? Math.round(Math.max(...speedHistory))
-    : 0;
-
-  // ✅ 주행 시간
-  const elapsedMinutes = Math.round((Date.now() - startTime) / 60000);
-
-  // ✅ ETA 계산
-  let etaLine = "";
-  if (destinationLat && destinationLng && smoothedSpeed > 0) {
-    const destinationPos = new google.maps.LatLng(destinationLat, destinationLng);
-    const currentPos = new google.maps.LatLng(currentLat, currentLng);
-    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
-    const etaMinutes = (straightDistance / 1000) / smoothedSpeed * 60;
-    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${Math.round(etaMinutes)} 분 후 도착 예상</span>`;
-  }
-
-  // ✅ 모달창 업데이트
-  document.getElementById("travelStatsContent").innerHTML =
-    buildTravelStatsMessage(Math.round(smoothedSpeed), avgSpeed, maxSpeed, elapsedMinutes, totalDistance) + etaLine;
-}
-
-/* ---------------------- 이동정보 버튼 이벤트 ---------------------- */
-const travelStatsBtn = document.getElementById("openTravelStatsModal");
-if (travelStatsBtn) {
-  travelStatsBtn.addEventListener("click", () => {
-    // ✅ 초기화는 하지 않고, 모달만 열기
-    const travelStatsModal = document.getElementById("travelStatsModal");
-    if (travelStatsModal) travelStatsModal.style.display = "block";
-  });
-}
-
-/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
-const resetBtn = document.getElementById("resetPathBtn");
-if (resetBtn) {
-  resetBtn.addEventListener("click", () => {
-    resetNavigation();
-  });
-}
-
-/* ---------------------- 좌표 박스 닫기/재열기 버튼 ---------------------- */
-const closeBtn = document.getElementById("closeBtn");
-if (closeBtn) {
-  closeBtn.addEventListener("click", () => {
-    document.getElementById("locationBox").style.display = "none";
-    document.getElementById("reopenBtn").style.display = "block";
-  });
-}
-
-const reopenBtn = document.getElementById("reopenBtn");
-if (reopenBtn) {
-  reopenBtn.addEventListener("click", () => {
-    document.getElementById("locationBox").style.display = "block";
-    document.getElementById("reopenBtn").style.display = "none";
-  });
-}
 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
