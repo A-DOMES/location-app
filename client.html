@@ -1401,9 +1401,9 @@ function resetNavigation() {
   if (resetBtn) resetBtn.style.display = "none";
 
   // ---------------------- 알림 모달 자동 닫힘 ----------------------
-//  const popupModal = document.getElementById("popupModal");
-//  if (popupModal) openPopupModal(popupModal);
-// }
+  const popupModal = document.getElementById("popupModal");
+  if (popupModal) openPopupModal(popupModal);
+}
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 const resetBtn = document.getElementById("resetPathBtn");
@@ -1855,7 +1855,7 @@ function resetNavigation(fullStop = false) {
   lastTimestamp = null;
 
   followUser = true; // 사람중심 모드로 복귀
-  speakMessage("경로가 초기화 되엇습니다.");
+  speakMessage("경로 안내가 중단되었습니다.");
 
   // ✅ 완전 종료일 때만 좌표 초기화
   if (fullStop) {
