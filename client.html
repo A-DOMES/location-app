@@ -119,7 +119,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #searchDestinationBtn:active { transform:scale(0.95); }
 #searchDestinationBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
 @keyframes bounce { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1.1);} }
-#travelStatsContent { margin-top:10px; font-size:14px; color:#333; }
+#destinationResult { margin-top:10px; font-size:14px; color:#333; }
 
 /* ---------------------- 독립적인 목적지 모달 입력창 (검색 전용) ---------------------- */
 /* 독립적인 검색결과 창 */
@@ -151,7 +151,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #startRouteBtn:focus{outline:none;box-shadow:0 0 0 3px rgba(25,118,210,0.4);}
 
 /* ---------------------- 검색 결과 글씨 개선 ---------------------- */
-#travelStatsContent{margin-top:12px;font-size:16px;line-height:1.5;color:#333;}
+#destinationResult{margin-top:12px;font-size:16px;line-height:1.5;color:#333;}
 
 
 /* ---------------------- 이동정보 버튼 ---------------------- */
@@ -398,7 +398,7 @@ button:hover{background-color:#1565c0;}
     <button id="startRouteBtn" style="display:none;">🚗 경로 안내</button>
 
     <!-- 결과 영역 -->
-    <div id="travelStatsContent"></div>
+    <div id="destinationResult"></div>
   </div>
 </div>
 
@@ -1334,7 +1334,7 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
   document.getElementById("searchResultPanel").style.display = "none";
 
   // 목적지 결과 모달도 같이 닫기
-  document.getElementById("travelStatsContentModal").style.display = "none";
+  document.getElementById("destinationResultModal").style.display = "none";
 
   // 입력값 초기화
   document.getElementById("destinationInput").value = "";
@@ -1590,7 +1590,7 @@ async function findDestination(inputName, showPanel = true) {
                 fields: ["formatted_phone_number","website","opening_hours","rating","types"]
               }, (place, detailStatus) => {
                 if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                  const infoPanel = document.getElementById("travelStatsContent");
+                  const infoPanel = document.getElementById("destinationResult");
                   infoPanel.innerHTML = `
                     ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
                     ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
@@ -1695,7 +1695,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     map.setCenter(pos);
     map.setZoom(18);
 
-    document.getElementById("travelStatsContent").innerHTML = `
+    document.getElementById("destinationResult").innerHTML = `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
         🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
@@ -1735,7 +1735,7 @@ setInterval(async () => {
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
-    document.getElementById("travelStatsContent").innerText = "목적지를 입력하세요.";
+    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     openModal(document.getElementById("destinationModal"));
     return;
   }
@@ -1745,7 +1745,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     if (success) {
       console.log("검색 성공: 결과 선택 시 지도 반영됨");
     } else {
-      document.getElementById("travelStatsContent").innerText = "검색 결과가 없습니다.";
+      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
     }
   });
 });
@@ -1764,7 +1764,7 @@ document.getElementById("openDestinationModal").addEventListener("click", () => 
 
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
   const message = buildTravelStatsMessage(speedHistory, pathCoords, startTime);
-  document.getElementById("travelStatsContent").innerHTML = message;
+  document.getElementById("destinationResult").innerHTML = message;
   openModal(document.getElementById("travelStatsModal"));
 });
 
@@ -1787,7 +1787,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
   destinationLat = null;
   destinationLng = null;
-  document.getElementById("travelStatsContent").innerHTML = "";
+  document.getElementById("destinationResult").innerHTML = "";
   document.getElementById("startRouteBtn").style.display = "none";
 
   openPopupModal(document.getElementById("popupModal"));
@@ -1807,7 +1807,7 @@ function initAutocomplete() {
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry) {
-      document.getElementById("travelStatsContent").innerText = "목적지를 찾을 수 없습니다.";
+      document.getElementById("destinationResult").innerText = "목적지를 찾을 수 없습니다.";
       return;
     }
 
