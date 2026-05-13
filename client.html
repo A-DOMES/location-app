@@ -1350,12 +1350,20 @@ function resetNavigation() {
 
   // ---------------------- 이동정보 초기화 ----------------------
   speedHistory = [];
-  startTime = Date.now();
+  startTime = null;   // ⬅️ 주행 시간 끊기 (Date.now() 대신 null)
   destinationLat = null;
   destinationLng = null;
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
+
+  // ---------------------- 표시 변수 초기화 ----------------------
+  smoothedSpeed = 0;
+  avgSpeed = 0;
+  maxSpeed = 0;
+  elapsedMinutes = 0;
+  totalDistance = 0;
+  etaLine = "";
 
   // ---------------------- 목적지 관련 초기화 ----------------------
   if (destinationCircle) {
@@ -1369,13 +1377,7 @@ function resetNavigation() {
     otherMarker = null;
   }
 
-  smoothedSpeed = 0;
-  avgSpeed = 0;
-  maxSpeed = 0;
-  elapsedMinutes = 0;
-  totalDistance = 0;
-  etaLine = "";
-  // ---------------------- 평상시 주행 모달 초기화 (존재할 때만) ----------------------
+  // ---------------------- 평상시 주행 모달 초기화 ----------------------
   const travelStatsEl = document.getElementById("travelStatsContent");
   if (travelStatsEl) {
     travelStatsEl.innerHTML = `
@@ -1387,7 +1389,7 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- 목적지 안내 모달 초기화 (존재할 때만) ----------------------
+  // ---------------------- 목적지 안내 모달 초기화 ----------------------
   const destinationEl = document.getElementById("destinationResult");
   if (destinationEl) {
     destinationEl.innerHTML = `
@@ -1397,9 +1399,9 @@ function resetNavigation() {
   }
 
   // ---------------------- 모드 복귀 ----------------------
-  followUser = true; // 초기화 시 사람중심 모드로 복귀
+  followUser = true;
 
-  // ---------------------- 음성 안내 중단 ----------------------
+  // ---------------------- 음성 안내 ----------------------
   speakMessage("경로가 초기화 되었습니다.");
 
   // ---------------------- 버튼 상태 ----------------------
@@ -1409,7 +1411,32 @@ function resetNavigation() {
   // ---------------------- 알림 모달 자동 닫힘 ----------------------
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
+}
+
+/* ---------------------- 이동정보 업데이트 함수 ---------------------- */
+function updateTravelStats() {
+  // 초기화 상태면 계산하지 않고 0 값 유지
+  if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
+    document.getElementById("travelStatsContent").innerHTML = `
+      🚗 현재 속도: 0 km/h<br>
+      📊 평균 속도: 0 km/h<br>
+      ⚡ 최고 속도: 0 km/h<br>
+      ⏱️ 주행 시간: 0 분<br>
+      📏 총 이동 거리: 0 km<br>
+    `;
+    return;
   }
+
+  // 기존 계산 로직…
+  document.getElementById("travelStatsContent").innerHTML = `
+    🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
+    📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
+    ⚡ 최고 속도: ${maxSpeed.toFixed(1)} km/h<br>
+    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
+    📏 총 이동 거리: ${totalDistance} km<br>
+    ${etaLine}
+  `;
+}
 
 /* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
 const resetBtn = document.getElementById("resetPathBtn");
