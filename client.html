@@ -1416,6 +1416,18 @@ function resetNavigation() {
     `;
   }
 
+  // ---------------------- 이동정보 모달 즉시 초기화 ----------------------
+  const travelStatsEl = document.getElementById("travelStatsContent");
+  if (travelStatsEl) {
+    travelStatsEl.innerHTML = `
+      🚗 현재 속도: 0 km/h<br>
+      📊 평균 속도: 0 km/h<br>
+      ⚡ 최고 속도: 0 km/h<br>
+      ⏱️ 주행 시간: 0 분<br>
+      📏 총 이동 거리: 0 km<br>
+    `;
+  }
+
   // ---------------------- 모드 복귀 ----------------------
   followUser = true;
 
@@ -1433,10 +1445,8 @@ function resetNavigation() {
   // ---------------------- 목적지 검색창 흔적 지우기 ----------------------
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
-
-  // ---------------------- 이동정보 모달 즉시 초기화 ----------------------
-  updateTravelStats();
 }
+
 
 
 
