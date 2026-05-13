@@ -1429,20 +1429,25 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- 모드 복귀 ----------------------
+  // ---------------------- ✅ 모드 복귀 ----------------------
   followUser = true;
 
-  // ---------------------- 음성 안내 ----------------------
+  // ---------------------- ✅ 음성 안내 ----------------------
   speakMessage("경로가 초기화 되었습니다.");
 
-  // ---------------------- 버튼 상태 ----------------------
+  // ----------------------✅ 버튼 상태 ----------------------
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
   
-  // ---------------------- 알림 모달 자동 닫힘 ----------------------
+  // ---------------------- ✅ 알림 모달 자동 닫힘 ----------------------
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
-}
+
+  // ---------------------- ✅ 목적지 검색창 흔적 지우기 ----------------------
+  const destInput = document.getElementById("destinationInput");
+  if (destInput) destInput.value = "";
+} 
+
 
 /* ---------------------- 이동정보 업데이트 함수 ---------------------- */
 function updateTravelStats() {
@@ -1494,7 +1499,7 @@ if (reopenBtn) {
   });
 }
 
- 
+
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
