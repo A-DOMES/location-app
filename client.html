@@ -532,17 +532,9 @@ let lastLat = null;
 let lastLng = null;
 
 // 트래픽 최적화를 위한 변수  
-let pathCoords       = [];
-let speedHistory     = [];
-let totalDistance    = 0;
-let avgSpeed         = 0;
-let maxSpeed         = 0;
-let startTime        = Date.now();
+let avgSpeed = 0;
+let maxSpeed = 0;
 
-let destinationLat   = null;
-let destinationLng   = null;
-let currentLat       = null;
-let currentLng       = null;  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -972,7 +964,7 @@ function updateTravelStats() {
   const now             = Date.now();
   const elapsedMinutes  = Math.round((now - startTime) / 60000); // 주행 시간 (분)
   const smoothedSpeed   = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0; // 현재 속도 (스무딩)
-  const totalDistance   = Math.round(totalDistance); // 누적 거리 (km) → addPathCoord에서 갱신
+  const totalDistanceKm    = Math.round(totalDistance); // 누적 거리 (km) → addPathCoord에서 갱신
   const avgSpeedValue   = avgSpeed; // addSpeed에서 갱신된 평균 속도
   const maxSpeedValue   = maxSpeed; // addSpeed에서 갱신된 최고 속도
 
