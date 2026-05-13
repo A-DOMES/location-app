@@ -72,6 +72,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 @keyframes modalFadeIn { from{opacity:0; transform:translate(-50%,-20%) scale(0.9);} to{opacity:1; transform:translate(-50%,0) scale(1);} }
 .modal-content { position:absolute; left:50%; top:7%; transform:translateX(-50%); background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:16px; border-radius:12px; width:260px; text-align:center; border:2px solid #1976d2; box-shadow:0 4px 20px rgba(0,0,0,0.25); font-size:15px; font-weight:bold; animation:modalFadeIn 0.4s ease forwards; pointer-events:auto; }
 #popupModal .modal-content {width:420px; }  /* 이 모달만 폭을 넓힘 */
+.fadeIn {animation: modalFadeIn 0.4s ease forwards;}
 .drag-handle { cursor:move; background:#eee; padding:8px; border-radius:6px; }
 .close { margin-left:auto; font-size:20px; font-weight:bold; cursor:pointer; color:#d32f2f; background-color:#fff; border:2px solid #d32f2f; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:background-color 0.2s, color 0.2s, transform 0.2s; }
 .close:hover { background-color:#d32f2f; color:#fff; transform:scale(1.1); }
@@ -901,7 +902,8 @@ function getSmoothedSpeed(history, windowSize = 5) {
   return sum / recent.length;
 }
 
-// ---------------------- 이동정보 업데이트 ----------------------
+ 
+/* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats() {
   // ✅ 초기화 상태면 업데이트 중단
   if (speedHistory.length === 0 && pathCoords.length === 0) {
@@ -932,7 +934,7 @@ function updateTravelStats() {
     etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes.toFixed(1)} 분 후 도착 예상</span>`;
   }
 
-  // 모달창 업데이트
+  // ✅ 모달창 내용만 갱신 (열기 X)
   document.getElementById("travelStatsContent").innerHTML = `
     🚗 현재 속도: ${smoothedSpeed.toFixed(1)} km/h<br>
     📊 평균 속도: ${avgSpeed.toFixed(1)} km/h<br>
@@ -1242,8 +1244,6 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
     });
 }
 
-
-
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
@@ -1429,8 +1429,6 @@ if (reopenBtn) {
     document.getElementById("reopenBtn").style.display = "none";
   });
 }
-
- 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
@@ -2067,8 +2065,14 @@ function openModal(modal) {
   // ✅ 선택 모달 열기
   modal.style.display = 'block';
 
-  // ✅ 중앙 정렬 보정
-  modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
+  const content = modal.querySelector('.modal-content');
+  // 중앙 정렬 유지
+  content.style.transform = "translate(-50%, -50%)";
+
+  // ✅ 애니메이션 다시 적용 (처음과 동일한 모양 유지)
+  content.classList.remove("fadeIn");
+  void content.offsetWidth; // 강제 리플로우
+  content.classList.add("fadeIn");
 }
 
 function closeModal(modal) {
@@ -2081,7 +2085,6 @@ function openPopupModal(modal) {
   setTimeout(() => closeModal(modal), 3000);
 }
 
-  
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
   btn.addEventListener('click', () => {
