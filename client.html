@@ -1352,13 +1352,13 @@ makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 
 /* ---------------------- 경로 초기화 함수 ---------------------- */
 function resetNavigation() {
-  // ---------------------- 위치 추적 중단 ----------------------
+  // 위치 추적 중단
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
 
-  // ---------------------- 경로 초기화 ----------------------
+  // 경로 초기화
   pathCoords = [];
   if (pathPolyline) {
     pathPolyline.setMap(null);
@@ -1371,7 +1371,7 @@ function resetNavigation() {
   destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
-  // ---------------------- 이동정보 초기화 ----------------------
+  // 이동정보 초기화
   speedHistory = [];
   startTime = null;   // ✅ 주행 시간 끊기
   destinationLat = null;
@@ -1380,7 +1380,7 @@ function resetNavigation() {
   lastLng = null;
   lastTimestamp = null;
 
-  // ---------------------- 표시 변수 초기화 ----------------------
+  // 표시 변수 초기화
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
@@ -1388,19 +1388,19 @@ function resetNavigation() {
   totalDistance = 0;
   etaLine = "";
 
-  // ---------------------- 목적지 관련 초기화 ----------------------
+  // 목적지 관련 초기화
   if (destinationCircle) {
     destinationCircle.setMap(null);
     destinationCircle = null;
   }
 
-  // ---------------------- 상대방 마커 제거 ----------------------
+  // 상대방 마커 제거
   if (otherMarker) {
     otherMarker.setMap(null);
     otherMarker = null;
   }
 
-  // ---------------------- 목적지 안내 모달 초기화 ----------------------
+  // 목적지 안내 모달 초기화
   const destinationEl = document.getElementById("destinationResult");
   if (destinationEl) {
     destinationEl.innerHTML = `
@@ -1409,28 +1409,28 @@ function resetNavigation() {
     `;
   }
 
-  // ---------------------- 모드 복귀 ----------------------
+  // 모드 복귀
   followUser = true;
 
-  // ---------------------- 음성 안내 ----------------------
+  // 음성 안내
   speakMessage("경로가 초기화 되었습니다.");
 
-  // ---------------------- 버튼 상태 ----------------------
+  // 버튼 상태
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
   
-  // ---------------------- 알림 모달 자동 닫힘 ----------------------
+  // 알림 모달 자동 닫힘
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
 
-  // ---------------------- 목적지 검색창 흔적 지우기 ----------------------
+  // 목적지 검색창 흔적 지우기
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
 
-  // ---------------------- 이동정보 모달 즉시 초기화 ----------------------
+  // ✅ 이동정보 모달 즉시 초기화
   updateTravelStats();
 
-  // ---------------------- 현재 위치 다시 잡아 경로 재시작 ----------------------
+  // ✅ 현재 위치 다시 잡아 경로 재시작 + 이동정보 새로 시작
   navigator.geolocation.getCurrentPosition(pos => {
     const currentPos = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
 
@@ -1446,6 +1446,10 @@ function resetNavigation() {
       strokeWeight: 2,
       map: map
     });
+
+    // 이동정보 기록 새로 시작
+    startTime = Date.now();
+    speedHistory = [];
   });
 }
 
@@ -1505,16 +1509,7 @@ function updateTravelStats() {
 const travelStatsBtn = document.getElementById("openTravelStatsModal");
 if (travelStatsBtn) {
   travelStatsBtn.addEventListener("click", () => {
-    // ✅ 버튼을 누른 순간부터 기록 시작
-    startTime = Date.now();
-    speedHistory = [];
-    totalDistance = 0;
-    smoothedSpeed = 0;
-    avgSpeed = 0;
-    maxSpeed = 0;
-    elapsedMinutes = 0;
-    etaLine = "";
-
+    // ✅ 초기화는 하지 않고, 모달만 열기
     const travelStatsModal = document.getElementById("travelStatsModal");
     if (travelStatsModal) travelStatsModal.style.display = "block";
   });
@@ -1544,7 +1539,6 @@ if (reopenBtn) {
     document.getElementById("reopenBtn").style.display = "none";
   });
 }
-
 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
