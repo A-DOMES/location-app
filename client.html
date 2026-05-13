@@ -1169,7 +1169,7 @@ function checkSchoolZones(currentLat, currentLng) {
   const service = new google.maps.places.PlacesService(map);
   service.nearbySearch({
     location: { lat: currentLat, lng: currentLng },
-    radius: 5,
+    radius: 10,
     type: 'school'
   }, (results, status) => {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
@@ -1180,8 +1180,8 @@ function checkSchoolZones(currentLat, currentLng) {
           zoneCenter
         );
 
-        // ✅ 거리 조건 + 알림 빈도 제어 (5m 이내, 1분 간격)
-        if (distance <= 5 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
+        // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
+        if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
           lastSchoolZoneAlertTime = Date.now();
 
           const message = `
@@ -1429,6 +1429,24 @@ function resetNavigation() {
 
   // ---------------------- 이동정보 모달 즉시 초기화 ----------------------
   updateTravelStats();
+
+  // ---------------------- 현재 위치 다시 잡아 경로 재시작 ----------------------
+  navigator.geolocation.getCurrentPosition(pos => {
+    const currentPos = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+
+    // 새 경로 배열 시작
+    pathCoords = [currentPos];
+
+    // 새 Polyline 생성
+    pathPolyline = new google.maps.Polyline({
+      path: pathCoords,
+      geodesic: true,
+      strokeColor: "#FF0000",
+      strokeOpacity: 1.0,
+      strokeWeight: 2,
+      map: map
+    });
+  });
 }
 
 /* ---------------------- 이동정보 업데이트 함수 ---------------------- */
