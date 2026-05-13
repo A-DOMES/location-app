@@ -360,7 +360,7 @@ button:hover{background-color:#1565c0;}
   <!-- 지도 컨트롤 영역 -->
   <div id="mapControls">
     <!-- 경로 초기화 버튼 -->
-    <button id="resetPathBtn" style="display:block;">🔄 경로 초기화</button>
+    <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
     <!-- 목적지 찾기 버튼 -->
     <button id="openDestinationModal">📍 목적지 찾기</button>
     <!-- 이동정보 버튼 -->
@@ -1437,7 +1437,7 @@ function resetNavigation() {
 
   // ---------------------- 버튼 상태 ----------------------
   const resetBtn = document.getElementById("resetPathBtn");
-  if (resetBtn) resetBtn.style.display = "block";              // ⬅️ 버튼상태: block / none 차이)
+  if (resetBtn) resetBtn.style.display = "none";
   
   // ---------------------- 알림 모달 자동 닫힘 ----------------------
   const popupModal = document.getElementById("popupModal");
