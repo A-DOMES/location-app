@@ -1903,9 +1903,13 @@ function initAutocomplete() {
 
     console.log("✅ 자동완성 선택됨:", place.name, lat, lng);
 
+    // ✅ 목적지 표시
     showDestinationOnMap(place.name, lat, lng, address);
 
-    // ✅ 목적지도 배열에 기록
+    // ✅ 목적지 좌표 기록
+    destinationLat = lat;
+    destinationLng = lng;
+
     pathCoords.push({
       lat,
       lng,
@@ -1915,7 +1919,7 @@ function initAutocomplete() {
 
     document.getElementById("startRouteBtn").style.display = "inline-block";
   });
-}
+  
 
 /* ---------------------- 음성 안내 함수 ---------------------- */
 function speakMessage(message) {
