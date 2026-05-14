@@ -1981,91 +1981,108 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 });
 
 
-// ---------------------- 경로 안내 함수 ----------------------
+// ---------------------- 운행 안내 함수 ----------------------
 async function showRouteToDestination(destination) {
-  // 목적지 좌표 저장
-  destinationLat = destination.lat;
-  destinationLng = destination.lng;
+  // 기존 렌더러 제거
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
 
-  // 목적지 마커 표시
-  const marker = new google.maps.Marker({
-    map,
-    position: { lat: destinationLat, lng: destinationLng },
-    title: "목적지"
+  // 새 렌더러 준비 (폴리라인 직접 그리기)
+  destinationRenderer = new google.maps.Polyline({
+    strokeColor: "#0000FF",
+    strokeWeight: 4,
+    strokeOpacity: 0.8,
+    map: map
   });
-  destinationMarkers.push(marker);
 
-  // ✅ 운행 안내 시작
-  speakMessage("운행 안내를 시작합니다.");
+  try {
+    // 목적지 좌표 저장
+    destinationLat = destination.lat;
+    destinationLng = destination.lng;
 
-  // 실시간 이동 추적
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      currentLat = pos.coords.latitude;
-      currentLng = pos.coords.longitude;
-      currentSpeed = (pos.coords.speed || 0) * 3.6; // km/h
+    // 목적지 마커 표시
+    const marker = new google.maps.Marker({
+      map,
+      position: { lat: destinationLat, lng: destinationLng },
+      title: "목적지"
+    });
+    destinationMarkers.push(marker);
 
-      // 배열에 저장
-      pathCoords.push({ lat: currentLat, lng: currentLng });
-      speedHistory.push(currentSpeed);
+    // ✅ 안내 메시지: 한 번만 출력
+    if (!drivingStarted) {
+      speakMessage("운행 안내를 시작합니다.");
+      drivingStarted = true;
+    }
 
-      // 총 이동 거리
-      const totalDistKm = computeTotalDistance(pathCoords).toFixed(2);
+  } catch (error) {
+    console.error("운행 안내 오류:", error);
+    showQueuedModal("운행 안내 오류", `<p>운행 안내 중 오류가 발생했습니다.</p>`);
+    speakMessage("운행 안내 중 오류가 발생했습니다.");
+  }
 
-      // 직선 거리
-      const currPoint = new google.maps.LatLng(currentLat, currentLng);
-      const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
-      const straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(2);
-
-      // 평균/최고 속도
-      const avgSpeed = (speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length).toFixed(1);
-      const maxSpeed = Math.max(...speedHistory).toFixed(1);
-
-      // 주행 시간
-      const travelTimeMin = ((Date.now() - startTime) / 60000).toFixed(0);
-
-      // ETA 계산
-      let etaMsg = "계산 불가";
-      if (avgSpeed > 0) {
-        const etaMinutes = (straightDistKm / avgSpeed * 60).toFixed(0);
-        const etaTime = new Date(Date.now() + etaMinutes*60000).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-        etaMsg = `${etaTime} (약 ${etaMinutes}분 후)`;
-      }
-
-      // 모달창 표시
-      const statsHtml = `
-        <div style="text-align:left; font-size:14px;">
-          🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
-          📊 평균 속도: ${avgSpeed} km/h<br>
-          ⚡ 최고 속도: ${maxSpeed} km/h<br>
-          ⏱ 주행 시간: ${travelTimeMin} 분<br>
-          📏 총 이동 거리: ${totalDistKm} km<br>
-          📐 직선 거리: ${straightDistKm} km<br>
-          🕒 예상 도착 시간: ${etaMsg}
-        </div>
-      `;
-      document.getElementById("travelStatsContent").innerHTML = statsHtml;
-
-      // 목적지 반경 체크
-      const distanceToDest = google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint);
-      if (distanceToDest <= 15) {
-        speakMessage("목적지에 도착했습니다!");
-        resetNavigation(true);
-        navigator.geolocation.clearWatch(watchId);
-      }
-
-      if (followUser) {
-        map.setCenter({ lat: currentLat, lng: currentLng });
-      }
-    },
-    (err) => {
-      console.error("운행 안내 오류:", err);
-      speakMessage("운행 안내 중 오류가 발생했습니다.");
-    },
-    { enableHighAccuracy: true }
-  );
+  // ✅ 실시간 이동 경로 추적은 이미 배열에 저장되고 있으므로,
+  // 여기서는 배열(pathCoords, speedHistory)을 활용해 주행 정보만 갱신
+  setInterval(() => {
+    updateDrivingStats(destinationLat, destinationLng);
+  }, 5000); // 5초마다 모달 갱신
 }
 
+
+// ---------------------- 이동정보 갱신 함수 ----------------------
+function updateDrivingStats(destinationLat, destinationLng) {
+  if (pathCoords.length === 0) return;
+
+  // 📍 현재 위치 = 배열 마지막 값
+  const { lat: currentLat, lng: currentLng } = pathCoords[pathCoords.length - 1];
+
+  // 📏 총 이동 거리
+  const totalDistKm = computeTotalDistance(pathCoords).toFixed(2);
+
+  // 📐 직선 거리 (현재 위치 ↔ 목적지)
+  const currPoint = new google.maps.LatLng(currentLat, currentLng);
+  const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
+  const straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(2);
+
+  // 🚗 속도 관련 계산
+  const currentSpeedKmh = speedHistory.length ? speedHistory[speedHistory.length-1].toFixed(1) : 0;
+  const avgSpeed = speedHistory.length ? (speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length).toFixed(1) : 0;
+  const maxSpeed = speedHistory.length ? Math.max(...speedHistory).toFixed(1) : 0;
+
+  // ⏱ 주행 시간
+  const travelTimeMin = ((Date.now() - startTime) / 60000).toFixed(0);
+
+  // 🕒 예상 도착 시간 (ETA)
+  let etaMsg = "계산 불가";
+  if (avgSpeed > 0) {
+    const etaMinutes = (straightDistKm / avgSpeed * 60).toFixed(0);
+    const etaTime = new Date(Date.now() + etaMinutes*60000).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+    etaMsg = `${etaTime} (약 ${etaMinutes}분 후)`;
+  }
+
+  // ✅ 이동정보 모달창 갱신
+  const statsHtml = `
+    <div style="text-align:left; font-size:14px;">
+      🚗 현재 속도: ${currentSpeedKmh} km/h<br>
+      📊 평균 속도: ${avgSpeed} km/h<br>
+      ⚡ 최고 속도: ${maxSpeed} km/h<br>
+      ⏱ 주행 시간: ${travelTimeMin} 분<br>
+      📏 총 이동 거리: ${totalDistKm} km<br>
+      📐 직선 거리: ${straightDistKm} km<br>
+      🕒 예상 도착 시간: ${etaMsg}
+    </div>
+  `;
+  document.getElementById("travelStatsContent").innerHTML = statsHtml;
+  openModal(document.getElementById("travelStatsModal"));
+
+  // ✅ 목적지 반경 체크 (15m 이내 도착 시 안내 종료)
+  const distanceToDest = google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint);
+  if (distanceToDest <= 15) {
+    speakMessage("목적지에 도착했습니다!");
+    resetNavigation(true);
+  }
+}
 
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
