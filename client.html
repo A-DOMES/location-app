@@ -534,7 +534,7 @@ let lastLng = null;
 // 트래픽 최적화를 위한 변수  
 let avgSpeed = 0;
 let maxSpeed = 0;
-
+let lastUpdateTime = 0;   // 갱신 주기 제어용
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -728,96 +728,113 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
-  // ✅ watchPosition으로 실시간 추적
   navigator.geolocation.watchPosition(pos => {
-    // ✅ 좌표값 갱신
-    currentLat = pos.coords.latitude;
-    currentLng = pos.coords.longitude;
-    const timestamp = Date.now();
+    const now = Date.now();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const speed = pos.coords.speed || 0; // m/s
+    const speedKmh = speed * 3.6;
 
-    // ✅ 속도 계산
-    computeSpeedFromGPS(currentLat, currentLng, timestamp);
-
-    let heading = pos.coords.heading || 0;
-    const myPos = { lat: currentLat, lng: currentLng };
-
-    // ✅ 방향 보정
-    if (!heading || heading === 0) {
-      if (pathCoords.length > 1) {
-        const last = pathCoords[pathCoords.length - 1];
-        const prev = pathCoords[pathCoords.length - 2];
-        heading = google.maps.geometry.spherical.computeHeading(prev, last);
-      } else {
-        heading = lastHeading ?? 0;
-      }
+    // 이동 거리 계산
+    let distanceMoved = 0;
+    if (lastLat !== null && lastLng !== null) {
+      distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(lastLat, lastLng),
+        new google.maps.LatLng(lat, lng)
+      );
     }
-    lastHeading = heading;
-    const directionLabel = getDirectionLabel(heading);
 
-    // ✅ 갱신 시간
-    const now = new Date();
-    const timeString = now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+    // 속도에 따른 최소 주기 설정
+    let minInterval = 5000; // 기본 5초
+    if (speedKmh > 60) minInterval = 3000; // 차량 고속 → 3초
+    else if (speedKmh < 10) minInterval = 10000; // 걷기 → 10초
 
-    // ✅ 현재 위치 정보 즉시 표시
-    document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
-    document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
-    document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
-    document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-    
-    // ✅ 주소는 별도 영역에서만 비동기 처리
-    if (Date.now() - lastGeocodeTime > geocodeInterval) {
-      document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
-      
-      geocoder.geocode({ location: myPos }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          let address = results[0].formatted_address
-            .replace(/^대한민국\s*,?\s*/, "")
-            .replace(/\s*,?\s*대한민국$/, "");
-          document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동
+    if ((now - lastUpdateTime > minInterval) || distanceMoved > 30) {
+      lastUpdateTime = now;
+      lastLat = lat;
+      lastLng = lng;
+
+      // ✅ 좌표값 갱신
+      currentLat = lat;
+      currentLng = lng;
+      const timestamp = Date.now();
+
+      // ✅ 속도 계산
+      computeSpeedFromGPS(currentLat, currentLng, timestamp);
+
+      // ✅ 방향 보정
+      let heading = pos.coords.heading || 0;
+      if (!heading || heading === 0) {
+        if (pathCoords.length > 1) {
+          const last = pathCoords[pathCoords.length - 1];
+          const prev = pathCoords[pathCoords.length - 2];
+          heading = google.maps.geometry.spherical.computeHeading(prev, last);
+        } else {
+          heading = lastHeading ?? 0;
         }
-      });
-      lastGeocodeTime = Date.now();
+      }
+      lastHeading = heading;
+      const directionLabel = getDirectionLabel(heading);
+
+      // ✅ 현재 위치 정보 표시
+      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+      document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
+
+      // ✅ 주소 갱신 (지오코딩은 주기적 제한)
+      if (Date.now() - lastGeocodeTime > geocodeInterval) {
+        document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === "OK" && results[0]) {
+            let address = results[0].formatted_address
+              .replace(/^대한민국\s*,?\s*/, "")
+              .replace(/\s*,?\s*대한민국$/, "");
+            document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+          }
+        });
+        lastGeocodeTime = Date.now();
+      }
+
+      // ✅ 위치 표시 갱신
+      updateLocationDisplay(currentLat, currentLng, heading);
+
+      // ✅ 마커 이동
+      if (!myMarker) {
+        myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
+      } else {
+        myMarker.setPosition({ lat, lng });
+      }
+
+      // ✅ 지도 중심 이동 여부
+      if (followUser) map.setCenter({ lat, lng });
+
+      // ✅ 원형 표시
+      drawMultipleCircles({ lat, lng });
+
+      // ✅ 레이더 방향 보정
+      updateRadarPolygon({ lat, lng }, heading);
+
+      // ✅ 경로 polyline 갱신
+      updatePathPolyline(currentLat, currentLng);
+
+      if (pathCoords.length > 1) {
+        document.getElementById("resetPathBtn").style.display = "inline-block";
+      }
+
+      // ✅ 이동정보 업데이트
+      updateTravelStats();
+
+      // ✅ 보호구역/속도 제한 체크
+      checkSpeedLimit(currentLat, currentLng, currentSpeed);
+      checkSchoolZones(currentLat, currentLng);
+      checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
+
+      // ✅ 레이더 탐지
+      checkRadarPOIs({ lat, lng });
     }
-  
-    // ✅ 위치 표시 갱신
-    updateLocationDisplay(currentLat, currentLng, heading);
-
-    // ✅ 마커 이동
-    if (!myMarker) {
-      myMarker = new google.maps.Marker({ position: myPos, map, title: "내 위치" });
-    } else {
-      myMarker.setPosition(myPos);
-    }
-
-    // ✅ 지도 중심 이동 여부
-    if (followUser) {
-      map.setCenter(myPos);
-    }
-
-    // ✅ 원형 표시
-    drawMultipleCircles(myPos);
-
-    // ✅ 레이더 방향 보정
-    updateRadarPolygon(myPos, heading);
-
-    // ✅ 경로 polyline 갱신
-    updatePathPolyline(currentLat, currentLng);
-
-    if (pathCoords.length > 1) {
-      document.getElementById("resetPathBtn").style.display = "inline-block";
-    }
-
-    // ✅ 이동정보 업데이트
-    updateTravelStats();
-
-    // ✅ 보호구역/속도 제한 체크
-    checkSpeedLimit(currentLat, currentLng, currentSpeed);
-    checkSchoolZones(currentLat, currentLng);
-    checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
-
-    // ✅ 레이더 탐지
-    checkRadarPOIs(myPos);
-
   }, err => {
     console.error("위치 추적 오류:", err);
     document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
@@ -827,7 +844,6 @@ function startTracking() {
     timeout: 5000
   });
 }
-
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
@@ -845,25 +861,25 @@ makeDraggableAndResizable(toggleBtn);
   
 
 // ---------------------- 경로 보정 ----------------------
-function updatePathPolyline(lat, lng) {
+function updatePathPolyline(lat, lng, address = null) {
   if (pathCoords.length > 0) {
     const lastPoint = pathCoords[pathCoords.length - 1];
-    const distance = getDistance(lastPoint.lat(), lastPoint.lng(), lat, lng);
+    const distance = getDistance(lastPoint.lat, lastPoint.lng, lat, lng);
 
     // ✅ 최소 이동 거리 기준 (5m 이상일 때만 추가)
     if (distance >= 5 && distance < 100) {
-      pathCoords.push(new google.maps.LatLng(lat, lng));
-      pathPolyline.setPath(pathCoords);
+      pathCoords.push({ lat, lng, address, timestamp: Date.now() });
+      pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
     } else if (distance >= 100) {
       // ✅ 튀는 값 보정: 이전 좌표와 새 좌표의 중간값 추가
-      const midLat = (lastPoint.lat() + lat) / 2;
-      const midLng = (lastPoint.lng() + lng) / 2;
-      pathCoords.push(new google.maps.LatLng(midLat, midLng));
-      pathPolyline.setPath(pathCoords);
+      const midLat = (lastPoint.lat + lat) / 2;
+      const midLng = (lastPoint.lng + lng) / 2;
+      pathCoords.push({ lat: midLat, lng: midLng, address: null, timestamp: Date.now() });
+      pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
     }
   } else {
-    pathCoords.push(new google.maps.LatLng(lat, lng));
-    pathPolyline.setPath(pathCoords);
+    pathCoords.push({ lat, lng, address, timestamp: Date.now() });
+    pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
   }
 }
 
@@ -926,12 +942,15 @@ function getSmoothedSpeed(history, windowSize = 5) {
 
 
 // ---------------------- 좌표 추가 ----------------------
-function addPathCoord(newCoord) {
+function addPathCoord(newCoord, address = null) {
   if (pathCoords.length > 0) {
     const lastCoord = pathCoords[pathCoords.length - 1];
-    totalDistance  += google.maps.geometry.spherical.computeDistanceBetween(lastCoord, newCoord) / 1000; // km 단위
+    totalDistance += google.maps.geometry.spherical.computeDistanceBetween(
+      new google.maps.LatLng(lastCoord.lat, lastCoord.lng),
+      new google.maps.LatLng(newCoord.lat, newCoord.lng)
+    ) / 1000; // km 단위
   }
-  pathCoords.push(newCoord);
+  pathCoords.push({ ...newCoord, address, timestamp: Date.now() });
 }
 
 // ---------------------- 속도 추가 ----------------------
@@ -996,13 +1015,15 @@ function updateTravelStats() {
 
 
 
-/* ---------------------- 총 이동거리 계산 ---------------------- */
+// ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
 
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
-    total += google.maps.geometry.spherical.computeDistanceBetween(coords[i - 1], coords[i]);
+    const prev = new google.maps.LatLng(coords[i - 1].lat, coords[i - 1].lng);
+    const curr = new google.maps.LatLng(coords[i].lat, coords[i].lng);
+    total += google.maps.geometry.spherical.computeDistanceBetween(prev, curr);
   }
   return total / 1000; // km 단위 (정수 변환은 호출부에서 처리)
 }
@@ -1043,7 +1064,6 @@ if (reopenBtn) {
   });
 }
 
-
   
 // ---------------------- 위치 공유 ----------------------
 function shareLocation() {
@@ -1052,8 +1072,8 @@ function shareLocation() {
     return;
   }
 
-  // ✅ 주소와 구글 지도 링크 생성
-  const address = document.getElementById("addressBox").innerText || "주소 정보 없음";
+  // ✅ 주소와 구글 지도 링크 생성 (배열에서 가져오기)
+  const address = pathCoords.length > 0 ? (pathCoords[pathCoords.length - 1].address || "주소 정보 없음") : "주소 정보 없음";
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
   // ✅ 명함 스타일 텍스트 구성
@@ -1492,27 +1512,30 @@ function resetNavigation() {
   // ✅ 이동정보 모달 즉시 초기화
   updateTravelStats();
 
-  // ✅ 현재 위치 다시 잡아 경로 재시작 + 이동정보 새로 시작
-  navigator.geolocation.getCurrentPosition(pos => {
-    const currentPos = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+// ✅ 현재 위치 다시 잡아 경로 재시작 + 이동정보 새로 시작
+navigator.geolocation.getCurrentPosition(pos => {
+  // 새 경로 배열 시작 (좌표 + 주소 + 시간)
+  pathCoords = [{
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    address: null, // 주소는 이후 geocoder에서 갱신
+    timestamp: Date.now()
+  }];
 
-    // 새 경로 배열 시작
-    pathCoords = [currentPos];
-
-    // 새 Polyline 생성
-    pathPolyline = new google.maps.Polyline({
-      path: pathCoords,
-      geodesic: true,
-      strokeColor: "#FF0000",
-      strokeOpacity: 1.0,
-      strokeWeight: 2,
-      map: map
-    });
-
-    // 이동정보 기록 새로 시작
-    startTime = Date.now();
-    speedHistory = [];
+  // 새 Polyline 생성 (LatLng 객체로 변환)
+  pathPolyline = new google.maps.Polyline({
+    path: pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)),
+    geodesic: true,
+    strokeColor: "#FF0000",
+    strokeOpacity: 1.0,
+    strokeWeight: 2,
+    map: map
   });
+
+  // 이동정보 기록 새로 시작
+  startTime = Date.now();
+  speedHistory = [];
+});
 }
 
 
@@ -1875,8 +1898,8 @@ function initAutocomplete() {
   const input = document.getElementById("destinationInput");
   const autocomplete = new google.maps.places.Autocomplete(input, {
     fields: ["geometry", "name", "formatted_address"],
-    types: ["establishment"], // 장소 유형 (cafe, restaurant 등)
-    componentRestrictions: { country: "kr" } // 한국으로 제한
+    types: ["establishment"],
+    componentRestrictions: { country: "kr" }
   });
 
   autocomplete.addListener("place_changed", () => {
@@ -1894,7 +1917,14 @@ function initAutocomplete() {
 
     showDestinationOnMap(place.name, lat, lng, address);
 
-    // ✅ 검색 성공 시 경로 안내 버튼 표시
+    // ✅ 목적지도 배열에 기록
+    pathCoords.push({
+      lat,
+      lng,
+      address,
+      timestamp: Date.now()
+    });
+
     document.getElementById("startRouteBtn").style.display = "inline-block";
   });
 }
@@ -2117,27 +2147,24 @@ function checkRadarPOIs(myPos) {
 }
 
 
-
 /* ---------------------- 이동정보 메시지 빌드 ---------------------- */
 function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const currentSpeed   = speedHistory.length ? Math.round(speedHistory[speedHistory.length - 1]) : 0;
   const avgSpeed       = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeed       = speedHistory.length ? Math.round(Math.max(...speedHistory)) : 0;
   const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
-  const totalDistanceKm = (computeTotalDistance(pathCoords) / 1000).toFixed(1);
+  const totalDistanceKm = computeTotalDistance(pathCoords).toFixed(1); // ✅ /1000 제거
 
   return `
     <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
     <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
     <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
     <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
+    <div>📏 총 이동 거리: <span class="highlight">${totalDistanceKm} km</span></div>
   `;
-  }
+}
 
-
-
-
+  
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function showQueuedModal(title, content) {
   const modal = document.getElementById("queuedModal");
@@ -2180,9 +2207,9 @@ document.querySelectorAll('.close').forEach(btn => {
         destinationRenderer.setMap(null);
         destinationRenderer = null;
       }
-      // 주행 경로 선 다시 활성화
+      // ✅ 좌표+주소 구조 → LatLng 변환
       pathPolyline = new google.maps.Polyline({
-        path: pathCoords,
+        path: pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)),
         geodesic: true,
         strokeColor: "#0000FF", // 파란색
         strokeOpacity: 1.0,
@@ -2192,7 +2219,7 @@ document.querySelectorAll('.close').forEach(btn => {
     }
   });
 });
-
+  
 // ✅ ESC 키로 모달 닫기
 document.addEventListener('keydown', e => {
   if (e.key === "Escape") {
