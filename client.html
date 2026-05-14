@@ -1998,55 +1998,6 @@ async function showRouteToDestination(destination) {
     map: map
   });
 
-  try {
-    // 목적지 좌표 저장
-    destinationLat = destination.lat;
-    destinationLng = destination.lng;
-
-    // 목적지 마커 표시
-    const marker = new google.maps.Marker({
-      map,
-      position: { lat: destinationLat, lng: destinationLng },
-      title: "목적지"
-    });
-    destinationMarkers.push(marker);
-
-    // ✅ 안내 메시지: 한 번만 출력
-    if (!drivingStarted) {
-      speakMessage("운행 안내를 시작합니다.");
-      drivingStarted = true;
-    }
-
-  } catch (error) {
-    console.error("운행 안내 오류:", error);
-    showQueuedModal("운행 안내 오류", `<p>운행 안내 중 오류가 발생했습니다.</p>`);
-    speakMessage("운행 안내 중 오류가 발생했습니다.");
-  }
-
-  // ✅ 실시간 이동 경로 추적은 이미 배열에 저장되고 있으므로,
-  // 여기서는 배열(pathCoords, speedHistory)을 활용해 주행 정보만 갱신
-  setInterval(() => {
-    updateDrivingStats(destinationLat, destinationLng);
-  }, 5000); // 5초마다 모달 갱신
-}
-
-
-// ---------------------- 운행 안내 함수 ----------------------
-async function showRouteToDestination(destination) {
-  // 기존 렌더러 제거
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
-  }
-
-  // 새 렌더러 준비 (폴리라인 직접 그리기)
-  destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#0000FF",
-    strokeWeight: 4,
-    strokeOpacity: 0.8,
-    map: map
-  });
-
   // 목적지 좌표 저장 (마커는 찍지 않음)
   destinationLat = destination.lat;
   destinationLng = destination.lng;
@@ -2062,7 +2013,6 @@ async function showRouteToDestination(destination) {
     updateDrivingStats(destinationLat, destinationLng);
   }, 5000);
 }
-
 
 // ---------------------- 이동정보 갱신 함수 ----------------------
 function updateDrivingStats(destinationLat, destinationLng) {
@@ -2091,11 +2041,13 @@ function updateDrivingStats(destinationLat, destinationLng) {
   let etaMsg = "계산 불가";
   if (avgSpeed > 0) {
     const etaMinutes = Math.round(straightDistKm / avgSpeed * 60);
-    const etaTime = new Date(Date.now() + etaMinutes*60000).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-    etaMsg = `${etaTime} (약 ${etaMinutes}분 후)`;
+    const etaTime = new Date(Date.now() + etaMinutes*60000)
+                      .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+    // ✅ 문구를 짧게 변경
+    etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
   }
 
-  // ✅ 이동정보 모달창 갱신 (기존 스타일 유지)
+  // ✅ 이동정보 모달창 갱신 (기존 스타일 유지 + 줄바꿈 방지)
   const statsHtml = `
     <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
     <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
@@ -2103,7 +2055,7 @@ function updateDrivingStats(destinationLat, destinationLng) {
     <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
     <div>📏 총 이동 거리: <span class="highlight">${totalDistKm} km</span></div>
     <div>📐 직선 거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 예상 도착 시간: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
+    <div>🕒 예상 도착 시간: <span class="highlight" style="white-space:nowrap; display:inline-block;">${etaMsg}</span></div>
   `;
 
   document.getElementById("travelStatsContent").innerHTML = statsHtml;
@@ -2115,6 +2067,13 @@ function updateDrivingStats(destinationLat, destinationLng) {
     speakMessage("목적지에 도착했습니다!");
     resetNavigation(true);
   }
+}
+
+
+// ---------------------- 네비게이션 종료 시점 ----------------------
+function resetNavigation(clearAll) {
+  // … 기존 초기화 로직 …
+  drivingStarted = false; // ✅ 다시 false로 초기화
 }
 
 
