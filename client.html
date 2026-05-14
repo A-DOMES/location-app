@@ -1332,8 +1332,7 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
   }
 }
 
-
-
+  
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
@@ -1585,17 +1584,60 @@ function makeDraggableModal(element) {
 
 
 
-/* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
+/* ---------------------- 공통 fetch 함수 ---------------------- */
+async function fetchWithParsing(url) {
+  try {
+    const res = await fetch(url);
+    const contentType = res.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+      // ✅ 내 서버 응답 → JSON 처리
+      return await res.json();
+    } else {
+      // ✅ 외부 API 응답 → XML/HTML 처리
+      const text = await res.text();
+      const parser = new DOMParser();
+      return parser.parseFromString(text, "text/xml");
+    }
+  } catch (err) {
+    console.error("API 호출 오류:", err);
+    return null;
+  }
+}
+
+
+/* ----------------1️⃣ 사용자 서버에서 데이터 가져오기 호출 (JSON 응답)---------------- */
 async function loadAdminLocations() {
   try {
-    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
-    adminLocations = await res.json(); // 배열 저장
-    console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+    const data = await fetchWithParsing(CONFIG.USER_URL + "?mode=getLocations");
+    if (Array.isArray(data)) {
+      adminLocations = data;
+      console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+    }
   } catch (err) {
     console.error("사용자 서버 호출 오류:", err);
   }
 }
 
+/* ---------------------- 2️⃣ 외부 API 호출 (XML/HTML 응답) ---------------------- */
+async function checkSpeedLimitZone(currentLat, currentLng) {
+  const url = `${CONFIG.SPEED_API_URL}?lat=${currentLat}&lng=${currentLng}`;
+  const result = await fetchWithParsing(url);
+
+  if (!result) return;
+
+  // ✅ 외부 API 응답(XML)
+  if (result instanceof Document) {
+    const speedNodes = result.getElementsByTagName("SpeedLimit");
+    if (speedNodes.length > 0) {
+      const limit = speedNodes[0].textContent;
+      console.log("외부 API 속도 제한:", limit);
+      speakMessage(`현재 구간의 제한 속도는 ${limit} 킬로미터입니다.`);
+    }
+  }
+}
+  
+  
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
@@ -1613,101 +1655,111 @@ async function findDestination(inputName, showPanel = true) {
     destinationLat = parseFloat(match.lat);
     destinationLng = parseFloat(match.lng);
     document.getElementById("startRouteBtn").style.display = "inline-block";
-    return Promise.resolve(true);
+    return true;
   }
 
-  // 2️⃣ 외부 API 검색 (전역 변수 활용)
-  const service = new google.maps.places.PlacesService(map);
-  return new Promise((resolve) => {
-    service.textSearch(
-      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
-      (results, status) => {
-        const panel = document.getElementById("searchResultPanel");
-        const body = panel.querySelector(".search-body");
+  // 2️⃣ 외부 API 검색 (Place API 활용)
+  const request = {
+    textQuery: inputName,
+    locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 5000 }
+  };
 
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          let html = results.map((r, idx) => `
-            <div class="search-item" data-index="${idx}">
-              <div class="search-title">📍 ${r.name}</div>
-              <div class="search-address">🏠 ${r.formatted_address}</div>
-            </div>
-          `).join("");
+  try {
+    const { places } = await google.maps.places.Place.searchByText(request);
 
-          body.innerHTML = html;
-          if (showPanel) panel.style.display = "block";
+    const panel = document.getElementById("searchResultPanel");
+    const body = panel.querySelector(".search-body");
 
-          // ✅ 첫 번째 결과를 자동으로 지도에 표시 (레벨 7 복구)
-          const first = results[0];
-          const p = first.geometry.location;
+    if (places && places.length > 0) {
+      let html = places.map((r, idx) => `
+        <div class="search-item" data-index="${idx}">
+          <div class="search-title">📍 ${r.displayName}</div>
+          <div class="search-address">🏠 ${r.formattedAddress || ""}</div>
+        </div>
+      `).join("");
+
+      body.innerHTML = html;
+      if (showPanel) panel.style.display = "block";
+
+      const first = places[0];
+      const p = first.location;
+      map.setCenter(p);
+      map.setZoom(7);
+      showDestinationOnMap(first.displayName, p.lat(), p.lng(), first.formattedAddress);
+
+      destinationLat = p.lat();
+      destinationLng = p.lng();
+      document.getElementById("destinationInput").value = first.displayName;
+      document.getElementById("startRouteBtn").style.display = "inline-block";
+
+      panel.style.display = "none";
+
+      body.querySelectorAll(".search-item").forEach((item) => {
+        item.addEventListener("click", async () => {
+          const idx = item.dataset.index;
+          const r = places[idx];
+          const p = r.location;
+
           map.setCenter(p);
-          map.setZoom(7); // ← 복구된 부분
-          showDestinationOnMap(first.name, p.lat(), p.lng(), first.formatted_address);
+          map.setZoom(16);
+          showDestinationOnMap(r.displayName, p.lat(), p.lng(), r.formattedAddress);
 
           destinationLat = p.lat();
           destinationLng = p.lng();
-          document.getElementById("destinationInput").value = first.name;
-          document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 검색결과 창 닫기
+          document.getElementById("destinationInput").value = r.displayName;
           panel.style.display = "none";
 
-          // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
-          body.querySelectorAll(".search-item").forEach((item) => {
-            item.addEventListener("click", () => {
-              const idx = item.dataset.index;
-              const r = results[idx];
-              const p = r.geometry.location;
+          try {
+            const detailRequest = {
+              placeId: r.id,
+              fields: ["formattedPhoneNumber","website","regularOpeningHours","rating","types"]
+            };
+            const detail = await google.maps.places.Place.details(detailRequest);
 
-              map.setCenter(p);
-              map.setZoom(16); // 상세 보기 확대
-              showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
-
-              destinationLat = p.lat();
-              destinationLng = p.lng();
-
-              document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none";
-
-              service.getDetails({
-                placeId: r.place_id,
-                fields: ["formatted_phone_number","website","opening_hours","rating","types"]
-              }, (place, detailStatus) => {
-                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                  const infoPanel = document.getElementById("destinationResult");
-                  infoPanel.innerHTML = `
-                    ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                    ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                    ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                    ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                    ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                  `;
-                }
-              });
-
-              document.getElementById("startRouteBtn").style.display = "inline-block";
-            });
-          });
-
-          resolve(true);
-        } else {
-          if (showPanel) {
-            body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-            panel.style.display = "block";
+            const infoPanel = document.getElementById("destinationResult");
+            infoPanel.innerHTML = `
+              ${detail.rating ? `<div class="search-rating">⭐ ${detail.rating}</div>` : ""}
+              ${detail.formattedPhoneNumber ? `<div class="search-phone">📞 ${detail.formattedPhoneNumber}</div>` : ""}
+              ${detail.website ? `<div class="search-website">🌐 <a href="${detail.website}" target="_blank">${detail.website}</a></div>` : ""}
+              ${detail.regularOpeningHours ? `<div class="search-hours">🕒 ${detail.regularOpeningHours.weekdayDescriptions.join("<br>")}</div>` : ""}
+              ${detail.types ? `<div class="search-type">🏷 ${detail.types.join(", ")}</div>` : ""}
+            `;
+          } catch (err) {
+            console.error("Place.details 호출 오류:", err);
           }
-          resolve(false);
-        }
+
+          document.getElementById("startRouteBtn").style.display = "inline-block";
+        });
+      });
+
+      return true;
+    } else {
+      if (showPanel) {
+        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+        panel.style.display = "block";
       }
-    );
-  });
+      return false;
+    }
+  } catch (err) {
+    console.error("Place.searchByText 호출 오류:", err);
+    return false;
+  }
 }
 
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
-navigator.geolocation.getCurrentPosition(
+navigator.geolocation.watchPosition(
   (pos) => {
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    console.log("📍 초기 위치:", currentLat, currentLng);
+    console.log("📍 현재 위치:", currentLat, currentLng);
+
+    // ✅ 위치 갱신 시 배열 기반 판정
+    checkSpeedLimit(currentLat, currentLng, adminLocations);
+    checkSchoolZones(currentLat, currentLng, adminLocations);
+    checkDynamicSpeedZones(currentLat, currentLng, adminLocations);
+    checkRadarPOIs({ lat: currentLat, lng: currentLng }, adminLocations);
   },
   (err) => {
     console.error("위치 가져오기 오류:", err);
@@ -1715,10 +1767,8 @@ navigator.geolocation.getCurrentPosition(
   { enableHighAccuracy: true }
 );
 
-
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  // ✅ 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
 
@@ -1727,10 +1777,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setCenter(pos);
   map.setZoom(7);
 
-  // ✅ 목적지를 찍으면 지도중심모드로 전환
   followUser = false;  
   
-  // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
@@ -1742,7 +1790,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 ----------------------
   const marker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1773,7 +1820,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -1795,14 +1841,12 @@ setInterval(async () => {
 
   if (Array.isArray(adminLocations)) {
     destinationMarkers.forEach(marker => {
-      // marker.title 에는 검색 시 넣어둔 phone 값이 들어있다고 가정
       const match = adminLocations.find(item => item.phone === marker.getTitle());
       if (match) {
         const newLat = parseFloat(match.lat);
         const newLng = parseFloat(match.lng);
         const pos = new google.maps.LatLng(newLat, newLng);
 
-        // 위치가 바뀌었으면 기존 마커를 옮겨줌
         if (marker.getPosition().lat() !== newLat ||
             marker.getPosition().lng() !== newLng) {
           marker.setPosition(pos);
@@ -1811,7 +1855,8 @@ setInterval(async () => {
       }
     });
   }
-}, 5 * 60 * 1000); // 5분마다 실행
+}, 5 * 60 * 1000); // 서버 갱신 주기와 동일하게 5분
+
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
