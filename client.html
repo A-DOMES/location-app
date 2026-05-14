@@ -1244,41 +1244,52 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
 }
 
   
-// ---------------------- 속도 제한 관련 ----------------------
-  
 // ---------------------- 어린이 보호구역 ----------------------
-function checkSchoolZones(currentLat, currentLng) {
-  const service = new google.maps.places.PlacesService(map);
-  service.nearbySearch({
-    location: { lat: currentLat, lng: currentLng },
-    radius: 10,
-    type: 'school'
-  }, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      results.forEach(school => {
-        const zoneCenter = school.geometry.location;
-        const distance = google.maps.geometry.spherical.computeDistanceBetween(
-          new google.maps.LatLng(currentLat, currentLng),
-          zoneCenter
-        );
+// 기존: google.maps.places.PlacesService 사용
+// 변경: google.maps.places.Place.searchNearby 사용 (Promise 기반)
 
-        // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
-        if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
-          lastSchoolZoneAlertTime = Date.now();
+async function checkSchoolZones(currentLat, currentLng) {
+  // ✅ 요청 객체: locationBias와 includedTypes 사용
+  const request = {
+    locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 10 },
+    includedTypes: ["school"]   // 기존 type: 'school' → includedTypes 배열로 변경
+  };
 
-          const message = `
-            어린이 보호구역입니다.<br>
-            제한 속도는 30 km/h 입니다.
-          `;
-          showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
-          showQueuedModal("학교 앞 경고", message);
-          speakMessage("어린이 보호구역입니다. 제한 속도는 30 킬로미터 입니다.");
-        }
-      });
-    }
-  });
+  try {
+    // ✅ PlacesService → Place API로 교체
+    const { places } = await google.maps.places.Place.searchNearby(request);
+
+    // ✅ 결과 처리
+    places.forEach(school => {
+      // 기존: school.geometry.location → 변경: school.location
+      const zoneCenter = school.location;
+
+      const distance = google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(currentLat, currentLng),
+        zoneCenter
+      );
+
+      // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
+      if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
+        lastSchoolZoneAlertTime = Date.now();
+
+        const message = `
+          어린이 보호구역입니다.<br>
+          제한 속도는 30 km/h 입니다.
+        `;
+
+        // 기존 로직 그대로 유지
+        showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
+        showQueuedModal("학교 앞 경고", message);
+        speakMessage("어린이 보호구역입니다. 제한 속도는 30 킬로미터 입니다.");
+      }
+    });
+  } catch (err) {
+    console.error("Place API 호출 오류:", err);
+  }
 }
 
+  
 // ---------------------- 동적 속도 제한 구역 ----------------------
 function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
   const currentKmh = currentSpeed * 3.6;
@@ -1365,7 +1376,7 @@ window.onload = async () => {
 
   // ✅ 입력하는 동안 자동검색 → 검색결과 패널에 표시
   const inputEl = document.getElementById("destinationInput");
-  inputEl.addEventListener("input", () => {
+  inputEl.addEventListener("input", async () => {
     if (!map) return; // map 준비 안 됐으면 실행 안 함
     const inputName = inputEl.value;
     const panel = document.getElementById("searchResultPanel");
@@ -1376,16 +1387,24 @@ window.onload = async () => {
       return;
     }
 
-    const service = new google.maps.places.PlacesService(map);
-    service.textSearch({ query: inputName, location: map.getCenter(), radius: 5000 }, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+    // ✅ PlacesService → Place API로 교체
+    const request = {
+      textQuery: inputName,
+      locationBias: { center: map.getCenter(), radius: 5000 }
+    };
+
+    try {
+      // ✅ Promise 기반 호출
+      const { places } = await google.maps.places.Place.searchByText(request);
+
+      if (places && places.length > 0) {
         let html = "";
-        results.forEach(r => {
-          // ✅ 카드형으로 정리된 검색결과
+        places.forEach(r => {
+          // ✅ displayName / formattedAddress 사용
           html += `
-            <div class="search-item" data-name="${r.name}">
-              <div class="search-title">📍 ${r.name}</div>
-              <div class="search-address">🏠 ${r.formatted_address}</div>
+            <div class="search-item" data-name="${r.displayName}">
+              <div class="search-title">📍 ${r.displayName}</div>
+              <div class="search-address">🏠 ${r.formattedAddress || ""}</div>
             </div>
           `;
         });
@@ -1403,8 +1422,14 @@ window.onload = async () => {
         body.innerHTML = "<div>검색 결과가 없습니다.</div>";
         panel.style.display = "block";
       }
-    });
+    } catch (err) {
+      console.error("Place API 호출 오류:", err);
+      body.innerHTML = "<div>검색 중 오류가 발생했습니다.</div>";
+      panel.style.display = "block";
+    }
   });
+};
+
 
 // ✅ 닫기 버튼 이벤트 추가
 document.getElementById("closeSearchPanel").addEventListener("click", () => {
@@ -1612,6 +1637,9 @@ async function loadAdminLocations() {
 }
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
+// 기존: google.maps.places.PlacesService 사용
+// 변경: google.maps.places.Place API 사용 (Promise 기반)
+
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
@@ -1628,93 +1656,102 @@ async function findDestination(inputName, showPanel = true) {
     destinationLat = parseFloat(match.lat);
     destinationLng = parseFloat(match.lng);
     document.getElementById("startRouteBtn").style.display = "inline-block";
-    return Promise.resolve(true);
+    return true;
   }
 
-  // 2️⃣ 외부 API 검색 (전역 변수 활용)
-  const service = new google.maps.places.PlacesService(map);
-  return new Promise((resolve) => {
-    service.textSearch(
-      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
-      (results, status) => {
-        const panel = document.getElementById("searchResultPanel");
-        const body = panel.querySelector(".search-body");
+  // 2️⃣ 외부 API 검색 (Place API 활용)
+  const request = {
+    textQuery: inputName,
+    locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 5000 }
+  };
 
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          let html = results.map((r, idx) => `
-            <div class="search-item" data-index="${idx}">
-              <div class="search-title">📍 ${r.name}</div>
-              <div class="search-address">🏠 ${r.formatted_address}</div>
-            </div>
-          `).join("");
+  try {
+    // ✅ textSearch → searchByText
+    const { places } = await google.maps.places.Place.searchByText(request);
 
-          body.innerHTML = html;
-          if (showPanel) panel.style.display = "block";
+    const panel = document.getElementById("searchResultPanel");
+    const body = panel.querySelector(".search-body");
 
-          // ✅ 첫 번째 결과를 자동으로 지도에 표시 (레벨 7 복구)
-          const first = results[0];
-          const p = first.geometry.location;
+    if (places && places.length > 0) {
+      let html = places.map((r, idx) => `
+        <div class="search-item" data-index="${idx}">
+          <div class="search-title">📍 ${r.displayName}</div>
+          <div class="search-address">🏠 ${r.formattedAddress || ""}</div>
+        </div>
+      `).join("");
+
+      body.innerHTML = html;
+      if (showPanel) panel.style.display = "block";
+
+      // ✅ 첫 번째 결과를 자동으로 지도에 표시
+      const first = places[0];
+      const p = first.location;
+      map.setCenter(p);
+      map.setZoom(7);
+      showDestinationOnMap(first.displayName, p.lat(), p.lng(), first.formattedAddress);
+
+      destinationLat = p.lat();
+      destinationLng = p.lng();
+      document.getElementById("destinationInput").value = first.displayName;
+      document.getElementById("startRouteBtn").style.display = "inline-block";
+
+      panel.style.display = "none";
+
+      // ✅ 클릭 시 다른 결과 선택 가능
+      body.querySelectorAll(".search-item").forEach((item) => {
+        item.addEventListener("click", async () => {
+          const idx = item.dataset.index;
+          const r = places[idx];
+          const p = r.location;
+
           map.setCenter(p);
-          map.setZoom(7); // ← 복구된 부분
-          showDestinationOnMap(first.name, p.lat(), p.lng(), first.formatted_address);
+          map.setZoom(16);
+          showDestinationOnMap(r.displayName, p.lat(), p.lng(), r.formattedAddress);
 
           destinationLat = p.lat();
           destinationLng = p.lng();
-          document.getElementById("destinationInput").value = first.name;
-          document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 검색결과 창 닫기
+          document.getElementById("destinationInput").value = r.displayName;
           panel.style.display = "none";
 
-          // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
-          body.querySelectorAll(".search-item").forEach((item) => {
-            item.addEventListener("click", () => {
-              const idx = item.dataset.index;
-              const r = results[idx];
-              const p = r.geometry.location;
+          // ✅ getDetails → Place.details
+          try {
+            const detailRequest = {
+              placeId: r.id,
+              fields: ["formattedPhoneNumber","website","regularOpeningHours","rating","types"]
+            };
+            const detail = await google.maps.places.Place.details(detailRequest);
 
-              map.setCenter(p);
-              map.setZoom(16); // 상세 보기 확대
-              showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
-
-              destinationLat = p.lat();
-              destinationLng = p.lng();
-
-              document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none";
-
-              service.getDetails({
-                placeId: r.place_id,
-                fields: ["formatted_phone_number","website","opening_hours","rating","types"]
-              }, (place, detailStatus) => {
-                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                  const infoPanel = document.getElementById("destinationResult");
-                  infoPanel.innerHTML = `
-                    ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                    ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                    ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                    ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                    ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                  `;
-                }
-              });
-
-              document.getElementById("startRouteBtn").style.display = "inline-block";
-            });
-          });
-
-          resolve(true);
-        } else {
-          if (showPanel) {
-            body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-            panel.style.display = "block";
+            const infoPanel = document.getElementById("destinationResult");
+            infoPanel.innerHTML = `
+              ${detail.rating ? `<div class="search-rating">⭐ ${detail.rating}</div>` : ""}
+              ${detail.formattedPhoneNumber ? `<div class="search-phone">📞 ${detail.formattedPhoneNumber}</div>` : ""}
+              ${detail.website ? `<div class="search-website">🌐 <a href="${detail.website}" target="_blank">${detail.website}</a></div>` : ""}
+              ${detail.regularOpeningHours ? `<div class="search-hours">🕒 ${detail.regularOpeningHours.weekdayDescriptions.join("<br>")}</div>` : ""}
+              ${detail.types ? `<div class="search-type">🏷 ${detail.types.join(", ")}</div>` : ""}
+            `;
+          } catch (err) {
+            console.error("Place.details 호출 오류:", err);
           }
-          resolve(false);
-        }
+
+          document.getElementById("startRouteBtn").style.display = "inline-block";
+        });
+      });
+
+      return true;
+    } else {
+      if (showPanel) {
+        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+        panel.style.display = "block";
       }
-    );
-  });
+      return false;
+    }
+  } catch (err) {
+    console.error("Place.searchByText 호출 오류:", err);
+    return false;
+  }
 }
+
 
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
@@ -2113,37 +2150,35 @@ async function showRouteToDestination(destination) {
 
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
-function checkRadarPOIs(myPos) {
-  const service = new google.maps.places.PlacesService(map);
+async function checkRadarPOIs(myPos) {
+  const request = {
+    locationBias: { center: myPos, radius: radarRadiusMeters },
+    includedTypes: ["cafe", "restaurant", "pharmacy", "gas_station"]
+  };
 
-  service.nearbySearch({
-    location: myPos,
-    radius: radarRadiusMeters,
-    type: ["cafe", "restaurant", "pharmacy", "gas_station"]
-  }, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      results.forEach(place => {
-        const poiPos = place.geometry.location;
-        const distance = google.maps.geometry.spherical.computeDistanceBetween(
-          new google.maps.LatLng(currentLat, currentLng),
-          poiPos
-        );
+  try {
+    const { places } = await google.maps.places.Place.searchNearby(request);
 
-        if (distance <= radarRadiusMeters) {
-          const message = `<div class="alert-message">
-            <p>📍 레이더 반경 내 탐지: ${place.name}</p>
-            <p>거리: ${distance.toFixed(1)} m</p>
-          </div>`;
+    places.forEach(place => {
+      const poiPos = place.location; // geometry.location 대신 location 사용
+      const distance = google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(currentLat, currentLng),
+        poiPos
+      );
 
-          // 모달창 표시
-          showQueuedModal("레이더 탐지", message);
+      if (distance <= radarRadiusMeters) {
+        const message = `<div class="alert-message">
+          <p>📍 레이더 반경 내 탐지: ${place.displayName}</p>
+          <p>거리: ${distance.toFixed(1)} m</p>
+        </div>`;
 
-          // 음성 안내 추가
-          speakMessage(`레이더 반경 내 ${place.name} 발견, 거리 ${distance.toFixed(0)} 미터`);
-        }
-      });
-    }
-  });
+        showQueuedModal("레이더 탐지", message);
+        speakMessage(`레이더 반경 내 ${place.displayName} 발견, 거리 ${distance.toFixed(0)} 미터`);
+      }
+    });
+  } catch (err) {
+    console.error("Place API 호출 오류:", err);
+  }
 }
 
 
