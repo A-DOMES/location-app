@@ -685,10 +685,10 @@ function initMap() {
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userPos);
 
-        // ✅ 내 위치 마커 생성
-        myMarker = new google.maps.Marker({
+        // ✅ 내 위치 마커 생성 (AdvancedMarkerElement)
+        myMarker = new google.maps.marker.AdvancedMarkerElement({
           position: userPos,
-          map,
+          map: map,
           title: "내 위치"
         });
 
@@ -801,12 +801,17 @@ function startTracking() {
       // ✅ 위치 표시 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
 
-      // ✅ 마커 이동
+      // ✅ 마커 이동 (AdvancedMarkerElement)
       if (!myMarker) {
-        myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
+        myMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat, lng },
+          map: map,
+          title: "내 위치"
+        });
       } else {
-        myMarker.setPosition({ lat, lng });
+        myMarker.position = { lat, lng }; // setPosition 대신 position 속성 갱신
       }
+
 
       // ✅ 지도 중심 이동 여부
       if (followUser) map.setCenter({ lat, lng });
@@ -1741,53 +1746,49 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 ----------------------
-  const marker = new google.maps.Marker({
-    position: pos,
-    map: map,
-    icon: {
-      path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
-      fillColor: "#FF3B3B",
-      fillOpacity: 0.95,
-      strokeColor: "#fff",
-      strokeWeight: 2,
-      scale: 2,
-      anchor: new google.maps.Point(12, 24)
-    },
-    animation: google.maps.Animation.BOUNCE,
-    title: title
-  });
+// ---------------------- 목적지 마커 ----------------------
+const marker = new google.maps.marker.AdvancedMarkerElement({
+  position: pos,
+  map: map,
+  title: title,
+  content: (() => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24">
+        <path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z"
+              fill="#FF3B3B" stroke="#fff" stroke-width="2"/>
+      </svg>`;
+    return div;
+  })()
+});
 
-  destinationMarkers.push(marker);
+destinationMarkers.push(marker);
 
-  const infoWindow = new google.maps.InfoWindow({
-    content: `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`
-  });
+const infoWindow = new google.maps.InfoWindow({
+  content: `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`
+});
 
-  marker.addListener("mouseover", () => infoWindow.open(map, marker));
-  marker.addListener("mouseout", () => infoWindow.close());
+marker.addListener("click", () => {
+  infoWindow.open(map, marker);
+  map.setCenter(pos);
+  map.setZoom(18);
 
-  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
-  marker.addListener("click", () => {
-    map.setCenter(pos);
-    map.setZoom(18);
+  document.getElementById("destinationResult").innerHTML = `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`;
 
-    document.getElementById("destinationResult").innerHTML = `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`;
-
-    openModal(document.getElementById("destinationModal"));
-  });
-}
-
+  openModal(document.getElementById("destinationModal"));
+});
+)
+  
 /* ---------------------- 5분마다 서버 위치 갱신 ---------------------- */
 setInterval(async () => {
   await loadAdminLocations(); // 서버에서 최신 위치 가져오기
