@@ -1014,7 +1014,6 @@ function updateTravelStats() {
 }
 
 
-
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
@@ -1245,29 +1244,14 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
 
   
 // ---------------------- 어린이 보호구역 ----------------------
-// 기존: google.maps.places.PlacesService 사용
-// 변경: google.maps.places.Place.searchNearby 사용 (Promise 기반)
+function checkSchoolZones(currentLat, currentLng) {
+  // ✅ 이미 갱신된 학교 위치 배열 사용 (외부 호출 제거)
+  if (Array.isArray(schoolZones)) {
+    schoolZones.forEach(school => {
+      const zoneLat = parseFloat(school.lat);
+      const zoneLng = parseFloat(school.lng);
 
-async function checkSchoolZones(currentLat, currentLng) {
-  // ✅ 요청 객체: locationBias와 includedTypes 사용
-  const request = {
-    locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 10 },
-    includedTypes: ["school"]   // 기존 type: 'school' → includedTypes 배열로 변경
-  };
-
-  try {
-    // ✅ PlacesService → Place API로 교체
-    const { places } = await google.maps.places.Place.searchNearby(request);
-
-    // ✅ 결과 처리
-    places.forEach(school => {
-      // 기존: school.geometry.location → 변경: school.location
-      const zoneCenter = school.location;
-
-      const distance = google.maps.geometry.spherical.computeDistanceBetween(
-        new google.maps.LatLng(currentLat, currentLng),
-        zoneCenter
-      );
+      const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
       // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
       if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
@@ -1278,14 +1262,13 @@ async function checkSchoolZones(currentLat, currentLng) {
           제한 속도는 30 km/h 입니다.
         `;
 
-        // 기존 로직 그대로 유지
         showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
         showQueuedModal("학교 앞 경고", message);
         speakMessage("어린이 보호구역입니다. 제한 속도는 30 킬로미터 입니다.");
       }
     });
-  } catch (err) {
-    console.error("Place API 호출 오류:", err);
+  } else {
+    console.warn("⚠️ 학교 보호구역 데이터가 배열에 없습니다.");
   }
 }
 
@@ -1293,72 +1276,58 @@ async function checkSchoolZones(currentLat, currentLng) {
 // ---------------------- 동적 속도 제한 구역 ----------------------
 function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
   const currentKmh = currentSpeed * 3.6;
-  fetch(`https://api.data.go.kr/openapi/tn_pubr_public_speed_limit_zone_api?serviceKey=YOUR_SERVICE_KEY&numOfRows=10&pageNo=1&latitude=${currentLat}&longitude=${currentLng}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data?.response?.body?.items) {
-        data.response.body.items.forEach(zone => {
-          const limit = zone.lmtSpd;
-          const zoneLat = parseFloat(zone.lat);
-          const zoneLng = parseFloat(zone.lng);
-          const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
-          // ✅ 거리 조건 + 알림 빈도 제어 (50m 이내, 1분 간격)
-          if (distance <= 50 && (!lastDynamicZoneAlertTime || Date.now() - lastDynamicZoneAlertTime > 60000)) {
-            lastDynamicZoneAlertTime = Date.now();
+  // ✅ 이미 갱신된 동적 제한 구역 배열 사용 (외부 호출 제거)
+  if (Array.isArray(dynamicSpeedZones)) {
+    dynamicSpeedZones.forEach(zone => {
+      const limit = zone.lmtSpd;
+      const zoneLat = parseFloat(zone.lat);
+      const zoneLng = parseFloat(zone.lng);
+      const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
-            const message = `
-              동적 제한 구역입니다.<br>
-              제한 속도는 ${limit} km/h 입니다.
-            `;
-            showZoneAlert("속도 제한 구역", distance, limit, currentKmh, lastDynamicZoneAlertTime);
-            showQueuedModal("동적 제한 안내", message);
-            speakMessage(`동적 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
-          }
-        });
+      // ✅ 거리 조건 + 알림 빈도 제어 (50m 이내, 1분 간격)
+      if (distance <= 50 && (!lastDynamicZoneAlertTime || Date.now() - lastDynamicZoneAlertTime > 60000)) {
+        lastDynamicZoneAlertTime = Date.now();
+
+        const message = `
+          동적 제한 구역입니다.<br>
+          제한 속도는 ${limit} km/h 입니다.
+        `;
+        showZoneAlert("속도 제한 구역", distance, limit, currentKmh, lastDynamicZoneAlertTime);
+        showQueuedModal("동적 제한 안내", message);
+        speakMessage(`동적 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
       }
-    })
-    .catch(err => console.error("속도 제한 구역 API 호출 오류:", err));
+    });
+  } else {
+    console.warn("⚠️ 동적 제한 구역 데이터가 배열에 없습니다.");
+  }
 }
+
 
 // ---------------------- 일반 속도 제한 ----------------------
 function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
-  const snapUrl = `https://roads.googleapis.com/v1/snapToRoads?path=${currentLat},${currentLng}&key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY`;
+  const currentKmh = currentSpeed * 3.6;
 
-  fetch(snapUrl)
-    .then(res => res.json())
-    .then(snapData => {
-      if (snapData.snappedPoints?.length > 0) {
-        const placeId = snapData.snappedPoints[0].placeId;
-        return fetch(`https://roads.googleapis.com/v1/speedLimits?placeId=${placeId}&key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY`);
-      }
-    })
-    .then(res => res ? res.json() : null)
-    .then(limitData => {
-      if (limitData?.speedLimits?.length > 0) {
-        const limit = limitData.speedLimits[0].speedLimit;
-        const currentKmh = currentSpeed * 3.6;
+  // ✅ 이미 갱신된 제한 속도 값 사용 (외부 호출 제거)
+  const limit = currentSpeedLimit ?? null;
 
-        // ✅ 알림 빈도 제어 (1분 간격)
-        if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
-          lastSpeedLimitAlertTime = Date.now();
+  if (limit) {
+    // ✅ 알림 빈도 제어 (1분 간격)
+    if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
+      lastSpeedLimitAlertTime = Date.now();
 
-          const message = `
-            속도 제한 구역입니다.<br>
-            제한 속도는 ${limit} km/h 입니다.
-          `;
-          showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
-          showQueuedModal("속도 제한 안내", message);
-          speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
-        }
-      }
-    })
-    .catch(err => {
-      console.error("속도 제한 구역 API 호출 오류:", err);
-      showQueuedModal("속도 제한 오류", "<p>속도 제한 정보를 가져올 수 없습니다.</p>");
-    });
+      const message = `
+        속도 제한 구역입니다.<br>
+        제한 속도는 ${limit} km/h 입니다.
+      `;
+      showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
+      showQueuedModal("속도 제한 안내", message);
+      speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
+    }
+  } else {
+    console.warn("⚠️ 제한 속도 정보가 전역변수에 없습니다.");
+  }
 }
-
 
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
@@ -1623,23 +1592,61 @@ function makeDraggableModal(element) {
   });
 }
 
+/* ---------------------- 공통 fetch 함수 ---------------------- */
+async function fetchWithParsing(url) {
+  try {
+    const res = await fetch(url);
+    const contentType = res.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+      // ✅ 내 서버 응답 → JSON 처리
+      return await res.json();
+    } else {
+      // ✅ 외부 API 응답 → XML/HTML 처리
+      const text = await res.text();
+      const parser = new DOMParser();
+      return parser.parseFromString(text, "text/xml");
+    }
+  } catch (err) {
+    console.error("API 호출 오류:", err);
+    return null;
+  }
+}
 
 
-/* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
+/* ----------------1️⃣ 사용자 서버에서 데이터 가져오기 호출 (JSON 응답)---------------- */
 async function loadAdminLocations() {
   try {
-    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
-    adminLocations = await res.json(); // 배열 저장
-    console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+    const data = await fetchWithParsing(CONFIG.USER_URL + "?mode=getLocations");
+    if (Array.isArray(data)) {
+      adminLocations = data;
+      console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+    }
   } catch (err) {
     console.error("사용자 서버 호출 오류:", err);
   }
 }
 
-/* ---------------------- 목적지 검색 기능 ---------------------- */
-// 기존: google.maps.places.PlacesService 사용
-// 변경: google.maps.places.Place API 사용 (Promise 기반)
+/* ---------------------- 2️⃣ 외부 API 호출 (XML/HTML 응답) ---------------------- */
+async function checkSpeedLimitZone(currentLat, currentLng) {
+  const url = `${CONFIG.SPEED_API_URL}?lat=${currentLat}&lng=${currentLng}`;
+  const result = await fetchWithParsing(url);
 
+  if (!result) return;
+
+  // ✅ 외부 API 응답(XML)
+  if (result instanceof Document) {
+    const speedNodes = result.getElementsByTagName("SpeedLimit");
+    if (speedNodes.length > 0) {
+      const limit = speedNodes[0].textContent;
+      console.log("외부 API 속도 제한:", limit);
+      speakMessage(`현재 구간의 제한 속도는 ${limit} 킬로미터입니다.`);
+    }
+  }
+}
+  
+  
+/* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let match = null;
@@ -1666,7 +1673,6 @@ async function findDestination(inputName, showPanel = true) {
   };
 
   try {
-    // ✅ textSearch → searchByText
     const { places } = await google.maps.places.Place.searchByText(request);
 
     const panel = document.getElementById("searchResultPanel");
@@ -1683,7 +1689,6 @@ async function findDestination(inputName, showPanel = true) {
       body.innerHTML = html;
       if (showPanel) panel.style.display = "block";
 
-      // ✅ 첫 번째 결과를 자동으로 지도에 표시
       const first = places[0];
       const p = first.location;
       map.setCenter(p);
@@ -1697,7 +1702,6 @@ async function findDestination(inputName, showPanel = true) {
 
       panel.style.display = "none";
 
-      // ✅ 클릭 시 다른 결과 선택 가능
       body.querySelectorAll(".search-item").forEach((item) => {
         item.addEventListener("click", async () => {
           const idx = item.dataset.index;
@@ -1714,7 +1718,6 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = r.displayName;
           panel.style.display = "none";
 
-          // ✅ getDetails → Place.details
           try {
             const detailRequest = {
               placeId: r.id,
@@ -1753,13 +1756,18 @@ async function findDestination(inputName, showPanel = true) {
 }
 
 
-
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
-navigator.geolocation.getCurrentPosition(
+navigator.geolocation.watchPosition(
   (pos) => {
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    console.log("📍 초기 위치:", currentLat, currentLng);
+    console.log("📍 현재 위치:", currentLat, currentLng);
+
+    // ✅ 위치 갱신 시 배열 기반 판정
+    checkSpeedLimit(currentLat, currentLng, adminLocations);
+    checkSchoolZones(currentLat, currentLng, adminLocations);
+    checkDynamicSpeedZones(currentLat, currentLng, adminLocations);
+    checkRadarPOIs({ lat: currentLat, lng: currentLng }, adminLocations);
   },
   (err) => {
     console.error("위치 가져오기 오류:", err);
@@ -1767,10 +1775,8 @@ navigator.geolocation.getCurrentPosition(
   { enableHighAccuracy: true }
 );
 
-
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  // ✅ 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
 
@@ -1779,10 +1785,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setCenter(pos);
   map.setZoom(7);
 
-  // ✅ 목적지를 찍으면 지도중심모드로 전환
   followUser = false;  
   
-  // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
@@ -1794,7 +1798,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 ----------------------
   const marker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1825,7 +1828,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -1847,14 +1849,12 @@ setInterval(async () => {
 
   if (Array.isArray(adminLocations)) {
     destinationMarkers.forEach(marker => {
-      // marker.title 에는 검색 시 넣어둔 phone 값이 들어있다고 가정
       const match = adminLocations.find(item => item.phone === marker.getTitle());
       if (match) {
         const newLat = parseFloat(match.lat);
         const newLng = parseFloat(match.lng);
         const pos = new google.maps.LatLng(newLat, newLng);
 
-        // 위치가 바뀌었으면 기존 마커를 옮겨줌
         if (marker.getPosition().lat() !== newLat ||
             marker.getPosition().lng() !== newLng) {
           marker.setPosition(pos);
@@ -1863,7 +1863,7 @@ setInterval(async () => {
       }
     });
   }
-}, 5 * 60 * 1000); // 5분마다 실행
+}, 5 * 60 * 1000); // 서버 갱신 주기와 동일하게 5분
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
