@@ -1983,115 +1983,85 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
 // ---------------------- 경로 안내 함수 ----------------------
 async function showRouteToDestination(destination) {
-  // 기존 렌더러 제거
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
-  }
+  // 목적지 좌표 저장
+  destinationLat = destination.lat;
+  destinationLng = destination.lng;
 
-  // 새 렌더러 준비 (폴리라인 직접 그리기)
-  destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#0000FF",
-    strokeWeight: 4,
-    strokeOpacity: 0.8,
-    map: map
+  // 목적지 마커 표시
+  const marker = new google.maps.Marker({
+    map,
+    position: { lat: destinationLat, lng: destinationLng },
+    title: "목적지"
   });
+  destinationMarkers.push(marker);
 
-  try {
-    const routeService = new google.maps.routes.RouteService();
+  // ✅ 운행 안내 시작
+  speakMessage("운행 안내를 시작합니다.");
 
-    const result = await routeService.computeRoutes({
-      origin: {
-        location: { latLng: { latitude: currentLat, longitude: currentLng } }
-      },
-      destination: {
-        location: { latLng: { latitude: destination.lat, longitude: destination.lng } }
-      },
-      travelMode: "DRIVE",
-      routingPreference: "TRAFFIC_AWARE"
-    });
-
-    if (result.routes && result.routes.length > 0) {
-      const route = result.routes[0];
-
-      // 목적지 좌표 저장
-      destinationLat = destination.lat;
-      destinationLng = destination.lng;
-
-      // 목적지 마커 표시
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: destinationLat, lng: destinationLng },
-        title: "목적지"
-      });
-      destinationMarkers.push(marker);
-
-      // 경로 폴리라인 표시
-      if (route.polyline && route.polyline.encodedPolyline) {   // ✅ 조건 추가
-        const path = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
-        destinationRenderer.setPath(path);
-      }
-
-      // 안내 메시지 (예상 거리/시간 + 실제 누적 거리)
-      let instructions = "<div style='text-align:left; font-size:14px;'>";
-      instructions += `<p>총 거리(예상): ${(route.distanceMeters / 1000).toFixed(2)} km</p>`;
-      instructions += `<p>예상 소요 시간: ${(route.duration.seconds / 60).toFixed(0)} 분</p>`;
-      instructions += `<p>현재까지 이동 거리: ${totalDistance} km</p>`;
-      instructions += "</div>";
-
-      showQueuedModal("경로 안내", instructions);
-      speakMessage("경로 안내를 시작합니다.");
-
-    } else {
-      console.error("경로 안내 실패: 결과 없음");
-      showQueuedModal("경로 안내 오류", `<p>경로를 찾을 수 없습니다.</p>`);
-      speakMessage("경로를 찾을 수 없습니다.");
-    }
-  } catch (error) {
-    console.error("경로 안내 오류:", error);
-    showQueuedModal("경로 안내 오류", `<p>경로 안내 중 오류가 발생했습니다.</p>`);
-    speakMessage("경로 안내 중 오류가 발생했습니다.");
-  }
-
-  // ✅ 실시간 이동 경로 추적 + 총 이동 거리 계산 + 목적지 반경 체크
+  // 실시간 이동 추적
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
+      currentSpeed = (pos.coords.speed || 0) * 3.6; // km/h
 
-      // 경로 보정 함수 활용
-      updatePathPolyline(currentLat, currentLng);
+      // 배열에 저장
+      pathCoords.push({ lat: currentLat, lng: currentLng });
+      speedHistory.push(currentSpeed);
 
-      // 총 이동 거리 계산
-      totalDistance = computeTotalDistance(pathCoords);
+      // 총 이동 거리
+      const totalDistKm = computeTotalDistance(pathCoords).toFixed(2);
 
-      // 화면에 표시 (예시)
-      const travelStatsEl = document.getElementById("travelStatsContent");
-      if (travelStatsEl) {
-        travelStatsEl.innerHTML = `
-          🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
-          📏 총 이동 거리: ${totalDistance} km
-        `;
+      // 직선 거리
+      const currPoint = new google.maps.LatLng(currentLat, currentLng);
+      const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
+      const straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(2);
+
+      // 평균/최고 속도
+      const avgSpeed = (speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length).toFixed(1);
+      const maxSpeed = Math.max(...speedHistory).toFixed(1);
+
+      // 주행 시간
+      const travelTimeMin = ((Date.now() - startTime) / 60000).toFixed(0);
+
+      // ETA 계산
+      let etaMsg = "계산 불가";
+      if (avgSpeed > 0) {
+        const etaMinutes = (straightDistKm / avgSpeed * 60).toFixed(0);
+        const etaTime = new Date(Date.now() + etaMinutes*60000).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+        etaMsg = `${etaTime} (약 ${etaMinutes}분 후)`;
       }
 
-      // ✅ 목적지 반경 체크 (15m 이내 도착 시 안내 종료)
-      if (destinationLat && destinationLng) {
-        const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
-        const currPoint = new google.maps.LatLng(currentLat, currentLng);
-        const distanceToDest = google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint);
+      // 모달창 표시
+      const statsHtml = `
+        <div style="text-align:left; font-size:14px;">
+          🚗 현재 속도: ${currentSpeed.toFixed(1)} km/h<br>
+          📊 평균 속도: ${avgSpeed} km/h<br>
+          ⚡ 최고 속도: ${maxSpeed} km/h<br>
+          ⏱ 주행 시간: ${travelTimeMin} 분<br>
+          📏 총 이동 거리: ${totalDistKm} km<br>
+          📐 직선 거리: ${straightDistKm} km<br>
+          🕒 예상 도착 시간: ${etaMsg}
+        </div>
+      `;
+      document.getElementById("travelStatsContent").innerHTML = statsHtml;
 
-        if (distanceToDest <= 15) { // 15m 반경
-          speakMessage("목적지에 도착했습니다!");
-          resetNavigation(true);
-          navigator.geolocation.clearWatch(watchId); // 추적 종료
-        }
+      // 목적지 반경 체크
+      const distanceToDest = google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint);
+      if (distanceToDest <= 15) {
+        speakMessage("목적지에 도착했습니다!");
+        resetNavigation(true);
+        navigator.geolocation.clearWatch(watchId);
       }
 
       if (followUser) {
         map.setCenter({ lat: currentLat, lng: currentLng });
       }
     },
-    (err) => console.error("위치 추적 오류:", err),
+    (err) => {
+      console.error("운행 안내 오류:", err);
+      speakMessage("운행 안내 중 오류가 발생했습니다.");
+    },
     { enableHighAccuracy: true }
   );
 }
