@@ -1584,7 +1584,6 @@ function makeDraggableModal(element) {
 }
 
 
-
 /* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
 async function loadAdminLocations() {
   try {
@@ -1722,14 +1721,14 @@ function showDestinationOnMap(title, lat, lng, address="") {
   destinationLat = lat;
   destinationLng = lng;
 
-  const pos = { lat: lat, lng: lng }; // LatLngLiteral
+  const pos = new google.maps.LatLng(lat, lng);
 
   map.setCenter(pos);
   map.setZoom(7);
 
   // ✅ 목적지를 찍으면 지도중심모드로 전환
   followUser = false;  
-
+  
   // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
@@ -1742,28 +1741,25 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 (AdvancedMarkerElement) ----------------------
-  const svgIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24">
-      <path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z"
-            fill="#FF3B3B" stroke="#fff" stroke-width="2"/>
-    </svg>
-  `;
-
-  const marker = new google.maps.marker.AdvancedMarkerElement({
-    map: map,
+  // ---------------------- 목적지 마커 ----------------------
+  const marker = new google.maps.Marker({
     position: pos,
-    title: title,
-    content: (() => {
-      const div = document.createElement("div");
-      div.innerHTML = svgIcon;
-      return div;
-    })()
+    map: map,
+    icon: {
+      path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
+      fillColor: "#FF3B3B",
+      fillOpacity: 0.95,
+      strokeColor: "#fff",
+      strokeWeight: 2,
+      scale: 2,
+      anchor: new google.maps.Point(12, 24)
+    },
+    animation: google.maps.Animation.BOUNCE,
+    title: title
   });
 
   destinationMarkers.push(marker);
 
-  // ---------------------- 정보창 ----------------------
   const infoWindow = new google.maps.InfoWindow({
     content: `
       <div style="text-align:left">
@@ -1773,10 +1769,10 @@ function showDestinationOnMap(title, lat, lng, address="") {
       </div>`
   });
 
-  // ✅ 이벤트 연결
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
+  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -1903,13 +1899,9 @@ function initAutocomplete() {
 
     console.log("✅ 자동완성 선택됨:", place.name, lat, lng);
 
-    // ✅ 목적지 표시
     showDestinationOnMap(place.name, lat, lng, address);
 
-    // ✅ 목적지 좌표 기록
-    destinationLat = lat;
-    destinationLng = lng;
-
+    // ✅ 목적지도 배열에 기록
     pathCoords.push({
       lat,
       lng,
@@ -1919,7 +1911,7 @@ function initAutocomplete() {
 
     document.getElementById("startRouteBtn").style.display = "inline-block";
   });
- } 
+}
 
 /* ---------------------- 음성 안내 함수 ---------------------- */
 function speakMessage(message) {
@@ -2027,27 +2019,12 @@ async function showRouteToDestination(destination) {
       destinationLng = destination.lng;
 
       // 목적지 마커 표시
-      const svgIcon = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24">
-          <path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z"
-                fill="#FF3B3B" stroke="#fff" stroke-width="2"/>
-        </svg>
-      `;
-      
       const marker = new google.maps.marker.AdvancedMarkerElement({
-        map: map,
-        position: { lat: lat, lng: lng },   // ✅ LatLngLiteral 사용
-        title: title,
-        content: (() => {
-          const div = document.createElement("div");
-          div.innerHTML = svgIcon;
-          return div;
-        })()
+        map,
+        position: { lat: destinationLat, lng: destinationLng },
+        title: "목적지"
       });
-      
-      // ✅ 배열에 저장
       destinationMarkers.push(marker);
-
 
       // 경로 폴리라인 표시
       if (route.polyline && route.polyline.encodedPolyline) {   // ✅ 조건 추가
