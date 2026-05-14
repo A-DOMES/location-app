@@ -1747,21 +1747,22 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 
   // ---------------------- 목적지 마커 ----------------------
-  const marker = new google.maps.marker.AdvancedMarkerElement({
+  const marker = new google.maps.Marker({
     position: pos,
     map: map,
-    title: title,
-    content: (() => {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#FF3B3B" stroke="#fff" stroke-width="2">
-          <path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z"/>
-        </svg>
-      `;
-      return div;
-    })()
+    icon: {
+      path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
+      fillColor: "#FF3B3B",
+      fillOpacity: 0.95,
+      strokeColor: "#fff",
+      strokeWeight: 2,
+      scale: 2,
+      anchor: new google.maps.Point(12, 24)
+    },
+    animation: google.maps.Animation.BOUNCE,
+    title: title
   });
-  
+
   destinationMarkers.push(marker);
 
   const infoWindow = new google.maps.InfoWindow({
