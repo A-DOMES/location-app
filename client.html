@@ -518,6 +518,15 @@ let lastTimestamp = null;   // 이전 위치 시간 저장
 // 🚗 서버에서 가져온 차량 위치 데이터
 let adminLocations = []; 
 
+// 🚸 어린이 보호구역 데이터
+let schoolZones = []; 
+
+// ⚡ 동적 속도 제한 구역 데이터
+let dynamicSpeedZones = []; 
+
+// 제한 속도 값 (일반 속도 제한)
+let currentSpeedLimit = null; 
+
 // 기본값: 사람 중심 모드
 let followUser = true; 
 
@@ -535,6 +544,7 @@ let lastLng = null;
 let avgSpeed = 0;
 let maxSpeed = 0;
 let lastUpdateTime = 0;   // 갱신 주기 제어용
+
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
