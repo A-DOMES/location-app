@@ -518,15 +518,6 @@ let lastTimestamp = null;   // 이전 위치 시간 저장
 // 🚗 서버에서 가져온 차량 위치 데이터
 let adminLocations = []; 
 
-// 🚸 어린이 보호구역 데이터
-let schoolZones = []; 
-
-// ⚡ 동적 속도 제한 구역 데이터
-let dynamicSpeedZones = []; 
-
-// 제한 속도 값 (일반 속도 제한)
-let currentSpeedLimit = null; 
-
 // 기본값: 사람 중심 모드
 let followUser = true; 
 
@@ -544,7 +535,6 @@ let lastLng = null;
 let avgSpeed = 0;
 let maxSpeed = 0;
 let lastUpdateTime = 0;   // 갱신 주기 제어용
-
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -1342,7 +1332,8 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
   }
 }
 
-  
+
+
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
   // 1️⃣ 사용자 서버에서 데이터 가져오기
@@ -1594,60 +1585,17 @@ function makeDraggableModal(element) {
 
 
 
-/* ---------------------- 공통 fetch 함수 ---------------------- */
-async function fetchWithParsing(url) {
-  try {
-    const res = await fetch(url);
-    const contentType = res.headers.get("content-type");
-
-    if (contentType && contentType.includes("application/json")) {
-      // ✅ 내 서버 응답 → JSON 처리
-      return await res.json();
-    } else {
-      // ✅ 외부 API 응답 → XML/HTML 처리
-      const text = await res.text();
-      const parser = new DOMParser();
-      return parser.parseFromString(text, "text/xml");
-    }
-  } catch (err) {
-    console.error("API 호출 오류:", err);
-    return null;
-  }
-}
-
-
-/* ----------------1️⃣ 사용자 서버에서 데이터 가져오기 호출 (JSON 응답)---------------- */
+/* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
 async function loadAdminLocations() {
   try {
-    const data = await fetchWithParsing(CONFIG.USER_URL + "?mode=getLocations");
-    if (Array.isArray(data)) {
-      adminLocations = data;
-      console.log("사용자 서버에서 가져온 데이터:", adminLocations);
-    }
+    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
+    adminLocations = await res.json(); // 배열 저장
+    console.log("사용자 서버에서 가져온 데이터:", adminLocations);
   } catch (err) {
     console.error("사용자 서버 호출 오류:", err);
   }
 }
 
-/* ---------------------- 2️⃣ 외부 API 호출 (XML/HTML 응답) ---------------------- */
-async function checkSpeedLimitZone(currentLat, currentLng) {
-  const url = `${CONFIG.SPEED_API_URL}?lat=${currentLat}&lng=${currentLng}`;
-  const result = await fetchWithParsing(url);
-
-  if (!result) return;
-
-  // ✅ 외부 API 응답(XML)
-  if (result instanceof Document) {
-    const speedNodes = result.getElementsByTagName("SpeedLimit");
-    if (speedNodes.length > 0) {
-      const limit = speedNodes[0].textContent;
-      console.log("외부 API 속도 제한:", limit);
-      speakMessage(`현재 구간의 제한 속도는 ${limit} 킬로미터입니다.`);
-    }
-  }
-}
-
-  
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
@@ -1753,19 +1701,13 @@ async function findDestination(inputName, showPanel = true) {
   });
 }
 
+
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
-navigator.geolocation.watchPosition(
+navigator.geolocation.getCurrentPosition(
   (pos) => {
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
-    currentSpeed = pos.coords.speed || 0; // ✅ 속도 값 갱신
-    console.log("📍 현재 위치:", currentLat, currentLng);
-
-    // ✅ 위치 갱신 시 배열 기반 판정
-    checkSpeedLimit(currentLat, currentLng, currentSpeed);
-    checkSchoolZones(currentLat, currentLng);
-    checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
-    checkRadarPOIs({ lat: currentLat, lng: currentLng });
+    console.log("📍 초기 위치:", currentLat, currentLng);
   },
   (err) => {
     console.error("위치 가져오기 오류:", err);
@@ -1773,8 +1715,10 @@ navigator.geolocation.watchPosition(
   { enableHighAccuracy: true }
 );
 
+
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
+  // ✅ 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
 
@@ -1783,8 +1727,10 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setCenter(pos);
   map.setZoom(7);
 
+  // ✅ 목적지를 찍으면 지도중심모드로 전환
   followUser = false;  
   
+  // ---------------------- 목적지 원형 ----------------------
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
@@ -1796,6 +1742,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
+  // ---------------------- 목적지 마커 ----------------------
   const marker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -1826,6 +1773,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
+  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -1847,12 +1795,14 @@ setInterval(async () => {
 
   if (Array.isArray(adminLocations)) {
     destinationMarkers.forEach(marker => {
+      // marker.title 에는 검색 시 넣어둔 phone 값이 들어있다고 가정
       const match = adminLocations.find(item => item.phone === marker.getTitle());
       if (match) {
         const newLat = parseFloat(match.lat);
         const newLng = parseFloat(match.lng);
         const pos = new google.maps.LatLng(newLat, newLng);
 
+        // 위치가 바뀌었으면 기존 마커를 옮겨줌
         if (marker.getPosition().lat() !== newLat ||
             marker.getPosition().lng() !== newLng) {
           marker.setPosition(pos);
@@ -1861,7 +1811,7 @@ setInterval(async () => {
       }
     });
   }
-}, 5 * 60 * 1000); // 서버 갱신 주기와 동일하게 5분
+}, 5 * 60 * 1000); // 5분마다 실행
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
