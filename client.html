@@ -2021,10 +2021,13 @@ async function showRouteToDestination(destination) {
 
       // 목적지 마커 표시
       const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: destinationLat, lng: destinationLng },
-        title: "목적지"
+        map: map,
+        position: { lat: lat, lng: lng },   // ✅ LatLngLiteral 사용
+        title: title,
+        content: document.createElement("div") // ✅ 커스텀 아이콘 대신 content 사용 가능
       });
+      
+      // ✅ 기존처럼 배열에 저장
       destinationMarkers.push(marker);
 
       // 경로 폴리라인 표시
