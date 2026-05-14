@@ -1753,13 +1753,14 @@ navigator.geolocation.watchPosition(
   (pos) => {
     currentLat = pos.coords.latitude;
     currentLng = pos.coords.longitude;
+    currentSpeed = pos.coords.speed || 0; // ✅ 속도 값 갱신
     console.log("📍 현재 위치:", currentLat, currentLng);
 
     // ✅ 위치 갱신 시 배열 기반 판정
-    checkSpeedLimit(currentLat, currentLng, adminLocations);
-    checkSchoolZones(currentLat, currentLng, adminLocations);
-    checkDynamicSpeedZones(currentLat, currentLng, adminLocations);
-    checkRadarPOIs({ lat: currentLat, lng: currentLng }, adminLocations);
+    checkSpeedLimit(currentLat, currentLng, currentSpeed);
+    checkSchoolZones(currentLat, currentLng);
+    checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
+    checkRadarPOIs({ lat: currentLat, lng: currentLng });
   },
   (err) => {
     console.error("위치 가져오기 오류:", err);
@@ -1856,7 +1857,6 @@ setInterval(async () => {
     });
   }
 }, 5 * 60 * 1000); // 서버 갱신 주기와 동일하게 5분
-
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
