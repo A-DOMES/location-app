@@ -1248,105 +1248,90 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) 
   
 // ---------------------- 어린이 보호구역 ----------------------
 function checkSchoolZones(currentLat, currentLng) {
-  const service = new google.maps.places.PlacesService(map);
-  service.nearbySearch({
-    location: { lat: currentLat, lng: currentLng },
-    radius: 10,
-    type: 'school'
-  }, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      results.forEach(school => {
-        const zoneCenter = school.geometry.location;
-        const distance = google.maps.geometry.spherical.computeDistanceBetween(
-          new google.maps.LatLng(currentLat, currentLng),
-          zoneCenter
-        );
+  // ✅ 이미 갱신된 학교 위치 배열 사용 (외부 호출 제거)
+  if (Array.isArray(schoolZones)) {
+    schoolZones.forEach(school => {
+      const zoneLat = parseFloat(school.lat);
+      const zoneLng = parseFloat(school.lng);
 
-        // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
-        if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
-          lastSchoolZoneAlertTime = Date.now();
+      const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
-          const message = `
-            어린이 보호구역입니다.<br>
-            제한 속도는 30 km/h 입니다.
-          `;
-          showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
-          showQueuedModal("학교 앞 경고", message);
-          speakMessage("어린이 보호구역입니다. 제한 속도는 30 킬로미터 입니다.");
-        }
-      });
-    }
-  });
+      // ✅ 거리 조건 + 알림 빈도 제어 (10m 이내, 1분 간격)
+      if (distance <= 10 && (!lastSchoolZoneAlertTime || Date.now() - lastSchoolZoneAlertTime > 60000)) {
+        lastSchoolZoneAlertTime = Date.now();
+
+        const message = `
+          어린이 보호구역입니다.<br>
+          제한 속도는 30 km/h 입니다.
+        `;
+
+        showZoneAlert("어린이 보호구역", distance, 30, null, lastSchoolZoneAlertTime);
+        showQueuedModal("학교 앞 경고", message);
+        speakMessage("어린이 보호구역입니다. 제한 속도는 30 킬로미터 입니다.");
+      }
+    });
+  } else {
+    console.warn("⚠️ 학교 보호구역 데이터가 배열에 없습니다.");
+  }
 }
 
+  
 // ---------------------- 동적 속도 제한 구역 ----------------------
 function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
   const currentKmh = currentSpeed * 3.6;
-  fetch(`https://api.data.go.kr/openapi/tn_pubr_public_speed_limit_zone_api?serviceKey=YOUR_SERVICE_KEY&numOfRows=10&pageNo=1&latitude=${currentLat}&longitude=${currentLng}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data?.response?.body?.items) {
-        data.response.body.items.forEach(zone => {
-          const limit = zone.lmtSpd;
-          const zoneLat = parseFloat(zone.lat);
-          const zoneLng = parseFloat(zone.lng);
-          const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
-          // ✅ 거리 조건 + 알림 빈도 제어 (50m 이내, 1분 간격)
-          if (distance <= 50 && (!lastDynamicZoneAlertTime || Date.now() - lastDynamicZoneAlertTime > 60000)) {
-            lastDynamicZoneAlertTime = Date.now();
+  // ✅ 이미 갱신된 동적 제한 구역 배열 사용 (외부 호출 제거)
+  if (Array.isArray(dynamicSpeedZones)) {
+    dynamicSpeedZones.forEach(zone => {
+      const limit = zone.lmtSpd;
+      const zoneLat = parseFloat(zone.lat);
+      const zoneLng = parseFloat(zone.lng);
+      const distance = getDistance(zoneLat, zoneLng, currentLat, currentLng);
 
-            const message = `
-              동적 제한 구역입니다.<br>
-              제한 속도는 ${limit} km/h 입니다.
-            `;
-            showZoneAlert("속도 제한 구역", distance, limit, currentKmh, lastDynamicZoneAlertTime);
-            showQueuedModal("동적 제한 안내", message);
-            speakMessage(`동적 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
-          }
-        });
+      // ✅ 거리 조건 + 알림 빈도 제어 (50m 이내, 1분 간격)
+      if (distance <= 50 && (!lastDynamicZoneAlertTime || Date.now() - lastDynamicZoneAlertTime > 60000)) {
+        lastDynamicZoneAlertTime = Date.now();
+
+        const message = `
+          동적 제한 구역입니다.<br>
+          제한 속도는 ${limit} km/h 입니다.
+        `;
+        showZoneAlert("속도 제한 구역", distance, limit, currentKmh, lastDynamicZoneAlertTime);
+        showQueuedModal("동적 제한 안내", message);
+        speakMessage(`동적 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
       }
-    })
-    .catch(err => console.error("속도 제한 구역 API 호출 오류:", err));
+    });
+  } else {
+    console.warn("⚠️ 동적 제한 구역 데이터가 배열에 없습니다.");
+  }
 }
+
 
 // ---------------------- 일반 속도 제한 ----------------------
 function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
-  const snapUrl = `https://roads.googleapis.com/v1/snapToRoads?path=${currentLat},${currentLng}&key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY`;
+  const currentKmh = currentSpeed * 3.6;
 
-  fetch(snapUrl)
-    .then(res => res.json())
-    .then(snapData => {
-      if (snapData.snappedPoints?.length > 0) {
-        const placeId = snapData.snappedPoints[0].placeId;
-        return fetch(`https://roads.googleapis.com/v1/speedLimits?placeId=${placeId}&key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY`);
-      }
-    })
-    .then(res => res ? res.json() : null)
-    .then(limitData => {
-      if (limitData?.speedLimits?.length > 0) {
-        const limit = limitData.speedLimits[0].speedLimit;
-        const currentKmh = currentSpeed * 3.6;
+  // ✅ 이미 갱신된 제한 속도 값 사용 (외부 호출 제거)
+  const limit = currentSpeedLimit ?? null;
 
-        // ✅ 알림 빈도 제어 (1분 간격)
-        if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
-          lastSpeedLimitAlertTime = Date.now();
+  if (limit) {
+    // ✅ 알림 빈도 제어 (1분 간격)
+    if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
+      lastSpeedLimitAlertTime = Date.now();
 
-          const message = `
-            속도 제한 구역입니다.<br>
-            제한 속도는 ${limit} km/h 입니다.
-          `;
-          showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
-          showQueuedModal("속도 제한 안내", message);
-          speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
-        }
-      }
-    })
-    .catch(err => {
-      console.error("속도 제한 구역 API 호출 오류:", err);
-      showQueuedModal("속도 제한 오류", "<p>속도 제한 정보를 가져올 수 없습니다.</p>");
-    });
+      const message = `
+        속도 제한 구역입니다.<br>
+        제한 속도는 ${limit} km/h 입니다.
+      `;
+      showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
+      showQueuedModal("속도 제한 안내", message);
+      speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
+    }
+  } else {
+    console.warn("⚠️ 제한 속도 정보가 전역변수에 없습니다.");
+  }
 }
+
 
 
 // ------------------------------- 초기화 -----------------------------------
