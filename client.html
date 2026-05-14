@@ -651,9 +651,14 @@ makeDraggableModal(statsModal, statsHandle);
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 7, // ✅ 초기 줌 레벨을 7로 설정
+    zoom: 7, // ✅ 초기 줌 레벨
     gestureHandling: "greedy",
-    mapTypeId: "roadmap"
+    mapTypeId: "roadmap",
+
+    // ✅ 회전/기울기 허용 옵션 추가
+    heading: 0,   // 초기 방향 (북쪽)
+    tilt: 0,      // 초기 기울기 (평면)
+    rotateControl: true // 회전 버튼 표시
   });
 
   updateMapStyle(map);
@@ -717,6 +722,7 @@ function initMap() {
     );
   }
 }
+
 
 function updateMapStyle(map) {
   const body = document.body;
