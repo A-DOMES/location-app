@@ -1665,45 +1665,92 @@ async function findDestination(inputName, showPanel = true) {
     destinationLat = parseFloat(match.lat);
     destinationLng = parseFloat(match.lng);
     document.getElementById("startRouteBtn").style.display = "inline-block";
-    return true;
+    return Promise.resolve(true);
   }
 
-// 2️⃣ 구글 Place API 검색
-const request = {
-  textQuery: inputName,
-  locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 5000 }
-};
+  // 2️⃣ 외부 API 검색 (전역 변수 활용)
+  const service = new google.maps.places.PlacesService(map);
+  return new Promise((resolve) => {
+    service.textSearch(
+      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
+      (results, status) => {
+        const panel = document.getElementById("searchResultPanel");
+        const body = panel.querySelector(".search-body");
 
-try {
-  const { places } = await google.maps.places.Place.searchByText(request);
+        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+          let html = results.map((r, idx) => `
+            <div class="search-item" data-index="${idx}">
+              <div class="search-title">📍 ${r.name}</div>
+              <div class="search-address">🏠 ${r.formatted_address}</div>
+            </div>
+          `).join("");
 
-  if (places && places.length > 0) {
-    const first = places[0];
-    const p = first.location;
+          body.innerHTML = html;
+          if (showPanel) panel.style.display = "block";
 
-    // ✅ location 타입에 따라 안전하게 좌표 추출
-    const lat = (typeof p.lat === "function") ? p.lat() : p.latitude;
-    const lng = (typeof p.lng === "function") ? p.lng() : p.longitude;
+          // ✅ 첫 번째 결과를 자동으로 지도에 표시 (레벨 7 복구)
+          const first = results[0];
+          const p = first.geometry.location;
+          map.setCenter(p);
+          map.setZoom(7); // ← 복구된 부분
+          showDestinationOnMap(first.name, p.lat(), p.lng(), first.formatted_address);
 
-    // ✅ 지도에 마커 찍기
-    showDestinationOnMap(first.displayName, lat, lng, first.formattedAddress);
+          destinationLat = p.lat();
+          destinationLng = p.lng();
+          document.getElementById("destinationInput").value = first.name;
+          document.getElementById("startRouteBtn").style.display = "inline-block";
 
-    // ✅ 목적지 좌표 전역 변수에 저장
-    destinationLat = lat;
-    destinationLng = lng;
+          // ✅ 검색결과 창 닫기
+          panel.style.display = "none";
 
-    document.getElementById("destinationInput").value = first.displayName;
-    document.getElementById("startRouteBtn").style.display = "inline-block";
+          // ✅ 클릭 시 다른 결과 선택 가능 (상세 보기 확대)
+          body.querySelectorAll(".search-item").forEach((item) => {
+            item.addEventListener("click", () => {
+              const idx = item.dataset.index;
+              const r = results[idx];
+              const p = r.geometry.location;
 
-    return true;
-  } else {
-    console.warn("⚠️ 구글 검색 결과 없음");
-    return false;
-  }
-} catch (err) {
-  console.error("Place.searchByText 호출 오류:", err);
-  return false;
-}
+              map.setCenter(p);
+              map.setZoom(16); // 상세 보기 확대
+              showDestinationOnMap(r.name, p.lat(), p.lng(), r.formatted_address);
+
+              destinationLat = p.lat();
+              destinationLng = p.lng();
+
+              document.getElementById("destinationInput").value = r.name;
+              panel.style.display = "none";
+
+              service.getDetails({
+                placeId: r.place_id,
+                fields: ["formatted_phone_number","website","opening_hours","rating","types"]
+              }, (place, detailStatus) => {
+                if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
+                  const infoPanel = document.getElementById("destinationResult");
+                  infoPanel.innerHTML = `
+                    ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
+                    ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
+                    ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
+                    ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
+                    ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
+                  `;
+                }
+              });
+
+              document.getElementById("startRouteBtn").style.display = "inline-block";
+            });
+          });
+
+          resolve(true);
+        } else {
+          if (showPanel) {
+            body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+            panel.style.display = "block";
+          }
+          resolve(false);
+        }
+      }
+    );
+  });
 }
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
