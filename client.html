@@ -1646,7 +1646,7 @@ async function checkSpeedLimitZone(currentLat, currentLng) {
     }
   }
 }
-  
+
   
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
@@ -1668,7 +1668,7 @@ async function findDestination(inputName, showPanel = true) {
     return true;
   }
 
-  // 2️⃣ 외부 API 검색 (Place API 활용)
+  // 2️⃣ 구글 Place API 검색
   const request = {
     textQuery: inputName,
     locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 5000 }
@@ -1677,24 +1677,11 @@ async function findDestination(inputName, showPanel = true) {
   try {
     const { places } = await google.maps.places.Place.searchByText(request);
 
-    const panel = document.getElementById("searchResultPanel");
-    const body = panel.querySelector(".search-body");
-
     if (places && places.length > 0) {
-      let html = places.map((r, idx) => `
-        <div class="search-item" data-index="${idx}">
-          <div class="search-title">📍 ${r.displayName}</div>
-          <div class="search-address">🏠 ${r.formattedAddress || ""}</div>
-        </div>
-      `).join("");
-
-      body.innerHTML = html;
-      if (showPanel) panel.style.display = "block";
-
       const first = places[0];
       const p = first.location;
-      map.setCenter(p);
-      map.setZoom(7);
+
+      // ✅ 지도에 마커 찍기
       showDestinationOnMap(first.displayName, p.lat(), p.lng(), first.formattedAddress);
 
       destinationLat = p.lat();
@@ -1702,53 +1689,9 @@ async function findDestination(inputName, showPanel = true) {
       document.getElementById("destinationInput").value = first.displayName;
       document.getElementById("startRouteBtn").style.display = "inline-block";
 
-      panel.style.display = "none";
-
-      body.querySelectorAll(".search-item").forEach((item) => {
-        item.addEventListener("click", async () => {
-          const idx = item.dataset.index;
-          const r = places[idx];
-          const p = r.location;
-
-          map.setCenter(p);
-          map.setZoom(16);
-          showDestinationOnMap(r.displayName, p.lat(), p.lng(), r.formattedAddress);
-
-          destinationLat = p.lat();
-          destinationLng = p.lng();
-
-          document.getElementById("destinationInput").value = r.displayName;
-          panel.style.display = "none";
-
-          try {
-            const detailRequest = {
-              placeId: r.id,
-              fields: ["formattedPhoneNumber","website","regularOpeningHours","rating","types"]
-            };
-            const detail = await google.maps.places.Place.details(detailRequest);
-
-            const infoPanel = document.getElementById("destinationResult");
-            infoPanel.innerHTML = `
-              ${detail.rating ? `<div class="search-rating">⭐ ${detail.rating}</div>` : ""}
-              ${detail.formattedPhoneNumber ? `<div class="search-phone">📞 ${detail.formattedPhoneNumber}</div>` : ""}
-              ${detail.website ? `<div class="search-website">🌐 <a href="${detail.website}" target="_blank">${detail.website}</a></div>` : ""}
-              ${detail.regularOpeningHours ? `<div class="search-hours">🕒 ${detail.regularOpeningHours.weekdayDescriptions.join("<br>")}</div>` : ""}
-              ${detail.types ? `<div class="search-type">🏷 ${detail.types.join(", ")}</div>` : ""}
-            `;
-          } catch (err) {
-            console.error("Place.details 호출 오류:", err);
-          }
-
-          document.getElementById("startRouteBtn").style.display = "inline-block";
-        });
-      });
-
       return true;
     } else {
-      if (showPanel) {
-        body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-        panel.style.display = "block";
-      }
+      console.warn("⚠️ 구글 검색 결과 없음");
       return false;
     }
   } catch (err) {
@@ -1756,7 +1699,6 @@ async function findDestination(inputName, showPanel = true) {
     return false;
   }
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.watchPosition(
@@ -2083,8 +2025,10 @@ async function showRouteToDestination(destination) {
       destinationMarkers.push(marker);
 
       // 경로 폴리라인 표시
-      const path = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
-      destinationRenderer.setPath(path);
+      if (route.polyline && route.polyline.encodedPolyline) {   // ✅ 조건 추가
+        const path = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
+        destinationRenderer.setPath(path);
+      }
 
       // 안내 메시지 (예상 거리/시간 + 실제 누적 거리)
       let instructions = "<div style='text-align:left; font-size:14px;'>";
@@ -2247,18 +2191,22 @@ document.querySelectorAll('.close').forEach(btn => {
         destinationRenderer.setMap(null);
         destinationRenderer = null;
       }
-      // ✅ 좌표+주소 구조 → LatLng 변환
-      pathPolyline = new google.maps.Polyline({
-        path: pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)),
-        geodesic: true,
-        strokeColor: "#0000FF", // 파란색
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-        map: map
-      });
+      // ✅ 수정 포인트: pathCoords가 비어있을 때 오류 방지
+      if (pathCoords.length > 0) {   // ← 조건 추가
+        // ✅ 좌표+주소 구조 → LatLng 변환
+        pathPolyline = new google.maps.Polyline({
+          path: pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)),
+          geodesic: true,
+          strokeColor: "#0000FF", // 파란색
+          strokeOpacity: 1.0,
+          strokeWeight: 3,
+          map: map
+        });
+      }
     }
   });
 });
+
   
 // ✅ ESC 키로 모달 닫기
 document.addEventListener('keydown', e => {
