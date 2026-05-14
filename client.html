@@ -425,22 +425,23 @@ button:hover{background-color:#1565c0;}
 <div id="travelStatsModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="modal-title">이 동 정 보</h2>
+      <h2 class="modal-title">이동정보</h2>
       <span id="closeTravelStatsModal" class="close">✖</span>
     </div>
 
     <!-- 이동정보 내용 -->
     <div id="travelStatsContent">
-      <span>🚗 현재 속도: <span class="highlight">0 km/h</span></span>
-      <span>📊 평균 속도: <span class="highlight">0 km/h</span></span>
-      <span>⚡ 최고 속도: <span class="highlight">0 km/h</span></span>
-      <span>⏱️ 주행 시간: <span class="highlight">0 분</span></span>
-      <span>📏 총 이동 거리: <span class="highlight">0 km</span></span>
-      <span>📐 직선 거리: <span class="highlight">12.5 km</span></span>
-      <span>🕒 예상 도착 시간: <span class="highlight">25 분</span></span>
+      <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
+      <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
+      <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
+      <div>⏱️ 주행시간: <span class="highlight">0 분</span></div>
+      <div>📏 이동거리: <span class="highlight">0 km</span></div>
+      <div>📐 직선거리: <span class="highlight">0 km</span></div>
+      <div>🕒 도착예상: <span class="highlight">미정</span></div>
     </div>
   </div>
 </div>
+
 
 <!-- ✅ 토글 버튼 추가-->
 <div id="toggleFollowBtn">
@@ -971,11 +972,13 @@ function updateTravelStats() {
   // ✅ 초기화 상태면 0 값 유지
   if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
-      <div>🚗 현재 속도: <span class="highlight">0 km/h</span></div>
-      <div>📊 평균 속도: <span class="highlight">0 km/h</span></div>
-      <div>⚡ 최고 속도: <span class="highlight">0 km/h</span></div>
-      <div>⏱️ 주행 시간: <span class="highlight">0 분</span></div>
-      <div>📏 총 이동 거리: <span class="highlight">0 km</span></div>
+      <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
+      <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
+      <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
+      <div>⏱️ 주행시간: <span class="highlight">0 분</span></div>
+      <div>📏 이동거리: <span class="highlight">0 km</span></div>
+      <div>📐 직선거리: <span class="highlight">0 km</span></div>
+      <div>🕒 도착예상: <span class="highlight">미정</span></div>
     `;
     return;
   }
@@ -988,25 +991,29 @@ function updateTravelStats() {
   const avgSpeedValue   = Math.round(avgSpeed);
   const maxSpeedValue   = Math.round(maxSpeed);
 
-  // ✅ ETA 계산
-  let etaLine = "";
-  if (destinationLat && destinationLng && smoothedSpeed > 0) {
-    const destinationPos   = new google.maps.LatLng(destinationLat, destinationLng);
-    const currentPos       = new google.maps.LatLng(currentLat, currentLng);
-    const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
-    const etaMinutes       = Math.round((straightDistance / 1000) / smoothedSpeed * 60);
-    etaLine = `<div>🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes} 분 후 도착 예상</span></div>`;
-  }
+// ✅ ETA 계산
+let etaLine = "";
+if (destinationLat && destinationLng && smoothedSpeed > 0) {
+  const destinationPos   = new google.maps.LatLng(destinationLat, destinationLng);
+  const currentPos       = new google.maps.LatLng(currentLat, currentLng);
+  const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
+  const etaMinutes       = Math.round((straightDistance / 1000) / smoothedSpeed * 60);
 
-  // ✅ 모달창 업데이트 (값이 변했을 때만)
-  const newContent = `
-    <div>🚗 현재 속도: <span class="highlight">${smoothedSpeed} km/h</span></div>
-    <div>📊 평균 속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
-    <div>⚡ 최고 속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
-    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistanceKm} km</span></div>
-    ${etaLine}
-  `;
+  etaLine = `<div>🕒 도착예상: <span class="eta-highlight" style="white-space:nowrap;">${etaMinutes} 분 후</span></div>`;
+} else {
+  etaLine = `<div>🕒 도착예상: <span class="eta-highlight">미정</span></div>`;
+}
+
+// ✅ 모달창 업데이트 (값이 변했을 때만)
+const newContent = `
+  <div>🚗 현재속도: <span class="highlight">${smoothedSpeed} km/h</span></div>
+  <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
+  <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
+  <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+  <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
+  ${etaLine}
+`;
+
 
   const contentBox = document.getElementById("travelStatsContent");
   if (contentBox.innerHTML !== newContent) {
@@ -2037,26 +2044,26 @@ function updateDrivingStats(destinationLat, destinationLng) {
   // ⏱ 주행 시간
   const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
 
-  // 🕒 예상 도착 시간 (ETA)
-  let etaMsg = "계산 불가";
-  if (avgSpeed > 0) {
-    const etaMinutes = Math.round(straightDistKm / avgSpeed * 60);
-    const etaTime = new Date(Date.now() + etaMinutes*60000)
-                      .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-    // ✅ 문구를 짧게 변경
-    etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
-  }
+// 🕒 ETA 계산
+let etaMsg = "미정";  // ✅ 기본값을 '미정'으로 설정
+if (avgSpeed > 0) {
+  const etaMinutes = Math.round(straightDistKm / avgSpeed * 60);
+  const etaTime = new Date(Date.now() + etaMinutes * 60000)
+                    .toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
+  // ✅ 문구를 짧게 변경
+  etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
+}
 
-  // ✅ 이동정보 모달창 갱신 (기존 스타일 유지 + 줄바꿈 방지)
-  const statsHtml = `
-    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
-    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
-    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
-    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistKm} km</span></div>
-    <div>📐 직선 거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 예상 도착 시간: <span class="highlight" style="white-space:nowrap; display:inline-block;">${etaMsg}</span></div>
-  `;
+// ✅ 이동정보 모달창 갱신 (기존 스타일 유지 + 줄바꿈 방지)
+const statsHtml = `
+  <div>🚗 현재속도: <span class="highlight">${currentSpeed} km/h</span></div>
+  <div>📊 평균속도: <span class="highlight">${avgSpeed} km/h</span></div>
+  <div>⚡ 최고속도: <span class="highlight">${maxSpeed} km/h</span></div>
+  <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+  <div>📏 이동거리: <span class="highlight">${totalDistKm} km</span></div>
+  <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
+  <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap; display:inline-block;">${etaMsg}</span></div>
+`;
 
   document.getElementById("travelStatsContent").innerHTML = statsHtml;
   openModal(document.getElementById("travelStatsModal"));
@@ -2118,17 +2125,16 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const avgSpeed       = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeed       = speedHistory.length ? Math.round(Math.max(...speedHistory)) : 0;
   const elapsedMinutes = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
-  const totalDistanceKm = computeTotalDistance(pathCoords).toFixed(1); // ✅ /1000 제거
+  const totalDistanceKm = computeTotalDistance(pathCoords).toFixed(1);
 
   return `
-    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
-    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
-    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
-    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistanceKm} km</span></div>
+    <div>🚗 현재속도: <span class="highlight">${currentSpeed} km/h</span></div>
+    <div>📊 평균속도: <span class="highlight">${avgSpeed} km/h</span></div>
+    <div>⚡ 최고속도: <span class="highlight">${maxSpeed} km/h</span></div>
+    <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
   `;
 }
-
   
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
 function showQueuedModal(title, content) {
