@@ -2103,7 +2103,7 @@ function updateDrivingStats(destinationLat, destinationLng) {
     <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
     <div>📏 총 이동 거리: <span class="highlight">${totalDistKm} km</span></div>
     <div>📐 직선 거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 예상 도착 시간: <span class="highlight">${etaMsg}</span></div>
+    <div>🕒 예상 도착 시간: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
   `;
 
   document.getElementById("travelStatsContent").innerHTML = statsHtml;
