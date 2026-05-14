@@ -523,7 +523,8 @@ let followUser = true;
 
 // 목적지 마커 배열
 let destinationMarkers = []; 
-
+let drivingStarted = false;
+  
 // 초기화시 발생된 위도/ 경도값 저장변수
 let watchId = null;  
   
@@ -2030,6 +2031,39 @@ async function showRouteToDestination(destination) {
 }
 
 
+// ---------------------- 운행 안내 함수 ----------------------
+async function showRouteToDestination(destination) {
+  // 기존 렌더러 제거
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+
+  // 새 렌더러 준비 (폴리라인 직접 그리기)
+  destinationRenderer = new google.maps.Polyline({
+    strokeColor: "#0000FF",
+    strokeWeight: 4,
+    strokeOpacity: 0.8,
+    map: map
+  });
+
+  // 목적지 좌표 저장 (마커는 찍지 않음)
+  destinationLat = destination.lat;
+  destinationLng = destination.lng;
+
+  // ✅ 시작 메시지: 한 번만 출력
+  if (!drivingStarted) {
+    speakMessage("운행 안내를 시작합니다.");
+    drivingStarted = true;
+  }
+
+  // ✅ 배열 기반 주행 정보 갱신 (5초마다 모달 업데이트)
+  setInterval(() => {
+    updateDrivingStats(destinationLat, destinationLng);
+  }, 5000);
+}
+
+
 // ---------------------- 이동정보 갱신 함수 ----------------------
 function updateDrivingStats(destinationLat, destinationLng) {
   if (pathCoords.length === 0) return;
@@ -2063,13 +2097,13 @@ function updateDrivingStats(destinationLat, destinationLng) {
 
   // ✅ 이동정보 모달창 갱신 (기존 스타일 유지)
   const statsHtml = `
-    <div>🚗 현재속도: <span class="highlight">${currentSpeed} km/h</span></div>
-    <div>📊 평균속도: <span class="highlight">${avgSpeed} km/h</span></div>
-    <div>⚡ 최고속도: <span class="highlight">${maxSpeed} km/h</span></div>
-    <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동거리: <span class="highlight">${totalDistKm} km</span></div>
-    <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 예상도착시간: <span class="highlight">${etaMsg}</span></div>
+    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
+    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
+    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
+    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 총 이동 거리: <span class="highlight">${totalDistKm} km</span></div>
+    <div>📐 직선 거리: <span class="highlight">${straightDistKm} km</span></div>
+    <div>🕒 예상 도착 시간: <span class="highlight">${etaMsg}</span></div>
   `;
 
   document.getElementById("travelStatsContent").innerHTML = statsHtml;
