@@ -2063,13 +2063,13 @@ function updateDrivingStats(destinationLat, destinationLng) {
 
   // ✅ 이동정보 모달창 갱신 (기존 스타일 유지)
   const statsHtml = `
-    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
-    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
-    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
-    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
-    <div>📏 총 이동 거리: <span class="highlight">${totalDistKm} km</span></div>
-    <div>📐 직선 거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 예상 도착 시간: <span class="highlight">${etaMsg}</span></div>
+    <div>🚗 현재속도: <span class="highlight">${currentSpeed} km/h</span></div>
+    <div>📊 평균속도: <span class="highlight">${avgSpeed} km/h</span></div>
+    <div>⚡ 최고속도: <span class="highlight">${maxSpeed} km/h</span></div>
+    <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 총 이동거리: <span class="highlight">${totalDistKm} km</span></div>
+    <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
+    <div>🕒 예상도착시간: <span class="highlight">${etaMsg}</span></div>
   `;
 
   document.getElementById("travelStatsContent").innerHTML = statsHtml;
