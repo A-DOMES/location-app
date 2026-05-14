@@ -2020,15 +2020,27 @@ async function showRouteToDestination(destination) {
       destinationLng = destination.lng;
 
       // 목적지 마커 표시
+      const svgIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24">
+          <path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z"
+                fill="#FF3B3B" stroke="#fff" stroke-width="2"/>
+        </svg>
+      `;
+      
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map: map,
         position: { lat: lat, lng: lng },   // ✅ LatLngLiteral 사용
         title: title,
-        content: document.createElement("div") // ✅ 커스텀 아이콘 대신 content 사용 가능
+        content: (() => {
+          const div = document.createElement("div");
+          div.innerHTML = svgIcon;
+          return div;
+        })()
       });
       
-      // ✅ 기존처럼 배열에 저장
+      // ✅ 배열에 저장
       destinationMarkers.push(marker);
+
 
       // 경로 폴리라인 표시
       if (route.polyline && route.polyline.encodedPolyline) {   // ✅ 조건 추가
