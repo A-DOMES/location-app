@@ -951,22 +951,22 @@ function updateTravelStats() {
   // ✅ 초기화 상태면 0 값 유지
   if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
-      🚗 현재 속도: 0 km/h<br>
-      📊 평균 속도: 0 km/h<br>
-      ⚡ 최고 속도: 0 km/h<br>
-      ⏱️ 주행 시간: 0 분<br>
-      📏 총 이동 거리: 0 km<br>
+      <div>🚗 현재 속도: <span class="highlight">0 km/h</span></div>
+      <div>📊 평균 속도: <span class="highlight">0 km/h</span></div>
+      <div>⚡ 최고 속도: <span class="highlight">0 km/h</span></div>
+      <div>⏱️ 주행 시간: <span class="highlight">0 분</span></div>
+      <div>📏 총 이동 거리: <span class="highlight">0 km</span></div>
     `;
     return;
   }
 
   // ✅ 이동정보 계산 (정수 변환 + 행방향 정리)
   const now             = Date.now();
-  const elapsedMinutes  = Math.round((now - startTime) / 60000); // 주행 시간 (분)
-  const smoothedSpeed   = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0; // 현재 속도 (스무딩)
-  const totalDistanceKm = Math.round(totalDistance); // 누적 거리 (km)
-  const avgSpeedValue   = Math.round(avgSpeed); // 평균 속도 → 정수 변환
-  const maxSpeedValue   = Math.round(maxSpeed); // 최고 속도 → 정수 변환
+  const elapsedMinutes  = Math.round((now - startTime) / 60000);
+  const smoothedSpeed   = speedHistory.length > 0 ? Math.round(getSmoothedSpeed(speedHistory, 5)) : 0;
+  const totalDistanceKm = Math.round(totalDistance);
+  const avgSpeedValue   = Math.round(avgSpeed);
+  const maxSpeedValue   = Math.round(maxSpeed);
 
   // ✅ ETA 계산
   let etaLine = "";
@@ -975,16 +975,16 @@ function updateTravelStats() {
     const currentPos       = new google.maps.LatLng(currentLat, currentLng);
     const straightDistance = google.maps.geometry.spherical.computeDistanceBetween(currentPos, destinationPos);
     const etaMinutes       = Math.round((straightDistance / 1000) / smoothedSpeed * 60);
-    etaLine = `🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes} 분 후 도착 예상</span>`;
+    etaLine = `<div>🕒 예상 도착 시간: <span class="eta-highlight">${etaMinutes} 분 후 도착 예상</span></div>`;
   }
 
   // ✅ 모달창 업데이트 (값이 변했을 때만)
   const newContent = `
-    🚗 현재 속도: ${smoothedSpeed} km/h<br>
-    📊 평균 속도: ${avgSpeedValue} km/h<br>
-    ⚡ 최고 속도: ${maxSpeedValue} km/h<br>
-    ⏱️ 주행 시간: ${elapsedMinutes} 분<br>
-    📏 총 이동 거리: ${totalDistanceKm} km<br>
+    <div>🚗 현재 속도: <span class="highlight">${smoothedSpeed} km/h</span></div>
+    <div>📊 평균 속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
+    <div>⚡ 최고 속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
+    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 총 이동 거리: <span class="highlight">${totalDistanceKm} km</span></div>
     ${etaLine}
   `;
 
@@ -993,6 +993,7 @@ function updateTravelStats() {
     contentBox.innerHTML = newContent;
   }
 }
+
 
 
 /* ---------------------- 총 이동거리 계산 ---------------------- */
@@ -2126,13 +2127,14 @@ function buildTravelStatsMessage(speedHistory, pathCoords, startTime) {
   const totalDistanceKm = (computeTotalDistance(pathCoords) / 1000).toFixed(1);
 
   return `
-    🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span><br>
-    📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span><br>
-    ⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span><br>
-    ⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span><br>
-    📏 총 이동 거리: <span class="highlight">${totalDistance} km</span><br>
+    <div>🚗 현재 속도: <span class="highlight">${currentSpeed} km/h</span></div>
+    <div>📊 평균 속도: <span class="highlight">${avgSpeed} km/h</span></div>
+    <div>⚡ 최고 속도: <span class="highlight">${maxSpeed} km/h</span></div>
+    <div>⏱️ 주행 시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>📏 총 이동 거리: <span class="highlight">${totalDistance} km</span></div>
   `;
   }
+
 
 
 
