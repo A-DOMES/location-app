@@ -281,11 +281,12 @@ button:hover{background-color:#1565c0;}
 
 
 /* 이동정보 모달창 전체 위치 지정 */
-#travelStatsModal {
-  position: absolute;
-  top: 2px;    /* locationBox와 동일하게 맞춤 */
-  right: 300px; /* 화면 배치에 맞게 조정 */
-  z-index: 9999;
+@media (max-width: 768px) {
+  #locationBox,
+  #travelStatsModal {
+    top: 60px;   /* 모바일에서도 동일하게 */
+    right: 10px; /* 여백 줄여서 화면에 맞춤 */
+  }
 }
   
 /* ---------------------- 이동정보 모달창 헤더 ---------------------- */
