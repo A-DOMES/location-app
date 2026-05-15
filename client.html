@@ -935,13 +935,27 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   lastTimestamp = timestamp;
 }
 
-// ---------------------- 스무딩 함수 ----------------------
-function getSmoothedSpeed(history, windowSize = 5) {
+// ---------------------- 개선된 스무딩 함수 ----------------------
+function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
+
+  // 최근 windowSize 개 값 가져오기
   const recent = history.slice(-windowSize);
   const sum = recent.reduce((a, b) => a + b, 0);
-  return sum / recent.length;
+  let avg = sum / recent.length;
+
+  // 변화율 제한 적용
+  if (typeof smoothedSpeed !== "undefined") {
+    const delta = avg - smoothedSpeed;
+    if (Math.abs(delta) > maxDelta) {
+      // 이전 값에서 maxDelta 만큼만 변화하도록 제한
+      avg = smoothedSpeed + (delta > 0 ? maxDelta : -maxDelta);
+    }
+  }
+
+  return avg;
 }
+
 
 
 // ---------------------- 좌표 추가 ----------------------
