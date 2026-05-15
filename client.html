@@ -106,7 +106,7 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #map { width:100%; height:100vh; }
 
 /* ---------------------- 공유 팝업 메시지 ---------------------- */
-#popupMessage { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(25,118,210,0.95); color:white; padding:12px 20px; border-radius:8px; font-size:16px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2); display:none; z-index:9999; opacity:0; transition:opacity 0.5s ease, top 0.5s ease; }
+#popupMessage { position:absolute; top:80px; left:50%; transform:translateX(-50%); background:rgba(25,118,210,0.95); color:white; padding:12px 20px; border-radius:8px; font-size:16px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2); display:none; z-index:10000; opacity:0; transition:opacity 0.5s ease, top 0.5s ease; }
 
 /* ---------------------- 하단 표시창 ---------------------- */
 #locationDisplay { margin-top:10px; font-size:14px; font-weight:bold; }
@@ -997,12 +997,13 @@ function addSpeed(newSpeed) {
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
+  // ✅ 주행 시작 전 또는 경로가 없는 경우
   if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
       <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
       <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
-      <div>⏱️ 주행시간: <span class="highlight">0 분</span></div>
+      <div>⏱️ 주행시간: <span class="highlight">0:00:00</span></div>
       <div>📏 이동거리: <span class="highlight">0 km</span></div>
       <div>📐 직선거리: <span class="highlight">0 km</span></div>
       <div>🕒 도착예상: <span class="highlight">미정</span></div>
@@ -1010,8 +1011,13 @@ function updateTravelStats() {
     return;
   }
 
+  // ✅ 주행시간 계산 (버튼 눌러 startTime이 설정된 경우만)
   const now = Date.now();
-  const elapsedMinutes = Math.round((now - startTime) / 60000);
+  const elapsedSeconds = Math.floor((now - startTime) / 1000);
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+  const seconds = elapsedSeconds % 60;
+  const elapsedTimeStr = `${hours}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
   // ✅ GPS 기반 속도 값 활용
   const currentSpeedValue = Math.round(smoothedSpeed);
@@ -1040,7 +1046,7 @@ function updateTravelStats() {
     <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
     <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
     <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
-    <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
+    <div>⏱️ 주행시간: <span class="highlight">${elapsedTimeStr}</span></div>
     <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
     <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
     <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
@@ -1451,7 +1457,16 @@ document.getElementById("closeDestinationModal").addEventListener("click", () =>
 makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 };
 
-
+/* ---------------------- 이동시간 초기화 계산 함수  ---------------------- */
+function startTravel() {
+  startTime = Date.now();   // 버튼 눌렀을 때만 시작
+  pathCoords = [];
+  maxSpeed = 0;
+  speedHistory = [];
+  smoothedSpeed = 0;
+  updateTravelStats();
+}
+  
 /* ---------------------- 경로 초기화 함수 ---------------------- */
 function resetNavigation(fullStop = false) {
   // 📍 위치 추적 중단
