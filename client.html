@@ -970,7 +970,7 @@ function addSpeed(newSpeed) {
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  if (!startTime || speedHistory.length === 0 || pathCoords.length === 0) {
+  if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
       <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
@@ -985,31 +985,32 @@ function updateTravelStats() {
 
   const now = Date.now();
   const elapsedMinutes = Math.round((now - startTime) / 60000);
-  const smoothedSpeed = Math.round(getSmoothedSpeed(speedHistory, 5));
-  const totalDistanceKm = computeTotalDistance(pathCoords).toFixed(1);
-  const avgSpeedValue = Math.round(avgSpeed);
+
+  // ✅ GPS 기반 속도 값 활용
+  const currentSpeedValue = Math.round(smoothedSpeed);
+  const avgSpeedValue = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeedValue = Math.round(maxSpeed);
 
-  // 📐 직선거리 계산
-  let straightDistKm = 0;
+  // 📏 이동거리
+  const totalDistanceKm = computeTotalDistance(pathCoords).toFixed(1);
+
+  // 📐 직선거리 & ETA
+  let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
     const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
     straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
-  }
 
-  // 🕒 ETA 계산
-  let etaMsg = "미정";
-  if (destinationLat && destinationLng && avgSpeedValue > 0) {
-    const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
-    const etaTime = new Date(Date.now() + etaMinutes * 60000)
-                      .toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
-    etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
+    if (avgSpeedValue > 0) {
+      const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
+      const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
+      etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
+    }
   }
 
   // ✅ 모달창 업데이트
   const newContent = `
-    <div>🚗 현재속도: <span class="highlight">${smoothedSpeed} km/h</span></div>
+    <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
     <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
     <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
     <div>⏱️ 주행시간: <span class="highlight">${elapsedMinutes} 분</span></div>
@@ -1020,6 +1021,7 @@ function updateTravelStats() {
 
   document.getElementById("travelStatsContent").innerHTML = newContent;
 }
+
 
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
@@ -1454,9 +1456,9 @@ function resetNavigation(fullStop = false) {
     otherMarker = null;
   }
 
-  // 🚗 이동정보 초기화
+  // 🚗 이동정보 초기화 (핵심!)
   speedHistory = [];
-  startTime = null;
+  startTime = null;        // ✅ 주행시간 초기화
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
@@ -1484,7 +1486,7 @@ function resetNavigation(fullStop = false) {
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
 
-  // 🚗 이동정보 모달 즉시 초기화
+  // 🚗 이동정보 모달 즉시 초기화 → 0 값 반영
   updateTravelStats();
 
   // ✅ 완전 종료일 때만 목적지 좌표 초기화
@@ -1493,6 +1495,7 @@ function resetNavigation(fullStop = false) {
     destinationLng = null;
   }
 }
+
 
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
