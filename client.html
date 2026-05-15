@@ -921,7 +921,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
 
       // ✅ 속도 기록 및 스무딩
       speedHistory.push(currentSpeed);
-      smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
+      smoothedSpeed = getSmoothedSpeed(speedHistory, 7, 10); // 최근 7개, 변화율 제한 ±10km/h
 
       // ✅ 최고속도 갱신
       if (smoothedSpeed > maxSpeed) {
