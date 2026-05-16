@@ -840,28 +840,12 @@ function startTracking() {
 }
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-const toggleBtn = document.getElementById("toggleFollowBtn");
+const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
 
 toggleBtn.addEventListener("click", () => {
   followUser = !followUser;
-
-  if (currentLat && currentLng) {
-    const center = new google.maps.LatLng(currentLat, currentLng);
-    map.setCenter(center);
-    map.setZoom(7); // 항상 레벨 7 유지
-  }
-
-  // 버튼 내부 span 요소 갱신
-  const iconSpan = toggleBtn.querySelector(".icon");
-  const labelSpan = toggleBtn.querySelector(".label");
-
-  if (followUser) {
-    iconSpan.textContent = "👤";
-    labelSpan.textContent = "중심모드"; // 사람 중심 모드
-  } else {
-    iconSpan.textContent = "🗺️";
-    labelSpan.textContent = "중심모드"; // 지도 중심 모드
-  }
+  // 👤 사람 아이콘 / 🗺️ 지도 아이콘으로 표시
+  toggleBtn.innerText = followUser ? "👤중심모드" : "🗺️중심모드";
 });
 
   
@@ -1566,7 +1550,6 @@ function resetNavigation(fullStop = false) {
   totalDistance = 0;
 
   // 🔄 모드 복귀
-  followUser = true;
   drivingStarted = false; // 운행 안내 상태도 초기화
 
   // 🔊 음성 안내
