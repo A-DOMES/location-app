@@ -1036,15 +1036,15 @@ function updateTravelStats() {
     return;
   }
 
-  // ✅ 주행시간 계산 (버튼 눌러 startTime이 설정된 경우만)
+  // ✅ 주행시간 계산
   const now = Date.now();
   const elapsedSeconds = Math.floor((now - startTime) / 1000);
   const hours = Math.floor(elapsedSeconds / 3600);
   const minutes = Math.floor((elapsedSeconds % 3600) / 60);
   const seconds = elapsedSeconds % 60;
-  const elapsedTimeStr = `${hours}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+  const elapsedTimeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
-  // ✅ GPS 기반 속도 값 활용
+  // ✅ 속도 값
   const currentSpeedValue = Math.round(smoothedSpeed);
   const avgSpeedValue = speedHistory.length ? Math.round(speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length) : 0;
   const maxSpeedValue = Math.round(maxSpeed);
@@ -1054,7 +1054,7 @@ function updateTravelStats() {
 
   // 📐 직선거리 & ETA
   let straightDistKm = 0, etaMsg = "미정";
-  if (destinationLat && destinationLng) {
+  if (destinationLat && destinationLng && currentLat && currentLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
     const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
     straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
@@ -1076,7 +1076,6 @@ function updateTravelStats() {
     <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
     <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
   `;
-
   document.getElementById("travelStatsContent").innerHTML = newContent;
 }
 
