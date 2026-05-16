@@ -840,13 +840,31 @@ function startTracking() {
 }
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
+const toggleBtn = document.getElementById("toggleFollowBtn");
 
 toggleBtn.addEventListener("click", () => {
   followUser = !followUser;
-  // 👤 사람 아이콘 / 🗺️ 지도 아이콘으로 표시
-  toggleBtn.innerText = followUser ? "👤중심모드" : "🗺️중심모드";
+
+  const icon = followUser ? "👤" : "🗺️";
+  const label = followUser ? "사람중심" : "지도중심";
+  toggleBtn.innerText = `${icon}${label}`;
+
+  if (followUser) {
+    // 사람 중심 모드 → 현재 위치 기준
+    if (currentLat && currentLng) {
+      map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+      map.setZoom(7);
+    }
+  } else {
+    // 지도 중심 모드 → 경로 마지막 좌표 기준
+    if (pathCoords.length > 0) {
+      const lastPoint = pathCoords[pathCoords.length - 1];
+      map.setCenter(new google.maps.LatLng(lastPoint.lat, lastPoint.lng));
+      map.setZoom(7);
+    }
+  }
 });
+
 
   
 // ---------------------- 드래그 가능하게 적용 ----------------------
@@ -886,7 +904,7 @@ function updatePathPolyline(lat, lng, address = null) {
   pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
 
   // ✅ 사람 중심 모드: 지도 중심을 현재 위치로 이동
-  map.setCenter(new google.maps.LatLng(lat, lng));
+  // map.setCenter(new google.maps.LatLng(lat, lng));
   // map.setZoom(16); // 필요에 따라 줌 레벨 조정
 }
 
@@ -1575,6 +1593,12 @@ function resetNavigation(fullStop = false) {
   if (fullStop) {
     destinationLat = null;
     destinationLng = null;
+  }
+
+  // ✅ 지도 중심 및 줌 레벨 복귀 (항상 레벨 7)
+  if (currentLat && currentLng) {
+    map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+    map.setZoom(16); // ← 16 대신 7로 고정
   }
 }
 
