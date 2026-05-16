@@ -1550,6 +1550,7 @@ function resetNavigation(fullStop = false) {
   totalDistance = 0;
 
   // 🔄 모드 복귀
+  followUser = true;
   drivingStarted = false; // 운행 안내 상태도 초기화
 
   // 🔊 음성 안내
@@ -1575,12 +1576,6 @@ function resetNavigation(fullStop = false) {
     destinationLat = null;
     destinationLng = null;
   }
-
-  // ✅ 지도 중심 및 줌 레벨 복귀 (항상 레벨 7)
-  if (currentLat && currentLng) {
-    map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7);
-  } 
 }
 
 
