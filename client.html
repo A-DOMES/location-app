@@ -854,17 +854,17 @@ makeDraggableAndResizable(toggleBtn);
 
   
 
-// ---------------------- 경로 보정 ----------------------
+// ---------------------- 경로 보정 (파란색) ----------------------
 function updatePathPolyline(lat, lng, address = null) {
   if (pathCoords.length > 0) {
     const lastPoint = pathCoords[pathCoords.length - 1];
     const distance = getDistance(lastPoint.lat, lastPoint.lng, lat, lng);
 
-    // ✅ 최소 이동 거리 기준 (5m 이상일 때만 추가)
+    // 최소 이동 거리 기준
     if (distance >= 5 && distance < 100) {
       pathCoords.push({ lat, lng, address, timestamp: Date.now() });
     } else if (distance >= 100) {
-      // ✅ 튀는 값 보정: 이전 좌표와 새 좌표의 중간값 추가
+      // 튀는 값 보정
       const midLat = (lastPoint.lat + lat) / 2;
       const midLng = (lastPoint.lng + lng) / 2;
       pathCoords.push({ lat: midLat, lng: midLng, address: null, timestamp: Date.now() });
@@ -873,34 +873,19 @@ function updatePathPolyline(lat, lng, address = null) {
     pathCoords.push({ lat, lng, address, timestamp: Date.now() });
   }
 
-  // ✅ 내가 지나온 경로(빨간색)
+  // ✅ 지나온 경로만 관리 (파란색)
   if (!pathPolyline) {
     pathPolyline = new google.maps.Polyline({
       geodesic: true,
-      strokeColor: "#FF0000", // 빨간색: 일반 주행 경로
+      strokeColor: "#0000FF", // 파란색
       strokeOpacity: 1.0,
       strokeWeight: 3,
       map: map
     });
   }
   pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
-
-  // ✅ 목적지 안내 경로(파란색)도 갱신
-  if (destinationLat && destinationLng) {
-    if (!destinationRenderer) {
-      destinationRenderer = new google.maps.Polyline({
-        strokeColor: "#0000FF", // 파란색: 목적지 안내 경로
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
-        map: map
-      });
-    }
-    destinationRenderer.setPath(
-      pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
-        .concat(new google.maps.LatLng(destinationLat, destinationLng))
-    );
-  }
 }
+
 
 
 // ---------------------- 거리 계산 함수 ----------------------
@@ -1968,10 +1953,10 @@ async function showRouteToDestination(destination) {
     destinationRenderer = null;
   }
 
-  // 새 렌더러 준비
+  // 새 렌더러 준비 (빨간색 안내선)
   destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#FF0000",   // 빨간색: 목적지 안내 경로
-    strokeWeight: 6,          // 선 두께 (2: 얇은선, 4: 기본두께, 6~8: 굵은 선(강조 효과)
+    strokeColor: "#FF0000",
+    strokeWeight: 6,
     strokeOpacity: 0.8,
     map: map
   });
@@ -1980,31 +1965,31 @@ async function showRouteToDestination(destination) {
   destinationLat = destination.lat;
   destinationLng = destination.lng;
 
-  // ✅ 배열 기반 경로 + 목적지까지 연결
+  // 지나온 경로 + 목적지 연결
   if (pathCoords.length > 0) {
     destinationRenderer.setPath(
       pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
         .concat(new google.maps.LatLng(destinationLat, destinationLng))
     );
   } else {
-    // 경로가 아직 없을 경우 현재 위치에서 목적지까지 바로 연결
     destinationRenderer.setPath([
       new google.maps.LatLng(currentLat, currentLng),
       new google.maps.LatLng(destinationLat, destinationLng)
     ]);
   }
 
-  // ✅ 시작 메시지: 한 번만 출력
+  // 시작 메시지
   if (!drivingStarted) {
-    speakMessage("운행 안내를 시작합니다.");
+    speakMessage("경로 안내를 시작합니다.");
     drivingStarted = true;
   }
+}
 
-  // ✅ 이동정보 모달 주기적 갱신
+  // 모달 갱신 (한 번만 실행)  
   setInterval(() => {
     updateTravelStats();
   }, 5000);
-}
+
 
 
 /* ---------------------- 레이더 반경 내 탐지 ---------------------- */
