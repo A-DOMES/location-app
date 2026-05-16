@@ -239,7 +239,7 @@ button:hover{background-color:#1565c0;}
 #destinationInfoModal .close-btn{background:none;border:none;font-size:20px;color:#fff;cursor:pointer;}
 
 /* ---------------------- 목적지 찾기 모달창 헤더 ---------------------- */
-#destinationModal .modal-header {
+#travelStatsModal .modal-header {
   display:flex;
   justify-content:space-between;   /* 타이틀 왼쪽, 닫기 버튼 오른쪽 */
   align-items:center;
@@ -251,7 +251,7 @@ button:hover{background-color:#1565c0;}
 }
 
 /* ✅ 타이틀 글씨 크기 현재좌표와 동일하게 */
-#destinationModal .modal-header .title {
+#travelStatsModal .modal-header .title {
   font-size:26px;                  /* 현재 좌표창과 동일 */
   font-weight:bold;
   color:#1976d2;
@@ -259,7 +259,7 @@ button:hover{background-color:#1565c0;}
 }
 
 /* 닫기 버튼 (이동정보 모달창과 동일 스타일) */
-#destinationModal .modal-header .close {
+#travelStatsModal .modal-header .close {
   cursor:pointer;
   font-size:20px;                   /* X 글자 크기 */
   font-weight:bold;
@@ -274,7 +274,7 @@ button:hover{background-color:#1565c0;}
   align-items:center;
   transition:transform 0.2s ease, background 0.3s ease;
 }
-#destinationModal .modal-header .close:hover {
+#travelStatsModal .modal-header .close:hover {
   transform:scale(1.1);
   background:rgba(25,118,210,0.1);   /* hover 시 은은한 파란색 배경 */
 }
@@ -376,11 +376,11 @@ button:hover{background-color:#1565c0;}
   </div>
 
 <!-- 목적지 찾기 모달창 -->
-<div id="destinationModal" class="modal" style="display:none;">
+<div id="travelStatsModal" class="modal" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="modal-title">🔎 목적지 찾기</h2>
-      <span id="closeDestinationModal" class="close">✖</span>
+      <span id="closetravelStatsModal" class="close">✖</span>
     </div>
 
     <!-- 입력창 -->
@@ -625,7 +625,7 @@ makeDraggableAndResizable(document.getElementById("searchResultPanel"));
 makeDraggableAndResizable(document.getElementById("popupModal"));
 
 // 목적지 찾기 창은 헤더를 잡아 전체 창을 드래그 가능
-const destModal = document.querySelector('#destinationModal .modal-content');
+const destModal = document.querySelector('#travelStatsModal .modal-content');
 const destHandle = destModal.querySelector('.modal-header');
 makeDraggableModal(destModal, destHandle);
 
@@ -1440,7 +1440,7 @@ document.getElementById("closeSearchPanel").addEventListener("click", () => {
 // ✅ 목적지 모달 닫기 버튼 이벤트 (중복 제거 + 결과 모달 닫기 추가)
 document.getElementById("closeDestinationModal").addEventListener("click", () => {
   // 목적지 모달 닫기
-  document.getElementById("destinationModal").style.display = "none";
+  document.getElementById("travelStatsModal").style.display = "none";
 
   // 검색결과 패널 닫기
   document.getElementById("searchResultPanel").style.display = "none";
@@ -1799,7 +1799,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
         🏠 주소: ${address}
       </div>`;
 
-    openModal(document.getElementById("destinationModal"));
+    openModal(document.getElementById("travelStatsModal"));
   });
 }
 
@@ -1833,7 +1833,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    openModal(document.getElementById("destinationModal"));
+    openModal(document.getElementById("travelStatsModal"));
     return;
   }
 
@@ -1856,7 +1856,7 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 });
 
 document.getElementById("openDestinationModal").addEventListener("click", () => {
-  openModal(document.getElementById("destinationModal"));
+  openModal(document.getElementById("travelStatsModal"));
 });
 
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
