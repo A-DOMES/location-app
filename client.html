@@ -840,21 +840,29 @@ function startTracking() {
 }
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-const toggleBtn = document.getElementById("toggleFollowBtn"); // 버튼 변수 선언
+const toggleBtn = document.getElementById("toggleFollowBtn");
 
 toggleBtn.addEventListener("click", () => {
   followUser = !followUser;
 
   if (currentLat && currentLng) {
-    map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7); // 항상 레벨 7로 고정
+    const center = new google.maps.LatLng(currentLat, currentLng);
+    map.setCenter(center);
+    map.setZoom(7); // 항상 레벨 7 유지
   }
 
-  // 👤 사람 아이콘 / 🗺️ 지도 아이콘으로 표시
-  toggleBtn.innerText = followUser ? "👤중심모드" : "🗺️중심모드";
+  // 버튼 내부 span 요소 갱신
+  const iconSpan = toggleBtn.querySelector(".icon");
+  const labelSpan = toggleBtn.querySelector(".label");
+
+  if (followUser) {
+    iconSpan.textContent = "👤";
+    labelSpan.textContent = "중심모드"; // 사람 중심 모드
+  } else {
+    iconSpan.textContent = "🗺️";
+    labelSpan.textContent = "중심모드"; // 지도 중심 모드
+  }
 });
-
-
 
   
 // ---------------------- 드래그 가능하게 적용 ----------------------
