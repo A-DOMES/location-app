@@ -1970,8 +1970,8 @@ async function showRouteToDestination(destination) {
 
   // 새 렌더러 준비
   destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#0000FF",   // 파란색: 목적지 안내 경로
-    strokeWeight: 4,
+    strokeColor: "#FF0000",   // 빨간색: 목적지 안내 경로
+    strokeWeight: 6,          // 선 두께 (2: 얇은선, 4: 기본두께, 6~8: 굵은 선(강조 효과)
     strokeOpacity: 0.8,
     map: map
   });
