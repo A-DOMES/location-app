@@ -853,7 +853,7 @@ toggleBtn.addEventListener("click", () => {
     // 사람 중심 모드 → 현재 위치 기준
     if (currentLat && currentLng) {
       map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-      map.setZoom(7);
+      map.setZoom(16);
     }
   } else {
     // 지도 중심 모드 → 경로 마지막 좌표 기준
