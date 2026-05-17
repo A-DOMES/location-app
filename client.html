@@ -746,15 +746,7 @@ function startTracking() {
     if (speedKmh > 60) minInterval = 3000; // 차량 고속 → 3초
     else if (speedKmh < 10) minInterval = 10000; // 걷기 → 10초
 
-    // ✅ 배열에 무조건 저장 (조건 제거)
-    pathCoords.push({
-      lat,
-      lng,
-      timestamp: now
-    });
-    console.log("pathCoords 저장:", pathCoords[pathCoords.length - 1]);
-
-    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동 → 나머지 로직은 그대로 유지
+    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동
     if ((now - lastUpdateTime > minInterval) || distanceMoved > 30) {
       lastUpdateTime = now;
       lastLat = lat;
@@ -849,7 +841,6 @@ function startTracking() {
     timeout: 5000
   });
 }
-
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
@@ -961,25 +952,34 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     if (timeElapsed > 0) {
       let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
-      if (distance < 3) rawSpeed = 0;
+      // ✅ 작은 이동 무시 조건 완화 (2m 이하만 무시)
+      if (distance < 2) {
+        rawSpeed = 0;
+      }
 
-      // ✅ 비정상 값 필터링
-      if (rawSpeed > 200) rawSpeed = currentSpeed;
+      // ✅ 비정상 값 필터링 (300km/h 이상만 무시)
+      if (rawSpeed > 300) {
+        rawSpeed = currentSpeed;
+      }
 
       // ✅ 속도 기록 배열에 추가
       speedHistory.push(rawSpeed);
       if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
 
-      // ✅ 현재속도: 최근 5개 평균
+      // ✅ 현재속도: 최근 5개 평균 (값이 없으면 rawSpeed 그대로 사용)
       const recent = speedHistory.slice(-5);
-      currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
+      currentSpeed = recent.length > 0
+        ? recent.reduce((a, b) => a + b, 0) / recent.length
+        : rawSpeed;
 
       // ✅ 최고속도 갱신
       if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
 
       // ✅ 누적 거리 (m 단위)
       totalDistance += distance;
+
+      // 🔎 디버깅 로그
+      console.log(`거리: ${distance.toFixed(2)}m, 시간: ${timeElapsed.toFixed(2)}s, 속도: ${rawSpeed.toFixed(2)}km/h, 현재속도: ${currentSpeed.toFixed(2)}km/h`);
     }
   }
 
