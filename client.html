@@ -746,7 +746,15 @@ function startTracking() {
     if (speedKmh > 60) minInterval = 3000; // 차량 고속 → 3초
     else if (speedKmh < 10) minInterval = 10000; // 걷기 → 10초
 
-    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동
+    // ✅ 배열에 무조건 저장 (조건 제거)
+    pathCoords.push({
+      lat,
+      lng,
+      timestamp: now
+    });
+    console.log("pathCoords 저장:", pathCoords[pathCoords.length - 1]);
+
+    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동 → 나머지 로직은 그대로 유지
     if ((now - lastUpdateTime > minInterval) || distanceMoved > 30) {
       lastUpdateTime = now;
       lastLat = lat;
@@ -841,6 +849,7 @@ function startTracking() {
     timeout: 5000
   });
 }
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
