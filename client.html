@@ -935,53 +935,51 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 (개선 버전) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  // 주행 시작 시점 보장
   if (!startTime) startTime = Date.now();
 
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
-    // 거리 계산 (m 단위 유지)
     const distance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(lastLat, lastLng),
       new google.maps.LatLng(lat, lng)
     );
-
-    // 시간 계산 (초)
     const timeElapsed = (timestamp - lastTimestamp) / 1000;
 
     if (timeElapsed > 0) {
       let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
 
-      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
-      if (distance < 5) rawSpeed = 0;
+      if (distance < 1) rawSpeed = 0;        // GPS 드리프트 제거
+      if (rawSpeed > 200) rawSpeed = currentSpeed; // 비정상 값 필터링
 
-      // ✅ 비정상 값 필터링
-      if (rawSpeed > 200) rawSpeed = currentSpeed;
-
-      // ✅ 배열 기록 및 길이 제한
+      // ✅ 속도 기록
       speedHistory.push(rawSpeed);
-      if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
+      if (speedHistory.length > 10) speedHistory.shift();
 
-      // ✅ 평균속도 계산 (speedHistory 기반)
-      currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+      // ✅ 최소 2개일 때는 단순 평균, 10개 이상일 때는 보정 평균
+      if (speedHistory.length < 2) {
+        currentSpeed = rawSpeed;
+      } else if (speedHistory.length < 10) {
+        currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+      } else {
+        // 최근 10개 보정 평균
+        currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+      }
 
       // ✅ 최고속도 갱신
       if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
 
-      // ✅ 누적 거리 갱신 (항상 m 단위)
+      // ✅ 누적 거리 (m 단위)
       totalDistance += distance;
     }
   }
 
-  // ✅ 좌표 기록
+  // 좌표 갱신
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // ✅ 이동정보 갱신
+  // 이동정보 갱신
   updateTravelStats();
 }
-
-
 
 // ---------------------- 개선된 스무딩 함수 ----------------------
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
@@ -1052,11 +1050,11 @@ function updateTravelStats() {
   const seconds = elapsedSeconds % 60;
   const elapsedTimeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
-  // ✅ 속도 값 (speedHistory 기반)
+  // ✅ 속도 값
   const currentSpeedValue = Math.round(currentSpeed);
-  const avgSpeedValue = speedHistory.length > 0
+  const avgSpeedValue = speedHistory.length > 1
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
-    : 0;
+    : currentSpeedValue; // 최소 2개 미만이면 현재속도로 대체
   const maxSpeedValue = Math.round(maxSpeed);
 
   // 📏 이동거리 (m → km 변환)
@@ -1519,7 +1517,7 @@ function startTravel() {
   updateTravelStats();
 }
   
-/* ---------------------- 경로 초기화 함수 ---------------------- */
+/* ---------------------- 경로 초기화 함수 (개선 버전) ---------------------- */
 function resetNavigation(fullStop = false) {
   // 📍 위치 추적 중단
   if (watchId) {
@@ -1559,7 +1557,7 @@ function resetNavigation(fullStop = false) {
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
-  totalDistance = 0;
+  totalDistance = 0;       // ✅ m 단위로 초기화
 
   // 🔄 모드 복귀
   followUser = true;
@@ -1589,10 +1587,10 @@ function resetNavigation(fullStop = false) {
     destinationLng = null;
   }
 
-  // ✅ 지도 중심 및 줌 레벨 복귀 (항상 레벨 7)
+  // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
     map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(16); // ← 16 대신 7로 고정
+    map.setZoom(7); // ← 주석과 일치하도록 7로 고정
   }
 }
 
