@@ -1035,7 +1035,7 @@ function addSpeed(newSpeed) {
 }
 
   
-/* ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ---------------------- */
+// ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ----------------------
 function updateTravelStats() {
   if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
@@ -1060,7 +1060,7 @@ function updateTravelStats() {
   // ✅ 현재속도: 최근 5개 평균
   let currentSpeedValue = 0;
   if (speedHistory.length > 0) {
-    const recent = speedHistory.slice(-5); // 최근 5개만 추출
+    const recent = speedHistory.slice(-5);
     currentSpeedValue = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
   }
 
