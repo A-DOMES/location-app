@@ -937,7 +937,7 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 ----------------------
+// ---------------------- GPS 기반 속도 계산 (개선 버전) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
   if (!startTime) return;
 
@@ -951,14 +951,16 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       // ✅ 작은 이동 무시 (GPS 드리프트 제거)
       if (distance < 5) rawSpeed = 0;
 
-      // ✅ 비정상 값 필터링
-      if (rawSpeed > 100) rawSpeed = smoothedSpeed || currentSpeed;
+      // ✅ 비정상 값 필터링 (너무 큰 값은 무시)
+      if (rawSpeed > 200) rawSpeed = currentSpeed;
 
-      // ✅ 현재속도 갱신
+      // ✅ 현재 속도 갱신
       currentSpeed = rawSpeed;
 
-      // ✅ 속도 기록 및 스무딩 (개선된 함수 사용)
+      // ✅ 속도 기록
       speedHistory.push(currentSpeed);
+
+      // ✅ 스무딩 적용 (최근 7개 값 기준, 변화율 제한 10km/h)
       smoothedSpeed = getSmoothedSpeed(speedHistory, 7, 10);
 
       // ✅ 최고속도 갱신
@@ -967,15 +969,18 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       }
 
       console.log(
-        `거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 스무딩:${smoothedSpeed.toFixed(2)}km/h`
+        `거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, ` +
+        `raw:${rawSpeed.toFixed(2)}km/h, 스무딩:${smoothedSpeed.toFixed(2)}km/h`
       );
     }
   }
 
+  // ✅ 마지막 위치 갱신
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
+  // ✅ 이동정보 모달 갱신
   updateTravelStats();
 }
 
@@ -1026,22 +1031,13 @@ function addPathCoord(newCoord, address = null) {
 }
 
 
-
-// ---------------------- 속도 추가 ----------------------
-function addSpeed(newSpeed) {
-  speedHistory.push(newSpeed);
-
-  // 평균 속도 누적 갱신
-  avgSpeed = Math.round((avgSpeed * (speedHistory.length - 1) + newSpeed) / speedHistory.length);
-
-  // 최고 속도 갱신
-  if (newSpeed > maxSpeed) maxSpeed = newSpeed;
-}
-
-  
+// ---------------------- 이동정보 갱신 ----------------------
 function updateTravelStats() {
+  const statsBox = document.getElementById("travelStatsContent");
+
+  // 🚫 주행 시작 전 또는 좌표 없음 → 초기값 표시
   if (!startTime || pathCoords.length === 0) {
-    document.getElementById("travelStatsContent").innerHTML = `
+    statsBox.innerHTML = `
       <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
       <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
       <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
@@ -1062,16 +1058,16 @@ function updateTravelStats() {
   const seconds = elapsedSeconds % 60;
   const elapsedTimeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
-  // ✅ 현재속도: 개선된 스무딩 함수 적용
-  let currentSpeedValue = Math.round(smoothedSpeed);
+  // 🚗 현재속도 (스무딩 적용)
+  const currentSpeedValue = Math.round(smoothedSpeed || currentSpeed || 0);
 
-  // ✅ 평균속도: 전체 기록 평균
-  const avgSpeedValue = speedHistory.length > 1
+  // 📊 평균속도 (전체 기록 평균)
+  const avgSpeedValue = speedHistory.length > 0
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
-    : currentSpeedValue;
+    : 0;
 
-  // ✅ 최고속도
-  const maxSpeedValue = Math.round(maxSpeed);
+  // ⚡ 최고속도
+  const maxSpeedValue = Math.round(maxSpeed || 0);
 
   // 📏 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
@@ -1090,11 +1086,11 @@ function updateTravelStats() {
     }
   }
 
-  // 🚦 제한속도 표시 (없으면 "-")
+  // 🚦 제한속도 표시
   const limitValue = currentSpeedLimit > 0 ? `${currentSpeedLimit} km/h` : "- km/h";
 
   // 📊 화면에 표시
-  document.getElementById("travelStatsContent").innerHTML = `
+  statsBox.innerHTML = `
     <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
     <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
     <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
@@ -1105,6 +1101,7 @@ function updateTravelStats() {
     <div>🚦 제한속도: <span class="highlight">${limitValue}</span></div>
   `;
 }
+
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
