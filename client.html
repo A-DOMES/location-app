@@ -1052,7 +1052,7 @@ function addSpeed(newSpeed) {
 }
 
   
-// ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ----------------------
+// ---------------------- 이동정보 업데이트 (최근 5개 평균 적용 + 제한속도 표시) ----------------------
 function updateTravelStats() {
   // 🚫 아직 주행 시작 안 했거나 경로 좌표가 없을 때 → 기본값 표시
   if (!startTime || pathCoords.length === 0) {
@@ -1064,6 +1064,7 @@ function updateTravelStats() {
       <div>📏 이동거리: <span class="highlight">0 km</span></div>
       <div>📐 직선거리: <span class="highlight">0 km</span></div>
       <div>🕒 도착예상: <span class="highlight">미정</span></div>
+      <div>🚦 제한속도: <span class="highlight">- km/h</span></div>
     `;
     return;
   }
@@ -1108,6 +1109,9 @@ function updateTravelStats() {
     }
   }
 
+  // 🚦 제한속도 표시 (없으면 "-")
+  const limitValue = currentSpeedLimit > 0 ? `${currentSpeedLimit} km/h` : "- km/h";
+
   // 📊 화면에 표시
   document.getElementById("travelStatsContent").innerHTML = `
     <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
@@ -1117,6 +1121,7 @@ function updateTravelStats() {
     <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
     <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
     <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
+    <div>🚦 제한속도: <span class="highlight">${limitValue}</span></div>
   `;
 }
 
