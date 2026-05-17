@@ -528,6 +528,7 @@ let lastUpdateTime = 0;   // 갱신 주기 제어용
 
 let drivingMode = "normal"; // "normal" 또는 "navigation"
 let autoShowTravelStats = true; // 앱 실행 시 자동 표시 여부
+let currentSpeedLimit = 0;   // 현재 제한속도 (km/h), 기본값 0
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -936,7 +937,7 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 (처음은 rawSpeed, 이후는 평균) ----------------------
+// ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
   if (!startTime) startTime = Date.now();
 
@@ -945,12 +946,15 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       new google.maps.LatLng(lastLat, lastLng),
       new google.maps.LatLng(lat, lng)
     );
-    const timeElapsed = (timestamp - lastTimestamp) / 1000;
+    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
 
     if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6;
+      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-      if (distance < 2) rawSpeed = 0;
+      // ✅ 작은 이동 무시 조건 완화
+      if (distance < 1) rawSpeed = 0;
+
+      // ✅ 비정상 값 필터링
       if (rawSpeed > 300) rawSpeed = currentSpeed;
 
       // ✅ 처음에는 rawSpeed 그대로 표시
@@ -965,22 +969,27 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
         currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
       }
 
+      // ✅ 최고속도 갱신
       if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
+
+      // ✅ 누적 거리
       totalDistance += distance;
 
+      // 🔎 디버깅 로그
       console.log(`거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 현재:${currentSpeed.toFixed(2)}km/h`);
     }
   }
 
+  // ✅ 좌표 기록
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
+  // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
 
 
-  
 // ---------------------- 개선된 스무딩 함수 ----------------------
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
@@ -1386,13 +1395,11 @@ function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
 
 // ---------------------- 일반 속도 제한 ----------------------
 function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
-  const currentKmh = currentSpeed * 3.6;
+  const currentKmh = currentSpeed; // 이미 km/h 단위로 계산됨
 
-  // ✅ 이미 갱신된 제한 속도 값 사용 (외부 호출 제거)
   const limit = currentSpeedLimit ?? null;
 
   if (limit) {
-    // ✅ 알림 빈도 제어 (1분 간격)
     if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
       lastSpeedLimitAlertTime = Date.now();
 
