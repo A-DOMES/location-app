@@ -939,52 +939,43 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  // ✅ 이동정보 버튼을 누르지 않았다면 계산 중단
   if (!startTime) return;
 
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
-    // 거리 계산 (Google Maps API 사용)
-    const distance = google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(lastLat, lastLng),
-      new google.maps.LatLng(lat, lng)
-    ); // m 단위
-
-    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
+    const distance = getDistanceFromLatLonInKm(lastLat, lastLng, lat, lng) * 1000; // m
+    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초
 
     if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
+      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
 
       // ✅ 작은 이동 무시 (GPS 드리프트 제거)
       if (distance < 5) rawSpeed = 0;
 
-      // ✅ 비정상 값 필터링 (100km/h 이상은 무시)
+      // ✅ 비정상 값 필터링
       if (rawSpeed > 100) rawSpeed = smoothedSpeed || currentSpeed;
 
       // ✅ 현재속도 갱신
       currentSpeed = rawSpeed;
 
-      // ✅ 속도 기록 및 스무딩
+      // ✅ 속도 기록 및 스무딩 (개선된 함수 사용)
       speedHistory.push(currentSpeed);
-      smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
+      smoothedSpeed = getSmoothedSpeed(speedHistory, 7, 10);
 
       // ✅ 최고속도 갱신
       if (smoothedSpeed > maxSpeed) {
         maxSpeed = smoothedSpeed;
       }
 
-      // 🔎 디버깅 로그
       console.log(
         `거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 스무딩:${smoothedSpeed.toFixed(2)}km/h`
       );
     }
   }
 
-  // ✅ 좌표 기록
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
 
@@ -992,7 +983,6 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
 
-  // 최근 windowSize 개 값 가져오기
   const recent = history.slice(-windowSize);
   const sum = recent.reduce((a, b) => a + b, 0);
   let avg = sum / recent.length;
@@ -1001,7 +991,6 @@ function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
   if (typeof smoothedSpeed !== "undefined") {
     const delta = avg - smoothedSpeed;
     if (Math.abs(delta) > maxDelta) {
-      // 이전 값에서 maxDelta 만큼만 변화하도록 제한
       avg = smoothedSpeed + (delta > 0 ? maxDelta : -maxDelta);
     }
   }
