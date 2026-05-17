@@ -1039,9 +1039,7 @@ function addSpeed(newSpeed) {
 }
 
   
-// ---------------------- 이동정보 업데이트 (최근 5개 평균 적용 + 제한속도 표시) ----------------------
 function updateTravelStats() {
-  // 🚫 아직 주행 시작 안 했거나 경로 좌표가 없을 때 → 기본값 표시
   if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
       <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
@@ -1064,12 +1062,8 @@ function updateTravelStats() {
   const seconds = elapsedSeconds % 60;
   const elapsedTimeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
-  // ✅ 현재속도: 최근 5개 평균
-  let currentSpeedValue = 0;
-  if (speedHistory.length > 0) {
-    const recent = speedHistory.slice(-5);
-    currentSpeedValue = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
-  }
+  // ✅ 현재속도: 개선된 스무딩 함수 적용
+  let currentSpeedValue = Math.round(smoothedSpeed);
 
   // ✅ 평균속도: 전체 기록 평균
   const avgSpeedValue = speedHistory.length > 1
@@ -1111,7 +1105,6 @@ function updateTravelStats() {
     <div>🚦 제한속도: <span class="highlight">${limitValue}</span></div>
   `;
 }
-
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
