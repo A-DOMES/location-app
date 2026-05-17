@@ -529,6 +529,7 @@ let lastUpdateTime = 0;   // 갱신 주기 제어용
 let drivingMode = "normal"; // "normal" 또는 "navigation"
 let autoShowTravelStats = true; // 앱 실행 시 자동 표시 여부
 let currentSpeedLimit = 0;   // 현재 제한속도 (km/h), 기본값 0
+let smoothedSpeed = 0; // ✅ 전역 초기화  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -948,8 +949,8 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     if (timeElapsed > 0) {
       let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
 
-      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
-      if (distance < 5) rawSpeed = 0;
+      // ✅ 작은 이동 무시 (GPS 드리프트 제거) 보통 5이면 5m를 이동범위라 차량으로만 테스트가 가능함
+      if (distance < 2) rawSpeed = 0; 
 
       // ✅ 비정상 값 필터링 (너무 큰 값은 무시)
       if (rawSpeed > 200) rawSpeed = currentSpeed;
