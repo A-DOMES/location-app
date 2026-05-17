@@ -945,18 +945,15 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       new google.maps.LatLng(lastLat, lastLng),
       new google.maps.LatLng(lat, lng)
     );
-    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
+    const timeElapsed = (timestamp - lastTimestamp) / 1000;
 
     if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
+      let rawSpeed = (distance / timeElapsed) * 3.6;
 
-      // 작은 이동 무시 조건 완화
       if (distance < 2) rawSpeed = 0;
-
-      // 비정상 값 필터링
       if (rawSpeed > 300) rawSpeed = currentSpeed;
 
-      // ✅ 처음에는 rawSpeed 그대로 사용
+      // ✅ 처음에는 rawSpeed 그대로 표시
       if (speedHistory.length === 0) {
         currentSpeed = rawSpeed;
       } else {
@@ -968,23 +965,17 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
         currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
       }
 
-      // 최고속도 갱신
       if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
-
-      // 누적 거리
       totalDistance += distance;
 
-      // 디버깅 로그
-      console.log(`거리: ${distance.toFixed(2)}m, 시간: ${timeElapsed.toFixed(2)}s, rawSpeed: ${rawSpeed.toFixed(2)}km/h, 현재속도: ${currentSpeed.toFixed(2)}km/h`);
+      console.log(`거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 현재:${currentSpeed.toFixed(2)}km/h`);
     }
   }
 
-  // 좌표 기록
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // 모달창 갱신
   updateTravelStats();
 }
 
