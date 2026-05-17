@@ -939,44 +939,43 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  if (!startTime) startTime = Date.now();
+  // ✅ 이동정보 버튼을 누르지 않았다면 계산 중단
+  if (!startTime) return;
 
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
+    // 거리 계산 (Google Maps API 사용)
     const distance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(lastLat, lastLng),
       new google.maps.LatLng(lat, lng)
-    );
+    ); // m 단위
+
     const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
 
     if (timeElapsed > 0) {
       let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-      // ✅ 작은 이동 무시 조건 완화
-      if (distance < 1) rawSpeed = 0;
+      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
+      if (distance < 5) rawSpeed = 0;
 
-      // ✅ 비정상 값 필터링
-      if (rawSpeed > 300) rawSpeed = currentSpeed;
+      // ✅ 비정상 값 필터링 (100km/h 이상은 무시)
+      if (rawSpeed > 100) rawSpeed = smoothedSpeed || currentSpeed;
 
-      // ✅ 처음에는 rawSpeed 그대로 표시
-      if (speedHistory.length === 0) {
-        currentSpeed = rawSpeed;
-      } else {
-        // ✅ 이후부터는 최근 5개 평균
-        speedHistory.push(rawSpeed);
-        if (speedHistory.length > 10) speedHistory.shift();
+      // ✅ 현재속도 갱신
+      currentSpeed = rawSpeed;
 
-        const recent = speedHistory.slice(-5);
-        currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
-      }
+      // ✅ 속도 기록 및 스무딩
+      speedHistory.push(currentSpeed);
+      smoothedSpeed = getSmoothedSpeed(speedHistory, 5);
 
       // ✅ 최고속도 갱신
-      if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
-
-      // ✅ 누적 거리
-      totalDistance += distance;
+      if (smoothedSpeed > maxSpeed) {
+        maxSpeed = smoothedSpeed;
+      }
 
       // 🔎 디버깅 로그
-      console.log(`거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 현재:${currentSpeed.toFixed(2)}km/h`);
+      console.log(
+        `거리:${distance.toFixed(2)}m, 시간:${timeElapsed.toFixed(2)}s, raw:${rawSpeed.toFixed(2)}km/h, 스무딩:${smoothedSpeed.toFixed(2)}km/h`
+      );
     }
   }
 
@@ -988,7 +987,6 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
-
 
 // ---------------------- 개선된 스무딩 함수 ----------------------
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
