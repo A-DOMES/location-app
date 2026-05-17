@@ -935,6 +935,7 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 (개선 버전) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
+  // ✅ 주행 시작 시점 보장
   if (!startTime) startTime = Date.now();
 
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
@@ -947,8 +948,11 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     if (timeElapsed > 0) {
       let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
 
-      if (distance < 1) rawSpeed = 0;        // GPS 드리프트 제거
-      if (rawSpeed > 200) rawSpeed = currentSpeed; // 비정상 값 필터링
+      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
+      if (distance < 3) rawSpeed = 0;
+
+      // ✅ 비정상 값 필터링
+      if (rawSpeed > 200) rawSpeed = currentSpeed;
 
       // ✅ 속도 기록
       speedHistory.push(rawSpeed);
@@ -957,10 +961,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       // ✅ 최소 2개일 때는 단순 평균, 10개 이상일 때는 보정 평균
       if (speedHistory.length < 2) {
         currentSpeed = rawSpeed;
-      } else if (speedHistory.length < 10) {
-        currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
       } else {
-        // 최근 10개 보정 평균
         currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
       }
 
@@ -972,15 +973,15 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     }
   }
 
-  // 좌표 갱신
+  // ✅ 좌표 기록
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // 이동정보 갱신
+  // ✅ 이동정보 갱신
   updateTravelStats();
 }
-
+  
 // ---------------------- 개선된 스무딩 함수 ----------------------
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
@@ -1003,18 +1004,19 @@ function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
 }
 
 
-
-// ---------------------- 좌표 추가 ----------------------
+// ---------------------- 좌표 추가 (m 단위 누적) ----------------------
 function addPathCoord(newCoord, address = null) {
   if (pathCoords.length > 0) {
     const lastCoord = pathCoords[pathCoords.length - 1];
+    // ✅ 거리 계산은 m 단위로 누적
     totalDistance += google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(lastCoord.lat, lastCoord.lng),
       new google.maps.LatLng(newCoord.lat, newCoord.lng)
-    ) / 1000; // km 단위
+    ); // m 단위
   }
   pathCoords.push({ ...newCoord, address, timestamp: Date.now() });
 }
+
 
 // ---------------------- 속도 추가 ----------------------
 function addSpeed(newSpeed) {
@@ -1028,7 +1030,7 @@ function addSpeed(newSpeed) {
 }
 
   
-/* ---------------------- 이동정보 업데이트 (개선 버전) ---------------------- */
+// ---------------------- 이동정보 업데이트 (개선 버전) ----------------------
 function updateTravelStats() {
   if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
@@ -1054,7 +1056,7 @@ function updateTravelStats() {
   const currentSpeedValue = Math.round(currentSpeed);
   const avgSpeedValue = speedHistory.length > 1
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
-    : currentSpeedValue; // 최소 2개 미만이면 현재속도로 대체
+    : currentSpeedValue;
   const maxSpeedValue = Math.round(maxSpeed);
 
   // 📏 이동거리 (m → km 변환)
@@ -1085,7 +1087,7 @@ function updateTravelStats() {
   `;
 }
 
-
+  
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
