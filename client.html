@@ -933,20 +933,21 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 (개선 버전) ----------------------
+// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
   // ✅ 주행 시작 시점 보장
   if (!startTime) startTime = Date.now();
 
+  // ✅ 이전 좌표가 존재할 때만 계산 가능
   if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
     const distance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(lastLat, lastLng),
       new google.maps.LatLng(lat, lng)
     );
-    const timeElapsed = (timestamp - lastTimestamp) / 1000;
+    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
 
     if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h
+      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
       // ✅ 작은 이동 무시 (GPS 드리프트 제거)
       if (distance < 3) rawSpeed = 0;
@@ -954,15 +955,18 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       // ✅ 비정상 값 필터링
       if (rawSpeed > 200) rawSpeed = currentSpeed;
 
-      // ✅ 속도 기록
+      // ✅ 속도 기록 배열에 추가
       speedHistory.push(rawSpeed);
-      if (speedHistory.length > 10) speedHistory.shift();
+      if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
 
-      // ✅ 최소 2개일 때는 단순 평균, 10개 이상일 때는 보정 평균
-      if (speedHistory.length < 2) {
-        currentSpeed = rawSpeed;
-      } else {
+      // ✅ 현재속도: 최근 5개 평균
+      if (speedHistory.length < 5) {
+        // 5개 미만이면 전체 평균 사용
         currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+      } else {
+        // 5개 이상이면 최근 5개 평균 사용
+        const recent = speedHistory.slice(-5);
+        currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
       }
 
       // ✅ 최고속도 갱신
@@ -981,6 +985,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   // ✅ 이동정보 갱신
   updateTravelStats();
 }
+
   
 // ---------------------- 개선된 스무딩 함수 ----------------------
 function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
@@ -1030,7 +1035,7 @@ function addSpeed(newSpeed) {
 }
 
   
-// ---------------------- 이동정보 업데이트 (개선 버전) ----------------------
+/* ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ---------------------- */
 function updateTravelStats() {
   if (!startTime || pathCoords.length === 0) {
     document.getElementById("travelStatsContent").innerHTML = `
@@ -1052,11 +1057,19 @@ function updateTravelStats() {
   const seconds = elapsedSeconds % 60;
   const elapsedTimeStr = `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 
-  // ✅ 속도 값
-  const currentSpeedValue = Math.round(currentSpeed);
+  // ✅ 현재속도: 최근 5개 평균
+  let currentSpeedValue = 0;
+  if (speedHistory.length > 0) {
+    const recent = speedHistory.slice(-5); // 최근 5개만 추출
+    currentSpeedValue = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
+  }
+
+  // ✅ 평균속도: 전체 기록 평균
   const avgSpeedValue = speedHistory.length > 1
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
     : currentSpeedValue;
+
+  // ✅ 최고속도
   const maxSpeedValue = Math.round(maxSpeed);
 
   // 📏 이동거리 (m → km 변환)
@@ -1086,7 +1099,6 @@ function updateTravelStats() {
     <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
   `;
 }
-
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
