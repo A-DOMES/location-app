@@ -960,14 +960,8 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
 
       // ✅ 현재속도: 최근 5개 평균
-      if (speedHistory.length < 5) {
-        // 5개 미만이면 전체 평균 사용
-        currentSpeed = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
-      } else {
-        // 5개 이상이면 최근 5개 평균 사용
-        const recent = speedHistory.slice(-5);
-        currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
-      }
+      const recent = speedHistory.slice(-5);
+      currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
 
       // ✅ 최고속도 갱신
       if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
@@ -982,9 +976,10 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // ✅ 이동정보 갱신
+  // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
+
 
   
 // ---------------------- 개선된 스무딩 함수 ----------------------
@@ -1013,14 +1008,28 @@ function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
 function addPathCoord(newCoord, address = null) {
   if (pathCoords.length > 0) {
     const lastCoord = pathCoords[pathCoords.length - 1];
-    // ✅ 거리 계산은 m 단위로 누적
-    totalDistance += google.maps.geometry.spherical.computeDistanceBetween(
+
+    // ✅ 이전 좌표와 새 좌표 사이 거리 계산 (m 단위)
+    const segmentDistance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(lastCoord.lat, lastCoord.lng),
       new google.maps.LatLng(newCoord.lat, newCoord.lng)
-    ); // m 단위
+    );
+
+    // ✅ 누적 거리 갱신
+    totalDistance += segmentDistance;
   }
-  pathCoords.push({ ...newCoord, address, timestamp: Date.now() });
+
+  // ✅ 좌표 기록 (주소 + 타임스탬프 포함)
+  pathCoords.push({
+    ...newCoord,
+    address,
+    timestamp: Date.now()
+  });
+
+  // 🚗 이동정보 모달창 갱신
+  updateTravelStats();
 }
+
 
 
 // ---------------------- 속도 추가 ----------------------
