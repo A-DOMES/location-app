@@ -90,23 +90,23 @@
       margin-bottom: 12px;
     }
 
-/* 입력창 */
-input[type="text"] {
-  /* 좌측에서 띄우기: 네가 직접 값 조정 */
-  margin-left: 50px;     /* ✅ 여기 값을 20px, 50px, 80px 등으로 바꿔가며 테스트 */
-
-  /* 폭은 버튼과 맞추려면 동일하게 */
-  width: 350px;          /* ✅ 원하는 폭으로 직접 조정 */
-  /* max-width는 충돌을 일으키니 제거하거나 width와 동일하게 맞추기 */
-  /* max-width: 350px; */
-
-  height: 40px;
-  font-size: 18px;
-  padding: 8px;
-  border: 2px solid #1976d2;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
+    /* 입력창 */
+    input[type="text"] {
+      /* 좌측에서 띄우기: 네가 직접 값 조정 */
+      margin-left: 50px;     /* ✅ 여기 값을 20px, 50px, 80px 등으로 바꿔가며 테스트 */
+    
+      /* 폭은 버튼과 맞추려면 동일하게 */
+      width: 350px;          /* ✅ 원하는 폭으로 직접 조정 */
+      /* max-width는 충돌을 일으키니 제거하거나 width와 동일하게 맞추기 */
+      /* max-width: 350px; */
+    
+      height: 40px;
+      font-size: 18px;
+      padding: 8px;
+      border: 2px solid #1976d2;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
 
 
     .map-btn {
@@ -115,21 +115,21 @@ input[type="text"] {
       cursor: pointer;
     }
 
-/* 위치 전송 / 해제 버튼 */
-#sendBtn, #stopBtn {
-  margin-left: 0;        /* ✅ 좌측에 붙임 */
-  margin-right: auto;    /* ✅ 오른쪽 여백 자동 */
-
-  width: 480px;            /* ✅ 텍스트박스와 동일하게 맞추면 끝자락이 일치 */
-  height: 50px;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-  margin-bottom: 6px;
-  display: block;
-}
+    /* 위치 전송 / 해제 버튼 */
+    #sendBtn, #stopBtn {
+      margin-left: 0;        /* ✅ 좌측에 붙임 */
+      margin-right: auto;    /* ✅ 오른쪽 여백 자동 */
+    
+      width: 480px;            /* ✅ 텍스트박스와 동일하게 맞추면 끝자락이 일치 */
+      height: 50px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      margin-bottom: 6px;
+      display: block;
+    }
 
     #sendBtn {
       background: linear-gradient(to bottom, #42a5f5, #1976d2);
@@ -143,7 +143,7 @@ input[type="text"] {
     /* 모달창 */
     .modal {
       position: fixed;
-      left: 0; top: 0;
+      left: 0; top: 30px;
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.4);
       z-index: 1000;
