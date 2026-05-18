@@ -112,30 +112,30 @@
     #sendBtn { background: linear-gradient(to bottom, #42a5f5, #1976d2); }
     #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
 
-    /* 모달창 중앙 정렬 */
+    /* 모달 전체 */
     .modal {
+      display: none;
       position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%); /* 화면 정중앙 배치 */
-      z-index: 1000;
-      width: 100%;          /* 전체 화면 기준 */
-      height: 100%;         /* 전체 화면 기준 */
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      display: flex;              /* 중앙 배치 위해 flex 사용 */
+      justify-content: center;    /* 가로 중앙 */
+      align-items: center;        /* 세로 중앙 */
     }
     
-    /* 모달 내용 스타일 */
+    /* 모달 내용 */
     .modal-content {
       background-color: #fefefe;
       padding: 20px;
-      border: 2px solid #4CAF50;
+      border: 2px solid #2196F3;
       border-radius: 10px;
-      width: 80%;           /* 이전처럼 넉넉한 크기 */
-      max-width: 600px;     /* 최대 600px까지 크게 */
+      width: 80%;
+      max-width: 400px;
       text-align: center;
       font-size: 18px;
-      background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* 요청하신 배경색 */
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb); /* 요청하신 색상 */
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 
