@@ -83,16 +83,15 @@
     }
     input[type="text"] {
       flex: 1;
-      max-width: 70%;       /* 텍스트박스 폭 줄임 */
-      height: 38px;
+      height: 40px;
       font-size: 18px;
-      padding: 6px;
+      padding: 8px;
       border: 2px solid #1976d2;
       border-radius: 6px;
       box-sizing: border-box;
     }
     .map-btn {
-      width: 90px;          /* 지도 버튼 크게 */
+      width: 90px;
       height: 90px;
       cursor: pointer;
     }
@@ -111,12 +110,57 @@
     #sendBtn { background: linear-gradient(to bottom, #42a5f5, #1976d2); }
     #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
 
+    /* 위치전송 버튼을 텍스트박스 우측 끝에 맞추기 */
+    .send-btn-wrapper {
+      display: flex;
+      justify-content: flex-end; /* 오른쪽 끝 정렬 */
+    }
+
+    /* 모달창 중앙 정렬 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none; /* 기본은 숨김 */
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal {
+      background: #e3f2fd;
+      border: 2px solid #1976d2;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .modal h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #1565c0;
+      font-size: 22px;
+    }
+    .modal button {
+      margin-top: 12px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(to bottom, #42a5f5, #1976d2);
+    }
+    .modal button:hover { opacity: 0.85; }
+
     /* 모바일 대응 */
     @media (max-width:767px) {
       header h2 { font-size: 24px; }
       .info-box { font-size: 16px; }
-      .map-btn { width: 70px; height: 70px; } /* 모바일에서도 크게 */
-      input[type="text"] { font-size: 16px; height: 34px; max-width: 65%; }
+      .map-btn { width: 70px; height: 70px; }
+      input[type="text"] { font-size: 16px; height: 36px; }
       #sendBtn, #stopBtn { font-size: 16px; height: 46px; }
       .warning { font-size: 15px; }
     }
@@ -157,13 +201,37 @@
           </a>
           <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 아이디를 입력하세요">
         </div>
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+        <div class="send-btn-wrapper">
+          <button type="button" id="sendBtn" onclick="openModal()">위치 전송</button>
+        </div>
         <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </form>
     </section>
 
     <div id="map"></div>
   </div>
+
+  <!-- 모달창 -->
+  <div class="modal-overlay" id="myModal">
+    <div class="modal">
+      <h3>알림</h3>
+      <p>위치 전송이 시작되었습니다.</p>
+      <button onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById("myModal").style.display = "flex";
+    }
+    function closeModal() {
+      document.getElementById("myModal").style.display = "none";
+    }
+    function stopLocation() {
+      alert("위치정보 전송이 해제되었습니다.");
+    }
+  </script>
+
 
 
 <!-- config.js 불러오기 -->
