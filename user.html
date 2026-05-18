@@ -2,111 +2,111 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>A-DOMES | 사용자 위치 전송</title>
-  <link rel="manifest" href="manifest.json">
-
+  <title>A-DOMES | 내 위치 공유 & 지도 안내</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background-color: #f9f9f9;
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #eaf3fb; /* 연한 파란색 배경 */
       margin: 0;
-      color: #333;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    header {
-      background-color: #4CAF50;
-      padding: 20px;
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      margin: 16px;
+      padding: 24px;
+      width: 95%;          /* 모바일 화면 거의 채우도록 */
+      max-width: 600px;    /* 태블릿 이상에서는 너무 넓지 않게 제한 */
       text-align: center;
     }
-    header h2 {
-      font-size: 32px;
-      margin: 0;
+    .card h3 {
+      color: #1565c0; /* 진한 파란색 */
+      margin-bottom: 12px;
+      font-size: 22px;
       font-weight: bold;
-      color: #fff;
     }
-    .info-box {
-      border: 2px solid #4CAF50;
+    .card p {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+    }
+    .input-box {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border: 2px solid #1565c0;
       border-radius: 10px;
-      background-color: #e8f5e9;
-      padding: 20px;
-      margin: 40px auto;
-      max-width: 700px;
-      text-align: left;
-      font-size: 20px;
-      line-height: 1.4;
-    }
-    .info-box h3 { margin: 10px 0 5px 0; color: #2e7d32; }
-    .warning { display: block; margin-top: 10px; font-size: 20px; color: #d32f2f; font-weight: bold; }
-    .center-wrapper { display: flex; justify-content: center; margin-top: 20px; }
-    .inner-group { text-align: left; }
-    input[type="text"] {
-      width: 400px; height: 30px; font-size: 20px;
-      padding: 8px; margin-left: 140px; margin-bottom: 5px;
-      border: 2px solid #4CAF50; border-radius: 6px; display: block;
+      margin-bottom: 20px;
     }
     .button-group {
-      display: flex; justify-content: flex-start; align-items: center;
-      margin-left: 1px; margin-top: 10px; gap: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .map-btn { width: 100px; height: 100px; cursor: pointer; }
-    #sendBtn, #stopBtn {
-      width: 200px; height: 50px; font-size: 20px;
-      border: none; border-radius: 8px; cursor: pointer; color: white;
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 16px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #fff;
+      transition: 0.3s;
     }
-    #sendBtn { background: linear-gradient(to bottom, #66bb6a, #4CAF50); }
-    #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
-    .modal {
-      display: none; position: fixed; z-index: 999;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: #fefefe;
-      margin: 15% auto; padding: 20px;
-      border: 2px solid #4CAF50; border-radius: 10px;
-      width: 80%; max-width: 400px; text-align: center; font-size: 18px;
-      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-    }
+    #sendBtn { background: linear-gradient(to right, #42a5f5, #1565c0); }
+    #sendBtn:hover { background: linear-gradient(to right, #64b5f6, #1976d2); }
+    #stopBtn { background: linear-gradient(to right, #ef5350, #c62828); }
+    #stopBtn:hover { background: linear-gradient(to right, #e57373, #d32f2f); }
+    #mapBtn img { width: 70px; height: 70px; }
   </style>
 </head>
-
 <body>
-  <header>
-    <h2>A-DOMES | 사용자 위치 전송</h2>
-  </header>
-
-  <section class="info-box">
+  <!-- 상단 카드: 앱 목적 -->
+  <div class="card">
     <h3>앱 목적</h3>
-    <p>이 앱은 사용자의 현재 위치 정보를 서버에 기록하기 위해 만들어졌습니다.</p>
-    <h3>사용 방법</h3>
     <p>
-      입력란의 사용할 입력값은 고유값이며 잃어버린 경우 서비스를 제공하지 않습니다.<br>
-      위치 전송 버튼을 누르면 입력한 값과 현재 위치가 사용자 서버에 기록됩니다.<br>
-      화면을 켜 두시면 5분마다 자동으로 위치가 갱신됩니다.
+      내 위치를 기록하고 회원끼리 서로의 위치를 확인하며,<br>
+      전국 어디든 목적지를 검색해 안전하게 길을 안내받을 수 있습니다.
     </p>
-    <span class="warning">📱 위치 전송을 위해 화면을 끄지 마세요!</span>
-  </section>
+  </div>
 
-  <!-- ✅ 사용자 입력창 -->
-  <form id="locationForm" method="POST">
-    <div class="center-wrapper">
-      <div class="inner-group">
-        <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 아이디를 입력하세요">
-        <div class="button-group">
-          <!-- ✅ 지도 버튼 -->
-          <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
-            <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-          </a>
-          <!-- ✅ 위치 전송 버튼 -->
-          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-          <!-- ✅ 위치정보 해제 버튼 -->
-          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-        </div>
+  <!-- 중단 카드: 주요 기능 -->
+  <div class="card">
+    <h3>주요 기능</h3>
+    <p>
+      📡 위치 전송 · 자동 갱신<br>
+      🗺️ 전국 지도 검색 · 직선 거리 확인<br>
+      👥 회원 이름으로 상대 위치 확인<br>
+      🚸 보호구역 · 속도 제한 · 주변 시설 알림
+    </p>
+  </div>
+
+  <!-- 하단 카드: 입력창과 버튼 -->
+  <div class="card">
+    <h3>시작하기</h3>
+    <form id="locationForm" method="POST">
+      <input type="text" name="phone" id="phone" 
+             class="input-box" 
+             placeholder="닉네임 또는 아이디 입력">
+      <div class="button-group">
+        <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
+          <img src="btn-current.png" alt="지도 버튼">
+      </a>
+        <button type="button" id="sendBtn" class="btn" onclick="sendLocation()">위치 전송</button>
+        <button type="button" id="stopBtn" class="btn" onclick="stopLocation()">위치 해제</button>
       </div>
-    </div>
-  </form>
+      </form>
+      </div> <!-- 카드 닫기 -->
+      
+      <div id="map"></div>
 
-  <div id="map"></div>
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
