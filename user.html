@@ -13,6 +13,7 @@
       background-color: #f9f9f9;
       margin: 0;
       color: #333;
+      padding: 12px; /* 모바일 대응 여백 */
     }
     header {
       background-color: #1976d2; /* 파란색 계열 */
@@ -26,11 +27,11 @@
       color: #fff;
     }
     .info-box {
-      border: 2px solid #1976d2; /* 파란색 테두리 */
+      border: 2px solid #1976d2;
       border-radius: 10px;
-      background-color: #e3f2fd; /* 연한 파란색 배경 */
+      background-color: #e3f2fd;
       padding: 20px;
-      margin: 25px auto;
+      margin: 20px auto;
       max-width: 700px;
       text-align: left;
       font-size: 20px;
@@ -108,11 +109,11 @@
     /* 모바일 대응 */
     @media (max-width:767px) {
       header h2 { font-size: 24px; }
-      .info-box { max-width: 95%; font-size: 16px; }
-      input[type="text"] { width: 90%; margin-left: 0; font-size: 16px; }
-      #sendBtn, #stopBtn { width: 150px; height: 50px; font-size: 18px; }
+      .info-box { width: 95%; margin: 12px auto; font-size: 16px; }
+      input[type="text"] { width: 95%; margin-left: 0; font-size: 16px; }
+      #sendBtn, #stopBtn { width: 45%; height: 50px; font-size: 18px; }
       .map-btn { width: 70px; height: 70px; }
-      .warning { font-size: 14px; } /* 모바일에서 글씨 조금 줄여서 한 줄 표시 */
+      .warning { font-size: 14px; } /* 모바일에서 글씨 줄여서 한 줄 유지 */
     }
   </style>
 </head>
@@ -162,9 +163,7 @@
     </div>
   </form>
 
-  <div id="map"></div>
-
-
+  <div id="map">
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
 
