@@ -166,15 +166,33 @@ input[type="text"] {
       margin: 0 auto;
     }
 
-    /* 모바일 대응 */
-    @media (max-width:767px) {
-      header h2 { font-size: 22px; }
-      .info-box { font-size: 15px; }
-      .map-btn { width: 60px; height: 60px; }
-      input[type="text"] { font-size: 14px; height: 32px; max-width: 65%; }
-      #sendBtn, #stopBtn { font-size: 14px; height: 42px; width: 100%; max-width: none; }
-      .warning { font-size: 14px; }
-    }
+/* 모바일 대응 */
+@media (max-width:767px) {
+  header h2 { font-size: 22px; }
+  .info-box { font-size: 15px; }
+  .map-btn { width: 60px; height: 60px; }
+
+  input[type="text"] {
+    font-size: 14px;
+    height: 32px;
+    width: 100%;       /* ✅ 모바일에서는 꽉 채움 */
+    max-width: none;   /* ✅ 제한 없애기 */
+    margin-left: 20px;    /* ✅ 좌측으로 붙임 */
+    margin-right: 0;   /* ✅ 우측 여백 제거 */
+  }
+
+  #sendBtn, #stopBtn {
+    font-size: 14px;
+    height: 42px;
+    width: 100%;       /* ✅ 버튼도 꽉 채움 */
+    max-width: none;
+    margin-left: 0;    /* ✅ 좌측으로 붙임 */
+    margin-right: 0;
+  }
+
+  .warning { font-size: 14px; }
+}
+
   </style>
 </head>
 
