@@ -326,7 +326,7 @@ function handleSendLocation(result) {
   }
 }
 
-// ✅ 위치 해제
+// ✅ 위치 해제 (fetch POST로 수정)
 function stopLocation() {
   showModal("위치정보 해제 처리 중입니다...\n잠시만 기다려주세요.");
   clearInterval(intervalId); intervalId = null;
@@ -334,15 +334,27 @@ function stopLocation() {
   const token = sessionStorage.getItem("token");
   const phone = document.getElementById("phone").value;
 
-  const url = CONFIG.ADMIN_URL
-            + "?phone=" + encodeURIComponent(phone)
-            + "&status=해제"
-            + "&time=" + encodeURIComponent(new Date().toISOString())
-            + "&token=" + encodeURIComponent(token);
+  // ✅ POST 요청으로 관리자 서버에 해제 상태 전달
+  const params = new URLSearchParams({
+    phone: phone,
+    status: "해제",
+    time: new Date().toISOString(),
+    token: token
+  });
 
-  callJSONP(url, "handleStopLocation");
+  fetch(CONFIG.ADMIN_URL, {
+    method: "POST",
+    body: params
+  })
+  .then(res => res.json())
+  .then(result => handleStopLocation(result))
+  .catch(err => {
+    closeModal();
+    showModal("해제 오류: " + err.message, true);
+  });
 }
 
+// ✅ 해제 응답 처리
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
   const phone = document.getElementById("phone").value;
