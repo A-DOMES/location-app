@@ -7,9 +7,6 @@
   <link rel="manifest" href="manifest.json">
 
   <style>
-    /* ===========================
-       기본 레이아웃
-    =========================== */
     body {
       font-family: Arial, sans-serif;
       font-size: 18px;
@@ -27,15 +24,12 @@
       border: 2px solid #1976d2;
       border-radius: 12px;
       background: #fff;
-      max-width: 700px;   /* ✅ 기존 900px → 700px으로 줄임 */
+      max-width: 600px;   /* ✅ PC에서도 명함카드처럼 제한 */
       width: 100%;
       padding: 20px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     }
 
-    /* ===========================
-       헤더
-    =========================== */
     header {
       background-color: #1976d2;
       padding: 10px;
@@ -45,22 +39,19 @@
     }
 
     header h2 {
-      font-size: 26px;
+      font-size: 24px;
       margin: 0;
       font-weight: bold;
       color: #fff;
     }
 
-    /* ===========================
-       정보 박스
-    =========================== */
     .info-box {
       border: 2px solid #1976d2;
       border-radius: 10px;
       background-color: #e3f2fd;
       padding: 14px;
       margin: 14px 0;
-      font-size: 18px;
+      font-size: 17px;
       line-height: 1.5;
     }
 
@@ -79,60 +70,54 @@
     .desc {
       display: block;
       margin-top: 6px;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .warning {
       display: block;
       margin-top: 4px;
-      font-size: 18px;
+      font-size: 16px;
       color: #d32f2f;
       font-weight: bold;
       white-space: nowrap;
     }
 
-    /* ===========================
-       입력창 + 지도 버튼 그룹
-    =========================== */
+    /* 입력창 + 지도 버튼 그룹 */
     .input-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 12px;
     }
 
     input[type="text"] {
-      margin-left: 16px;
-      height: 40px;
-      font-size: 18px;
-      padding: 8px;
+      flex: 1;
+      max-width: 60%;     /* ✅ 카드 폭 기준 비율 */
+      height: 36px;
+      font-size: 16px;
+      padding: 6px;
       border: 2px solid #1976d2;
       border-radius: 6px;
       box-sizing: border-box;
-      max-width: 60%;     /* ✅ 카드 폭 줄인 만큼 입력창도 같이 줄임 */
     }
 
     .map-btn {
-      width: 80px;        /* ✅ 버튼 크기 줄임 */
-      height: 80px;
+      width: 70px;
+      height: 70px;
       cursor: pointer;
     }
 
-    /* ===========================
-       위치 전송 / 해제 버튼
-    =========================== */
+    /* 위치 전송 / 해제 버튼 */
     #sendBtn, #stopBtn {
-      width: 80%;         /* ✅ 버튼 폭도 카드 폭에 맞춰 줄임 */
-      height: 48px;
-      font-size: 17px;
+      width: 80%;         /* ✅ 카드 폭 기준 비율 */
+      height: 44px;
+      font-size: 16px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       color: white;
-      margin-bottom: 6px;
+      margin: 6px auto;
       display: block;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     #sendBtn {
@@ -144,9 +129,7 @@
       margin-top: 4px;
     }
 
-    /* ===========================
-       모달창
-    =========================== */
+    /* 모달창 */
     .modal {
       position: fixed;
       left: 0; top: 0;
@@ -160,27 +143,25 @@
 
     .modal-content {
       background-color: #fefefe;
-      padding: 16px;
+      padding: 14px;
       border: 2px solid #2196F3;
       border-radius: 10px;
-      width: 75%;        /* ✅ 폭 줄임 */
-      max-width: 360px;  /* ✅ 최대 폭 줄임 */
+      width: 75%;
+      max-width: 340px;
       text-align: center;
-      font-size: 16px;
+      font-size: 15px;
       background: linear-gradient(135deg, #e3f2fd, #bbdefb);
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       margin: 0 auto;
     }
 
-    /* ===========================
-       모바일 대응
-    =========================== */
+    /* 모바일 대응 */
     @media (max-width:767px) {
       header h2 { font-size: 22px; }
       .info-box { font-size: 15px; }
-      .map-btn { width: 65px; height: 65px; }
-      input[type="text"] { font-size: 15px; height: 34px; max-width: 65%; }
-      #sendBtn, #stopBtn { font-size: 15px; height: 44px; width: 100%; max-width: none; }
+      .map-btn { width: 60px; height: 60px; }
+      input[type="text"] { font-size: 14px; height: 32px; max-width: 65%; }
+      #sendBtn, #stopBtn { font-size: 14px; height: 42px; width: 100%; max-width: none; }
       .warning { font-size: 14px; }
     }
   </style>
@@ -192,7 +173,6 @@
     <h2>A-DOMES | 위치 전송</h2>
   </header>
 
-  <!-- 입력창 + 버튼 (위로 이동) -->
   <section class="info-box">
     <form id="locationForm" method="POST">
       <div class="input-group">
@@ -206,7 +186,6 @@
     </form>
   </section>
 
-  <!-- 앱 목적 + 주요 기능 (아래로 이동) -->
   <section class="info-box">
     <h3>앱 목적</h3>
     <p>
@@ -227,7 +206,6 @@
 
   <div id="map"></div>
 </div>
-
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
