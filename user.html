@@ -78,21 +78,22 @@
     .input-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 12px;
     }
     input[type="text"] {
       flex: 1;
-      height: 40px;
+      max-width: 70%;       /* 텍스트박스 폭 줄임 */
+      height: 38px;
       font-size: 18px;
-      padding: 8px;
+      padding: 6px;
       border: 2px solid #1976d2;
       border-radius: 6px;
       box-sizing: border-box;
     }
     .map-btn {
-      width: 60px;
-      height: 60px;
+      width: 90px;          /* 지도 버튼 크게 */
+      height: 90px;
       cursor: pointer;
     }
 
@@ -105,7 +106,7 @@
       border-radius: 8px;
       cursor: pointer;
       color: white;
-      margin-bottom: 6px; /* 버튼 간격 좁게 */
+      margin-bottom: 6px;
     }
     #sendBtn { background: linear-gradient(to bottom, #42a5f5, #1976d2); }
     #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
@@ -114,8 +115,8 @@
     @media (max-width:767px) {
       header h2 { font-size: 24px; }
       .info-box { font-size: 16px; }
-      .map-btn { width: 50px; height: 50px; }
-      input[type="text"] { font-size: 16px; height: 36px; }
+      .map-btn { width: 70px; height: 70px; } /* 모바일에서도 크게 */
+      input[type="text"] { font-size: 16px; height: 34px; max-width: 65%; }
       #sendBtn, #stopBtn { font-size: 16px; height: 46px; }
       .warning { font-size: 15px; }
     }
@@ -163,6 +164,7 @@
 
     <div id="map"></div>
   </div>
+
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
