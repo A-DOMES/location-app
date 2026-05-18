@@ -90,16 +90,20 @@
       margin-bottom: 12px;
     }
 
-    input[type="text"] {
-      flex: 1;
-      max-width: 60%;     /* ✅ 카드 폭 기준 비율 */
-      height: 36px;
-      font-size: 16px;
-      padding: 6px;
-      border: 2px solid #1976d2;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
+/* 입력창 */
+input[type="text"] {
+  width: 80%;          /* ✅ 버튼과 동일한 폭 */
+  height: 40px;
+  font-size: 18px;
+  padding: 8px;
+  border: 2px solid #1976d2;
+  border-radius: 6px;
+  box-sizing: border-box;
+
+  display: block;
+  margin-left: auto;   /* ✅ 왼쪽 여백 자동 → 오른쪽 끝으로 이동 */
+  margin-right: 0;     /* ✅ 오른쪽 끝자락 고정 */
+}
 
     .map-btn {
       width: 70px;
@@ -107,18 +111,18 @@
       cursor: pointer;
     }
 
-    /* 위치 전송 / 해제 버튼 */
-    #sendBtn, #stopBtn {
-      width: 80%;         /* ✅ 카드 폭 기준 비율 */
-      height: 44px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      margin: 6px auto;
-      display: block;
-    }
+/* 위치 전송 / 해제 버튼 */
+#sendBtn, #stopBtn {
+  width: 80%;          /* ✅ 텍스트박스와 동일한 폭 */
+  height: 50px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  margin: 6px auto;    /* ✅ 가운데 정렬 */
+  display: block;
+}
 
     #sendBtn {
       background: linear-gradient(to bottom, #42a5f5, #1976d2);
