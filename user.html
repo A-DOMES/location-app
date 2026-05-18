@@ -354,17 +354,25 @@ function stopLocation() {
   });
 }
 
-// ✅ 해제 응답 처리
+// ✅ 해제 응답 처리 (분기 강화)
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
   const phone = document.getElementById("phone").value;
   const dataObj = parseArrayResponse(result, phone);
   closeModal();
-  if (dataObj && dataObj.status === "해제") {
+
+  if (!dataObj) {
+    showModal("처리 중 오류 발생:\n응답 없음", true);
+    return;
+  }
+
+  if (dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
     document.getElementById("mapBtn").style.display = "none";
+  } else if (dataObj.status === "정상") {
+    showModal("✅ 아직 위치정보가 활성 상태입니다.", true);
   } else {
-    showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
+    showModal("처리 중 오류 발생:\n" + dataObj.status, true);
   }
 }
 
