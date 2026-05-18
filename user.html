@@ -269,11 +269,19 @@ function handleVerifyToken(result) {
   }
 }
 
-// ✅ 배열 응답 파싱
+// ✅ 배열 응답 파싱 (phone 값 비교 강화)
 function parseArrayResponse(arr, phone) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
-  return arr.find(row => row.phone === phone) || null;
+
+  // 입력값과 응답값을 trim + 소문자로 변환해서 비교
+  const normalizedPhone = (phone || "").trim().toLowerCase();
+
+  return arr.find(row => {
+    const rowPhone = (row.phone || "").trim().toLowerCase();
+    return rowPhone === normalizedPhone;
+  }) || null;
 }
+
 
 // ✅ 위치 전송
 function sendLocation() {
