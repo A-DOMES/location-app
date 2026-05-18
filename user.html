@@ -269,7 +269,7 @@ function handleVerifyToken(result) {
   }
 }
 
-// ✅ 배열 응답에서 내가 보낸 닉네임과 같은 phone 값 찾기
+// ✅ 배열 응답에서 닉네임과 phone 값 매칭
 function parseArrayResponse(arr, nickname) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
 
@@ -277,9 +277,9 @@ function parseArrayResponse(arr, nickname) {
 
   return arr.find(row => {
     const rowPhone = (row.phone || "").trim().toLowerCase();
-    return rowPhone === normalizedNickname;   // 닉네임과 phone 값 비교
-  }) || null
-  
+    return rowPhone === normalizedNickname;
+  }) || null;
+}
 
 // ✅ 위치 해제 응답 처리 함수
 function handleStopLocation(result) {
@@ -388,20 +388,34 @@ function stopLocation() {
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
 
-  const nickname = document.getElementById("phone").value; // 입력란에 닉네임 있음
-  const dataObj = parseArrayResponse(result, nickname);
+  const nickname = document.getElementById("phone").value.trim();
+  let dataObj = null;
 
-  closeModal();
+  // 응답이 배열일 경우
+  if (Array.isArray(result)) {
+    dataObj = parseArrayResponse(result, nickname);
+  }
 
+  // 응답이 객체일 경우
+  if (result.result) {
+    if (result.result === "success") {
+      showModal("🛑 위치정보가 해제되었습니다.", true);
+      document.getElementById("mapBtn").classList.add("hidden");
+      return;
+    } else {
+      showModal("❌ " + result.message, true);
+      return;
+    }
+  }
+
+  // 배열에서 찾은 경우 처리
   if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
-    document.getElementById("mapBtn").style.display = "none";
+    document.getElementById("mapBtn").classList.add("hidden");
   } else {
     showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
-
-
 // ✅ 자동 갱신
 function autoUpdate() {
   if (!navigator.geolocation) return;
