@@ -30,11 +30,11 @@
     }
     header {
       background-color: #1976d2;
-      padding: 20px;
+      padding: 12px;   /* 기존 20px → 12px로 줄여서 높이 축소 */
       text-align: center;
       border-radius: 8px;
-      margin-bottom: 20px;
-    }
+      margin-bottom: 16px; /* 아래 간격도 조금 줄임 */
+   }
     header h2 {
       font-size: 32px;
       margin: 0;
@@ -51,14 +51,14 @@
       line-height: 1.5;
     }
     .info-box h3 {
-      margin: 10px 0 5px 0;
+      margin: 6px 0 4px 0; /* 기존 10px/5px → 위아래 간격 줄임 */
       color: #1565c0;
       font-size: 22px;
     }
     .warning {
       display: block;
       margin-top: 10px;
-      font-size: 22px;
+      font-size: 18px;
       color: #d32f2f;
       font-weight: bold;
       white-space: nowrap; /* 줄바꿈 방지 */
@@ -98,7 +98,7 @@
     /* 모바일 대응 */
     @media (max-width:767px) {
       header h2 { font-size: 24px; }
-      .info-box { font-size: 16px; }
+      .info-box { font-size: 17px; }
       input[type="text"] { font-size: 16px; height: 36px; }
       #sendBtn, #stopBtn { width: 45%; font-size: 18px; height: 50px; }
       .map-btn { width: 60px; height: 60px; }
