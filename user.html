@@ -92,17 +92,20 @@
 
 /* 입력창 */
 input[type="text"] {
-  width: 80%;          /* ✅ 버튼과 동일한 폭 */
+  /* 좌측으로 이동 */
+  margin-left: 17;        /* ✅ 좌측에 붙임 */
+  margin-right: auto;    /* ✅ 오른쪽 여백 자동 */
+
+  /* 폭은 네가 직접 조정 */
+  width: 70%;            /* ✅ 여기 값을 네가 원하는 대로 줄여서 맞추면 됨 */
+  max-width: 70%;        /* ✅ 버튼 끝자락과 맞추려면 이 값 조정 */
+
   height: 40px;
   font-size: 18px;
   padding: 8px;
   border: 2px solid #1976d2;
   border-radius: 6px;
   box-sizing: border-box;
-
-  display: block;
-  margin-left: auto;   /* ✅ 왼쪽 여백 자동 → 오른쪽 끝으로 이동 */
-  margin-right: 0;     /* ✅ 오른쪽 끝자락 고정 */
 }
 
     .map-btn {
@@ -113,14 +116,17 @@ input[type="text"] {
 
 /* 위치 전송 / 해제 버튼 */
 #sendBtn, #stopBtn {
-  width: 80%;          /* ✅ 텍스트박스와 동일한 폭 */
+  margin-left: 0;        /* ✅ 좌측에 붙임 */
+  margin-right: auto;    /* ✅ 오른쪽 여백 자동 */
+
+  width: 70%;            /* ✅ 텍스트박스와 동일하게 맞추면 끝자락이 일치 */
   height: 50px;
   font-size: 18px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   color: white;
-  margin: 6px auto;    /* ✅ 가운데 정렬 */
+  margin-bottom: 6px;
   display: block;
 }
 
