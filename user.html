@@ -81,10 +81,10 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+    /* 텍스트박스 위치 조정 */
     input[type="text"] {
-      flex: 0 0 auto;       /* 자동 크기, 남은 공간 전부 차지하지 않음 */
-      max-width: 70%;       /* 전체 폭의 70%까지만 사용 → 우측만 줄어듦 */
-      /* ↑ 이 부분을 65%나 60%로 바꿔가며 테스트하면 원하는 만큼 우측을 줄일 수 있음 */
+      position: relative;
+      right: 10px;   /* 우측으로 10px 이동 → 값은 필요에 따라 조정 */
       height: 40px;
       font-size: 18px;
       padding: 8px;
@@ -112,16 +112,20 @@
     #sendBtn { background: linear-gradient(to bottom, #42a5f5, #1976d2); }
     #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
 
-    /* 모달창 중앙 정렬 (기존 배경 그대로 유지) */
-    .modal-overlay {
+    /* 모달창 중앙 정렬 */
+    .modal {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4); /* 기존 배경 유지 */
-      display: none;               /* 기본은 숨김 */
-      justify-content: center;     /* 가로 중앙 */
-      align-items: center;         /* 세로 중앙 */
-      z-index: 999;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%); /* 화면 정중앙 배치 */
+      background: #e3f2fd;              /* 기존 배경 유지 */
+      border: 2px solid #1976d2;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      width: 80%;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      text-align: center;
+      z-index: 1000;
     }
 
     /* 모바일 대응 */
