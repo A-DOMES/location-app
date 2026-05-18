@@ -269,7 +269,7 @@ function handleVerifyToken(result) {
   }
 }
 
-// ✅ 배열 응답 파싱 (nickname 기준으로 매칭)
+// ✅ 배열 응답 파싱 (nickname 기준)
 function parseArrayResponse(arr, nickname) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
 
@@ -280,6 +280,7 @@ function parseArrayResponse(arr, nickname) {
     return rowNickname === normalizedNickname;
   }) || null;
 }
+
 
 
 // ✅ 위치 전송
@@ -375,6 +376,7 @@ function handleStopLocation(result) {
     showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
+
 
 
 // ✅ 자동 갱신
