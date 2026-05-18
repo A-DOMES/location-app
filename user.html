@@ -347,11 +347,13 @@ function handleSendLocation(result) {
   closeModal();
   if (dataObj && dataObj.status === "정상") {
     showModal("✅ 위치정보가 성공적으로 재갱신되었습니다.", true);
-    document.getElementById("mapBtn").style.display = "inline-block";
+    document.getElementById("mapBtn").style.visibility = "visible";
+    document.getElementById("mapBtn").style.pointerEvents = "auto";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   } else {
     showModal("✅ 위치정보를 서버에 저장하였습니다.", true);
     document.getElementById("mapBtn").style.visibility = "visible";
+    document.getElementById("mapBtn").style.pointerEvents = "auto";
     if (!intervalId) intervalId = setInterval(autoUpdate, 5 * 60 * 1000);
   }
 }
@@ -400,7 +402,9 @@ function handleStopLocation(result) {
   if (result.result) {
     if (result.result === "success") {
       showModal("🛑 위치정보가 해제되었습니다.", true);
-      document.getElementById("mapBtn").classList.add("hidden");
+      const mapBtn = document.getElementById("mapBtn");
+      mapBtn.style.visibility = "hidden";
+      mapBtn.style.pointerEvents = "none";
       return;
     } else {
       showModal("❌ " + result.message, true);
@@ -411,11 +415,14 @@ function handleStopLocation(result) {
   // 배열에서 찾은 경우 처리
   if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
-    document.getElementById("mapBtn").classList.add("hidden");
+    const mapBtn = document.getElementById("mapBtn");
+    mapBtn.style.visibility = "hidden";
+    mapBtn.style.pointerEvents = "none";
   } else {
     showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
+
 // ✅ 자동 갱신
 function autoUpdate() {
   if (!navigator.geolocation) return;
