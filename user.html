@@ -92,13 +92,13 @@
 
 /* 입력창 */
 input[type="text"] {
-  /* 좌측으로 이동 */
-  margin-left: 40px;        /* ✅ 좌측에 붙임 */
-  margin-right: auto;    /* ✅ 오른쪽 여백 자동 */
+  /* 좌측에서 띄우기: 네가 직접 값 조정 */
+  margin-left: 50px;     /* ✅ 여기 값을 20px, 50px, 80px 등으로 바꿔가며 테스트 */
 
-  /* 폭은 네가 직접 조정 */
-  width: 350px;            /* ✅ 여기 값을 네가 원하는 대로 줄여서 맞추면 됨 */
-  max-width: 100px;        /* ✅ 버튼 끝자락과 맞추려면 이 값 조정 */
+  /* 폭은 버튼과 맞추려면 동일하게 */
+  width: 350px;          /* ✅ 원하는 폭으로 직접 조정 */
+  /* max-width는 충돌을 일으키니 제거하거나 width와 동일하게 맞추기 */
+  /* max-width: 350px; */
 
   height: 40px;
   font-size: 18px;
@@ -107,6 +107,7 @@ input[type="text"] {
   border-radius: 6px;
   box-sizing: border-box;
 }
+
 
     .map-btn {
       width: 70px;
