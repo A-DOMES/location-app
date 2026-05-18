@@ -83,7 +83,7 @@
     }
     /* 텍스트박스: 현재 크기 유지 + 우측으로 살짝 이동 */
     input[type="text"] {
-      margin-left: 10px;   /* 좌측에서 살짝 띄워서 우측으로 이동한 효과 */
+      margin-left: 12px;   /* 좌측에서 살짝 띄워서 우측으로 이동한 효과 */
       /* 필요에 따라 15px, 20px 등으로 조정 가능 */
       height: 40px;
       font-size: 18px;
@@ -117,15 +117,21 @@
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%); /* 화면 정중앙 배치 */
-      background: #e3f2fd;              /* 기존 배경 유지 */
-      border: 2px solid #1976d2;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 400px;
-      width: 80%;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-      text-align: center;
       z-index: 1000;
+    }
+    
+    /* 모달 내용 스타일 */
+    .modal-content {
+      background-color: #fefefe;
+      padding: 20px;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+      font-size: 18px;
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* 요청하신 배경색 */
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 
     /* 모바일 대응 */
