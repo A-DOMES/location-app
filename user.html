@@ -139,7 +139,7 @@
     margin-top: 4px;
   }
 
-  /* 모달창 전체 영역 */
+  /* 모달창 전체 영역 (기본: PC용) */
   .modal {
     position: fixed;
     left: 0; top: 0;
@@ -148,20 +148,19 @@
     z-index: 1000;
     display: flex;
     justify-content: center;           /* 가로 중앙 */
-    align-items: flex-start;           /* 세로 위쪽 기준 */
+    align-items: center;               /* ✅ PC에서는 화면 중앙 */
   }
 
-  /* 모달창 내용 */
+  /* 모달창 내용 (PC용) */
   .modal-content {
-    margin-top: 200px;                  /* 위에서 70px 내려옴 (PC용) */
     background-color: #fefefe;
     padding: 14px;
     border: 2px solid #2196F3;
     border-radius: 10px;
-    width: 75%;
-    max-width: 340px;
+    width: 80%;                        /* ✅ PC에서는 크게 */
+    max-width: 700px;                  /* ✅ 폭 제한 넓게 */
     text-align: center;
-    font-size: 15px;
+    font-size: 18px;                   /* ✅ 글자도 크게 */
     background: linear-gradient(135deg, #e3f2fd, #bbdefb); /* 파란색 그라데이션 */
     box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     margin: 0 auto;
@@ -176,7 +175,7 @@
     input[type="text"] {
       font-size: 14px;
       height: 32px;
-      width: 150%;       /* 모바일에서는 꽉 채움 */
+      width: 100%;       /* 모바일에서는 꽉 채움 */
       max-width: none;
       margin-left: 20px; /* 모바일에서는 좌측 여백 줄임 */
       margin-right: 0;
@@ -193,11 +192,15 @@
 
     .warning { font-size: 14px; }
 
+    .modal {
+      align-items: flex-start;         /* ✅ 모바일에서는 위쪽 기준 */
+    }
+
     .modal-content {
-      margin-top: 100px; /* 모바일에서는 위에서 100px 내려옴 */
-      width: 90%;        /* 모바일에서는 폭 더 넓게 */
+      margin-top: 100px;               /* ✅ 모바일에서는 위에서 100px 내려옴 */
+      width: 90%;                      /* 모바일에서는 폭 더 넓게 */
       max-width: 340px;
-      font-size: 14px;
+      font-size: 14px;                 /* 모바일에서는 글자 작게 */
     }
   }
 </style>
