@@ -20,7 +20,7 @@
       padding: 12px;
     }
     .main-card {
-      border: 2px solid #1976d2; /* 파란색 테두리 */
+      border: 2px solid #1976d2;
       border-radius: 12px;
       background: #fff;
       max-width: 900px;
@@ -30,13 +30,13 @@
     }
     header {
       background-color: #1976d2;
-      padding: 10px;   /* 기존 20px → 10px로 줄여서 높이 축소 */
+      padding: 10px;
       text-align: center;
       border-radius: 8px;
-      margin-bottom: 14px; /* 아래 간격도 조금 줄임 */
+      margin-bottom: 14px;
     }
     header h2 {
-      font-size: 28px;  /* 글씨 크기도 살짝 줄여서 박스 높이 조정 */
+      font-size: 28px;
       margin: 0;
       font-weight: bold;
       color: #fff;
@@ -51,56 +51,61 @@
       line-height: 1.5;
     }
     .info-box h3 {
-      margin-top: 2px;       /* 제목 위쪽 간격 */
-      margin-bottom: 2px;    /* 제목 아래 본문과의 간격을 거의 없앰 */
+      margin-top: 2px;
+      margin-bottom: 2px;
       color: #1565c0;
       font-size: 20px;
     }
     .info-box p {
-      margin-top: 2px;   /* 제목과 본문 사이 간격 최소화 */
-      margin-bottom: 8px; /* 문단 간격은 조금만 유지 */
+      margin-top: 2px;
+      margin-bottom: 8px;
     }
     .desc {
       display: block;
-      margin-top: 6px;   /* 위쪽 간격을 살짝 줘서 목록과 구분 */
+      margin-top: 6px;
       font-size: 16px;
     }
     .warning {
       display: block;
-      margin-top: 6px;
+      margin-top: 4px;
       font-size: 18px;
       color: #d32f2f;
       font-weight: bold;
-      white-space: nowrap; /* 줄바꿈 방지 */
+      white-space: nowrap;
+    }
+
+    /* 입력창 + 지도 버튼 그룹 */
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
     }
     input[type="text"] {
-      width: 100%;
+      flex: 1;
       height: 40px;
-      font-size: 20px;
+      font-size: 18px;
       padding: 8px;
-      margin-bottom: 10px;
       border: 2px solid #1976d2;
       border-radius: 6px;
       box-sizing: border-box;
     }
-    .button-group {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 30px;
-      margin-top: 15px;
-      flex-wrap: wrap;
+    .map-btn {
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
     }
-    .map-btn { width: 80px; height: 80px; cursor: pointer; }
+
+    /* 위치 전송 / 해제 버튼 */
     #sendBtn, #stopBtn {
-      flex: 1;
-      min-width: 160px;
-      height: 55px;
-      font-size: 20px;
+      width: 100%;
+      height: 50px;
+      font-size: 18px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       color: white;
+      margin-bottom: 6px; /* 버튼 간격 좁게 */
     }
     #sendBtn { background: linear-gradient(to bottom, #42a5f5, #1976d2); }
     #stopBtn { background: linear-gradient(to bottom, #ef5350, #f44336); }
@@ -109,10 +114,10 @@
     @media (max-width:767px) {
       header h2 { font-size: 24px; }
       .info-box { font-size: 16px; }
+      .map-btn { width: 50px; height: 50px; }
       input[type="text"] { font-size: 16px; height: 36px; }
-      #sendBtn, #stopBtn { width: 45%; font-size: 18px; height: 50px; }
-      .map-btn { width: 60px; height: 60px; }
-      .warning { font-size: 15px; } /* 모바일에서 글씨 줄여서 한 줄 유지 */
+      #sendBtn, #stopBtn { font-size: 16px; height: 46px; }
+      .warning { font-size: 15px; }
     }
   </style>
 </head>
@@ -123,12 +128,12 @@
       <h2>A-DOMES | 위치 전송</h2>
     </header>
 
-    <!-- 앱 목적 + 주요 기능 통합 -->
+    <!-- 앱 목적 + 주요 기능 -->
     <section class="info-box">
       <h3>앱 목적</h3>
       <p>
-        전국 어디든 목적지를 검색해 안전하게 길을 안내받을 수 있습니다.,<br>
-        내 위치를 기록하고 회원끼리 서로의 위치를 확인 할 수 있습니다.
+        전국 어디든 목적지를 검색해 안전하게 길을 안내받을 수 있습니다.<br>
+        내 위치를 기록하고 회원끼리 서로의 위치를 확인할 수 있습니다.
       </p>
 
       <h3>주요 기능</h3>
@@ -145,20 +150,19 @@
     <!-- 입력창 + 버튼 -->
     <section class="info-box">
       <form id="locationForm" method="POST">
-        <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 아이디를 입력하세요">
-        <div class="button-group">
+        <div class="input-group">
           <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
             <img src="btn-current.png" alt="지도 버튼" class="map-btn">
           </a>
-          <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-          <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+          <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 아이디를 입력하세요">
         </div>
+        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </form>
     </section>
 
     <div id="map"></div>
   </div>
-
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
