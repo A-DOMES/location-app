@@ -6,156 +6,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background-color: #f0f4f8;
-      margin: 0;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 12px;
-    }
-    .main-card {
-      border: 2px solid #1976d2;
-      border-radius: 12px;
-      background: #fff;
-      max-width: 900px;
-      width: 100%;
-      padding: 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    }
-    header {
-      background-color: #1976d2;
-      padding: 10px;
-      text-align: center;
-      border-radius: 8px;
-      margin-bottom: 14px;
-    }
-    header h2 {
-      font-size: 28px;
-      margin: 0;
-      font-weight: bold;
-      color: #fff;
-    }
-    .info-box {
-      border: 2px solid #1976d2;
-      border-radius: 10px;
-      background-color: #e3f2fd;
-      padding: 16px;
-      margin: 16px 0;
-      font-size: 20px;
-      line-height: 1.5;
-    }
-    .info-box h3 {
-      margin-top: 2px;
-      margin-bottom: 2px;
-      color: #1565c0;
-      font-size: 20px;
-    }
-    .info-box p {
-      margin-top: 2px;
-      margin-bottom: 8px;
-    }
-    .desc {
-      display: block;
-      margin-top: 6px;
-      font-size: 16px;
-    }
-    .warning {
-      display: block;
-      margin-top: 4px;
-      font-size: 18px;
-      color: #d32f2f;
-      font-weight: bold;
-      white-space: nowrap;
-    }
+<style>
+/* ===========================
+   기본 레이아웃
+=========================== */
+body {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  background-color: #f0f4f8;
+  margin: 0;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 12px;
+}
 
-    /* 입력창 + 지도 버튼 그룹 */
-    .input-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    /* 텍스트박스: 현재 크기 유지 + 우측으로 살짝 이동 */
-    input[type="text"] {
-      margin-left: 16px;   /* 좌측에서 살짝 띄워서 우측으로 이동한 효과 */
-      /* 필요에 따라 15px, 20px 등으로 조정 가능 */
-      height: 40px;
-      font-size: 18px;
-      padding: 8px;
-      border: 2px solid #1976d2;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    .map-btn {
-      width: 90px;
-      height: 90px;
-      cursor: pointer;
-    }
+.main-card {
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  background: #fff;
+  max-width: 900px;
+  width: 100%;
+  padding: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
 
-    /* 위치 전송 / 해제 버튼 */
-    #sendBtn, #stopBtn {
-      width: 100%;
-      height: 50px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      margin-bottom: 6px;
-    }
-    
-    #sendBtn {
-      background: linear-gradient(to bottom, #42a5f5, #1976d2);
-    }
-    
-    #stopBtn {
-      background: linear-gradient(to bottom, #ef5350, #f44336);
-      margin-top: 4px;   /* 해제 버튼을 조금 더 아래로 */
-    }
+/* ===========================
+   헤더
+=========================== */
+header {
+  background-color: #1976d2;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
 
+header h2 {
+  font-size: 28px;
+  margin: 0;
+  font-weight: bold;
+  color: #fff;
+}
 
-    /* 모달창 */
-    .modal {
-      position: fixed;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.4);
-      z-index: 1000;
-    }
-    
-    /* 모달 내용 */
-    .modal-content {
-      background-color: #fefefe;
-      padding: 20px;
-      border: 2px solid #2196F3;
-      border-radius: 10px;
-      width: 80%;
-      max-width: 400px;
-      text-align: center;
-      font-size: 18px;
-      background: linear-gradient(135deg, #e3f2fd, #bbdefb); /* 요청하신 색상 */
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-    
-      /* 위치 조정: margin-top으로 상단에서 중앙 방향으로 내림 */
-      margin: 50% auto;   /* auto는 좌우 중앙, 20%는 위에서 내려오는 정도 */
-    }
+/* ===========================
+   정보 박스
+=========================== */
+.info-box {
+  border: 2px solid #1976d2;
+  border-radius: 10px;
+  background-color: #e3f2fd;
+  padding: 16px;
+  margin: 16px 0;
+  font-size: 20px;
+  line-height: 1.5;
+}
 
-    /* 모바일 대응 */
-    @media (max-width:767px) {
-      header h2 { font-size: 24px; }
-      .info-box { font-size: 16px; }
-      .map-btn { width: 70px; height: 70px; }
-      input[type="text"] { font-size: 16px; height: 36px; max-width: 65%; }
-      #sendBtn, #stopBtn { font-size: 16px; height: 46px; }
-      .warning { font-size: 15px; }
-    }
-  </style>
+.info-box h3 {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  color: #1565c0;
+  font-size: 20px;
+}
+
+.info-box p {
+  margin-top: 2px;
+  margin-bottom: 8px;
+}
+
+.desc {
+  display: block;
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+.warning {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  color: #d32f2f;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* ===========================
+   입력창 + 지도 버튼 그룹
+=========================== */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+input[type="text"] {
+  flex: 1;                 /* ✅ 입력창은 남는 공간 채우기 */
+  min-width: 200px;
+  max-width: 60%;
+  height: 40px;
+  font-size: 18px;
+  padding: 8px;
+  border: 2px solid #1976d2;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.map-btn {
+  width: 90px;
+  height: 90px;
+  cursor: pointer;
+}
+
+/* ===========================
+   위치 전송 / 해제 버튼
+=========================== */
+#sendBtn, #stopBtn {
+  width: 200px;            /* ✅ 버튼 폭 고정 */
+  max-width: 40%;          /* ✅ 화면이 넓을 때도 적당히 */
+  height: 50px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  margin-bottom: 6px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;      /* ✅ 가운데 정렬 */
+}
+
+#sendBtn {
+  background: linear-gradient(to bottom, #42a5f5, #1976d2);
+}
+
+#stopBtn {
+  background: linear-gradient(to bottom, #ef5350, #f44336);
+  margin-top: 4px;
+}
+
+/* ===========================
+   모달창
+=========================== */
+.modal {
+  position: fixed;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  z-index: 1000;
+
+  /* ✅ 중앙 정렬 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  padding: 20px;
+  border: 2px solid #2196F3;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+  font-size: 18px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+
+  /* ❌ margin-top 제거 */
+  margin: 0 auto;
+}
+
+/* ===========================
+   모바일 대응
+=========================== */
+@media (max-width:767px) {
+  header h2 { font-size: 24px; }
+  .info-box { font-size: 16px; }
+  .map-btn { width: 70px; height: 70px; }
+  input[type="text"] { font-size: 16px; height: 36px; max-width: 65%; }
+  #sendBtn, #stopBtn { font-size: 16px; height: 46px; width: 100%; max-width: none; }
+  .warning { font-size: 15px; }
+}
+</style>
+
 </head>
 
 <body>
