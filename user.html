@@ -120,12 +120,13 @@
       left: 0; top: 0;
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.4);
-      display: flex;              /* 중앙 배치 위해 flex 사용 */
-      justify-content: center;    /* 가로 중앙 */
-      align-items: center;        /* 세로 중앙 */
+    
+      /* 중앙 배치용 flex */
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     
-    /* 모달 내용 */
     .modal-content {
       background-color: #fefefe;
       padding: 20px;
@@ -135,8 +136,10 @@
       max-width: 400px;
       text-align: center;
       font-size: 18px;
-      background: linear-gradient(135deg, #e3f2fd, #bbdefb); /* 요청하신 색상 */
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    
+      /* margin 제거 → 중앙 배치 */
+      margin: 0;
     }
 
     /* 모바일 대응 */
