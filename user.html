@@ -269,21 +269,17 @@ function handleVerifyToken(result) {
   }
 }
 
-// ✅ 배열 응답 파싱 함수
-// 서버 응답 배열 안에서 nickname 값으로 매칭하도록 수정
+// ✅ 배열 응답에서 내가 보낸 닉네임과 같은 phone 값 찾기
 function parseArrayResponse(arr, nickname) {
-  // 배열이 아니거나 비어있으면 null 반환
   if (!Array.isArray(arr) || arr.length === 0) return null;
 
-  // 입력값 정규화: 앞뒤 공백 제거 + 소문자로 변환
   const normalizedNickname = (nickname || "").trim().toLowerCase();
 
-  // 배열에서 nickname이 일치하는 객체 찾기
   return arr.find(row => {
-    const rowNickname = (row.nickname || "").trim().toLowerCase();
-    return rowNickname === normalizedNickname;
-  }) || null;
-}
+    const rowPhone = (row.phone || "").trim().toLowerCase();
+    return rowPhone === normalizedNickname;   // 닉네임과 phone 값 비교
+  }) || null
+  
 
 // ✅ 위치 해제 응답 처리 함수
 function handleStopLocation(result) {
@@ -388,29 +384,22 @@ function stopLocation() {
   });
 }
 
-// ✅ 위치 해제 응답 처리 함수
+// ✅ 위치 해제 응답 처리
 function handleStopLocation(result) {
   console.log("[DEBUG] handleStopLocation 응답:", result);
 
-  // phone input에 실제로 nickname이 들어있으므로 그대로 사용
-  const nickname = document.getElementById("phone").value;
-
-  // 응답 배열에서 nickname으로 매칭
+  const nickname = document.getElementById("phone").value; // 입력란에 닉네임 있음
   const dataObj = parseArrayResponse(result, nickname);
 
-  // 모달 닫기
   closeModal();
 
-  // 매칭된 객체가 있고 status가 "해제"라면 정상 처리
   if (dataObj && dataObj.status === "해제") {
     showModal("🛑 위치정보가 해제되었습니다.", true);
     document.getElementById("mapBtn").style.display = "none";
   } else {
-    // 매칭 실패 시 오류 메시지 출력
     showModal("처리 중 오류 발생:\n" + (dataObj ? dataObj.status : "응답 오류"), true);
   }
 }
-
 
 
 // ✅ 자동 갱신
