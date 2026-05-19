@@ -68,29 +68,22 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #shareBtn:hover { background:#1565c0; }
 
 #reopenBtn {
-  position:absolute; top:20px; right:20px;
-  background:rgba(25,118,210,0.9);
+  position:absolute; top:12px; right:20px;   /* ✅ 우측 상단으로 이동 */
+  background:rgba(255,255,255,0.25);
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
   border:2px solid #1976d2; border-radius:999px;
-  padding:10px 22px; font-size:18px; font-weight:700;
-  color:#1976d2; /* 기본은 파란색 글씨 */
+  padding:10px 22px; font-size:18px; font-weight:700; color:white;
   cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25);
   display:none; z-index:9999; white-space:nowrap;
   transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
 }
-#reopenBtn:hover { background:#1565c0; transform:scale(1.1); animation:bounce 0.3s; }
+#reopenBtn:hover { background:#e3f2fd; transform:scale(1.1); animation:bounce 0.3s; }
 #reopenBtn:active { transform:scale(0.95); }
 #reopenBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
 @keyframes bounce {
   0%{transform:scale(1);}
   50%{transform:scale(1.15);}
   100%{transform:scale(1.1);}
-}
-
-/* ✅ 위성지도 모드일 때 버튼 글씨 흰색으로 변경 */
-.satellite-mode #shareBtn,
-.satellite-mode #reopenBtn {
-  color:white;
 }
 
 /* ---------------------- 메시지 ---------------------- */
@@ -646,16 +639,6 @@ const statsModal = document.querySelector('#travelStatsModal .modal-content');
 const statsHandle = statsModal.querySelector('.modal-header');
 makeDraggableModal(statsModal, statsHandle);
 
-
-// ---------------------- 위성지도 모드 전환시 흰색 처리 ----------------------  
-function setSatelliteMode(enabled) {
-  if (enabled) {
-    document.body.classList.add("satellite-mode");
-  } else {
-    document.body.classList.remove("satellite-mode");
-  }
-}
-  
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
