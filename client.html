@@ -525,6 +525,7 @@ let lastLng = null;
 let avgSpeed = 0;
 let maxSpeed = 0;
 let lastUpdateTime = 0;   // 갱신 주기 제어용
+let currentSpeedLimit = null; // 현재 위치의 제한속도 값  
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -1052,7 +1053,7 @@ function addPathCoord(newCoord, address = null) {
 
 
 
-// ---------------------- 속도 추가 ----------------------
+// ----------------------외부에서 사용 할 속도 추가 함수 ----------------------
 function addSpeed(newSpeed) {
   speedHistory.push(newSpeed);
 
@@ -1444,25 +1445,30 @@ function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
 
 // ---------------------- 일반 속도 제한 ----------------------
 function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
-  const currentKmh = currentSpeed * 3.6;
+  // ✅ currentSpeed는 이미 km/h 단위로 계산된 값이므로 그대로 사용
+  const currentKmh = currentSpeed;
 
-  // ✅ 이미 갱신된 제한 속도 값 사용 (외부 호출 제거)
+  // ✅ 전역변수에 저장된 제한속도 값 불러오기 (없으면 null)
   const limit = currentSpeedLimit ?? null;
 
   if (limit) {
-    // ✅ 알림 빈도 제어 (1분 간격)
+    // ✅ 알림 빈도 제어: 1분(60000ms) 간격으로만 알림 발생
     if (!lastSpeedLimitAlertTime || Date.now() - lastSpeedLimitAlertTime > 60000) {
       lastSpeedLimitAlertTime = Date.now();
 
+      // ✅ 사용자에게 보여줄 메시지 구성
       const message = `
         속도 제한 구역입니다.<br>
         제한 속도는 ${limit} km/h 입니다.
       `;
+
+      // ✅ 알림창/모달/음성 안내 실행
       showZoneAlert("속도 제한 구역", 50, limit, currentKmh, lastSpeedLimitAlertTime);
       showQueuedModal("속도 제한 안내", message);
       speakMessage(`속도 제한 구역입니다. 제한 속도는 ${limit} 킬로미터 입니다.`);
     }
   } else {
+    // ✅ 제한속도 값이 없을 경우 경고 로그 출력
     console.warn("⚠️ 제한 속도 정보가 전역변수에 없습니다.");
   }
 }
