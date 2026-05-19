@@ -525,7 +525,12 @@ let lastLng = null;
 let avgSpeed = 0;
 let maxSpeed = 0;
 let lastUpdateTime = 0;   // 갱신 주기 제어용
-let currentSpeedLimit = null; // 현재 위치의 제한속도 값  
+let currentSpeedLimit = null; // 현재 위치의 제한속도 값
+
+// ✅ 보호구역/속도 제한 관련 배열 안전 초기화
+const schoolZones = [];        // 학교 구역 데이터
+const dynamicSpeedZones = [];  // 동적 속도 구역 데이터
+
   
 const poiIcons = {
   cafe: "https://cdn-icons-png.flaticon.com/512/415/415733.png",
@@ -837,7 +842,7 @@ function startTracking() {
   }, {
     enableHighAccuracy: true,
     maximumAge: 0,
-    timeout: 5000
+    timeout: 10000 // ⬅️ 타임아웃을 10초로 늘려 GPS 응답 대기
   });
 }
 
@@ -1347,7 +1352,7 @@ function updateRadarPolygon(myPos, heading) {
 // ---------------------- 보호구역/속도 제한 알림 ----------------------
 function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertTimeVar) {
   const now = Date.now();
-
+    
   if (distance <= 50 && distance > 20) {
     if (now - lastAlertTimeVar.value > 60000) {
       const message = `<div class="alert-message">
