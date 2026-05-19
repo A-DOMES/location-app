@@ -872,6 +872,21 @@ toggleBtn.addEventListener("click", () => {
 // ---------------------- 드래그 가능하게 적용 ----------------------
 makeDraggableAndResizable(toggleBtn);
 
+// ---------------------- 좌표창 닫기/열기 이벤트 ----------------------
+document.getElementById("closeBtn").addEventListener("click", () => {
+  // 좌표창 숨기기
+  document.getElementById("locationBox").style.display = "none";
+  // 다시 열기 버튼 표시
+  document.getElementById("reopenBtn").style.display = "block";
+});
+
+document.getElementById("reopenBtn").addEventListener("click", () => {
+  // 좌표창 보이기
+  document.getElementById("locationBox").style.display = "block";
+  // 다시 열기 버튼 숨김
+  document.getElementById("reopenBtn").style.display = "none";
+});
+
   
 
 // ---------------------- 경로 보정 (파란색) ----------------------
