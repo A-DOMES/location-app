@@ -949,43 +949,48 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  // ✅ 주행 시작 시점 보장
-  if (!startTime) startTime = Date.now();
-
-  // ✅ 이전 좌표가 존재할 때만 계산 가능
-  if (lastLat !== null && lastLng !== null && lastTimestamp !== null) {
-    const distance = google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(lastLat, lastLng),
-      new google.maps.LatLng(lat, lng)
-    );
-    const timeElapsed = (timestamp - lastTimestamp) / 1000; // 초 단위
-
-    if (timeElapsed > 0) {
-      let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
-
-      // ✅ 작은 이동 무시 (GPS 드리프트 제거)
-      if (distance < 3) rawSpeed = 0;
-
-      // ✅ 비정상 값 필터링
-      if (rawSpeed > 200) rawSpeed = currentSpeed;
-
-      // ✅ 속도 기록 배열에 추가
-      speedHistory.push(rawSpeed);
-      if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
-
-      // ✅ 현재속도: 최근 5개 평균
-      const recent = speedHistory.slice(-5);
-      currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
-
-      // ✅ 최고속도 갱신
-      if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
-
-      // ✅ 누적 거리 (m 단위)
-      totalDistance += distance;
-    }
+  // ✅ 첫 위치에서는 기준점만 저장
+  if (lastTimestamp === null) {
+    lastLat = lat;
+    lastLng = lng;
+    lastTimestamp = timestamp;
+    return; // 첫 점에서는 속도 계산하지 않음
   }
 
-  // ✅ 좌표 기록
+  // ✅ 거리 계산
+  const distance = google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(lastLat, lastLng),
+    new google.maps.LatLng(lat, lng)
+  );
+
+  // ✅ 시간 차이 (초 단위)
+  const timeElapsed = (timestamp - lastTimestamp) / 1000;
+
+  if (timeElapsed > 0) {
+    let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
+
+    // 작은 이동 무시 (GPS 드리프트 제거)
+    if (distance < 3) rawSpeed = 0;
+
+    // 비정상 값 필터링
+    if (rawSpeed > 200) rawSpeed = currentSpeed;
+
+    // ✅ 속도 기록 배열에 추가
+    speedHistory.push(rawSpeed);
+    if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
+
+    // ✅ 현재속도: 최근 5개 평균
+    const recent = speedHistory.slice(-5);
+    currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
+
+    // ✅ 최고속도 갱신
+    if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
+
+    // ✅ 누적 거리 갱신
+    totalDistance += distance;
+  }
+
+  // ✅ 좌표와 시간 갱신
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
@@ -993,6 +998,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
+
 
 
   
