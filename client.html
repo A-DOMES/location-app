@@ -68,22 +68,22 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #shareBtn:hover { background:#1565c0; }
 
 #reopenBtn {
-  position:absolute; top:60px; left:50%; transform:translateX(-50%);
+  position:absolute; top:20px; right:20px;   /* ✅ 우측 상단으로 이동 */
   background:rgba(255,255,255,0.25);
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
   border:2px solid #1976d2; border-radius:999px;
   padding:10px 22px; font-size:18px; font-weight:700; color:#1976d2;
   cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25);
-  display:none; z-index:9999; text-align:center; white-space:nowrap;
+  display:none; z-index:9999; white-space:nowrap;
   transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease;
 }
-#reopenBtn:hover { background:#e3f2fd; transform:translateX(-50%) scale(1.1); animation:bounce 0.3s; }
-#reopenBtn:active { transform:translateX(-50%) scale(0.95); }
+#reopenBtn:hover { background:#e3f2fd; transform:scale(1.1); animation:bounce 0.3s; }
+#reopenBtn:active { transform:scale(0.95); }
 #reopenBtn:focus { outline:none; box-shadow:0 0 0 3px rgba(25,118,210,0.4); }
 @keyframes bounce {
-  0%{transform:translateX(-50%) scale(1);}
-  50%{transform:translateX(-50%) scale(1.15);}
-  100%{transform:translateX(-50%) scale(1.1);}
+  0%{transform:scale(1);}
+  50%{transform:scale(1.15);}
+  100%{transform:scale(1.1);}
 }
 
 /* ---------------------- 메시지 ---------------------- */
