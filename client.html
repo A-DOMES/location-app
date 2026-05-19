@@ -989,6 +989,9 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
 
     // ✅ 누적 거리 갱신
     totalDistance += distance;
+
+        // 📝 디버깅 로그 추가
+    console.log("거리:", distance, "시간:", timeElapsed, "계산속도:", rawSpeed, "현재속도:", currentSpeed);
   }
 
   // ✅ 좌표와 시간 갱신
