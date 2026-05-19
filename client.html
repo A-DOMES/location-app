@@ -1939,13 +1939,25 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 
 // ---------------------- 경로 초기화 버튼 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
+  // ✅ 경로 좌표 배열 초기화
   pathCoords = [];
+
+  // ✅ 경로 Polyline 제거
   if (pathPolyline) {
     pathPolyline.setMap(null);
     pathPolyline = null;
   }
+
+  // ✅ 직선거리 Polyline 제거 (빠져있던 부분)
+  if (distanceLine) {
+    distanceLine.setMap(null);
+    distanceLine = null;
+  }
+
+  // 초기화 버튼 숨기기
   document.getElementById("resetPathBtn").style.display = "none";
 
+  // ✅ 목적지 원형 표시 제거
   if (destinationCircle) {
     destinationCircle.setMap(null);
     destinationCircle = null;
@@ -1955,9 +1967,14 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   destinationMarkers.forEach(m => m.setMap(null));
   destinationMarkers = [];
 
+  // 목적지 좌표 초기화
   destinationLat = null;
   destinationLng = null;
+
+  // 목적지 결과창 초기화
   document.getElementById("destinationResult").innerHTML = "";
+
+  // 경로 시작 버튼 숨기기
   document.getElementById("startRouteBtn").style.display = "none";
 
   // ✅ 속도/거리 값도 리셋
@@ -1969,6 +1986,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   totalDistance = 0;
   updateTravelStats();
 
+  // ✅ 팝업 모달 열기
   openPopupModal(document.getElementById("popupModal"));
 });
 
@@ -1976,12 +1994,12 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 const closeQueuedModal = document.getElementById("closeQueuedModal");
 if (closeQueuedModal) {
   closeQueuedModal.addEventListener("click", () => {
+    // ✅ 이동정보 모달 닫기
     document.getElementById("travelStatsModal").style.display = "none";
     autoShowTravelStats = false; // 닫으면 자동 표시 중단
   });
 }
-
-  
+ 
 
 /* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
