@@ -826,11 +826,6 @@ function startTracking() {
       // ✅ 이동정보 업데이트
       updateTravelStats();
 
-      // ✅ 보호구역/속도 제한 체크
-      checkSpeedLimit(currentLat, currentLng, currentSpeed);
-      checkSchoolZones(currentLat, currentLng);
-      checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
-
       // ✅ 레이더 탐지
       checkRadarPOIs({ lat, lng });
     }
