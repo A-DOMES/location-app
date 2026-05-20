@@ -953,17 +953,18 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용) ----------------------
+// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용 + 정지 상태 감지 + 디버깅 로그 강화) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
   // ✅ 첫 위치에서는 기준점만 저장
   if (lastTimestamp === null) {
     lastLat = lat;
     lastLng = lng;
     lastTimestamp = timestamp;
+    console.log("첫 위치 저장:", lat, lng, "timestamp:", timestamp);
     return; // 첫 점에서는 속도 계산하지 않음
   }
 
-  // ✅ 거리 계산
+  // ✅ 거리 계산 (m 단위)
   const distance = google.maps.geometry.spherical.computeDistanceBetween(
     new google.maps.LatLng(lastLat, lastLng),
     new google.maps.LatLng(lat, lng)
@@ -975,11 +976,17 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   if (timeElapsed > 0) {
     let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-    // 작은 이동 무시 (GPS 드리프트 제거)
-    if (distance < 3) rawSpeed = 0;
+    // ✅ 작은 이동 무시 (GPS 드리프트 제거)
+    if (distance < 3) {
+      console.log("드리프트 제거됨, distance:", distance);
+      rawSpeed = 0;
+    }
 
-    // 비정상 값 필터링
-    if (rawSpeed > 200) rawSpeed = currentSpeed;
+    // ✅ 비정상 값 필터링
+    if (rawSpeed > 200) {
+      console.log("비정상 속도 감지, rawSpeed:", rawSpeed, "→ currentSpeed 유지");
+      rawSpeed = currentSpeed;
+    }
 
     // ✅ 속도 기록 배열에 추가
     speedHistory.push(rawSpeed);
@@ -995,8 +1002,20 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     // ✅ 누적 거리 갱신
     totalDistance += distance;
 
-        // 📝 디버깅 로그 추가
-    console.log("거리:", distance, "시간:", timeElapsed, "계산속도:", rawSpeed, "현재속도:", currentSpeed);
+    // ✅ 정지 상태 감지
+    if (recent.every(v => v === 0)) {
+      console.log("정지 상태 감지됨 → currentSpeed = 0");
+      currentSpeed = 0;
+    }
+
+    // 📝 디버깅 로그 추가 (좌표 + 계산 과정 전체)
+    console.log(
+      "lastLat:", lastLat, "lastLng:", lastLng,
+      "lat:", lat, "lng:", lng,
+      "거리:", distance, "시간:", timeElapsed,
+      "계산속도:", rawSpeed, "현재속도:", currentSpeed,
+      "누적거리:", totalDistance
+    );
   }
 
   // ✅ 좌표와 시간 갱신
@@ -1007,8 +1026,6 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
-
-
 
   
 // ---------------------- 개선된 스무딩 함수 ----------------------
