@@ -1074,21 +1074,21 @@ function addSpeed(newSpeed) {
 }
 
   
-// ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ----------------------
+// ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
+  // ✅ 시작 시점이나 경로 좌표가 없으면 초기값 표시
   if (!startTime || pathCoords.length === 0) {
-    document.getElementById("travelStatsContent").innerHTML = `
-      <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
-      <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
-      <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
-      <div>⏱️ 주행시간: <span class="highlight">00:00:00</span></div>
-      <div>📏 이동거리: <span class="highlight">0 km</span></div>
-      <div>📐 직선거리: <span class="highlight">0 km</span></div>
-      <div>🕒 도착예상: <span class="highlight">미정</span></div>
-    `;
+    document.getElementById("currentSpeed").innerText = "0 km/h";
+    document.getElementById("avgSpeed").innerText = "0 km/h";
+    document.getElementById("maxSpeed").innerText = "0 km/h";
+    document.getElementById("driveTime").innerText = "00:00:00";
+    document.getElementById("travelDistance").innerText = "0 km";
+    document.getElementById("straightDistance").innerText = "0 km";
+    document.getElementById("eta").innerText = "미정";
     return;
   }
 
+  // ✅ 경과 시간 계산
   const now = Date.now();
   const elapsedSeconds = Math.floor((now - startTime) / 1000);
   const hours = Math.floor(elapsedSeconds / 3600);
@@ -1111,10 +1111,10 @@ function updateTravelStats() {
   // ✅ 최고속도
   const maxSpeedValue = Math.round(maxSpeed);
 
-  // 📏 이동거리 (m → km 변환)
+  // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
 
-  // 📐 직선거리 & ETA
+  // ✅ 직선거리 & ETA 계산
   let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
@@ -1128,16 +1128,16 @@ function updateTravelStats() {
     }
   }
 
-  document.getElementById("travelStatsContent").innerHTML = `
-    <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
-    <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
-    <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
-    <div>⏱️ 주행시간: <span class="highlight">${elapsedTimeStr}</span></div>
-    <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
-    <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
-  `;
+  // ✅ 각 요소에 값 반영
+  document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
+  document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
+  document.getElementById("maxSpeed").innerText = `${maxSpeedValue} km/h`;
+  document.getElementById("driveTime").innerText = elapsedTimeStr;
+  document.getElementById("travelDistance").innerText = `${totalDistanceKm} km`;
+  document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
+  document.getElementById("eta").innerText = etaMsg;
 }
+
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
