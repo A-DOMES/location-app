@@ -783,7 +783,7 @@ function startTracking() {
       document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
       document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
       document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-      document.getElementById("speedBox").innerText = `현재 속도: ${currentSpeed.toFixed(1)} km/h`;
+      document.getElementById("currentSpeed").innerText = `${currentSpeed.toFixed(1)} km/h`;
 
       // ✅ 주소 갱신 (지오코딩은 주기적 제한)
       if (Date.now() - lastGeocodeTime > geocodeInterval) {
@@ -1003,7 +1003,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   lastTimestamp = timestamp;
 
   // 🚗 이동정보 모달창 갱신
-  updateTravelStats();
+  ();
 }
 
 
@@ -1074,15 +1074,13 @@ function addSpeed(newSpeed) {
 // ---------------------- 이동정보 업데이트 (최근 5개 평균 적용) ----------------------
 function updateTravelStats() {
   if (!startTime || pathCoords.length === 0) {
-    document.getElementById("travelStatsContent").innerHTML = `
-      <div>🚗 현재속도: <span class="highlight">0 km/h</span></div>
-      <div>📊 평균속도: <span class="highlight">0 km/h</span></div>
-      <div>⚡ 최고속도: <span class="highlight">0 km/h</span></div>
-      <div>⏱️ 주행시간: <span class="highlight">00:00:00</span></div>
-      <div>📏 이동거리: <span class="highlight">0 km</span></div>
-      <div>📐 직선거리: <span class="highlight">0 km</span></div>
-      <div>🕒 도착예상: <span class="highlight">미정</span></div>
-    `;
+    document.getElementById("currentSpeed").innerText = "0 km/h";
+    document.getElementById("avgSpeed").innerText = "0 km/h";
+    document.getElementById("maxSpeed").innerText = "0 km/h";
+    document.getElementById("driveTime").innerText = "00:00:00";
+    document.getElementById("travelDistance").innerText = "0 km";
+    document.getElementById("straightDistance").innerText = "0 km";
+    document.getElementById("eta").innerText = "미정";
     return;
   }
 
@@ -1125,16 +1123,16 @@ function updateTravelStats() {
     }
   }
 
-  document.getElementById("travelStatsContent").innerHTML = `
-    <div>🚗 현재속도: <span class="highlight">${currentSpeedValue} km/h</span></div>
-    <div>📊 평균속도: <span class="highlight">${avgSpeedValue} km/h</span></div>
-    <div>⚡ 최고속도: <span class="highlight">${maxSpeedValue} km/h</span></div>
-    <div>⏱️ 주행시간: <span class="highlight">${elapsedTimeStr}</span></div>
-    <div>📏 이동거리: <span class="highlight">${totalDistanceKm} km</span></div>
-    <div>📐 직선거리: <span class="highlight">${straightDistKm} km</span></div>
-    <div>🕒 도착예상: <span class="highlight" style="white-space:nowrap;">${etaMsg}</span></div>
-  `;
+  // ✅ 개별 요소 갱신
+  document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
+  document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
+  document.getElementById("maxSpeed").innerText = `${maxSpeedValue} km/h`;
+  document.getElementById("driveTime").innerText = elapsedTimeStr;
+  document.getElementById("travelDistance").innerText = `${totalDistanceKm} km`;
+  document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
+  document.getElementById("eta").innerText = etaMsg;
 }
+
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
