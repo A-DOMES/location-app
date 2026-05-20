@@ -643,10 +643,12 @@ makeDraggableModal(statsModal, statsHandle);
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 7, // ✅ 초기 줌 레벨
-    gestureHandling: "greedy",
-    mapTypeId: "roadmap",
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 37.5665, lng: 126.9780 }, // ✅ 초기 중심 좌표 (예: 서울)
+      zoom: 7, // ✅ 초기 줌 레벨
+      gestureHandling: "greedy",
+      mapTypeId: "roadmap"
+    });
 
     // ✅ 회전/기울기 허용 옵션 추가
     heading: 0,   // 초기 방향 (북쪽)
@@ -750,8 +752,8 @@ function startTracking() {
     if (currentSpeed > 60) minInterval = 3000; // 차량 고속 → 3초
     else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
 
-    // ✅ 조건: 최소 주기 경과 또는 일정 거리 이상 이동
-    if ((now - lastUpdateTime > minInterval) || distanceMoved > 30) {
+    // ✅ 조건: 첫 위치 또는 최소 주기 경과 또는 일정 거리 이상 이동
+    if (lastUpdateTime === 0 || (now - lastUpdateTime > minInterval) || distanceMoved > 30) {
       lastUpdateTime = now;
       lastLat = lat;
       lastLng = lng;
