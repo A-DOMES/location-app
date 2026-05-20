@@ -965,7 +965,7 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용 + 정지 상태 감지 + 디버깅 로그 강화) ----------------------
+// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용 + 정지 상태 감지 + 분기 조건 추가 + 디버깅 로그 강화) ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
   // ✅ 첫 위치에서는 기준점만 저장
   if (lastTimestamp === null) {
@@ -988,9 +988,21 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   if (timeElapsed > 0) {
     let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-    // ✅ 작은 이동 무시 (GPS 드리프트 제거)
-    if (distance < 3) {
-      console.log("드리프트 제거됨, distance:", distance);
+    // ✅ 상황별 드리프트 제거 기준 분기
+    let minDistanceThreshold = 5; // 기본값
+    if (currentSpeed < 10) {
+      // 걷기/자전거 → 민감하게
+      minDistanceThreshold = 3;
+    } else if (currentSpeed >= 10 && currentSpeed < 60) {
+      // 저속 차량 → 중간값
+      minDistanceThreshold = 5;
+    } else {
+      // 고속 차량 → 안정적으로
+      minDistanceThreshold = 10;
+    }
+
+    if (distance < minDistanceThreshold) {
+      console.log("드리프트 제거됨, distance:", distance, "threshold:", minDistanceThreshold);
       rawSpeed = 0;
     }
 
