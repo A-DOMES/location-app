@@ -729,7 +729,7 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
-  // ✅ 주행 시작 시간 초기화
+  // ✅ 주행 시작 시간 초기화 (처음 실행 시)
   if (!startTime) startTime = Date.now();
 
   navigator.geolocation.watchPosition(pos => {
