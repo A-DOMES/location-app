@@ -643,12 +643,10 @@ makeDraggableModal(statsModal, statsHandle);
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: 37.5665, lng: 126.9780 }, // ✅ 초기 중심 좌표 (예: 서울)
-      zoom: 7, // ✅ 초기 줌 레벨
-      gestureHandling: "greedy",
-      mapTypeId: "roadmap"
-    });
+  map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 7, // ✅ 초기 줌 레벨
+    gestureHandling: "greedy",
+    mapTypeId: "roadmap",
 
     // ✅ 회전/기울기 허용 옵션 추가
     heading: 0,   // 초기 방향 (북쪽)
@@ -702,7 +700,7 @@ function initMap() {
 
         drawMultipleCircles(userPos);
         updateRadarPolygon(userPos, 0);
-        ();
+        startTracking();
 
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
@@ -711,12 +709,13 @@ function initMap() {
         }
       },
       () => {
-        ();
+        startTracking();
       },
       { enableHighAccuracy: true }
     );
   }
 }
+
 
 function updateMapStyle(map) {
   const body = document.body;
@@ -730,73 +729,111 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
-  // ✅ 주행 시작 시간 초기화 (처음 실행 시)
-  if (!startTime) startTime = Date.now();
-
   navigator.geolocation.watchPosition(pos => {
     const now = Date.now();
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
 
-    // ✅ 첫 위치는 무조건 실행되도록 보장
-    if (!myMarker) {
-      // 첫 위치 좌표 저장
-      currentLat = lat;
-      currentLng = lng;
-      lastLat = lat;
-      lastLng = lng;
-      lastUpdateTime = 0; // 첫 위치 표시 위해 0으로 둠
-
-      // 마커 생성
-      myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
-
-      // 지도 중심 이동
-      map.setCenter({ lat, lng });
-
-      // 경로 기록 시작
-      pathCoords.push({ lat, lng });
-      updatePathPolyline(lat, lng);
-
-      // 주행정보 갱신 (주행시간 포함)
-      updateTravelStats();
-
-      return; // 첫 위치 처리 후 종료 → 이후 조건문에서 갱신
+    // ✅ 이동 거리 계산
+    let distanceMoved = 0;
+    if (lastLat !== null && lastLng !== null) {
+      distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(lastLat, lastLng),
+        new google.maps.LatLng(lat, lng)
+      );
     }
 
-    // ✅ 이동 거리 계산
-    let distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(lastLat, lastLng),
-      new google.maps.LatLng(lat, lng)
-    );
-
-    // ✅ 속도에 따른 최소 주기 설정
+    // ✅ 속도에 따른 최소 주기 설정 (좌표 기반 currentSpeed 사용)
     let minInterval = 5000; // 기본 5초
     if (currentSpeed > 60) minInterval = 3000; // 차량 고속 → 3초
     else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
 
-    // ✅ 조건: 첫 위치 또는 최소 주기 경과 또는 일정 거리 이상 이동
-    if (lastUpdateTime === 0 || (now - lastUpdateTime > minInterval) || distanceMoved > 30) {
+    // ✅ 조건: 최소 주기 경과 또는 일정 거리 이상 이동
+    if ((now - lastUpdateTime > minInterval) || distanceMoved > 30) {
       lastUpdateTime = now;
       lastLat = lat;
       lastLng = lng;
+
+      // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
+      const timestamp = Date.now();
 
-      // ✅ 좌표 기반 속도 계산
-      computeSpeedFromGPS(currentLat, currentLng, Date.now());
+      // ✅ 좌표 기반 속도 계산 (pos.coords.speed 대신)
+      computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
-      // ✅ 마커 이동
-      myMarker.setPosition({ lat, lng });
+      // ✅ 방향 보정
+      let heading = pos.coords.heading || 0;
+      if (!heading || heading === 0) {
+        if (pathCoords.length > 1) {
+          const last = pathCoords[pathCoords.length - 1];
+          const prev = pathCoords[pathCoords.length - 2];
+          heading = google.maps.geometry.spherical.computeHeading(prev, last);
+        } else {
+          heading = lastHeading ?? 0;
+        }
+      }
+      lastHeading = heading;
+      const directionLabel = getDirectionLabel(heading);
 
-      // 지도 중심 이동 여부
+      // ✅ 현재 위치 정보 표시 (속도는 currentSpeed 사용)
+      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+      document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
+      document.getElementById("speedBox").innerText = `현재 속도: ${currentSpeed.toFixed(1)} km/h`;
+
+      // ✅ 주소 갱신 (지오코딩은 주기적 제한)
+      if (Date.now() - lastGeocodeTime > geocodeInterval) {
+        document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === "OK" && results[0]) {
+            let address = results[0].formatted_address
+              .replace(/^대한민국\s*,?\s*/, "")
+              .replace(/\s*,?\s*대한민국$/, "");
+            document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+          }
+        });
+        lastGeocodeTime = Date.now();
+      }
+
+      // ✅ 위치 표시 갱신
+      updateLocationDisplay(currentLat, currentLng, heading);
+
+      // ✅ 마커 이동 (첫 위치 포함)
+      if (!myMarker) {
+        myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
+      } else {
+        myMarker.setPosition({ lat, lng });
+      }
+
+      // ✅ 지도 중심 이동 여부
       if (followUser) map.setCenter({ lat, lng });
 
-      // 경로 기록
-      pathCoords.push({ lat, lng });
-      updatePathPolyline(lat, lng);
+      // ✅ 원형 표시
+      drawMultipleCircles({ lat, lng });
 
-      // 주행정보 갱신
+      // ✅ 레이더 방향 보정
+      updateRadarPolygon({ lat, lng }, heading);
+
+      // ✅ 경로 polyline 갱신
+      updatePathPolyline(currentLat, currentLng);
+
+      if (pathCoords.length > 1) {
+        document.getElementById("resetPathBtn").style.display = "inline-block";
+      }
+
+      // ✅ 이동정보 업데이트
       updateTravelStats();
+
+      // ✅ 보호구역/속도 제한 체크 (currentSpeed 사용)
+      checkSpeedLimit(currentLat, currentLng, currentSpeed);
+      checkSchoolZones(currentLat, currentLng);
+      checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
+
+      // ✅ 레이더 탐지
+      checkRadarPOIs({ lat, lng });
     }
   }, err => {
     console.error("위치 추적 오류:", err);
@@ -808,7 +845,7 @@ function startTracking() {
   });
 }
 
-  
+
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
 
