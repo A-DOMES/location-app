@@ -557,24 +557,35 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+// ---------------------- 방향 라벨 변환 함수 ----------------------
 function getDirectionLabel(heading) {
+  // ✅ heading 값이 없으면 "방향 없음" 반환
   if (heading == null) return "방향 없음";
-  if (heading < 45) return "북";
-  if (heading < 90) return "동북방향";
-  if (heading < 135) return "동";
-  if (heading < 180) return "동남방향";
-  if (heading < 225) return "남";
-  if (heading < 270) return "남서방향";
-  if (heading < 315) return "서";
-  if (heading <= 360) return "서북방향";
+
+  // ✅ heading 각도(0~360도)에 따라 방향 문자열 반환
+  if (heading < 45) return "북";          // 0~44도
+  if (heading < 90) return "동북방향";    // 45~89도
+  if (heading < 135) return "동";         // 90~134도
+  if (heading < 180) return "동남방향";   // 135~179도
+  if (heading < 225) return "남";         // 180~224도
+  if (heading < 270) return "남서방향";   // 225~269도
+  if (heading < 315) return "서";         // 270~314도
+  if (heading <= 360) return "서북방향";  // 315~360도
+
+  // ✅ 범위를 벗어나면 "방향 없음"
   return "방향 없음";
 }
 
+// ---------------------- 위치 표시 갱신 함수 ----------------------
 function updateLocationDisplay(lat, lng, heading) {
+  // ✅ heading 값을 방향 문자열로 변환
   const directionLabel = getDirectionLabel(heading);
+
+  // ✅ 화면에 현재 위치와 방향 표시
   document.getElementById("locationDisplay").innerText =
     `현재 위치: (${lat.toFixed(5)}, ${lng.toFixed(5)}) / 방향: ${directionLabel}`;
 }
+
 
 function makeDraggableAndResizable(element) {
   let isDragging = false, offsetX, offsetY;
@@ -729,14 +740,15 @@ function updateMapStyle(map) {
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
+  // ✅ 위치 추적 시작 (watchPosition: 위치가 바뀔 때마다 콜백 실행)
   navigator.geolocation.watchPosition(pos => {
     const now = Date.now();
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const speed = pos.coords.speed || 0; // m/s
-    const speedKmh = speed * 3.6;
+    const lat = pos.coords.latitude;   // 현재 위도
+    const lng = pos.coords.longitude;  // 현재 경도
+    const speed = pos.coords.speed || 0; // 브라우저 제공 속도 (m/s)
+    const speedKmh = speed * 3.6;        // km/h 변환
 
-    // 이동 거리 계산
+    // ✅ 이동 거리 계산 (이전 좌표와 현재 좌표 차이)
     let distanceMoved = 0;
     if (lastLat !== null && lastLng !== null) {
       distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
@@ -745,12 +757,12 @@ function startTracking() {
       );
     }
 
-    // 속도에 따른 최소 주기 설정
+    // ✅ 속도에 따른 최소 주기 설정
     let minInterval = 5000; // 기본 5초
-    if (speedKmh > 60) minInterval = 3000; // 차량 고속 → 3초
+    if (speedKmh > 60) minInterval = 3000;   // 차량 고속 → 3초
     else if (speedKmh < 10) minInterval = 10000; // 걷기 → 10초
 
-    // 조건: 최소 주기 경과 또는 일정 거리 이상 이동
+    // ✅ 조건: 최소 주기 경과 OR 일정 거리 이상 이동 시 갱신
     if ((now - lastUpdateTime > minInterval) || distanceMoved > 5) {
       lastUpdateTime = now;
       lastLat = lat;
@@ -761,7 +773,7 @@ function startTracking() {
       currentLng = lng;
       const timestamp = Date.now();
 
-      // ✅ 속도 계산
+      // ✅ 속도 계산 (좌표+시간 기반)
       computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
       // ✅ 방향 계산
@@ -778,17 +790,17 @@ function startTracking() {
           heading = lastHeading ?? 0;
         }
       }
-      lastHeading = heading;
-      const directionLabel = getDirectionLabel(heading);
+      lastHeading = heading; // 마지막 방향 저장
+      const directionLabel = getDirectionLabel(heading); // 방향 라벨 변환 (예: 북, 남, 동, 서)
 
-      // ✅ 현재 위치 정보 표시
+      // ✅ 현재 위치 정보 표시 (UI 갱신)
       const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
       document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
       document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
       document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
       document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
 
-      // ✅ 주소 갱신 (지오코딩은 주기적 제한)
+      // ✅ 주소 갱신 (지오코딩은 일정 주기마다만 실행)
       if (Date.now() - lastGeocodeTime > geocodeInterval) {
         document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
@@ -802,10 +814,8 @@ function startTracking() {
         lastGeocodeTime = Date.now();
       }
 
-      // ✅ 위치 표시 갱신
+      // ✅ 지도 및 마커 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
-
-      // ✅ 마커 이동
       if (!myMarker) {
         myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
       } else {
@@ -815,15 +825,12 @@ function startTracking() {
       // ✅ 지도 중심 이동 여부
       if (followUser) map.setCenter({ lat, lng });
 
-      // ✅ 원형 표시
+      // ✅ 원형 표시 및 레이더 보정
       drawMultipleCircles({ lat, lng });
-
-      // ✅ 레이더 방향 보정
       updateRadarPolygon({ lat, lng }, heading);
 
       // ✅ 경로 polyline 갱신
       updatePathPolyline(currentLat, currentLng);
-
       if (pathCoords.length > 1) {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
@@ -840,14 +847,16 @@ function startTracking() {
       checkRadarPOIs({ lat, lng });
     }
   }, err => {
+    // ✅ 오류 처리
     console.error("위치 추적 오류:", err);
     document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
   }, {
-    enableHighAccuracy: true,
-    maximumAge: 3000, // 최근 5초 이내 위치 캐시 허용
-    timeout: 20000 // ⬅️ 타임아웃을 10초로 늘려 GPS 응답 대기
+    enableHighAccuracy: true, // 높은 정확도 요청
+    maximumAge: 3000,         // 최근 3초 이내 위치 캐시 허용
+    timeout: 20000            // GPS 응답 대기 시간 20초
   });
 }
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
