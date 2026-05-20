@@ -764,14 +764,17 @@ function startTracking() {
       // ✅ 속도 계산
       computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
-      // ✅ 방향 보정
-      let heading = pos.coords.heading || 0;
+      // ✅ 방향 계산
+      let heading = pos.coords.heading || 0; 
+      // 브라우저가 heading 값을 제공하지 않으면 직접 계산
       if (!heading || heading === 0) {
         if (pathCoords.length > 1) {
-          const last = pathCoords[pathCoords.length - 1];
-          const prev = pathCoords[pathCoords.length - 2];
-          heading = google.maps.geometry.spherical.computeHeading(prev, last);
+          const last = pathCoords[pathCoords.length - 1];   // 최근 좌표
+          const prev = pathCoords[pathCoords.length - 2];   // 그 이전 좌표
+          // getBearing 함수로 두 좌표 간 방위각 계산 (0~360도)
+          heading = getBearing(prev.lat(), prev.lng(), last.lat(), last.lng());
         } else {
+          // 좌표가 부족하면 이전 heading 유지
           heading = lastHeading ?? 0;
         }
       }
