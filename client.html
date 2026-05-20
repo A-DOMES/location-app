@@ -734,6 +734,12 @@ function startTracking() {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
 
+    // ✅ 주행시간은 조건과 상관없이 항상 갱신
+    updateTravelStats();
+
+    // ✅ 좌표 기반 속도 계산도 항상 실행
+    computeSpeedFromGPS(lat, lng, now);
+
     // ✅ 이동 거리 계산
     let distanceMoved = 0;
     if (lastLat !== null && lastLng !== null) {
@@ -743,7 +749,7 @@ function startTracking() {
       );
     }
 
-    // ✅ 속도에 따른 최소 주기 설정 (좌표 기반 currentSpeed 사용)
+    // ✅ 속도에 따른 최소 주기 설정 (currentSpeed 기준)
     let minInterval = 5000; // 기본 5초
     if (currentSpeed > 60) minInterval = 3000; // 차량 고속 → 3초
     else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
@@ -754,13 +760,8 @@ function startTracking() {
       lastLat = lat;
       lastLng = lng;
 
-      // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
-      const timestamp = Date.now();
-
-      // ✅ 좌표 기반 속도 계산 (pos.coords.speed 대신)
-      computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
       // ✅ 방향 보정
       let heading = pos.coords.heading || 0;
@@ -801,7 +802,7 @@ function startTracking() {
       // ✅ 위치 표시 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
 
-      // ✅ 마커 이동 (첫 위치 포함)
+      // ✅ 마커 이동
       if (!myMarker) {
         myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
       } else {
@@ -823,9 +824,6 @@ function startTracking() {
       if (pathCoords.length > 1) {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
-
-      // ✅ 이동정보 업데이트
-      updateTravelStats();
 
       // ✅ 보호구역/속도 제한 체크 (currentSpeed 사용)
       checkSpeedLimit(currentLat, currentLng, currentSpeed);
