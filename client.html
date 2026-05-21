@@ -1197,15 +1197,23 @@ function updateTravelStats() {
   // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
   
-  // ✅ 직선거리 계산 (배열 기반)
-  const straightDistKm = computeRemainingDistance(pathCoords, currentLat, currentLng).toFixed(1);
-  
-  // ✅ ETA 표시 (배열 기반)
-  let etaMsg = "미정";
+  // ✅ 직선거리 & ETA 계산
+  let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
-    etaMsg = computeETA(pathCoords, avgSpeedValue);
-  }
+    const currPoint = new google.maps.LatLng(currentLat, currentLng);
+    const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
   
+    // ✅ 현재 위치 → 목적지 직선거리 계산
+    straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
+  
+    // ✅ ETA 계산 (평균속도 기반)
+    if (avgSpeedValue > 0) {
+      const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
+      const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
+      etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
+    }
+  }
+   
   // ✅ 각 요소에 값 반영
   document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
