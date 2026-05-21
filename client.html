@@ -1129,6 +1129,33 @@ function addSpeed(newSpeed) {
   if (newSpeed > maxSpeed) maxSpeed = newSpeed;
 }
 
+// ---------------------- 남은 거리 계산 ----------------------
+function computeRemainingDistance(pathCoords, currentLat, currentLng) {
+  if (!pathCoords || pathCoords.length < 2) return 0;
+
+  const currPoint = new google.maps.LatLng(currentLat, currentLng);
+  const destPoint = new google.maps.LatLng(
+    pathCoords[pathCoords.length - 1].lat,
+    pathCoords[pathCoords.length - 1].lng
+  );
+
+  return google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000; // km
+}
+
+// ---------------------- ETA 계산 ----------------------
+function computeETA(pathCoords, avgSpeedValue) {
+  if (!pathCoords || pathCoords.length < 2 || avgSpeedValue <= 0) return "미정";
+
+  const remainingDistKm = computeRemainingDistance(pathCoords, currentLat, currentLng);
+
+  const etaMinutes = Math.round(remainingDistKm / avgSpeedValue * 60);
+  const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  return `약 ${etaMinutes}분 후 (${etaTime})`;
+} 
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
@@ -1169,21 +1196,16 @@ function updateTravelStats() {
 
   // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
-
-  // ✅ 직선거리 & ETA 계산
-  let straightDistKm = 0, etaMsg = "미정";
+  
+  // ✅ 직선거리 계산 (배열 기반)
+  const straightDistKm = computeRemainingDistance(pathCoords, currentLat, currentLng).toFixed(1);
+  
+  // ✅ ETA 표시 (배열 기반)
+  let etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
-    const currPoint = new google.maps.LatLng(currentLat, currentLng);
-    const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
-    straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
-
-    if (avgSpeedValue > 0) {
-      const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
-      const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
-      etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
-    }
+    etaMsg = computeETA(pathCoords, avgSpeedValue);
   }
-
+  
   // ✅ 각 요소에 값 반영
   document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
@@ -1192,7 +1214,7 @@ function updateTravelStats() {
   document.getElementById("travelDistance").innerText = `${totalDistanceKm} km`;
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
-}
+  }
 
   
 // ---------------------- 총 이동거리 계산 ----------------------
