@@ -294,13 +294,15 @@ button:hover{background-color:#1565c0;}
 /* ---------------------- 이동정보 모달창 중앙 상단 고정 ---------------------- */
 @media (max-width: 600px) {
   #travelStatsModal .modal-content {
-    position: fixed;              /* 화면 전체 기준으로 고정 */
-    top: 20px !important;         /* 중앙 상단에 고정 */
-    left: 50%;                    /* 가로 중앙 */
-    transform: translateX(-50%);  /* X축만 중앙 정렬 */
-    margin: 0;                    /* 혹시 기본 margin이 있으면 제거 */
+    position: fixed !important;     /* 화면 전체 기준으로 강제 */
+    top: 20px !important;           /* 중앙 상단 고정 */
+    left: 50% !important;           /* 가로 중앙 */
+    transform: translateX(-50%) !important; /* X축만 중앙 정렬 */
+    margin: 0 !important;           /* 혹시 기본 margin 제거 */
+    width: 90% !important;          /* 모바일 반응형 폭 유지 */
   }
 }
+
 
   
 /* 타이틀 글씨 */
