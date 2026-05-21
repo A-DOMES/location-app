@@ -750,10 +750,10 @@ function startTracking() {
     // const speed = pos.coords.speed || 0;
     // const speedKmh = speed * 3.6;
 
-    // ✅ 수정: 좌표 기반 속도 계산 강제 실행
+    // ✅ 수정: 좌표 기반 속도 계산 강제 실행 (걷기에서도 자연스럽게 반영)
     computeSpeedFromGPS(lat, lng, now);
 
-    // ✅ 이동 거리 계산 (이전 좌표와 현재 좌표 차이)
+    // ✅ 이동 거리 계산 (경로 그리기용)
     let distanceMoved = 0;
     if (lastLat !== null && lastLng !== null) {
       distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
@@ -827,13 +827,13 @@ function startTracking() {
       drawMultipleCircles({ lat, lng });
       updateRadarPolygon({ lat, lng }, heading);
 
-      // ✅ 경로 polyline 갱신
+      // ✅ 경로 polyline 갱신 (5m 이상 이동 기준 유지 → 경로 깔끔)
       updatePathPolyline(currentLat, currentLng);
       if (pathCoords.length > 1) {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
 
-      // ✅ 이동정보 업데이트
+      // ✅ 이동정보 업데이트 (속도는 2m 기준 + 스무딩 적용)
       updateTravelStats();
 
       // ✅ 보호구역/속도 제한 체크
@@ -854,7 +854,6 @@ function startTracking() {
     timeout: 20000            // GPS 응답 대기 시간 20초
   });
 }
-
 
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
@@ -964,74 +963,66 @@ function getBearing(lat1, lng1, lat2, lng2) {
   return (brng + 360) % 360; // 0~360도
 }
 
-// ---------------------- GPS 기반 속도 계산 (최근 5개 평균 적용 + 정지 상태 감지 + 분기 조건 추가 + 디버깅 로그 강화) ----------------------
+// ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  // ✅ 첫 위치에서는 기준점만 저장
+  // 첫 위치에서는 기준점만 저장
   if (lastTimestamp === null) {
     lastLat = lat;
     lastLng = lng;
     lastTimestamp = timestamp;
     console.log("첫 위치 저장:", lat, lng, "timestamp:", timestamp);
-    return; // 첫 점에서는 속도 계산하지 않음
+    return;
   }
 
-  // ✅ 거리 계산 (m 단위)
+  // 거리 계산 (m 단위)
   const distance = google.maps.geometry.spherical.computeDistanceBetween(
     new google.maps.LatLng(lastLat, lastLng),
     new google.maps.LatLng(lat, lng)
   );
 
-  // ✅ 시간 차이 (초 단위)
+  // 시간 차이 (초 단위)
   const timeElapsed = (timestamp - lastTimestamp) / 1000;
 
   if (timeElapsed > 0) {
     let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-    // ✅ 상황별 드리프트 제거 기준 분기
-    let minDistanceThreshold = 5; // 기본값
-    if (currentSpeed < 10) {
-      // 걷기/자전거 → 민감하게
-      minDistanceThreshold = 3;
-    } else if (currentSpeed >= 10 && currentSpeed < 60) {
-      // 저속 차량 → 중간값
-      minDistanceThreshold = 5;
-    } else {
-      // 고속 차량 → 안정적으로
-      minDistanceThreshold = 10;
-    }
+    // 상황별 드리프트 제거 기준
+    let minDistanceThreshold = 5;
+    if (currentSpeed < 10) minDistanceThreshold = 3;       // 걷기/자전거
+    else if (currentSpeed < 60) minDistanceThreshold = 5;  // 저속 차량
+    else minDistanceThreshold = 10;                        // 고속 차량
 
     if (distance < minDistanceThreshold) {
       console.log("드리프트 제거됨, distance:", distance, "threshold:", minDistanceThreshold);
       rawSpeed = 0;
     }
 
-    // ✅ 비정상 값 필터링
     if (rawSpeed > 200) {
       console.log("비정상 속도 감지, rawSpeed:", rawSpeed, "→ currentSpeed 유지");
       rawSpeed = currentSpeed;
     }
 
-    // ✅ 속도 기록 배열에 추가
+    // 속도 기록 배열에 추가
     speedHistory.push(rawSpeed);
-    if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
+    if (speedHistory.length > 10) speedHistory.shift();
 
-    // ✅ 현재속도: 최근 5개 평균
-    const recent = speedHistory.slice(-5);
-    currentSpeed = recent.reduce((a, b) => a + b, 0) / recent.length;
+    // 현재속도: 자동 스무딩 적용
+    currentSpeed = getSmoothedSpeed(speedHistory);
 
-    // ✅ 최고속도 갱신
+    // 최고속도 갱신
     if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
 
-    // ✅ 누적 거리 갱신
+    // 누적 거리 갱신
     totalDistance += distance;
 
-    // ✅ 정지 상태 감지
+    // 정지 상태 감지
+    const recent = speedHistory.slice(-5);
     if (recent.every(v => v === 0)) {
       console.log("정지 상태 감지됨 → currentSpeed = 0");
       currentSpeed = 0;
     }
 
-    // 📝 디버깅 로그 추가 (좌표 + 계산 과정 전체)
+    // 디버깅 로그
     console.log(
       "lastLat:", lastLat, "lastLng:", lastLng,
       "lat:", lat, "lng:", lng,
@@ -1041,37 +1032,53 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     );
   }
 
-  // ✅ 좌표와 시간 갱신
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // 🚗 이동정보 모달창 갱신
+  // 이동정보 모달창 갱신
   updateTravelStats();
 }
 
   
-// ---------------------- 개선된 스무딩 함수 ----------------------
-function getSmoothedSpeed(history, windowSize = 7, maxDelta = 10) {
+// ---------------------- 개선된 스무딩 함수 (상황별 자동 적용) ----------------------
+function getSmoothedSpeed(history, baseWindowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
 
-  // 최근 windowSize 개 값 가져오기
-  const recent = history.slice(-windowSize);
+  // 최근 속도 값 가져오기
+  const recent = history.slice(-baseWindowSize);
   const sum = recent.reduce((a, b) => a + b, 0);
   let avg = sum / recent.length;
+
+  // 상황별 windowSize 자동 조정
+  let windowSize = baseWindowSize;
+  if (currentSpeed < 10) {
+    // 걷기 → 반응성 중요 (최근 5개)
+    windowSize = 5;
+  } else if (currentSpeed >= 10 && currentSpeed < 60) {
+    // 자전거/저속 차량 → 중간값 (최근 7개)
+    windowSize = 7;
+  } else {
+    // 고속 차량 → 안정성 중요 (최근 10개)
+    windowSize = 10;
+  }
+
+  // 다시 계산 (상황별 windowSize 적용)
+  const adjustedRecent = history.slice(-windowSize);
+  const adjustedSum = adjustedRecent.reduce((a, b) => a + b, 0);
+  avg = adjustedSum / adjustedRecent.length;
 
   // 변화율 제한 적용
   if (typeof smoothedSpeed !== "undefined") {
     const delta = avg - smoothedSpeed;
     if (Math.abs(delta) > maxDelta) {
-      // 이전 값에서 maxDelta 만큼만 변화하도록 제한
       avg = smoothedSpeed + (delta > 0 ? maxDelta : -maxDelta);
     }
   }
 
+  smoothedSpeed = avg;
   return avg;
 }
-
 
 // ---------------------- 좌표 추가 (m 단위 누적) ----------------------
 function addPathCoord(newCoord, address = null) {
