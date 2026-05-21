@@ -293,20 +293,22 @@ button:hover{background-color:#1565c0;}
 
 /* ---------------------- 이동정보 모달창 중앙 상단 고정 ---------------------- */
 @media (max-width: 600px) {
+  #travelStatsModal.modal {
+    display: flex !important;
+    align-items: flex-start !important; /* 상단 정렬 */
+    justify-content: center !important; /* 가로 중앙 */
+  }
+
   #travelStatsModal .modal-content {
-    all: unset;                   /* 기존 속성 초기화 */
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    background: rgba(255,255,255,0.25);
-    border: 2px solid #1976d2;
-    border-radius: 12px;
-    padding: 16px;
-    z-index: 9999;
+    margin-top: 20px !important;  /* 상단 여백 */
+    position: relative !important; /* fixed 대신 relative로 */
+    top: auto !important;          /* top 값 무시 */
+    left: auto !important;
+    transform: none !important;
+    width: 90% !important;
   }
 }
+
 
   
 /* 타이틀 글씨 */
