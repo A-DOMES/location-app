@@ -1206,11 +1206,12 @@ function updateTravelStats() {
     // ✅ 현재 위치 → 목적지 직선거리 계산
     straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
   
-    // ✅ ETA 계산 (평균속도 기반)
+    // ✅ ETA 계산 (평균속도 기반 → 도착 예상 시각만 표시)
     if (avgSpeedValue > 0) {
       const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
-      const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
-      etaMsg = `약 ${etaMinutes}분 후 (${etaTime})`;
+      const etaTime = new Date(Date.now() + etaMinutes * 60000)
+        .toLocaleTimeString("ko-KR", {hour:"2-digit", minute:"2-digit"});
+      etaMsg = etaTime; // ← 시간만 표시
     }
   }
    
