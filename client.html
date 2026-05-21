@@ -298,14 +298,15 @@ button:hover{background-color:#1565c0;}
 #currentLocationModal .modal-content { position:fixed; top:20px; right:20px; }
 
 /* ---------------------- 이동정보 모달창 중앙 상단 ---------------------- */
+#travelStatsModal.modal { display:flex; align-items:flex-start; justify-content:center; }
+
 #travelStatsModal .modal-content { 
-  position:fixed; 
-  left:50%; 
-  transform:translateX(-50%); 
+  position:relative; 
+  margin-top:10px; /* 원하는 만큼 수동으로 조정 */
   width:auto; 
   max-width:1000px; 
-  margin-top:5px; /* 수동으로 높이 조정 */
 }
+
 
   
 /* 타이틀 글씨 */
