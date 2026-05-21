@@ -965,7 +965,7 @@ function getBearing(lat1, lng1, lat2, lng2) {
 
 // ---------------------- GPS 기반 속도 계산 ----------------------
 function computeSpeedFromGPS(lat, lng, timestamp) {
-  // 첫 위치에서는 기준점만 저장
+  // ✅ 첫 위치에서는 기준점만 저장 (속도 계산하지 않음)
   if (lastTimestamp === null) {
     lastLat = lat;
     lastLng = lng;
@@ -974,55 +974,63 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     return;
   }
 
-  // 거리 계산 (m 단위)
+  // ✅ 거리 계산 (m 단위)
   const distance = google.maps.geometry.spherical.computeDistanceBetween(
     new google.maps.LatLng(lastLat, lastLng),
     new google.maps.LatLng(lat, lng)
   );
 
-  // 시간 차이 (초 단위)
+  // ✅ 시간 차이 (초 단위)
   const timeElapsed = (timestamp - lastTimestamp) / 1000;
 
   if (timeElapsed > 0) {
     let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
-    // 상황별 드리프트 제거 기준
-    let minDistanceThreshold = 5;
-    if (currentSpeed < 10) minDistanceThreshold = 3;       // 걷기/자전거
-    else if (currentSpeed < 60) minDistanceThreshold = 5;  // 저속 차량
-    else minDistanceThreshold = 10;                        // 고속 차량
+    // ✅ 상황별 드리프트 제거 기준 (완화된 조건)
+    let minDistanceThreshold = 2; // 기본값을 낮춤
+    if (currentSpeed < 10) {
+      // 걷기/자전거 → 작은 이동도 반영 (2m 기준)
+      minDistanceThreshold = 2;
+    } else if (currentSpeed >= 10 && currentSpeed < 60) {
+      // 저속 차량 → 중간값 (5m 기준)
+      minDistanceThreshold = 5;
+    } else {
+      // 고속 차량 → 안정성 확보 (10m 기준)
+      minDistanceThreshold = 10;
+    }
 
     if (distance < minDistanceThreshold) {
       console.log("드리프트 제거됨, distance:", distance, "threshold:", minDistanceThreshold);
       rawSpeed = 0;
     }
 
+    // ✅ 비정상 값 필터링 (200km/h 이상은 무시)
     if (rawSpeed > 200) {
       console.log("비정상 속도 감지, rawSpeed:", rawSpeed, "→ currentSpeed 유지");
       rawSpeed = currentSpeed;
     }
 
-    // 속도 기록 배열에 추가
+    // ✅ 속도 기록 배열에 추가 (최근 10개만 유지)
     speedHistory.push(rawSpeed);
     if (speedHistory.length > 10) speedHistory.shift();
 
-    // 현재속도: 자동 스무딩 적용
+    // ✅ 현재속도: 자동 스무딩 적용
     currentSpeed = getSmoothedSpeed(speedHistory);
 
-    // 최고속도 갱신
+    // ✅ 최고속도 갱신
     if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
 
-    // 누적 거리 갱신
+    // ✅ 누적 거리 갱신
     totalDistance += distance;
 
-    // 정지 상태 감지
+    // ✅ 정지 상태 감지 (최근 값이 모두 0이면 정지로 판단)
     const recent = speedHistory.slice(-5);
     if (recent.every(v => v === 0)) {
       console.log("정지 상태 감지됨 → currentSpeed = 0");
       currentSpeed = 0;
     }
 
-    // 디버깅 로그
+    // 📝 디버깅 로그
     console.log(
       "lastLat:", lastLat, "lastLng:", lastLng,
       "lat:", lat, "lng:", lng,
@@ -1032,28 +1040,29 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     );
   }
 
+  // ✅ 좌표와 시간 갱신
   lastLat = lat;
   lastLng = lng;
   lastTimestamp = timestamp;
 
-  // 이동정보 모달창 갱신
+  // 🚗 이동정보 모달창 갱신
   updateTravelStats();
 }
 
-  
+
 // ---------------------- 개선된 스무딩 함수 (상황별 자동 적용) ----------------------
 function getSmoothedSpeed(history, baseWindowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
 
-  // 최근 속도 값 가져오기
+  // ✅ 최근 baseWindowSize 개 값 평균
   const recent = history.slice(-baseWindowSize);
   const sum = recent.reduce((a, b) => a + b, 0);
   let avg = sum / recent.length;
 
-  // 상황별 windowSize 자동 조정
+  // ✅ 상황별 windowSize 자동 조정 (완화된 조건)
   let windowSize = baseWindowSize;
   if (currentSpeed < 10) {
-    // 걷기 → 반응성 중요 (최근 5개)
+    // 걷기 → 반응성 중요 (최근 3~5개)
     windowSize = 5;
   } else if (currentSpeed >= 10 && currentSpeed < 60) {
     // 자전거/저속 차량 → 중간값 (최근 7개)
@@ -1063,12 +1072,12 @@ function getSmoothedSpeed(history, baseWindowSize = 7, maxDelta = 10) {
     windowSize = 10;
   }
 
-  // 다시 계산 (상황별 windowSize 적용)
+  // ✅ 다시 계산 (상황별 windowSize 적용)
   const adjustedRecent = history.slice(-windowSize);
   const adjustedSum = adjustedRecent.reduce((a, b) => a + b, 0);
   avg = adjustedSum / adjustedRecent.length;
 
-  // 변화율 제한 적용
+  // ✅ 변화율 제한 적용 (갑작스러운 튀는 값 완화)
   if (typeof smoothedSpeed !== "undefined") {
     const delta = avg - smoothedSpeed;
     if (Math.abs(delta) > maxDelta) {
@@ -1076,6 +1085,7 @@ function getSmoothedSpeed(history, baseWindowSize = 7, maxDelta = 10) {
     }
   }
 
+  // ✅ 최종 스무딩 값 반환
   smoothedSpeed = avg;
   return avg;
 }
