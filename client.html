@@ -293,11 +293,12 @@ button:hover{background-color:#1565c0;}
 
 /* ---------------------- 이동정보 모달창 상하 이동 조정 ---------------------- */  
 @media (max-width: 600px) {
-  #travelStatsModal .modal-content {
-    top: 5px !important;   /* 원하는 위치로 강제 */
-    left: 50%;
-    transform: translateX(-50%);
-  }
+#travelStatsModal .modal-content {
+  position: fixed;              /* absolute 대신 fixed로 강제 */
+  top: 20px !important;         /* 원하는 위치 */
+  left: 50%;
+  transform: translate(-50%, 0); /* X축만 중앙 정렬, Y축은 보정하지 않음 */
+}
 }
   
 /* 타이틀 글씨 */
