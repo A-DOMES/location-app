@@ -987,7 +987,7 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
     let rawSpeed = (distance / timeElapsed) * 3.6; // km/h 변환
 
     // ✅ 상황별 드리프트 제거 기준 (완화된 조건)
-    let minDistanceThreshold = 2; // 기본값을 낮춤
+    let minDistanceThreshold = 2;
     if (currentSpeed < 10) {
       // 걷기/자전거 → 작은 이동도 반영 (2m 기준)
       minDistanceThreshold = 2;
@@ -1010,15 +1010,11 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
       rawSpeed = currentSpeed;
     }
 
-    // ✅ 속도 기록 배열에 추가 (최근 10개만 유지)
-    speedHistory.push(rawSpeed);
-    if (speedHistory.length > 10) speedHistory.shift();
+    // ✅ 속도 기록 배열에 추가 (외부 함수 활용)
+    addSpeed(rawSpeed);
 
     // ✅ 현재속도: 자동 스무딩 적용
     currentSpeed = getSmoothedSpeed(speedHistory);
-
-    // ✅ 최고속도 갱신
-    if (currentSpeed > maxSpeed) maxSpeed = currentSpeed;
 
     // ✅ 누적 거리 갱신
     totalDistance += distance;
@@ -1117,17 +1113,19 @@ function addPathCoord(newCoord, address = null) {
 }
 
 
-
-// ----------------------외부에서 사용 할 속도 추가 함수 ----------------------
+// ---------------------- 외부에서 사용 할 속도 추가 함수 ----------------------
 function addSpeed(newSpeed) {
+  // ✅ 속도 기록 배열에 추가
   speedHistory.push(newSpeed);
+  if (speedHistory.length > 10) speedHistory.shift(); // 최근 10개만 유지
 
-  // 평균 속도 누적 갱신
+  // ✅ 평균 속도 누적 갱신
   avgSpeed = Math.round((avgSpeed * (speedHistory.length - 1) + newSpeed) / speedHistory.length);
 
-  // 최고 속도 갱신
+  // ✅ 최고 속도 갱신
   if (newSpeed > maxSpeed) maxSpeed = newSpeed;
 }
+  
 
 // ---------------------- 남은 거리 계산 ----------------------
 function computeRemainingDistance(pathCoords, currentLat, currentLng) {
