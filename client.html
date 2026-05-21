@@ -423,7 +423,7 @@ button:hover{background-color:#1565c0;}
       <div>⚡ 최고속도: <span id="maxSpeed" class="highlight">0 km/h</span></div>
       <div>⏱️ 주행시간: <span id="driveTime" class="highlight">0 분</span></div>
       <div>📏 이동거리: <span id="travelDistance" class="highlight">0 km</span></div>
-      <div>📐 직선거리: <span id="straightDistance" class="highlight">0 km</span></div>
+      <div>📐 경로거리: <span id="routeDistance" class="highlight">0 km</span></div>
       <div>🕒 도착예상: <span id="eta" class="highlight">미정</span></div>
     </div>
   </div>
@@ -1164,7 +1164,7 @@ function updateTravelStats() {
     document.getElementById("maxSpeed").innerText = "0 km/h";
     document.getElementById("driveTime").innerText = "00:00:00";
     document.getElementById("travelDistance").innerText = "0 km";
-    document.getElementById("straightDistance").innerText = "0 km";
+    document.getElementById("routeDistance").innerText = "0 km";
     document.getElementById("eta").innerText = "미정";
     return;
   }
@@ -1194,25 +1194,30 @@ function updateTravelStats() {
 
   // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
-  
-  // ✅ 직선거리 계산 (배열 기반)
-  const straightDistKm = computeRemainingDistance(pathCoords, currentLat, currentLng).toFixed(1);
-  
+
+  // ✅ 도로 경로 거리 (Directions API 응답 활용)
+  let routeDistanceText = "미정";
+  if (routeResult && routeResult.routes[0].legs[0]) {
+    routeDistanceText = routeResult.routes[0].legs[0].distance.text; 
+    // 예: "12.3 km"
+  }
+
   // ✅ ETA 표시 (배열 기반)
   let etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
     etaMsg = computeETA(pathCoords, avgSpeedValue);
   }
-  
+
   // ✅ 각 요소에 값 반영
   document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
   document.getElementById("maxSpeed").innerText = `${maxSpeedValue} km/h`;
   document.getElementById("driveTime").innerText = elapsedTimeStr;
   document.getElementById("travelDistance").innerText = `${totalDistanceKm} km`;
-  document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
+  document.getElementById("routeDistance").innerText = routeDistanceText; // ← 도로 경로 거리 표시
   document.getElementById("eta").innerText = etaMsg;
-  }
+}
+
 
   
 // ---------------------- 총 이동거리 계산 ----------------------
