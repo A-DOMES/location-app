@@ -745,8 +745,13 @@ function startTracking() {
     const now = Date.now();
     const lat = pos.coords.latitude;   // 현재 위도
     const lng = pos.coords.longitude;  // 현재 경도
-    const speed = pos.coords.speed || 0; // 브라우저 제공 속도 (m/s)
-    const speedKmh = speed * 3.6;        // km/h 변환
+
+    // ❌ 기존: 브라우저 제공 speed 사용 (대부분 null/0이라 무의미)
+    // const speed = pos.coords.speed || 0;
+    // const speedKmh = speed * 3.6;
+
+    // ✅ 수정: 좌표 기반 속도 계산 강제 실행
+    computeSpeedFromGPS(lat, lng, now);
 
     // ✅ 이동 거리 계산 (이전 좌표와 현재 좌표 차이)
     let distanceMoved = 0;
@@ -759,8 +764,8 @@ function startTracking() {
 
     // ✅ 속도에 따른 최소 주기 설정
     let minInterval = 5000; // 기본 5초
-    if (speedKmh > 60) minInterval = 3000;   // 차량 고속 → 3초
-    else if (speedKmh < 10) minInterval = 10000; // 걷기 → 10초
+    if (currentSpeed > 60) minInterval = 3000;   // 차량 고속 → 3초
+    else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
 
     // ✅ 조건: 최소 주기 경과 OR 일정 거리 이상 이동 시 갱신
     if ((now - lastUpdateTime > minInterval) || distanceMoved > 5) {
@@ -771,27 +776,20 @@ function startTracking() {
       // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
-      const timestamp = Date.now();
-
-      // ✅ 속도 계산 (좌표+시간 기반)
-      computeSpeedFromGPS(currentLat, currentLng, timestamp);
 
       // ✅ 방향 계산
       let heading = pos.coords.heading || 0; 
-      // 브라우저가 heading 값을 제공하지 않으면 직접 계산
       if (!heading || heading === 0) {
         if (pathCoords.length > 1) {
-          const last = pathCoords[pathCoords.length - 1];   // 최근 좌표
-          const prev = pathCoords[pathCoords.length - 2];   // 그 이전 좌표
-          // getBearing 함수로 두 좌표 간 방위각 계산 (0~360도)
+          const last = pathCoords[pathCoords.length - 1];
+          const prev = pathCoords[pathCoords.length - 2];
           heading = getBearing(prev.lat(), prev.lng(), last.lat(), last.lng());
         } else {
-          // 좌표가 부족하면 이전 heading 유지
           heading = lastHeading ?? 0;
         }
       }
-      lastHeading = heading; // 마지막 방향 저장
-      const directionLabel = getDirectionLabel(heading); // 방향 라벨 변환 (예: 북, 남, 동, 서)
+      lastHeading = heading;
+      const directionLabel = getDirectionLabel(heading);
 
       // ✅ 현재 위치 정보 표시 (UI 갱신)
       const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
@@ -856,6 +854,7 @@ function startTracking() {
     timeout: 20000            // GPS 응답 대기 시간 20초
   });
 }
+
 
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
