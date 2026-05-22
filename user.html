@@ -21,6 +21,17 @@ body {
   padding: 12px;                    /* 화면 여백 */
 }
 
+/* =========================== ✅ 메인 카드 영역 =========================== */
+.main-card {
+  border: 2px solid #1976d2;        /* 파란색 테두리 */
+  border-radius: 12px;              /* 모서리 둥글게 */
+  background: #fff;                 /* 흰색 배경 */
+  max-width: 520px;                 /* ✅ PC에서는 널찍하게 */
+  width: 100%;                      /* 화면 폭 전체 */
+  padding: 20px;                    /* 내부 여백 */
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15); /* 그림자 */
+}
+
 /* =========================== ✅ 헤더 영역 =========================== */
 header {
   background-color: #1976d2;        /* 파란색 배경 */
@@ -36,7 +47,7 @@ header h2 {
   color: #fff;                      /* 흰색 글자 */
 }
 
-/* =========================== ✅ 정보 박스 (기본 안내/입력용) =========================== */
+/* =========================== ✅ 정보 박스 =========================== */
 .info-box {
   border: 2px solid #1976d2;        /* 파란색 테두리 */
   border-radius: 10px;              /* 모서리 둥글게 */
@@ -76,11 +87,10 @@ header h2 {
 
 /* =========================== ✅ 입력창 + 지도 버튼 그룹 =========================== */
 .input-group {
-  display: flex;              /* flex 사용 */
-  flex-direction: column;     /* ✅ 세로 방향으로 배치 */
-  align-items: flex-start;    /* 왼쪽 기준 정렬 */
-  gap: 10px;                  /* 요소 간격 */
-  margin-bottom: 12px;        /* 아래쪽 여백 */
+  display:flex;                     /* 가로 배치 */
+  align-items:center;               /* 세로 중앙 정렬 */
+  gap:10px;                         /* 요소 간격 */
+  margin-bottom:12px;               /* 아래쪽 여백 */
 }
 input[type="text"] {
   margin-left:50px;                 /* 좌측 여백 */
@@ -105,7 +115,7 @@ input[type="text"] {
 }
 .map-btn:hover {
   background:linear-gradient(to bottom, #90caf9, #1565c0); /* 호버 시 밝게 */
-  transform:translateY(-3px) scale(1.05); /* 위로 살짝 올라가며 커짐 */
+  transform:scale(1.05);            /* 살짝 커짐 */
 }
 
 /* =========================== ✅ 위치 전송 / 해제 버튼 =========================== */
@@ -120,7 +130,6 @@ input[type="text"] {
   color:white;                      /* 글자색 흰색 */
   margin-bottom:6px;                /* 아래쪽 여백 */
   display:block;                    /* 블록 표시 */
-  transition:transform 0.2s ease;   /* 애니메이션 */
 }
 #sendBtn {
   background:linear-gradient(to bottom, #42a5f5, #1976d2); /* 파란색 그라데이션 */
@@ -130,23 +139,17 @@ input[type="text"] {
   background:linear-gradient(to bottom, #ef5350, #f44336); /* 빨간색 그라데이션 */
   margin-top:10px;                  /* 위쪽 여백 */
 }
-#sendBtn:hover, #stopBtn:hover {
-  transform:translateY(-3px) scale(1.05); /* 호버 시 위로 올라가며 커짐 */
-}
-#sendBtn:active, #stopBtn:active,
-#sendBtn:focus, #stopBtn:focus {
-  transform:none;                   /* 클릭/포커스 시 원래 크기로 복귀 */
-}
 </style>
 </head>
 
 <body>
-  <!-- ✅ 상단 헤더 -->
+<div class="main-card">
+  <!-- ✅ 헤더 -->
   <header>
     <h2>A-DOMES | 위치 전송</h2>
   </header>
 
-  <!-- ✅ 입력창 및 버튼 영역 -->
+  <!-- ✅ 입력창 및 버튼 -->
   <section class="info-box">
     <form id="locationForm" method="POST">
       <div class="input-group">
