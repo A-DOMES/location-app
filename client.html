@@ -1477,6 +1477,7 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertVarName) 
       if (zoneName === "어린이 보호구역") {
         message += `<p class="speed-warning">제한속도: ${limit} km/h</p>`;
         if (currentKmh && currentKmh > limit) {
+          // over-limit 클래스 → CSS에서 붉은색 깜박임 (1초 간격)
           message += `<p class="speed-warning over-limit">현재 속도: ${currentKmh.toFixed(1)} km/h</p>`;
         }
       } else {
@@ -1496,7 +1497,6 @@ function showZoneAlert(zoneName, distance, limit, currentKmh, lastAlertVarName) 
     speakMessage(`${zoneName}입니다. ${limit ? `제한 속도는 ${limit} 킬로미터입니다.` : "주의하세요."}`);
   }
 }
-
 
 // ---------------------- 어린이 보호구역 ----------------------
 function checkSchoolZones(currentLat, currentLng) {
