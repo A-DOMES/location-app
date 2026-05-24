@@ -1268,21 +1268,30 @@ function updateTravelStats() {
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
 
-// ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
-updateStraightLine();
+  // ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
+  updateStraightLine();
 
-// ✅ 목적지 도착 시 선 제거 (예: 50m 이하일 때)
-if (straightDistKm <= 0.05) { // km 단위 → 50m
-  if (straightLine) {
-    straightLine.setMap(null);
-    straightLine = null;
+  // ✅ 목적지 도착 반경을 속도에 따라 자동 조정
+  let detectionRadiusKm = 0.05; // 기본 50m
+  if (currentSpeedValue > 60) {
+    detectionRadiusKm = 0.1; // 100m
+  } else if (currentSpeedValue > 40) {
+    detectionRadiusKm = 0.07; // 70m
   }
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
+
+  // ✅ 목적지 도착 시 선 제거
+  if (straightDistKm <= detectionRadiusKm) {
+    if (straightLine) {
+      straightLine.setMap(null);
+      straightLine = null;
+    }
+    if (destinationRenderer) {
+      destinationRenderer.setMap(null);
+      destinationRenderer = null;
+    }
+    speakMessage("목적지에 도착했습니다.");
+    drivingStarted = false;
   }
-  speakMessage("목적지에 도착했습니다.");
-  drivingStarted = false;
 }
   
 // ---------------------- 총 이동거리 계산 ----------------------
