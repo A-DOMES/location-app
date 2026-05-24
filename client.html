@@ -1543,7 +1543,7 @@ function checkSchoolZones(currentLat, currentLng) {
 
   schoolZones.forEach(school => {
     const distance = getDistance(parseFloat(school.lat), parseFloat(school.lng), currentLat, currentLng);
-    if (distance <= 20) {   // ✅ 20m 앞에서만 알림
+    if (distance <= 50) {   // ✅ 50m 앞에서만 알림
       showZoneAlert("어린이 보호구역", distance, 30, currentSpeed, "lastSchoolZoneAlertTime");
     }
   });
