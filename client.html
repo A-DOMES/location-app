@@ -468,7 +468,7 @@ button:hover{background-color:#1565c0;}
 <script>  
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;
-let pathCoords = [];
+let pathCoords = [];   // 이동 경로 좌표 기록
 
 let lastGeocodeTime = 0;
 let geocodeInterval = 60000;
@@ -482,25 +482,25 @@ let poiMarkers = [];
 let compassMarkers = [];
 let infoWindow;
 
-let directionsService, directionsRenderer;  // 기존 경로 안내용 (일반 목적)
+let directionsService, directionsRenderer;  // 구글 경로 안내용
 
 let currentLat, currentLng;   // 현재 위치 좌표
 let otherMarker;
 let circles = [];
 
-let totalDistance = 0;
+let totalDistance = 0;        // 누적 이동 거리
 
 let modalQueue = [];
 let modalTimer = null;
 
-// 최근 알림 시간
+// 최근 알림 시간 (중복 알림 방지용)
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
 let lastSpeedLimitAlertTime = 0;
 
 // 속도 기록
 let speedHistory = [];
-let startTime = Date.now();
+let startTime = null;   // 주행 시작 시점 (경로 안내 버튼 클릭 시 초기화)
 
 // 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
 let livePathRenderer = null;
@@ -508,12 +508,16 @@ let livePathRenderer = null;
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
 
-// 목적지 좌표 및 도착
+// 목적지 좌표 및 도착 상태
 let destinationLat = null;
 let destinationLng = null;
-let destinationArrived = false;
-  
-// ✅ 직선 Polyline 객체 (빠져있던 부분 추가)
+
+// ✅ 도착 안내 제어용 플래그
+let destinationSet = false;       // 목적지가 설정되었는지 여부
+let destinationArrived = false;   // 목적지 도착 안내가 이미 실행되었는지 여부
+let drivingStarted = false;       // 주행 시작 여부
+
+// 직선 Polyline 객체 (현재 위치 ↔ 목적지 연결선)
 let straightLine = null;
 
 let currentSpeed = 0;       // 현재 속도 (km/h)
@@ -528,12 +532,11 @@ let followUser = true;
 
 // 목적지 마커 배열
 let destinationMarkers = []; 
-let drivingStarted = false;
-  
-// 초기화시 발생된 위도/ 경도값 저장변수
+
+// 초기화시 발생된 위도/경도값 저장변수
 let watchId = null;  
-  
-// 목적지 관련변수
+
+// 목적지 관련변수 (마지막 좌표 기록)
 let lastLat = null;
 let lastLng = null;
 
@@ -1280,20 +1283,28 @@ function updateTravelStats() {
     detectionRadiusKm = 0.07; // 70m
   }
 
-// ✅ 목적지 도착 시 선 제거 + 안내 (한 번만 실행)
-if (!destinationArrived && straightDistKm <= detectionRadiusKm) {
-  if (straightLine) {
-    straightLine.setMap(null);
-    straightLine = null;
+  // ✅ 목적지 도착 시 선 제거 + 안내 (한 번만 실행)
+  if (destinationSet && !destinationArrived && straightDistKm <= detectionRadiusKm) {
+    if (straightLine) {
+      straightLine.setMap(null);
+      straightLine = null;
+    }
+    if (destinationRenderer) {
+      destinationRenderer.setMap(null);
+      destinationRenderer = null;
+    }
+
+    // ✅ 다기능 모달창 표시
+    document.getElementById("modalTitle").innerText = "목적지 도착";
+    document.getElementById("modalMessage").innerText = "목적지에 도착했습니다.";
+    document.getElementById("popupModal").style.display = "block";
+
+    // ✅ 음성 안내
+    speakMessage("목적지에 도착했습니다.");
+
+    drivingStarted = false;
+    destinationArrived = true; // ✅ 이후에는 다시 실행되지 않음
   }
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null);
-    destinationRenderer = null;
-  }
-  speakMessage("목적지에 도착했습니다.");
-  drivingStarted = false;
-  destinationArrived = true; // ✅ 이후에는 다시 실행되지 않음
-}
 }
   
 // ---------------------- 총 이동거리 계산 ----------------------
@@ -2055,7 +2066,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 }
 
-/* ---------------------- 5분마다 서버 위치 갱신 ---------------------- */
+/* ---------------------- 1분마다 서버 위치 갱신 ---------------------- */
 setInterval(async () => {
   await loadAdminLocations(); // 서버에서 최신 위치 가져오기
 
@@ -2114,6 +2125,11 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
   // ✅ 경로 안내 실행
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
+
+  // ✅ 목적지 설정 플래그 ON
+  destinationSet = true;
+  destinationArrived = false; // 아직 도착하지 않음
+  drivingStarted = true;
 
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
@@ -2216,7 +2232,7 @@ function initAutocomplete() {
   });
 }
 
-/* ---------------------- 음성 안내 함수 ---------------------- */
+// ---------------------- 음성 안내 함수 ----------------------
 function speakMessage(message) {
   const utterance = new SpeechSynthesisUtterance(message);
   utterance.lang = "ko-KR"; // 한국어 음성
