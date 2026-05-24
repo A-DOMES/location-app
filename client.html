@@ -512,7 +512,9 @@ let destinationRenderer = null;
 let destinationLat = null;
 let destinationLng = null;
 
-// 속도 관련 변수
+// ✅ 직선 Polyline 객체 (빠져있던 부분 추가)
+let straightLine = null;
+
 let currentSpeed = 0;       // 현재 속도 (km/h)
 let lastPosition = null;    // 이전 위치 저장
 let lastTimestamp = null;   // 이전 위치 시간 저장
@@ -1169,6 +1171,28 @@ function computeETA(pathCoords, avgSpeedValue) {
 
   return `약 ${etaMinutes}분 후 (${etaTime})`;
 } 
+
+// ---------------------- 직선 Polyline 갱신 ----------------------
+function updateStraightLine() {
+  if (!destinationLat || !destinationLng || !currentLat || !currentLng) return;
+
+  const currPoint = new google.maps.LatLng(currentLat, currentLng);
+  const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
+
+  if (!straightLine) {
+    // 최초 생성
+    straightLine = new google.maps.Polyline({
+      path: [currPoint, destPoint],
+      map: map,
+      strokeColor: "#FF0000",
+      strokeOpacity: 0.8,
+      strokeWeight: 2
+    });
+  } else {
+    // 위치 갱신 시 선 업데이트
+    straightLine.setPath([currPoint, destPoint]);
+  }
+}
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
@@ -1243,7 +1267,10 @@ function updateTravelStats() {
   document.getElementById("travelDistance").innerText = `${totalDistanceKm} km`;
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
-  }
+
+  // ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
+  updateStraightLine();
+}
 
   
 // ---------------------- 총 이동거리 계산 ----------------------
