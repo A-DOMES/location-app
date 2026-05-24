@@ -508,10 +508,11 @@ let livePathRenderer = null;
 // 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
 let destinationRenderer = null;
 
-// 목적지 좌표
+// 목적지 좌표 및 도착
 let destinationLat = null;
 let destinationLng = null;
-
+let destinationArrived = false;
+  
 // ✅ 직선 Polyline 객체 (빠져있던 부분 추가)
 let straightLine = null;
 
@@ -1279,19 +1280,20 @@ function updateTravelStats() {
     detectionRadiusKm = 0.07; // 70m
   }
 
-  // ✅ 목적지 도착 시 선 제거
-  if (straightDistKm <= detectionRadiusKm) {
-    if (straightLine) {
-      straightLine.setMap(null);
-      straightLine = null;
-    }
-    if (destinationRenderer) {
-      destinationRenderer.setMap(null);
-      destinationRenderer = null;
-    }
-    speakMessage("목적지에 도착했습니다.");
-    drivingStarted = false;
+// ✅ 목적지 도착 시 선 제거 + 안내 (한 번만 실행)
+if (!destinationArrived && straightDistKm <= detectionRadiusKm) {
+  if (straightLine) {
+    straightLine.setMap(null);
+    straightLine = null;
   }
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  speakMessage("목적지에 도착했습니다.");
+  drivingStarted = false;
+  destinationArrived = true; // ✅ 이후에는 다시 실행되지 않음
+}
 }
   
 // ---------------------- 총 이동거리 계산 ----------------------
