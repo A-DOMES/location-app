@@ -1268,10 +1268,22 @@ function updateTravelStats() {
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
 
-  // ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
-  updateStraightLine();
-}
+// ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
+updateStraightLine();
 
+// ✅ 목적지 도착 시 선 제거 (예: 50m 이하일 때)
+if (straightDistKm <= 0.05) { // km 단위 → 50m
+  if (straightLine) {
+    straightLine.setMap(null);
+    straightLine = null;
+  }
+  if (destinationRenderer) {
+    destinationRenderer.setMap(null);
+    destinationRenderer = null;
+  }
+  speakMessage("목적지에 도착했습니다.");
+  drivingStarted = false;
+}
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
@@ -1662,40 +1674,44 @@ function resetNavigation(fullStop = false) {
   // 🗺️ 경로 초기화
   pathCoords = [];
   if (pathPolyline) {
-    pathPolyline.setMap(null);
+    pathPolyline.setMap(null);   // 기존 이동 경로 Polyline 제거
     pathPolyline = null;
   }
   if (destinationRenderer) {
-    destinationRenderer.setMap(null);
+    destinationRenderer.setMap(null); // 목적지 안내 Polyline 제거
     destinationRenderer = null;
   }
-  destinationMarkers.forEach(marker => marker.setMap(null));
+  if (straightLine) {
+    straightLine.setMap(null);   // 직선 Polyline 제거
+    straightLine = null;
+  }
+  destinationMarkers.forEach(marker => marker.setMap(null)); // 목적지 마커 제거
   destinationMarkers = [];
 
   // 🎯 목적지 관련 초기화
   if (destinationCircle) {
-    destinationCircle.setMap(null);
+    destinationCircle.setMap(null); // 목적지 원형 표시 제거
     destinationCircle = null;
   }
   if (otherMarker) {
-    otherMarker.setMap(null);
+    otherMarker.setMap(null);       // 기타 마커 제거
     otherMarker = null;
   }
 
-  // 🚗 이동정보 초기화 (핵심!)
+  // 🚗 이동정보 초기화
   speedHistory = [];
-  startTime = null;        // ✅ 주행시간 초기화
+  startTime = null;        // 주행시간 초기화
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
-  totalDistance = 0;       // ✅ m 단위로 초기화
+  totalDistance = 0;       // 총 이동거리 초기화
 
   // 🔄 모드 복귀
-  followUser = true;
-  drivingStarted = false; // 운행 안내 상태도 초기화
+  followUser = true;       // 사용자 중심 모드 복귀
+  drivingStarted = false;  // 운행 안내 상태 초기화
 
   // 🔊 음성 안내
   speakMessage("경로가 초기화 되었습니다.");
@@ -1724,10 +1740,9 @@ function resetNavigation(fullStop = false) {
   // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
     map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7); // ← 주석과 일치하도록 7로 고정
+    map.setZoom(7); // 기본 줌 레벨로 복귀
   }
 }
-
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
