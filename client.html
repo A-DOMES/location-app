@@ -1543,7 +1543,21 @@ function checkSchoolZones(currentLat, currentLng) {
 
   schoolZones.forEach(school => {
     const distance = getDistance(parseFloat(school.lat), parseFloat(school.lng), currentLat, currentLng);
-    if (distance <= 50) {   // ✅ 50m 앞에서만 알림
+
+    // ✅ 기본 감지 반경: 50m
+    let detectionRadius = 50;
+
+    // ✅ 속도에 따라 감지 반경 자동 조정
+    // - 40km/h 이상이면 70m
+    // - 60km/h 이상이면 100m
+    if (currentSpeed > 60) {
+      detectionRadius = 100;
+    } else if (currentSpeed > 40) {
+      detectionRadius = 70;
+    }
+
+    // ✅ 반경 조건 충족 시 알림 발생
+    if (distance <= detectionRadius) {
       showZoneAlert("어린이 보호구역", distance, 30, currentSpeed, "lastSchoolZoneAlertTime");
     }
   });
@@ -1555,7 +1569,18 @@ function checkDynamicSpeedZones(currentLat, currentLng, currentSpeed) {
 
   dynamicSpeedZones.forEach(zone => {
     const distance = getDistance(parseFloat(zone.lat), parseFloat(zone.lng), currentLat, currentLng);
-    if (distance <= 20) {   // ✅ 20m 앞에서만 알림
+
+    // ✅ 기본 감지 반경: 50m
+    let detectionRadius = 50;
+
+    // ✅ 속도에 따라 반경 자동 조정
+    if (currentSpeed > 60) {
+      detectionRadius = 100;
+    } else if (currentSpeed > 40) {
+      detectionRadius = 70;
+    }
+
+    if (distance <= detectionRadius) {
       showZoneAlert("속도 제한 구역", distance, zone.lmtSpd, currentSpeed, "lastDynamicZoneAlertTime");
     }
   });
@@ -1566,10 +1591,20 @@ function checkSpeedLimit(currentLat, currentLng, currentSpeed) {
   const limit = currentSpeedLimit ?? null;
   if (!limit) return;
 
-  // ✅ 일반 속도제한도 20m 앞에서만 알림
-  showZoneAlert("속도 제한 구역", 20, limit, currentSpeed, "lastSpeedLimitAlertTime");
-}
+  // ✅ 기본 감지 반경: 50m
+  let detectionRadius = 50;
 
+  // ✅ 속도에 따라 반경 자동 조정
+  if (currentSpeed > 60) {
+    detectionRadius = 100;
+  } else if (currentSpeed > 40) {
+    detectionRadius = 70;
+  }
+
+  if (getDistance(currentLat, currentLng, currentLat, currentLng) <= detectionRadius) {
+    showZoneAlert("속도 제한 구역", detectionRadius, limit, currentSpeed, "lastSpeedLimitAlertTime");
+  }
+}
   
 // ------------------------------- 초기화 -----------------------------------
 window.onload = async () => {
