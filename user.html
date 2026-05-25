@@ -378,6 +378,7 @@ function sendLocation() {
       lng: position.coords.longitude,
       time: new Date().toISOString(),
       token: token
+      mode: "location"   // ✅ 명시적으로 추가
     });
 
     fetch(CONFIG.ADMIN_URL, {
@@ -491,7 +492,8 @@ function autoUpdate() {
     const phone = document.getElementById("phone").value;
 
     const url = CONFIG.ADMIN_URL
-              + "?phone=" + encodeURIComponent(phone)
+              + "?mode=location"
+              + "&phone=" + encodeURIComponent(phone)
               + "&status=정상"
               + "&lat=" + encodeURIComponent(position.coords.latitude)
               + "&lng=" + encodeURIComponent(position.coords.longitude)
