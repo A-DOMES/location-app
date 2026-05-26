@@ -1998,13 +1998,6 @@ navigator.geolocation.getCurrentPosition(
   { enableHighAccuracy: true }
 );
 
-/* ---------------------- 목적지 찾기 모달 닫기 ---------------------- */  
-function closeModal(modal) {
-  if (modal) {
-    modal.style.display = "none";
-    modal.classList.remove("open"); // 혹시 open 클래스가 있다면 제거
-  }
-}
 
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
@@ -2144,8 +2137,16 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   destinationArrived = false; // 아직 도착하지 않음
   drivingStarted = true;
 
-  // ✅ 목적지 찾기 모달 닫기 추가
+  // ✅ 목적지 모달 닫기
   closeModal(document.getElementById("destinationModal"));
+
+  // ✅ 검색결과 패널 닫기
+  const searchPanel = document.getElementById("searchResultPanel");
+  if (searchPanel) searchPanel.style.display = "none";
+
+  // ✅ 목적지 결과 모달 닫기
+  const destResultModal = document.getElementById("destinationResultModal");
+  if (destResultModal) destResultModal.style.display = "none";
   
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
