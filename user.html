@@ -377,7 +377,7 @@ function sendLocation() {
       lat: position.coords.latitude,
       lng: position.coords.longitude,
       time: new Date().toISOString(),
-      token: token
+      token: token,
       mode: "login"   // ✅ 이 줄 추가
     });
 
