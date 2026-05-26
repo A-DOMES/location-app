@@ -125,52 +125,36 @@ body { display:flex; justify-content:center; align-items:center;
 <script src="config.js"></script>
 
 <script>
-  // 📌 사용자 API URL (config.js에서 불러옴)
   const USER_API_URL = CONFIG.USER_URL;
 
-  // 📌 로그인 함수
   function login() {
     const id = document.getElementById("id").value.trim();
     const pw = document.getElementById("pw").value.trim();
 
-    // ✅ 입력값 검증
     if (!id || !pw) {
       alert("⚠️ 아이디와 비밀번호를 입력하세요.");
       return;
     }
 
-    // ✅ 로그인 모달 표시
     const modal = document.getElementById("loginModal");
     modal.style.display = "block";
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ JSONP 방식 응답 처리 함수 정의
+    // ✅ JSONP 방식 호출
     const callbackName = "handleLoginResponse";
     window[callbackName] = function(result) {
       if (result.result === "success") {
-        // 로그인 성공 처리
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
 
-        // 세션/로컬스토리지 저장
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("role", result.role);
         sessionStorage.setItem("userId", id);
         sessionStorage.setItem("token", result.token);
         localStorage.setItem("nickname", result.nickname);
 
-        // ✅ 마지막 로그인 시간 기록 요청 (클라이언트에서 서버 호출)
-        fetch(`${USER_API_URL}?mode=updateLastLogin&id=${encodeURIComponent(id)}`)
-          .then(res => res.json())
-          .then(updateResult => {
-            console.log("last_login 업데이트 응답:", updateResult);
-          })
-          .catch(err => {
-            console.error("last_login 업데이트 오류:", err);
-          });
-
-        // ✅ 권한에 따라 페이지 이동
+        // ✅ role에 따라 분기 처리
         const roleRedirects = {
           "AD": "https://a-domes.github.io/location-pwa/admin.html",
           "RU": "https://a-domes.github.io/location-app/user.html"
@@ -186,28 +170,24 @@ body { display:flex; justify-content:center; align-items:center;
         }, 1500);
 
       } else if (result.result === "blocked") {
-        // 계정이 차단된 경우
         modal.style.display = "none";
         alert("🚫 계정이 비활성화되었습니다.");
       } else {
-        // 로그인 실패 처리
         modal.style.display = "none";
         alert("❌ 로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
       }
     };
 
-    // ✅ JSONP 요청을 위한 script 태그 동적 추가
+    // ✅ script 태그를 동적으로 추가해서 JSONP 요청
     const script = document.createElement("script");
     script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
     document.body.appendChild(script);
   }
 
-  // 📌 회원가입 페이지 이동
   function goRegister() {
     window.location.href = "registerUser.html";
   }
 
-  // ✅ 전역에 함수 등록
   window.login = login;
   window.goRegister = goRegister;
 </script>
