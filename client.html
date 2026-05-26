@@ -1919,7 +1919,9 @@ async function findDestination(inputName, showPanel = true) {
         const mergedList = [...serverMatches, ...googleMatches];
 
         const panel = document.getElementById("searchResultPanel");
+        if (!panel) { resolve(false); return; } // 안전 체크
         const body = panel.querySelector(".search-body");
+        if (!body) { resolve(false); return; } // 안전 체크
 
         if (mergedList.length > 0) {
           body.innerHTML = mergedList.map((item, idx) => `
@@ -1937,7 +1939,8 @@ async function findDestination(inputName, showPanel = true) {
           destinationLat = first.lat;
           destinationLng = first.lng;
           document.getElementById("destinationInput").value = first.name;
-          document.getElementById("startRouteBtn").style.display = "inline-block";
+          const startBtn = document.getElementById("startRouteBtn");
+          if (startBtn) startBtn.style.display = "inline-block";
 
           // ✅ 클릭 이벤트
           body.querySelectorAll(".search-item").forEach((item) => {
@@ -1958,18 +1961,21 @@ async function findDestination(inputName, showPanel = true) {
                 }, (place, detailStatus) => {
                   if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
                     const infoPanel = document.getElementById("destinationResult");
-                    infoPanel.innerHTML = `
-                      ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                      ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                      ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                      ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                      ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                    `;
+                    if (infoPanel) {
+                      infoPanel.innerHTML = `
+                        ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
+                        ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
+                        ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
+                        ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
+                        ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
+                      `;
+                    }
                   }
                 });
               }
 
-              document.getElementById("startRouteBtn").style.display = "inline-block";
+              const startBtn = document.getElementById("startRouteBtn");
+              if (startBtn) startBtn.style.display = "inline-block";
             });
           });
 
