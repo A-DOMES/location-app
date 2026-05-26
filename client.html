@@ -2144,10 +2144,11 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   // ✅ 검색결과 패널 닫기
   const searchPanel = document.getElementById("searchResultPanel");
   if (searchPanel) searchPanel.style.display = "none";
-  
-  // ✅ 이동정보 모달 자동 표시
+
+  // ✅ 이동정보 모달 직접 열기 (openModal 사용 X)
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) travelStatsModal.style.display = "block";
+
   updateTravelStats();
 });
   
