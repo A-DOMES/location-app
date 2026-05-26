@@ -2138,7 +2138,12 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   drivingStarted = true;
 
   // ✅ 목적지 모달 닫기
-  document.getElementById("destinationModal").style.display = "none";
+  const destinationModal = document.getElementById("destinationModal");
+  if (destinationModal) destinationModal.style.display = "none";
+
+  // ✅ 검색결과 패널 닫기
+  const searchPanel = document.getElementById("searchResultPanel");
+  if (searchPanel) searchPanel.style.display = "none";
   
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
