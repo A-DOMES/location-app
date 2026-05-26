@@ -1282,7 +1282,7 @@ function updateTravelStats() {
   updateStraightLine();
 
   // ✅ 목적지 도착 반경을 속도에 따라 자동 조정
-  let detectionRadiusKm = 0.05; // 기본 50m
+  let detectionRadiusKm = 0.07; // 기본 50m
   if (currentSpeedValue > 60) {
     detectionRadiusKm = 0.1; // 100m
   } else if (currentSpeedValue > 40) {
