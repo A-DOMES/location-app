@@ -378,6 +378,7 @@ function sendLocation() {
       lng: position.coords.longitude,
       time: new Date().toISOString(),
       token: token
+      mode: "login"   // ✅ 이 줄 추가
     });
 
     fetch(CONFIG.ADMIN_URL, {
