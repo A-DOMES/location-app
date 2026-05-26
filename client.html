@@ -1282,7 +1282,7 @@ function updateTravelStats() {
   updateStraightLine();
 
   // ✅ 목적지 도착 반경을 속도에 따라 자동 조정
-  let detectionRadiusKm = 0.10; // 기본 100m
+  let detectionRadiusKm = 0.07; // 기본 50m
   if (currentSpeedValue > 60) {
     detectionRadiusKm = 0.1; // 100m
   } else if (currentSpeedValue > 40) {
@@ -2137,27 +2137,12 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   destinationArrived = false; // 아직 도착하지 않음
   drivingStarted = true;
 
-  // ✅ 목적지 모달 닫기
-  closeModal(document.getElementById("destinationModal"));
-
-  // ✅ 검색결과 패널 닫기
-  const searchPanel = document.getElementById("searchResultPanel");
-  if (searchPanel) {
-    searchPanel.style.display = "none";
-    searchPanel.style.visibility = "hidden";
-  }
-
-  // ✅ 이동정보 모달 열기
+  // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
-  if (travelStatsModal) {
-    travelStatsModal.style.display = "block";
-    travelStatsModal.style.visibility = "visible";
-    travelStatsModal.style.opacity = "1";
-  }
-
+  if (travelStatsModal) travelStatsModal.style.display = "block";
   updateTravelStats();
 });
-  
+
 // ---------------------- 목적지 모달 열기 버튼 ----------------------
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   openModal(document.getElementById("destinationModal"));
@@ -2364,13 +2349,8 @@ function openModal(modal) {
 }
 
 function closeModal(modal) {
-  if (modal) {
-    modal.style.display = "none";
-    modal.style.visibility = "hidden";
-    modal.style.opacity = "0";
-  }
+  modal.style.display = 'none';
 }
-
 
 function openPopupModal(modal) {
   openModal(modal);
