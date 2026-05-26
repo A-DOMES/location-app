@@ -2137,14 +2137,14 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   destinationArrived = false; // 아직 도착하지 않음
   drivingStarted = true;
 
+  // ✅ 목적지 찾기 모달 닫기 추가
+  const destinationModal = document.getElementById("destinationModal");
+  if (destinationModal) destinationModal.style.display = "none";
+  
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) travelStatsModal.style.display = "block";
   updateTravelStats();
-
-  // ✅ 목적지 찾기 모달 닫기 추가
-  const destinationModal = document.getElementById("destinationModal");
-  if (destinationModal) destinationModal.style.display = "none";
 });
   
 // ---------------------- 목적지 모달 열기 버튼 ----------------------
