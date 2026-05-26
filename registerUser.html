@@ -6,198 +6,56 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
 /* ---------------------- 기본 페이지 ---------------------- */
-body {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
-  font-family:'Noto Sans KR','Roboto',sans-serif;
-  margin:0;
-  overflow-y:auto; /* ✅ 내용이 많으면 스크롤 */
-}
+body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; margin:0; overflow-y:auto; }
 
 /* ---------------------- 회원가입 박스 ---------------------- */
-.register-box {
-  position: relative;
-  background:#fff;
-  padding:50px 40px;
-  border-radius:20px;
-  box-shadow:0 12px 32px rgba(0,0,0,0.2);
-  text-align:center;
-  width:100%;
-  max-width:420px;   /* ✅ 로그인 화면처럼 제한 */
-  animation:fadeIn 1s ease-in-out;
-  margin:30px auto;  /* ✅ 화면 중앙 배치 */
-}
-
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(20px); }
-  to { opacity:1; transform:translateY(0); }
-}
+.register-box { position:relative; background:#fff; padding:50px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2); text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; margin:30px auto; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
 
 /* ---------------------- 헤더 ---------------------- */
-.register-box h2 {
-  margin-bottom:20px;
-  color:#2c3e50;
-  font-size:26px;
-  font-weight:700;
-  text-align:left;
-}
-.register-box p {
-  color:#7f8c8d;
-  font-size:14px;
-  margin-bottom:20px;
-  text-align:left;
-  line-height:1.6;
-}
+.register-box h2 { margin-bottom:20px; color:#2c3e50; font-size:26px; font-weight:700; text-align:left; }
+.register-box p { color:#7f8c8d; font-size:14px; margin-bottom:20px; text-align:left; line-height:1.6; }
 
 /* ---------------------- 입력 필드 ---------------------- */
-label {
-  display:block;
-  margin-top:15px;
-  font-weight:500;
-  color:#2c3e50;
-  text-align:left;
-}
-.register-box input {
-  width:100%;
-  margin-top:8px;
-  padding:14px;
-  font-size:15px;
-  border:1.5px solid #bdc3c7;
-  border-radius:10px;
-  background-color:#f0f8ff;
-  box-sizing:border-box;
-}
-.register-box input:focus {
-  border-color:#2980b9;
-  box-shadow:0 0 8px rgba(41,128,185,.3);
-  outline:none;
-}
+label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
+.register-box input { width:100%; margin-top:8px; padding:14px; font-size:15px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff; box-sizing:border-box; }
+.register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
 
 /* ---------------------- 아이디 입력 그룹 ---------------------- */
-.input-group {
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.input-group input {
-  flex:1;
-}
-.check-btn {
-  padding:14px 20px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(to right,#3498db,#2980b9);
-  color:#fff;
-  cursor:pointer;
-  font-weight:500;
-  font-size:16px;
-  white-space:nowrap;
-}
+.input-group { display:flex; align-items:center; gap:10px; }
+.input-group input { flex:1; }
+.check-btn { padding:14px 20px; border:none; border-radius:10px; background:linear-gradient(to right,#3498db,#2980b9); color:#fff; cursor:pointer; font-weight:500; font-size:16px; white-space:nowrap; }
 
 /* ---------------------- 버튼 그룹 ---------------------- */
-.btn-group {
-  display:flex;
-  justify-content:space-between;
-  margin-top:20px;
-}
-.btn-group button {
-  flex:1;
-  margin:0 5px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  cursor:pointer;
-  font-weight:500;
-}
-.primary-btn {
-  background:linear-gradient(to right,#3498db,#2980b9);
-  color:#fff;
-}
-.secondary-btn {
-  background:#bdc3c7;
-  color:#2c3e50;
-}
+.btn-group { display:flex; justify-content:space-between; margin-top:20px; }
+.btn-group button { flex:1; margin:0 5px; padding:12px; border:none; border-radius:10px; font-size:16px; cursor:pointer; font-weight:500; }
+.primary-btn { background:linear-gradient(to right,#3498db,#2980b9); color:#fff; }
+.secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-.checkbox-group {
-  margin-left:15px;
-  display:inline-flex;
-  align-items:center;
-  white-space:nowrap;
-  margin-bottom:12px;
-}
-.checkbox-group input[type="checkbox"] {
-  margin-right:10px;
-}
+.checkbox-group { margin-left:15px; display:inline-flex; align-items:center; white-space:nowrap; margin-bottom:12px; }
+.checkbox-group input[type="checkbox"] { margin-right:10px; }
 
 /* ---------------------- 닫기 버튼 ---------------------- */
-.close-btn {
-  position:absolute;
-  top:15px;
-  right:20px;
-  background:none;
-  border:none;
-  font-size:20px;
-  color:#7f8c8d;
-  cursor:pointer;
-}
-.close-btn:hover {
-  color:#e74c3c;
-}
+.close-btn { position:absolute; top:15px; right:20px; background:none; border:none; font-size:20px; color:#7f8c8d; cursor:pointer; }
+.close-btn:hover { color:#e74c3c; }
 
 /* ---------------------- 모달 ---------------------- */
-.modal {
-  display:none;
-  position:fixed;
-  z-index:999;
-  left:0; top:0;
-  width:100%; height:100%;
-  background-color:rgba(0,0,0,0.4);
-}
-.modal-content {
-  background:#fff;
-  margin:20% auto;
-  padding:2rem;
-  border-radius:12px;
-  width:90%;
-  max-width:450px;
-  text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,0.3);
-}
-.modal-content h2 {
-  font-size:1.5rem;
-  margin-bottom:1rem;
-  color:#2c3e50;
-}
-.modal-content p {
-  font-size:1.2rem;
-  color:#555;
-  margin-bottom:1.5rem;
-}
+.modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4); }
+.modal-content { background:#fff; margin:20% auto; padding:2rem; border-radius:12px; width:90%; max-width:450px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3); }
+.modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
+.modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
 
 /* ---------------------- 모바일 최적화 ---------------------- */
 @media (max-width:600px) {
-  .register-box {
-    padding:30px 20px;
-    border-radius:12px;
-  }
-  .register-box h2 {
-    font-size:22px;
-  }
-  .register-box p {
-    font-size:13px;
-  }
-  .checkbox-group span {
-    font-size:0.95rem;
-  }
+  .register-box { padding:30px 20px; border-radius:12px; }
+  .register-box h2 { font-size:22px; }
+  .register-box p { font-size:13px; }
+  .checkbox-group span { font-size:0.95rem; }
 }
-    
   </style>
 </head>
+
 <body>
   <div class="register-box">
     <!-- 닫기 버튼 -->
@@ -207,7 +65,7 @@ label {
     <p>현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
        아래 정보를 입력하여 계정을 생성하세요.</p>
 
-    <!-- 아이디 입력 -->
+    <!-- 회원 ID 입력 (그대로 유지) -->
     <label for="id">회원 ID 입력</label>
     <div class="input-group">
       <input type="text" id="id" 
@@ -217,33 +75,29 @@ label {
     </div>
     <div id="idMessage"></div>
 
-<!-- 비밀번호 입력 라벨 + 버튼 -->
-<div style="display:flex; align-items:center; width:90%; margin-top:25px;">
-  <label for="pw" style="margin:0;">비밀번호 입력</label>
-  <button type="button" id="toggleBtn" onclick="togglePassword()" 
-          style="margin-left:auto; position:relative; left:30px;
-                 padding:6px 12px; font-size:13px; border:none; border-radius:6px; 
-                 background:#3498db; color:#fff; cursor:pointer;">
-    보이기
-  </button>
-</div>
-<!-- 비밀번호 입력 텍스트박스 -->
-<div style="margin-top:12px; width:90%;">
-  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)" style="width:100%;">
-</div>
+    <!-- 비밀번호 입력 -->
+    <label for="pw" style="margin-top:20px;">비밀번호 입력</label>
+    <div style="display:flex; align-items:center; margin-top:8px;">
+      <input type="password" id="pw" 
+             placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)" 
+             style="flex:1; padding:14px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff;">
+      <button type="button" id="toggleBtn" onclick="togglePassword()" 
+              style="margin-left:10px; padding:10px 16px; font-size:13px; border:none; border-radius:6px; 
+                     background:#3498db; color:#fff; cursor:pointer;">
+        보이기
+      </button>
+    </div>
 
-<!-- 비밀번호 확인 (그대로 유지) -->
-<label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
-<input type="password" id="pwConfirm" placeholder="비밀번호 확인" style="width:90%;">
+    <!-- 비밀번호 확인 -->
+    <label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
+    <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
 
-
-<!-- 이메일 입력 필드 추가 -->
-<label for="email">이메일 입력</label>
-<input type="email" id="email" placeholder="이메일 주소 입력">
-
+    <!-- 이메일 입력 -->
+    <label for="email" style="margin-top:15px;">이메일 입력</label>
+    <input type="email" id="email" placeholder="이메일 주소 입력">
 
     <!-- 닉네임 입력 -->
-    <label for="name">닉네임 입력</label>
+    <label for="name" style="margin-top:15px;">닉네임 입력</label>
     <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
 
     <!-- 약관 동의 -->
@@ -283,6 +137,7 @@ label {
       <h2>회원가입 완료 🎉</h2>
       <p id="modalMessage"></p>
     </div>
+  </div>
 
   <!-- 대기 모달 -->
   <div id="loadingModal" class="modal">
@@ -291,6 +146,8 @@ label {
       <p>잠시만 기다려주세요...</p>
     </div>
   </div>
+</body>
+
 
   
   <!-- config.js 먼저 불러오기 -->
