@@ -2139,7 +2139,10 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
   // ✅ 목적지 찾기 모달 닫기 추가
   const destinationModal = document.getElementById("destinationModal");
-  if (destinationModal) destinationModal.style.display = "none";
+  if (destinationModal) {
+    destinationModal.style.display = "none";
+    destinationModal.classList.remove("open"); // 혹시 open 클래스 쓰고 있다면 같이 제거
+  }
   
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
