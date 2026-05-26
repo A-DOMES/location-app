@@ -147,19 +147,29 @@ body { display:flex; justify-content:center; align-items:center;
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-
+      
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("role", result.role);
         sessionStorage.setItem("userId", id);
         sessionStorage.setItem("token", result.token);
         localStorage.setItem("nickname", result.nickname);
-
+      
+        // ✅ 마지막 로그인 시간 기록 요청
+        fetch(`${USER_API_URL}?mode=updateLastLogin&id=${encodeURIComponent(id)}`)
+          .then(res => res.json())
+          .then(updateResult => {
+            console.log("last_login 업데이트 응답:", updateResult);
+          })
+          .catch(err => {
+            console.error("last_login 업데이트 오류:", err);
+          });
+      
         // ✅ role에 따라 분기 처리
         const roleRedirects = {
           "AD": "https://a-domes.github.io/location-pwa/admin.html",
           "RU": "https://a-domes.github.io/location-app/user.html"
         };
-
+      
         setTimeout(() => {
           const targetUrl = roleRedirects[result.role];
           if (targetUrl) {
@@ -167,7 +177,7 @@ body { display:flex; justify-content:center; align-items:center;
           } else {
             alert("알 수 없는 권한입니다.");
           }
-        }, 1500);
+        }, 1500
 
       } else if (result.result === "blocked") {
         modal.style.display = "none";
