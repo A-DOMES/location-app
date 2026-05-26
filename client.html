@@ -2138,16 +2138,22 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   drivingStarted = true;
 
   // ✅ 목적지 모달 닫기
-  const destinationModal = document.getElementById("destinationModal");
-  if (destinationModal) destinationModal.style.display = "none";
+  closeModal(document.getElementById("destinationModal"));
 
   // ✅ 검색결과 패널 닫기
   const searchPanel = document.getElementById("searchResultPanel");
-  if (searchPanel) searchPanel.style.display = "none";
+  if (searchPanel) {
+    searchPanel.style.display = "none";
+    searchPanel.style.visibility = "hidden";
+  }
 
-  // ✅ 이동정보 모달 직접 열기 (openModal 사용 X)
+  // ✅ 이동정보 모달 열기
   const travelStatsModal = document.getElementById("travelStatsModal");
-  if (travelStatsModal) travelStatsModal.style.display = "block";
+  if (travelStatsModal) {
+    travelStatsModal.style.display = "block";
+    travelStatsModal.style.visibility = "visible";
+    travelStatsModal.style.opacity = "1";
+  }
 
   updateTravelStats();
 });
@@ -2358,8 +2364,13 @@ function openModal(modal) {
 }
 
 function closeModal(modal) {
-  modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = "none";
+    modal.style.visibility = "hidden";
+    modal.style.opacity = "0";
+  }
 }
+
 
 function openPopupModal(modal) {
   openModal(modal);
