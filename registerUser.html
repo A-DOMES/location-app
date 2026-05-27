@@ -20,18 +20,17 @@ body { display:flex; justify-content:center; align-items:center; min-height:100v
 /* ---------------------- 입력 필드 ---------------------- */
 label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
 
-.register-box input { flex:1; padding:14px; font-size:15px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff; box-sizing:border-box; }
+.register-box input { flex:none; padding:14px; font-size:15px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff; box-sizing:border-box; }
 
 .register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
 
 /* 회원ID, 이메일, 닉네임, 비밀번호 확인란 전용 스타일 */
-#userId, #email, #nickname, #pwConfirm { flex:none; width:calc(100% - 90px); }
+#userId, #email, #nickname, #pwConfirm { width:calc(100% - 90px); }
 
-/* 입력 그룹: 버튼을 항상 오른쪽 끝에 고정 */
-.input-group { display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px; }
+/* 입력 그룹: 버튼은 우측, 텍스트박스는 좌측 */
+.input-group { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
 .input-group input { flex:none; }
 .input-group button { padding:14px 20px; border:none; border-radius:10px; background:linear-gradient(to right,#3498db,#2980b9); color:#fff; cursor:pointer; font-weight:500; font-size:14px; white-space:nowrap; }
-
 
 /* ---------------------- 입력 그룹 ---------------------- */
 .input-group { display:flex; align-items:center; gap:10px; margin-top:8px; }
