@@ -4,200 +4,160 @@
   <meta charset="UTF-8">
   <title>회원가입</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
   <style>
 /* ---------------------- 기본 페이지 ---------------------- */
 body {
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  display:flex; justify-content:center; align-items:center;
   min-height:100vh;
   background:linear-gradient(135deg,#74ebd5,#ACB6E5);
   font-family:'Noto Sans KR','Roboto',sans-serif;
-  margin:0;
-  overflow-y:auto; /* ✅ 내용이 많으면 스크롤 */
+  margin:0; overflow-y:auto;
 }
 
 /* ---------------------- 회원가입 박스 ---------------------- */
 .register-box {
-  position: relative;
-  background:#fff;
-  padding:50px 40px;
-  border-radius:20px;
-  box-shadow:0 12px 32px rgba(0,0,0,0.2);
-  text-align:center;
-  width:100%;
-  max-width:420px;   /* ✅ 로그인 화면처럼 제한 */
-  animation:fadeIn 1s ease-in-out;
-  margin:30px auto;  /* ✅ 화면 중앙 배치 */
+  position:relative; background:#fff; padding:50px 40px;
+  border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2);
+  text-align:center; width:100%; max-width:420px;
+  animation:fadeIn 1s ease-in-out; margin:30px auto;
 }
-
 @keyframes fadeIn {
-  from { opacity:0; transform:translateY(20px); }
-  to { opacity:1; transform:translateY(0); }
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 /* ---------------------- 헤더 ---------------------- */
 .register-box h2 {
-  margin-bottom:20px;
-  color:#2c3e50;
-  font-size:26px;
-  font-weight:700;
-  text-align:left;
+  margin-bottom:20px; color:#2c3e50;
+  font-size:26px; font-weight:700; text-align:left;
 }
 .register-box p {
-  color:#7f8c8d;
-  font-size:14px;
-  margin-bottom:20px;
-  text-align:left;
-  line-height:1.6;
+  color:#7f8c8d; font-size:14px; margin-bottom:20px;
+  text-align:left; line-height:1.6;
 }
 
 /* ---------------------- 입력 필드 ---------------------- */
 label {
-  display:block;
-  margin-top:15px;
-  font-weight:500;
-  color:#2c3e50;
-  text-align:left;
+  display:block; margin-top:15px; font-weight:500;
+  color:#2c3e50; text-align:left;
 }
+
 .register-box input {
-  width:100%;
-  margin-top:8px;
-  padding:14px;
-  font-size:15px;
-  border:1.5px solid #bdc3c7;
-  border-radius:10px;
-  background-color:#f0f8ff;
-  box-sizing:border-box;
+  flex:none; padding:14px; font-size:15px;
+  border:1.5px solid #bdc3c7; border-radius:10px;
+  background-color:#f0f8ff; box-sizing:border-box;
+  width:calc(100% - 100px); /* 모든 텍스트박스 동일한 폭 */
 }
+
 .register-box input:focus {
   border-color:#2980b9;
   box-shadow:0 0 8px rgba(41,128,185,.3);
   outline:none;
 }
 
-/* ---------------------- 아이디 입력 그룹 ---------------------- */
+/* 입력 그룹: 버튼은 우측 고정, 텍스트박스는 좌측 고정 */
 .input-group {
-  display:flex;
-  align-items:center;
-  gap:10px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; margin-top:8px;
 }
-.input-group input {
-  flex:1;
-}
-.check-btn {
-  padding:14px 20px;
-  border:none;
-  border-radius:10px;
+.input-group input { flex:none; }
+.input-group button {
+  padding:14px 20px; border:none; border-radius:10px;
   background:linear-gradient(to right,#3498db,#2980b9);
-  color:#fff;
-  cursor:pointer;
-  font-weight:500;
-  font-size:16px;
+  color:#fff; cursor:pointer; font-weight:500; font-size:14px;
   white-space:nowrap;
 }
 
 /* ---------------------- 버튼 그룹 ---------------------- */
 .btn-group {
-  display:flex;
-  justify-content:space-between;
-  margin-top:20px;
+  display:flex; justify-content:space-between; margin-top:20px;
 }
 .btn-group button {
-  flex:1;
-  margin:0 5px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  cursor:pointer;
-  font-weight:500;
+  flex:1; margin:0 5px; padding:12px; border:none; border-radius:10px;
+  font-size:16px; cursor:pointer; font-weight:500;
 }
-.primary-btn {
-  background:linear-gradient(to right,#3498db,#2980b9);
-  color:#fff;
-}
-.secondary-btn {
-  background:#bdc3c7;
-  color:#2c3e50;
-}
+.primary-btn { background:linear-gradient(to right,#3498db,#2980b9); color:#fff; }
+.secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-.checkbox-group {
-  margin-left:15px;
-  display:inline-flex;
-  align-items:center;
-  white-space:nowrap;
-  margin-bottom:12px;
-}
-.checkbox-group input[type="checkbox"] {
-  margin-right:10px;
+/* register-box는 전체 박스만 가운데 배치 */
+.register-box {
+  text-align: center; /* 전체 박스는 중앙 */
 }
 
+/* 내부 terms-wrapper는 좌측 정렬 전용 */
+.terms-wrapper {
+  text-align: left;   /* 부모 중앙정렬 영향 제거 */
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* 약관 동의 컨테이너 */
+.terms label {
+  display: block;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+/* 체크박스 그룹 */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 좌측 정렬 강제 */
+  margin-bottom: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.checkbox-group span {
+  font-size: 15px;
+  color: #2c3e50;
+}
+    
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
-  position:absolute;
-  top:15px;
-  right:20px;
-  background:none;
-  border:none;
-  font-size:20px;
-  color:#7f8c8d;
-  cursor:pointer;
+  position:absolute; top:15px; right:20px;
+  background:none; border:none; font-size:20px;
+  color:#7f8c8d; cursor:pointer;
 }
-.close-btn:hover {
-  color:#e74c3c;
-}
+.close-btn:hover { color:#e74c3c; }
 
 /* ---------------------- 모달 ---------------------- */
 .modal {
-  display:none;
-  position:fixed;
-  z-index:999;
-  left:0; top:0;
-  width:100%; height:100%;
+  display:none; position:fixed; z-index:999;
+  left:0; top:0; width:100%; height:100%;
   background-color:rgba(0,0,0,0.4);
 }
 .modal-content {
-  background:#fff;
-  margin:20% auto;
-  padding:2rem;
-  border-radius:12px;
-  width:90%;
-  max-width:450px;
-  text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,0.3);
+  background:#fff; margin:20% auto; padding:2rem;
+  border-radius:12px; width:90%; max-width:450px;
+  text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);
 }
-.modal-content h2 {
-  font-size:1.5rem;
-  margin-bottom:1rem;
-  color:#2c3e50;
-}
-.modal-content p {
-  font-size:1.2rem;
-  color:#555;
-  margin-bottom:1.5rem;
-}
+.modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
+.modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
 
 /* ---------------------- 모바일 최적화 ---------------------- */
 @media (max-width:600px) {
-  .register-box {
-    padding:30px 20px;
-    border-radius:12px;
+  .register-box { padding:40px 25px; border-radius:16px; max-width:95%; }
+  .register-box h2 { font-size:24px; }
+  .register-box p { font-size:15px; line-height:1.8; }
+  label { font-size:16px; }
+  .register-box input {
+    font-size:16px; padding:16px;
+    width:calc(100% - 110px); /* 모바일에서도 동일하게 적용 */
   }
-  .register-box h2 {
-    font-size:22px;
-  }
-  .register-box p {
-    font-size:13px;
-  }
-  .checkbox-group span {
-    font-size:0.95rem;
-  }
+  .input-group button { font-size:15px; padding:16px 22px; }
+  .checkbox-group span { font-size:15px; }
 }
-    
+
   </style>
 </head>
+
 <body>
   <div class="register-box">
     <!-- 닫기 버튼 -->
@@ -207,7 +167,7 @@ label {
     <p>현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
        아래 정보를 입력하여 계정을 생성하세요.</p>
 
-    <!-- 아이디 입력 -->
+    <!-- 회원 ID 입력 (그대로 유지) -->
     <label for="id">회원 ID 입력</label>
     <div class="input-group">
       <input type="text" id="id" 
@@ -217,46 +177,53 @@ label {
     </div>
     <div id="idMessage"></div>
 
-<!-- 비밀번호 입력 라벨 + 버튼 -->
-<div style="display:flex; align-items:center; width:90%; margin-top:25px;">
-  <label for="pw" style="margin:0;">비밀번호 입력</label>
-  <button type="button" id="toggleBtn" onclick="togglePassword()" 
-          style="margin-left:auto; position:relative; left:30px;
-                 padding:6px 12px; font-size:13px; border:none; border-radius:6px; 
-                 background:#3498db; color:#fff; cursor:pointer;">
-    보이기
-  </button>
-</div>
-<!-- 비밀번호 입력 텍스트박스 -->
-<div style="margin-top:12px; width:90%;">
-  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)" style="width:100%;">
+<!-- 비밀번호 입력 -->
+<label for="pw" style="margin-top:20px;">비밀번호 입력</label>
+<div class="input-group">
+  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+  <button id="toggleBtn" onclick="togglePassword()">보이기</button>
 </div>
 
-<!-- 비밀번호 확인 (그대로 유지) -->
+<!-- 비밀번호 확인 -->
 <label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
-<input type="password" id="pwConfirm" placeholder="비밀번호 확인" style="width:90%;">
+<div class="input-group">
+  <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
+</div>
 
 
+<!-- 이메일 입력 -->
+<label for="email" style="margin-top:15px;">이메일 입력</label>
+<div class="input-group">
+  <input type="email" id="email" placeholder="이메일 주소 입력">
+  <button onclick="verifyEmail()">인증</button>
+</div>
+<span id="emailMessage"></span>
 
+<!-- 닉네임 입력 -->
+<label for="name" style="margin-top:15px;">닉네임 입력</label>
+<div class="input-group">
+  <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
+  <button onclick="checkNickname()">확인</button>
+</div>
+<span id="nameMessage"></span>
 
-    <!-- 닉네임 입력 -->
-    <label for="name">닉네임 입력</label>
-    <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
-
-    <!-- 약관 동의 -->
-    <div class="terms" style="text-align:left; margin-top:15px;">
-      <label style="margin-bottom:6px;">이용약관 동의</label>
-      <div class="checkbox-group">
-        <input type="checkbox" id="agree1">
-        <span>이용약관에 동의합니다</span>
-      </div>
-
-      <label style="margin-bottom:6px; margin-top:15px;">개인정보 수집 및 이용 동의</label>
-      <div class="checkbox-group">
-        <input type="checkbox" id="agree2">
-        <span>개인정보 수집 및 이용동의에 수락합니다</span>
-      </div>
+<!-- 약관 동의 -->
+<div class="terms-wrapper">
+  <div class="terms">
+    <label>이용약관 동의</label>
+    <div class="checkbox-group">
+      <input type="checkbox" id="agree1">
+      <span>이용약관에 동의합니다</span>
     </div>
+
+    <label>개인정보 수집 및 이용 동의</label>
+    <div class="checkbox-group">
+      <input type="checkbox" id="agree2">
+      <span>개인정보 수집 및 이용동의에 수락합니다</span>
+    </div>
+  </div>
+</div>
+
 
     <!-- 회원가입 등록 / 취소 버튼 -->
     <div class="btn-group">
@@ -280,6 +247,7 @@ label {
       <h2>회원가입 완료 🎉</h2>
       <p id="modalMessage"></p>
     </div>
+  </div>
 
   <!-- 대기 모달 -->
   <div id="loadingModal" class="modal">
@@ -288,163 +256,261 @@ label {
       <p>잠시만 기다려주세요...</p>
     </div>
   </div>
+</body>
+
 
   
-  <!-- config.js 먼저 불러오기 -->
-  <script src="config.js"></script>
-  <script>
-    /* ============================
-       📌 아이디 중복검사
-       ============================ */
-    function checkId() {
-      var id = document.getElementById("id").value.trim();
-      var msg = document.getElementById("idMessage");
-  
-      if (!msg) return;
-  
-      const idRegex = /^[a-z0-9-_]{5,20}$/;
-      if (!idRegex.test(id)) {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 아이디 규칙 오류";
-        return;
-      }
-  
-      msg.style.color = "#2980b9";
-      msg.innerText = "⏳ 중복 검사 중...";
-  
-      fetch(`${CONFIG.USER_URL}?mode=checkUserId&id=${encodeURIComponent(id)}`)
-        .then(res => res.json())
-        .then(result => {
-          if (result.result === "exists") {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-          } else if (result.result === "available") {
-            msg.style.color = "green";
-            msg.innerText = "✅ 사용 가능한 아이디입니다.";
-          } else {
-            msg.style.color = "red";
-            msg.innerText = "❌ 알 수 없는 응답";
-          }
-        })
-        .catch(err => {
-          msg.style.color = "red";
-          msg.innerText = "❌ 서버 오류: " + err.message;
-        });
+<!-- config.js 먼저 불러오기 -->
+<script src="config.js"></script>
+<script>
+  /* ============================
+     📌 아이디 중복검사
+     ============================ */
+  function checkId() {
+    var id = document.getElementById("id").value.trim();
+    var msg = document.getElementById("idMessage");
+
+    if (!msg) return;
+
+    const idRegex = /^[a-z0-9-_]{5,20}$/;
+    if (!idRegex.test(id)) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 아이디 규칙 오류";
+      return;
     }
-  
-    /* ============================
-       📌 회원가입 처리
-       ============================ */
-    function register() {
-      var id = document.getElementById("id").value.trim();
-      var pw = document.getElementById("pw").value.trim();
-      var pwConfirm = document.getElementById("pwConfirm").value.trim();
-      var name = document.getElementById("name").value.trim();
-      var agree1 = document.getElementById("agree1").checked;
-      var agree2 = document.getElementById("agree2").checked;
-      var msg = document.getElementById("message");
-  
-      if (!msg) return;
-  
-      const idRegex = /^[a-z0-9-_]{5,20}$/;
-      if (!idRegex.test(id)) {
+
+    msg.style.color = "#2980b9";
+    msg.innerText = "⏳ 중복 검사 중...";
+
+    fetch(`${CONFIG.USER_URL}?mode=checkUserId&id=${encodeURIComponent(id)}`)
+      .then(res => res.json())
+      .then(result => {
+        if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+        } else if (result.result === "available") {
+          msg.style.color = "green";
+          msg.innerText = "✅ 사용 가능한 아이디입니다.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 알 수 없는 응답";
+        }
+      })
+      .catch(err => {
         msg.style.color = "red";
-        msg.innerText = "⚠️ 아이디 규칙 오류";
-        return;
-      }
-  
-      const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
-      if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
+        msg.innerText = "❌ 서버 오류: " + err.message;
+      });
+  }
+
+/* ============================
+   📌 회원가입 처리
+   ============================ */
+function register() {
+  var id = document.getElementById("id").value.trim();
+  var pw = document.getElementById("pw").value.trim();
+  var pwConfirm = document.getElementById("pwConfirm").value.trim();
+  var name = document.getElementById("name").value.trim();
+  var email = document.getElementById("email").value.trim();
+  var agree1 = document.getElementById("agree1").checked;
+  var agree2 = document.getElementById("agree2").checked;
+  var msg = document.getElementById("message");
+
+  if (!msg) return;
+
+  // 기본 유효성 검사
+  const idRegex = /^[a-z0-9-_]{5,20}$/;
+  if (!idRegex.test(id)) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 아이디 규칙 오류";
+    return;
+  }
+
+  const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
+  if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 비밀번호 규칙 오류";
+    return;
+  }
+
+  if (pw !== pwConfirm) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
+    return;
+  }
+
+  if (!id || !pw || !name || !email || !agree1 || !agree2) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 모든 항목을 입력하고 약관에 동의해야 합니다.";
+    return;
+  }
+
+  // ✅ 대기 모달 띄우기
+  document.getElementById("loadingModal").style.display = "block";
+
+  // ✅ 서버 호출 (모든 파라미터 전달)
+  fetch(`${CONFIG.USER_URL}?mode=registerUser`
+        + `&id=${encodeURIComponent(id)}`
+        + `&pw=${encodeURIComponent(pw)}`
+        + `&name=${encodeURIComponent(name)}`
+        + `&realname=${encodeURIComponent(name)}`   // 기본값: 닉네임과 동일
+        + `&phone=${encodeURIComponent("N/A")}`     // 기본값
+        + `&carNo=${encodeURIComponent("N/A")}`     // 기본값
+        + `&deviceId=${encodeURIComponent("N/A")}`  // 기본값
+        + `&email=${encodeURIComponent(email)}`)
+    .then(res => res.json())
+    .then(result => {
+      // ✅ 응답 오면 대기 모달 닫기
+      document.getElementById("loadingModal").style.display = "none";
+      console.log("회원가입 응답:", result);
+
+      if (result.result === "pending") {
+        // ✅ 완료 모달 띄우기
+        document.getElementById("modalMessage").innerHTML =
+          `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
+           이메일 인증을 위해 메일함을 확인해주세요.<br>
+           인증을 완료해야 로그인할 수 있습니다.<br>
+           잠시 후 로그인 화면으로 이동합니다...`;
+
+        document.getElementById("registerModal").style.display = "block";
+
+        // ✅ 3초 후 로그인 화면으로 이동
+        setTimeout(() => { goLogin(); }, 3000);
+
+      } else if (result.result === "exists") {
         msg.style.color = "red";
-        msg.innerText = "⚠️ 비밀번호 규칙 오류";
-        return;
-      }
-  
-      if (pw !== pwConfirm) {
+        msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+      } else if (result.result === "missing") {
         msg.style.color = "red";
-        msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
-        return;
-      }
-  
-      if (!id || !pw || !name || !agree1 || !agree2) {
+        msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
+      } else {
         msg.style.color = "red";
-        msg.innerText = "⚠️ 모든 항목을 입력하고 약관에 동의해야 합니다.";
-        return;
+        msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
       }
-  
-      // ✅ 대기 모달 띄우기
-      document.getElementById("loadingModal").style.display = "block";
-  
-      // ✅ 사용자 서버 호출
-      fetch(`${CONFIG.USER_URL}?mode=registerUser&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&name=${encodeURIComponent(name)}`)
-        .then(res => res.json())
-        .then(result => {
-          // ✅ 응답 오면 대기 모달 닫기
-          document.getElementById("loadingModal").style.display = "none";
-          console.log("회원가입 응답:", result);
-  
-          if (result.result === "success") {
-            // ✅ 닉네임과 토큰을 localStorage에 저장
+    })
+    .catch(err => {
+      // 오류 시에도 대기 모달 닫기
+      document.getElementById("loadingModal").style.display = "none";
+      msg.style.color = "red";
+      msg.innerText = "❌ 서버 오류: " + err.message;
+    });
+}
+
+  /* ============================
+     📌 로그인 처리
+     ============================ */
+  function login() {
+    var id = document.getElementById("id").value.trim();
+    var pw = document.getElementById("pw").value.trim();
+    var msg = document.getElementById("loginMessage");
+
+    if (!id || !pw) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
+      return;
+    }
+
+    fetch(`${CONFIG.USER_URL}?mode=login&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
+      .then(res => res.json())
+      .then(result => {
+        console.log("로그인 응답:", result);
+
+        if (result.result === "success") {
+          if (result.email_verified === "true") {
             localStorage.setItem("nickname", result.name);
             localStorage.setItem("token", result.token);
-  
-            // 완료 모달 띄우기
-            document.getElementById("modalMessage").innerHTML =
-              `${result.name || ""}님, 회원가입을 축하드립니다 🎉<br>
-               발급된 토큰: ${result.token}<br>
-               잠시 후 로그인 화면으로 이동합니다...`;
-            document.getElementById("registerModal").style.display = "block";
-  
-            // ✅ 3초 후 로그인 화면으로 이동
-            setTimeout(() => { goLogin(); }, 3000);
-          } else if (result.result === "exists") {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-          } else if (result.result === "missing") {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
+            window.location.href = "main.html";   // 로그인 성공 후 메인 페이지 이동
           } else {
             msg.style.color = "red";
-            msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
+            msg.innerText = "⚠️ 이메일 인증을 완료해야 로그인할 수 있습니다.";
           }
-        })
-        .catch(err => {
-          // 오류 시에도 대기 모달 닫기
-          document.getElementById("loadingModal").style.display = "none";
+        } else if (result.result === "invalid") {
           msg.style.color = "red";
-          msg.innerText = "❌ 서버 오류: " + err.message;
-        });
-    }
-  
-    /* ============================
-       📌 화면 이동
-       ============================ */
-    function goLogin() {
-      window.location.href = "index.html";
-    }
-    function closeRegister() {
-      window.location.href = "index.html";
-    }
-  
-    /* ============================
-       📌 비밀번호 보이기 기능
-       ============================ */
-    function togglePassword() {
-      const pwField = document.getElementById("pw");
-      const pwConfirmField = document.getElementById("pwConfirm");
-      const toggleBtn = document.getElementById("toggleBtn");
-  
-      if (pwField.type === "password") {
-        pwField.type = "text";
-        pwConfirmField.type = "text";
-        toggleBtn.innerText = "숨기기";
-      } else {
-        pwField.type = "password";
-        pwConfirmField.type = "password";
-        toggleBtn.innerText = "보이기";
-      }
-    }
-  </script>
+          msg.innerText = "❌ 아이디 또는 비밀번호가 잘못되었습니다.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 로그인 실패. 다시 시도하세요.";
+        }
+      })
+      .catch(err => {
+        msg.style.color = "red";
+        msg.innerText = "❌ 서버 오류: " + err.message;
+      });
+  }
 
+  /* ============================
+     📌 화면 이동
+     ============================ */
+  function goLogin() {
+    window.location.href = "index.html";
+  }
+  function closeRegister() {
+    window.location.href = "index.html";
+  }
+
+  /* ============================
+     📌 비밀번호 보이기 기능
+     ============================ */
+  function togglePassword() {
+    const pwField = document.getElementById("pw");
+    const pwConfirmField = document.getElementById("pwConfirm");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    if (pwField.type === "password") {
+      pwField.type = "text";
+      pwConfirmField.type = "text";
+      toggleBtn.innerText = "숨기기";
+    } else {
+      pwField.type = "password";
+      pwConfirmField.type = "password";
+      toggleBtn.innerText = "보이기";
+    }
+  }
+
+  /* ============================
+   📌 이메일 인증 버튼 (안내만 출력)
+   ============================ */
+  function verifyEmail() {
+    var msg = document.getElementById("emailMessage");
+    msg.style.color = "#2980b9";
+    msg.innerText = "회원가입 후 메일함에서 인증 버튼을 눌러야 로그인할 수 있습니다.";
+  }
+
+/* ============================
+   📌 닉네임 중복검사
+   ============================ */
+function checkNickname() {
+  var name = document.getElementById("name").value.trim();
+  var msg = document.getElementById("nameMessage");
+
+  if (!name) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 닉네임을 입력하세요.";
+    return;
+  }
+
+  msg.style.color = "#2980b9";
+  msg.innerText = "⏳ 닉네임 검사 중...";
+
+  // 서버 호출 (닉네임 중복검사)
+  fetch(`${CONFIG.USER_URL}?mode=checkNickname&name=${encodeURIComponent(name)}`)
+    .then(res => res.json())
+    .then(result => {
+      if (result.result === "exists") {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 이미 사용 중인 닉네임입니다.";
+      } else if (result.result === "available") {
+        msg.style.color = "green";
+        msg.innerText = "✅ 사용 가능한 닉네임입니다.";
+      } else {
+        msg.style.color = "red";
+        msg.innerText = "❌ 알 수 없는 응답";
+      }
+    })
+    .catch(err => {
+      msg.style.color = "red";
+      msg.innerText = "❌ 서버 오류: " + err.message;
+    });
+}
+</script>
 </body>
 </html>
