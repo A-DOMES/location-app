@@ -81,24 +81,39 @@ label {
 .secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
+/* 약관 동의 전체 컨테이너 */
+.terms {
+  width: 100%;
+  text-align: left;   /* 부모 중앙정렬 영향 제거 */
+  margin-top: 25px;   /* 위쪽 간격 확보 */
+}
+
+/* 라벨 스타일 */
+.terms label {
+  display: block;
+  font-weight: 600;
+  margin-top: 15px;   /* 위쪽 여백 */
+  margin-bottom: 8px; /* 라벨과 체크박스 간격 */
+  color: #2c3e50;
+}
+
+/* 체크박스 그룹 */
 .checkbox-group {
   display: flex;
   align-items: center;
   justify-content: flex-start; /* 좌측 정렬 */
-  width: 100%;
-  margin-top: 18px;    /* 위쪽 여백 */
-  margin-bottom: 12px; /* 아래쪽 여백 */
-  text-align: left;    /* 부모 중앙정렬 영향 제거 */
+  margin-bottom: 12px;
 }
 
+/* 체크박스 */
 .checkbox-group input[type="checkbox"] {
-  margin-right: 8px;   /* 체크박스와 텍스트 간격 */
+  margin-right: 8px; /* 체크박스와 텍스트 간격 */
 }
 
-.checkbox-group label {
+/* 체크박스 옆 텍스트 */
+.checkbox-group span {
   font-size: 15px;
   color: #2c3e50;
-  white-space: nowrap; /* 줄바꿈 방지 */
 }
 
 
