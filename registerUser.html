@@ -355,25 +355,19 @@ label {
   }
 
 /* ============================
-   📌 회원가입 처리 (디버깅 버전)
+   📌 회원가입 처리
    ============================ */
 function register() {
-  const id = document.getElementById("id").value.trim();
-  const pw = document.getElementById("pw").value.trim();
-  const pwConfirm = document.getElementById("pwConfirm").value.trim();
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const agree1 = document.getElementById("agree1").checked;
-  const agree2 = document.getElementById("agree2").checked;
-  const msg = document.getElementById("message");
+  var id = document.getElementById("id").value.trim();
+  var pw = document.getElementById("pw").value.trim();
+  var pwConfirm = document.getElementById("pwConfirm").value.trim();
+  var name = document.getElementById("name").value.trim();
+  var email = document.getElementById("email").value.trim();
+  var agree1 = document.getElementById("agree1").checked;
+  var agree2 = document.getElementById("agree2").checked;
+  var msg = document.getElementById("message");
 
   if (!msg) return;
-
-  // 🔍 디버깅 로그
-  console.log("입력값 확인:", {
-    id, pw, pwConfirm, name, email,
-    agree1, agree2, idChecked, nameChecked
-  });
 
   // 기본 유효성 검사
   const idRegex = /^[a-z0-9-_]{5,20}$/;
@@ -406,22 +400,16 @@ function register() {
   // ✅ 대기 모달 띄우기
   document.getElementById("loadingModal").style.display = "block";
 
-  // 서버 요청 URL 구성
-  const url = `${CONFIG.USER_URL}?mode=registerUser`
-    + `&id=${encodeURIComponent(id)}`
-    + `&pw=${encodeURIComponent(pw)}`
-    + `&name=${encodeURIComponent(name)}`
-    + `&realname=${encodeURIComponent(name)}`
-    + `&phone=${encodeURIComponent("N/A")}`
-    + `&carNo=${encodeURIComponent("N/A")}`
-    + `&deviceId=${encodeURIComponent("N/A")}`
-    + `&email=${encodeURIComponent(email)}`;
-
-  // 🔍 요청 URL 확인
-  console.log("회원가입 요청 URL:", url);
-
   // ✅ 서버 호출
-  fetch(url)
+  fetch(`${CONFIG.USER_URL}?mode=registerUser`
+        + `&id=${encodeURIComponent(id)}`
+        + `&pw=${encodeURIComponent(pw)}`
+        + `&name=${encodeURIComponent(name)}`
+        + `&realname=${encodeURIComponent(name)}`
+        + `&phone=${encodeURIComponent("N/A")}`
+        + `&carNo=${encodeURIComponent("N/A")}`
+        + `&deviceId=${encodeURIComponent("N/A")}`
+        + `&email=${encodeURIComponent(email)}`)
     .then(res => res.json())
     .then(result => {
       document.getElementById("loadingModal").style.display = "none";
@@ -454,8 +442,6 @@ function register() {
       msg.innerText = "❌ 서버 오류: " + err.message;
     });
 }
-
-
   /* ============================
      📌 로그인 처리
      ============================ */
