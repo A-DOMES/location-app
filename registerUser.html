@@ -310,7 +310,7 @@ label {
     var pw = document.getElementById("pw").value.trim();
     var pwConfirm = document.getElementById("pwConfirm").value.trim();
     var name = document.getElementById("name").value.trim();
-    var email = document.getElementById("email").value.trim();   // ✅ 이메일 추가
+    var email = document.getElementById("email").value.trim();
     var agree1 = document.getElementById("agree1").checked;
     var agree2 = document.getElementById("agree2").checked;
     var msg = document.getElementById("message");
@@ -326,7 +326,7 @@ label {
     }
 
     const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
-    if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
+    if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-가]/.test(pw)) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 비밀번호 규칙 오류";
       return;
@@ -344,10 +344,10 @@ label {
       return;
     }
 
-    // ✅ 대기 모달 띄우기
+    // 대기 모달 띄우기
     document.getElementById("loadingModal").style.display = "block";
 
-    // ✅ 서버 호출
+    // 서버 호출
     fetch(`${CONFIG.USER_URL}?mode=registerUser&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(result => {
@@ -355,7 +355,7 @@ label {
         console.log("회원가입 응답:", result);
 
         if (result.result === "pending") {
-          // ✅ 이메일 인증 안내 메시지
+          // 이메일 인증 안내 메시지
           document.getElementById("modalMessage").innerHTML =
             `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
              이메일 인증을 위해 메일함을 확인해주세요.<br>
@@ -455,40 +455,13 @@ label {
   }
 
   /* ============================
-   📌 이메일 인증
+   📌 이메일 인증 버튼 (안내만 출력)
    ============================ */
-function verifyEmail() {
-  var email = document.getElementById("email").value.trim();
-  var msg = document.getElementById("emailMessage");
-
-  // 이메일 형식 검사
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 올바른 이메일 형식이 아닙니다.";
-    return;
+  function verifyEmail() {
+    var msg = document.getElementById("emailMessage");
+    msg.style.color = "#2980b9";
+    msg.innerText = "회원가입 후 메일함에서 인증 버튼을 눌러야 로그인할 수 있습니다.";
   }
-
-  msg.style.color = "#2980b9";
-  msg.innerText = "⏳ 인증 메일 발송 중...";
-
-  // 서버 호출 (메일 발송)
-  fetch(`${CONFIG.USER_URL}?mode=sendVerifyEmail&email=${encodeURIComponent(email)}`)
-    .then(res => res.json())
-    .then(result => {
-      if (result.result === "sent") {
-        msg.style.color = "green";
-        msg.innerText = "✅ 인증 메일을 확인하세요.";
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "❌ 메일 발송 실패.";
-      }
-    })
-    .catch(err => {
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + err.message;
-    });
-}
 
 /* ============================
    📌 닉네임 중복검사
@@ -526,7 +499,6 @@ function checkNickname() {
       msg.innerText = "❌ 서버 오류: " + err.message;
     });
 }
-
 </script>
 </body>
 </html>
