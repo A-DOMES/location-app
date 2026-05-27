@@ -194,24 +194,11 @@ label {
 
 
 <!-- 이메일 입력 -->
+<label for="email" style="margin-top:15px;">이메일 입력</label>
 <div class="input-group">
-  <!-- 아이디 입력 -->
-  <input type="text" id="emailId" placeholder="아이디 입력">
-
-  <!-- 도메인 선택 -->
-  <select id="emailDomain" onchange="toggleCustomDomain(this.value)">
-    <option value="">도메인 선택</option>
-    <option value="@naver.com">@naver.com</option>
-    <option value="@gmail.com">@gmail.com</option>
-    <option value="@daum.net">@daum.net</option>
-    <option value="custom">직접 입력</option>
-  </select>
-
-  <!-- 직접 입력용 도메인 -->
-  <input type="text" id="customDomain" placeholder="도메인 직접 입력" style="display:none;">
+  <input type="email" id="email" placeholder="이메일 주소 입력" onblur="verifyEmailFormat()">
 </div>
 <span id="emailMessage"></span>
-
 
     
 <!-- 닉네임 입력 -->
@@ -530,46 +517,13 @@ label {
 /* ============================
    📌 이메일 인증 안내
    ============================ */
-function toggleCustomDomain(value) {
-  var customDomain = document.getElementById("customDomain");
-  if (value === "custom") {
-    customDomain.style.display = "inline-block";
-  } else {
-    customDomain.style.display = "none";
-    customDomain.value = "";
-  }
-}
-
-function verifyEmail() {
-  var idPart = document.getElementById("emailId").value.trim();
-  var domainPart = document.getElementById("emailDomain").value;
-  var customDomain = document.getElementById("customDomain").value.trim();
+function verifyEmailFormat() {
+  var email = document.getElementById("email").value.trim();
   var msg = document.getElementById("emailMessage");
 
-  let email = "";
-  if (!idPart) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 이메일 아이디를 입력하세요.";
-    return;
-  }
-
-  if (domainPart === "custom") {
-    if (!customDomain) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 직접 입력할 도메인을 입력하세요.";
-      return;
-    }
-    email = idPart + "@" + customDomain;
-  } else if (domainPart) {
-    email = idPart + domainPart;
-  } else {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 이메일 도메인을 선택하거나 직접 입력하세요.";
-    return;
-  }
-
-  // 이메일 형식 검사
+  // 이메일 형식 검사 (간단한 정규식)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   if (!emailRegex.test(email)) {
     msg.style.color = "red";
     msg.innerText = "⚠️ 올바른 이메일 형식을 입력하세요.";
@@ -578,6 +532,8 @@ function verifyEmail() {
     msg.innerText = "회원가입 후 메일함에서 인증 후 로그인 하세요.";
   }
 }
+
+
 
 </script>
 </body>
