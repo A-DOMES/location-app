@@ -82,8 +82,8 @@ label {
 .secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-/* register-box는 전체 박스만 가운데 배치 */
-.register-box {
+/* -box는 전체 박스만 가운데 배치 */
+.-box {
   text-align: center; /* 전체 박스는 중앙 */
 }
 
@@ -144,11 +144,11 @@ label {
 
 /* ---------------------- 모바일 최적화 ---------------------- */
 @media (max-width:600px) {
-  .register-box { padding:40px 25px; border-radius:16px; max-width:95%; }
-  .register-box h2 { font-size:24px; }
-  .register-box p { font-size:15px; line-height:1.8; }
+  .-box { padding:40px 25px; border-radius:16px; max-width:95%; }
+  .-box h2 { font-size:24px; }
+  .-box p { font-size:15px; line-height:1.8; }
   label { font-size:16px; }
-  .register-box input {
+  .-box input {
     font-size:16px; padding:16px;
     width:calc(100% - 110px); /* 모바일에서도 동일하게 적용 */
   }
@@ -161,9 +161,9 @@ label {
 </head>
 
 <body>
-  <div class="register-box">
+  <div class="-box">
     <!-- 닫기 버튼 -->
-    <button class="close-btn" onclick="closeRegister()">✖</button>
+    <button class="close-btn" onclick="close()">✖</button>
 
     <h2>📍 A-DOMES | 위치정보시스템</h2>
     <p>현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
@@ -229,8 +229,8 @@ label {
 
     <!-- 회원가입 등록 / 취소 버튼 -->
     <div class="btn-group">
-      <button class="primary-btn" onclick="register()">회원가입 등록</button>
-      <button class="secondary-btn" onclick="closeRegister()">취소</button>
+      <button class="primary-btn" onclick="()">회원가입 등록</button>
+      <button class="secondary-btn" onclick="close()">취소</button>
     </div>
 
     <div id="message"></div>
@@ -244,7 +244,7 @@ label {
   </div>
 
   <!-- 모달 HTML 구조 -->
-  <div id="registerModal" class="modal">
+  <div id="Modal" class="modal">
     <div class="modal-content">
       <h2>회원가입 완료 🎉</h2>
       <p id="modalMessage"></p>
@@ -354,94 +354,95 @@ label {
       });
   }
 
-  /* ============================
-     📌 회원가입 처리
-     ============================ */
-  function register() {
-    var id = document.getElementById("id").value.trim();
-    var pw = document.getElementById("pw").value.trim();
-    var pwConfirm = document.getElementById("pwConfirm").value.trim();
-    var name = document.getElementById("name").value.trim();
-    var email = document.getElementById("email").value.trim();
-    var agree1 = document.getElementById("agree1").checked;
-    var agree2 = document.getElementById("agree2").checked;
-    var msg = document.getElementById("message");
+/* ============================
+   📌 회원가입 처리
+   ============================ */
+function register() {
+  var id = document.getElementById("id").value.trim();
+  var pw = document.getElementById("pw").value.trim();
+  var pwConfirm = document.getElementById("pwConfirm").value.trim();
+  var name = document.getElementById("name").value.trim();
+  var email = document.getElementById("email").value.trim();
+  var agree1 = document.getElementById("agree1").checked;
+  var agree2 = document.getElementById("agree2").checked;
+  var msg = document.getElementById("message");
 
-    if (!msg) return;
+  if (!msg) return;
 
-    // 기본 유효성 검사
-    const idRegex = /^[a-z0-9-_]{5,20}$/;
-    if (!idRegex.test(id)) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 아이디 규칙 오류";
-      return;
-    }
-
-    const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
-    if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 비밀번호 규칙 오류";
-      return;
-    }
-
-    if (pw !== pwConfirm) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
-      return;
-    }
-
-    // ✅ 모든 조건 확인 (중복검사 포함)
-    if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
-      return;
-    }
-
-    // ✅ 대기 모달 띄우기
-    document.getElementById("loadingModal").style.display = "block";
-
-    // ✅ 서버 호출
-    fetch(`${CONFIG.USER_URL}?mode=registerUser`
-          + `&id=${encodeURIComponent(id)}`
-          + `&pw=${encodeURIComponent(pw)}`
-          + `&name=${encodeURIComponent(name)}`
-          + `&realname=${encodeURIComponent(name)}`
-          + `&phone=${encodeURIComponent("N/A")}`
-          + `&carNo=${encodeURIComponent("N/A")}`
-          + `&deviceId=${encodeURIComponent("N/A")}`
-          + `&email=${encodeURIComponent(email)}`)
-      .then(res => res.json())
-      .then(result => {
-        document.getElementById("loadingModal").style.display = "none";
-        console.log("회원가입 응답:", result);
-
-        if (result.result === "pending") {
-          document.getElementById("modalMessage").innerHTML =
-            `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
-             이메일 인증을 위해 메일함을 확인해주세요.<br>
-             인증을 완료해야 로그인할 수 있습니다.<br>
-             잠시 후 로그인 화면으로 이동합니다...`;
-
-          document.getElementById("registerModal").style.display = "block";
-          setTimeout(() => { goLogin(); }, 3000);
-
-        } else if (result.result === "exists") {
-          msg.style.color = "red";
-          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-        } else if (result.result === "missing") {
-          msg.style.color = "red";
-          msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
-        } else {
-          msg.style.color = "red";
-          msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
-        }
-      })
-      .catch(err => {
-        document.getElementById("loadingModal").style.display = "none";
-        msg.style.color = "red";
-        msg.innerText = "❌ 서버 오류: " + err.message;
-      });
+  // 기본 유효성 검사
+  const idRegex = /^[a-z0-9-_]{5,20}$/;
+  if (!idRegex.test(id)) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 아이디 규칙 오류";
+    return;
   }
+
+  const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
+  if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 비밀번호 규칙 오류";
+    return;
+  }
+
+  if (pw !== pwConfirm) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
+    return;
+  }
+
+  // ✅ 모든 조건 확인 (중복검사 포함)
+  if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
+    return;
+  }
+
+  // ✅ 대기 모달 띄우기
+  document.getElementById("loadingModal").style.display = "block";
+
+  // ✅ 서버 호출
+  fetch(`${CONFIG.USER_URL}?mode=registerUser`
+        + `&id=${encodeURIComponent(id)}`
+        + `&pw=${encodeURIComponent(pw)}`
+        + `&name=${encodeURIComponent(name)}`
+        + `&realname=${encodeURIComponent(name)}`
+        + `&phone=${encodeURIComponent("N/A")}`
+        + `&carNo=${encodeURIComponent("N/A")}`
+        + `&deviceId=${encodeURIComponent("N/A")}`
+        + `&email=${encodeURIComponent(email)}`)
+    .then(res => res.json())
+    .then(result => {
+      document.getElementById("loadingModal").style.display = "none";
+      console.log("회원가입 응답:", result);
+
+      if (result.result === "pending") {
+        document.getElementById("modalMessage").innerHTML =
+          `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
+           이메일 인증을 위해 메일함을 확인해주세요.<br>
+           인증을 완료해야 로그인할 수 있습니다.<br>
+           잠시 후 로그인 화면으로 이동합니다...`;
+
+        document.getElementById("registerModal").style.display = "block";
+        setTimeout(() => { goLogin(); }, 3000);
+
+      } else if (result.result === "exists") {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+      } else if (result.result === "missing") {
+        msg.style.color = "red";
+        msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
+      } else {
+        msg.style.color = "red";
+        msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
+      }
+    })
+    .catch(err => {
+      document.getElementById("loadingModal").style.display = "none";
+      msg.style.color = "red";
+      msg.innerText = "❌ 서버 오류: " + err.message;
+    });
+}
+
 
   /* ============================
      📌 로그인 처리
