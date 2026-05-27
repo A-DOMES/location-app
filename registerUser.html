@@ -16,15 +16,25 @@
   .register-box h2 { margin-bottom:20px; color:#2c3e50; font-size:26px; font-weight:700; text-align:left; }
   .register-box p { color:#7f8c8d; font-size:14px; margin-bottom:20px; text-align:left; line-height:1.6; }
   
-  /* ---------------------- 입력 필드 ---------------------- */
-  label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
-  .register-box input { width:100%; margin-top:8px; padding:14px; font-size:15px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff; box-sizing:border-box; }
-  .register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
-  
-  /* ---------------------- 입력 그룹 ---------------------- */
-  .input-group { display:flex; align-items:center; gap:10px; margin-top:8px; }
-  .input-group input { flex:1; }
-  .input-group button { padding:14px 20px; border:none; border-radius:10px; background:linear-gradient(to right,#3498db,#2980b9); color:#fff; cursor:pointer; font-weight:500; font-size:14px; white-space:nowrap; }
+/* ---------------------- 입력 필드 ---------------------- */
+label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
+.register-box input {
+  flex:1; padding:14px; font-size:15px;
+  border:1.5px solid #bdc3c7; border-radius:10px;
+  background-color:#f0f8ff; box-sizing:border-box;
+}
+.register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
+
+/* ---------------------- 입력 그룹 (회원ID, 비밀번호, 이메일, 닉네임 모두 동일) ---------------------- */
+.input-group { display:flex; align-items:center; gap:10px; margin-top:8px; }
+.input-group input { flex:1; }
+.input-group button {
+  padding:14px 20px; border:none; border-radius:10px;
+  background:linear-gradient(to right,#3498db,#2980b9);
+  color:#fff; cursor:pointer; font-weight:500; font-size:14px;
+  white-space:nowrap;
+}
+
   
   /* ---------------------- 버튼 그룹 ---------------------- */
   .btn-group { display:flex; justify-content:space-between; margin-top:20px; }
@@ -46,26 +56,17 @@
   .modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
   .modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
   
-  /* ---------------------- 모바일 최적화 ---------------------- */
-  @media (max-width:600px) {
-    .register-box { padding:30px 20px; border-radius:12px; }
-    .register-box h2 { font-size:22px; }
-    .register-box p { font-size:13px; }
-    .checkbox-group span { font-size:0.95rem; }
-  }
-
-/* 모든 입력 필드 공통 스타일 */
-.register-box input {
-  width: 100%;              /* 회원 ID 입력란과 동일한 폭 */
-  margin-top: 8px;
-  padding: 14px;            /* 동일한 높이 */
-  font-size: 15px;
-  border: 1.5px solid #bdc3c7;
-  border-radius: 10px;
-  background-color: #f0f8ff;
-  box-sizing: border-box;
+/* ---------------------- 모바일 최적화 ---------------------- */
+@media (max-width:600px) {
+  .register-box { padding:40px 25px; border-radius:16px; max-width:95%; }
+  .register-box h2 { font-size:24px; }
+  .register-box p { font-size:15px; line-height:1.8; }
+  label { font-size:16px; }
+  .register-box input { font-size:16px; padding:16px; }
+  .input-group button { font-size:15px; padding:16px 22px; }
+  .checkbox-group span { font-size:15px; }
 }
-    
+  
   </style>
 </head>
 
@@ -88,34 +89,35 @@
     </div>
     <div id="idMessage"></div>
 
-    <!-- 비밀번호 입력 -->
-    <label for="pw" style="margin-top:20px;">비밀번호 입력</label>
-    <div style="display:flex; align-items:center; margin-top:8px;">
-      <input type="password" id="pw" 
-             placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)" 
-             style="flex:1; padding:14px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff;">
-      <button type="button" id="toggleBtn" onclick="togglePassword()" 
-              style="margin-left:10px; padding:10px 16px; font-size:13px; border:none; border-radius:6px; 
-                     background:#3498db; color:#fff; cursor:pointer;">
-        보이기
-      </button>
-    </div>
+<!-- 비밀번호 입력 -->
+<label for="pw" style="margin-top:20px;">비밀번호 입력</label>
+<div class="input-group">
+  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+  <button id="toggleBtn" onclick="togglePassword()">보이기</button>
+</div>
 
-    <!-- 비밀번호 확인 -->
-    <label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
-    <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
 
-    <!-- 이메일 입력 -->
-    <label for="email" style="margin-top:15px;">이메일 입력</label>
-    <input type="email" id="email" placeholder="이메일 주소 입력">
-    <button type="button" onclick="verifyEmail()">인증</button>
-    <span id="emailMessage"></span>
+<!-- 비밀번호 확인 -->
+<label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
+<div class="input-group">
+  <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
+</div>
 
-    <!-- 닉네임 입력 -->
-    <label for="name" style="margin-top:15px;">닉네임 입력</label>
-    <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
-    <button type="button" onclick="checkNickname()">확인</button>
-    <span id="nameMessage"></span>
+<!-- 이메일 입력 -->
+<label for="email" style="margin-top:15px;">이메일 입력</label>
+<div class="input-group">
+  <input type="email" id="email" placeholder="이메일 주소 입력">
+  <button onclick="verifyEmail()">인증</button>
+</div>
+<span id="emailMessage"></span>
+
+<!-- 닉네임 입력 -->
+<label for="name" style="margin-top:15px;">닉네임 입력</label>
+<div class="input-group">
+  <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
+  <button onclick="checkNickname()">확인</button>
+</div>
+<span id="nameMessage"></span>
 
     <!-- 약관 동의 -->
     <div class="terms" style="text-align:left; margin-top:15px;">
