@@ -6,17 +6,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
 
   <style>
-    /* ---------------------- 기본 페이지 ---------------------- */
-    body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; margin:0; overflow-y:auto; }
-    
-    /* ---------------------- 회원가입 박스 ---------------------- */
-    .register-box { position:relative; background:#fff; padding:50px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2); text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; margin:30px auto; }
-    @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
-    
-    /* ---------------------- 헤더 ---------------------- */
-    .register-box h2 { margin-bottom:20px; color:#2c3e50; font-size:26px; font-weight:700; text-align:left; }
-    .register-box p { color:#7f8c8d; font-size:14px; margin-bottom:20px; text-align:left; line-height:1.6; }
-    
+  /* ---------------------- 기본 페이지 ---------------------- */
+  body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; margin:0; overflow-y:auto; }
+  
+  /* ---------------------- 회원가입 박스 ---------------------- */
+  .register-box { position:relative; background:#fff; padding:50px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2); text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; margin:30px auto; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+  
+  /* ---------------------- 헤더 ---------------------- */
+  .register-box h2 { margin-bottom:20px; color:#2c3e50; font-size:26px; font-weight:700; text-align:left; }
+  .register-box p { color:#7f8c8d; font-size:14px; margin-bottom:20px; text-align:left; line-height:1.6; }
+  
   /* ---------------------- 입력 필드 ---------------------- */
   label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
   .register-box input {
@@ -26,13 +26,13 @@
   }
   .register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
   
-  /* 비밀번호 확인란 전용 스타일 */
+  /* 👉 비밀번호 확인란 전용 스타일 */
   #pwConfirm {
+    flex: none;                /* flex:1 적용 해제 */
     width: calc(100% - 110px); /* 버튼이 붙은 입력란과 동일한 폭으로 맞춤 */
   }
-
   
-  /* ---------------------- 입력 그룹 (회원ID, 비밀번호, 이메일, 닉네임 모두 동일) ---------------------- */
+  /* ---------------------- 입력 그룹 ---------------------- */
   .input-group { display:flex; align-items:center; gap:10px; margin-top:8px; }
   .input-group input { flex:1; }
   .input-group button {
@@ -41,7 +41,7 @@
     color:#fff; cursor:pointer; font-weight:500; font-size:14px;
     white-space:nowrap;
   }
-
+  
   /* ---------------------- 버튼 그룹 ---------------------- */
   .btn-group { display:flex; justify-content:space-between; margin-top:20px; }
   .btn-group button { flex:1; margin:0 5px; padding:12px; border:none; border-radius:10px; font-size:16px; cursor:pointer; font-weight:500; }
@@ -62,16 +62,17 @@
   .modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
   .modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
   
-/* ---------------------- 모바일 최적화 ---------------------- */
-@media (max-width:600px) {
-  .register-box { padding:40px 25px; border-radius:16px; max-width:95%; }
-  .register-box h2 { font-size:24px; }
-  .register-box p { font-size:15px; line-height:1.8; }
-  label { font-size:16px; }
-  .register-box input { font-size:16px; padding:16px; }
-  .input-group button { font-size:15px; padding:16px 22px; }
-  .checkbox-group span { font-size:15px; }
-}
+  /* ---------------------- 모바일 최적화 ---------------------- */
+  @media (max-width:600px) {
+    .register-box { padding:40px 25px; border-radius:16px; max-width:95%; }
+    .register-box h2 { font-size:24px; }
+    .register-box p { font-size:15px; line-height:1.8; }
+    label { font-size:16px; }
+    .register-box input { font-size:16px; padding:16px; }
+    .input-group button { font-size:15px; padding:16px 22px; }
+    .checkbox-group span { font-size:15px; }
+  }
+
   </style>
 </head>
 
