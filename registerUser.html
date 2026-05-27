@@ -347,8 +347,16 @@ function register() {
   // ✅ 대기 모달 띄우기
   document.getElementById("loadingModal").style.display = "block";
 
-  // ✅ 서버 호출
-  fetch(`${CONFIG.USER_URL}?mode=registerUser&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`)
+  // ✅ 서버 호출 (모든 파라미터 전달)
+  fetch(`${CONFIG.USER_URL}?mode=registerUser`
+        + `&id=${encodeURIComponent(id)}`
+        + `&pw=${encodeURIComponent(pw)}`
+        + `&name=${encodeURIComponent(name)}`
+        + `&realname=${encodeURIComponent(name)}`   // 기본값: 닉네임과 동일
+        + `&phone=${encodeURIComponent("N/A")}`     // 기본값
+        + `&carNo=${encodeURIComponent("N/A")}`     // 기본값
+        + `&deviceId=${encodeURIComponent("N/A")}`  // 기본값
+        + `&email=${encodeURIComponent(email)}`)
     .then(res => res.json())
     .then(result => {
       // ✅ 응답 오면 대기 모달 닫기
