@@ -82,24 +82,25 @@ label {
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
 .checkbox-group {
-  display:flex;
-  align-items:center;
-  justify-content:flex-start; /* 좌측 정렬 */
-  width:100%;
-  text-align:left; /* 부모의 중앙정렬 영향 제거 */
-  margin-bottom:12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 좌측 정렬 */
+  width: 100%;
+  margin-top: 18px;    /* 위쪽 여백 */
+  margin-bottom: 12px; /* 아래쪽 여백 */
+  text-align: left;    /* 부모 중앙정렬 영향 제거 */
 }
 
 .checkbox-group input[type="checkbox"] {
-  margin-right:8px; /* 체크박스와 텍스트 간격 */
+  margin-right: 8px;   /* 체크박스와 텍스트 간격 */
 }
 
-.checkbox-group label,
-.checkbox-group span {
-  font-size:15px;
-  color:#2c3e50;
-  white-space:nowrap; /* 줄바꿈 방지 */
+.checkbox-group label {
+  font-size: 15px;
+  color: #2c3e50;
+  white-space: nowrap; /* 줄바꿈 방지 */
 }
+
 
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
