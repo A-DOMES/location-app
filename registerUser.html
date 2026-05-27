@@ -7,33 +7,61 @@
 
   <style>
 /* ---------------------- 기본 페이지 ---------------------- */
-body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#74ebd5,#ACB6E5); font-family:'Noto Sans KR','Roboto',sans-serif; margin:0; overflow-y:auto; }
+body {
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+  font-family:'Noto Sans KR','Roboto',sans-serif;
+  margin:0; overflow-y:auto;
+}
 
 /* ---------------------- 회원가입 박스 ---------------------- */
-.register-box { position:relative; background:#fff; padding:50px 40px; border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2); text-align:center; width:100%; max-width:420px; animation:fadeIn 1s ease-in-out; margin:30px auto; }
-@keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+.register-box {
+  position:relative; background:#fff; padding:50px 40px;
+  border-radius:20px; box-shadow:0 12px 32px rgba(0,0,0,0.2);
+  text-align:center; width:100%; max-width:420px;
+  animation:fadeIn 1s ease-in-out; margin:30px auto;
+}
+@keyframes fadeIn {
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
 
 /* ---------------------- 헤더 ---------------------- */
-.register-box h2 { margin-bottom:20px; color:#2c3e50; font-size:26px; font-weight:700; text-align:left; }
-.register-box p { color:#7f8c8d; font-size:14px; margin-bottom:20px; text-align:left; line-height:1.6; }
+.register-box h2 {
+  margin-bottom:20px; color:#2c3e50;
+  font-size:26px; font-weight:700; text-align:left;
+}
+.register-box p {
+  color:#7f8c8d; font-size:14px; margin-bottom:20px;
+  text-align:left; line-height:1.6;
+}
 
 /* ---------------------- 입력 필드 ---------------------- */
-label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-align:left; }
+label {
+  display:block; margin-top:15px; font-weight:500;
+  color:#2c3e50; text-align:left;
+}
 
-.register-box input { flex:none; padding:14px; font-size:15px; border:1.5px solid #bdc3c7; border-radius:10px; background-color:#f0f8ff; box-sizing:border-box; }
+.register-box input {
+  flex:none; padding:14px; font-size:15px;
+  border:1.5px solid #bdc3c7; border-radius:10px;
+  background-color:#f0f8ff; box-sizing:border-box;
+  width:calc(100% - 100px); /* 모든 텍스트박스 동일한 폭 */
+}
 
-.register-box input:focus { border-color:#2980b9; box-shadow:0 0 8px rgba(41,128,185,.3); outline:none; }
-
-/* 모든 텍스트박스 동일한 폭으로 맞춤 */
-#userId, #password, #pwConfirm, #email, #nickname { width:calc(100% - 85px); }
+.register-box input:focus {
+  border-color:#2980b9;
+  box-shadow:0 0 8px rgba(41,128,185,.3);
+  outline:none;
+}
 
 /* 입력 그룹: 버튼은 우측 고정, 텍스트박스는 좌측 고정 */
-.input-group { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
+.input-group {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; margin-top:8px;
+}
 .input-group input { flex:none; }
-.input-group button { padding:14px 20px; border:none; border-radius:10px; background:linear-gradient(to right,#3498db,#2980b9); color:#fff; cursor:pointer; font-weight:500; font-size:14px; white-space:nowrap; }
-
-/* ---------------------- 입력 그룹 ---------------------- */
-.input-group { display:flex; align-items:center; gap:10px; margin-top:8px; }
 .input-group button {
   padding:14px 20px; border:none; border-radius:10px;
   background:linear-gradient(to right,#3498db,#2980b9);
@@ -42,22 +70,42 @@ label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-ali
 }
 
 /* ---------------------- 버튼 그룹 ---------------------- */
-.btn-group { display:flex; justify-content:space-between; margin-top:20px; }
-.btn-group button { flex:1; margin:0 5px; padding:12px; border:none; border-radius:10px; font-size:16px; cursor:pointer; font-weight:500; }
+.btn-group {
+  display:flex; justify-content:space-between; margin-top:20px;
+}
+.btn-group button {
+  flex:1; margin:0 5px; padding:12px; border:none; border-radius:10px;
+  font-size:16px; cursor:pointer; font-weight:500;
+}
 .primary-btn { background:linear-gradient(to right,#3498db,#2980b9); color:#fff; }
 .secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-.checkbox-group { margin-left:15px; display:inline-flex; align-items:center; white-space:nowrap; margin-bottom:12px; }
+.checkbox-group {
+  margin-left:15px; display:inline-flex; align-items:center;
+  white-space:nowrap; margin-bottom:12px;
+}
 .checkbox-group input[type="checkbox"] { margin-right:10px; }
 
 /* ---------------------- 닫기 버튼 ---------------------- */
-.close-btn { position:absolute; top:15px; right:20px; background:none; border:none; font-size:20px; color:#7f8c8d; cursor:pointer; }
+.close-btn {
+  position:absolute; top:15px; right:20px;
+  background:none; border:none; font-size:20px;
+  color:#7f8c8d; cursor:pointer;
+}
 .close-btn:hover { color:#e74c3c; }
 
 /* ---------------------- 모달 ---------------------- */
-.modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4); }
-.modal-content { background:#fff; margin:20% auto; padding:2rem; border-radius:12px; width:90%; max-width:450px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3); }
+.modal {
+  display:none; position:fixed; z-index:999;
+  left:0; top:0; width:100%; height:100%;
+  background-color:rgba(0,0,0,0.4);
+}
+.modal-content {
+  background:#fff; margin:20% auto; padding:2rem;
+  border-radius:12px; width:90%; max-width:450px;
+  text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);
+}
 .modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
 .modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
 
@@ -67,7 +115,10 @@ label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-ali
   .register-box h2 { font-size:24px; }
   .register-box p { font-size:15px; line-height:1.8; }
   label { font-size:16px; }
-  .register-box input { font-size:16px; padding:16px; width: calc(100% - 110px); }
+  .register-box input {
+    font-size:16px; padding:16px;
+    width:calc(100% - 110px); /* 모바일에서도 동일하게 적용 */
+  }
   .input-group button { font-size:15px; padding:16px 22px; }
   .checkbox-group span { font-size:15px; }
 }
