@@ -82,10 +82,18 @@ label {
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
 .checkbox-group {
-  margin-left:15px; display:inline-flex; align-items:center;
-  white-space:nowrap; margin-bottom:12px;
+  display:flex; align-items:center; justify-content:flex-start;
+  margin-bottom:12px;
 }
-.checkbox-group input[type="checkbox"] { margin-right:10px; }
+
+.checkbox-group input[type="checkbox"] {
+  margin-right:10px; /* 체크박스와 텍스트 간격 */
+}
+
+.checkbox-group span {
+  font-size:15px; color:#2c3e50; text-align:left;
+}
+
 
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
