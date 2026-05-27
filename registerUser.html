@@ -56,18 +56,16 @@ label {
   outline:none;
 }
 
-/* 입력 그룹: 버튼은 우측 고정, 텍스트박스는 좌측 고정 */
+/* 입력 그룹: 텍스트박스만 남음 */
 .input-group {
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex; align-items:center;
   gap:10px; margin-top:8px;
 }
-.input-group input { flex:none; }
-.input-group button {
-  padding:14px 20px; border:none; border-radius:10px;
-  background:linear-gradient(to right,#3498db,#2980b9);
-  color:#fff; cursor:pointer; font-weight:500; font-size:14px;
-  white-space:nowrap;
+
+.input-group input {
+  flex:none; /* 기존 크기 유지 */
 }
+
 
 /* ---------------------- 버튼 그룹 ---------------------- */
 .btn-group {
@@ -151,9 +149,9 @@ label {
     font-size:16px; padding:16px;
     width:calc(100% - 110px); /* 모바일에서도 동일하게 적용 */
   }
-  .input-group button { font-size:15px; padding:16px 22px; }
   .checkbox-group span { font-size:15px; }
 }
+
 
   </style>
 </head>
@@ -194,11 +192,11 @@ label {
 <!-- 이메일 입력 -->
 <label for="email" style="margin-top:15px;">이메일 입력</label>
 <div class="input-group">
-  <input type="email" id="email" placeholder="이메일 주소 입력">
-  <button onclick="verifyEmail()">인증</button>
+  <input type="email" id="email" placeholder="이메일 주소 입력" onblur="verifyEmail()">
 </div>
 <span id="emailMessage"></span>
 
+    
 <!-- 닉네임 입력 -->
 <label for="name" style="margin-top:15px;">닉네임 입력</label>
 <div class="input-group">
@@ -512,14 +510,24 @@ label {
     }
   }
 
-  /* ============================
-     📌 이메일 인증 버튼 (안내만 출력)
-     ============================ */
-  function verifyEmail() {
-    var msg = document.getElementById("emailMessage");
+/* ============================
+   📌 이메일 인증 안내
+   ============================ */
+function verifyEmail() {
+  var msg = document.getElementById("emailMessage");
+  var email = document.getElementById("email").value.trim();
+
+  // 이메일 형식 검사
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    msg.style.color = "red";
+    msg.innerText = "⚠️ 올바른 이메일 형식을 입력하세요.";
+  } else {
     msg.style.color = "#2980b9";
     msg.innerText = "회원가입 후 메일함에서 인증 후 로그인 하세요.";
   }
+}
 
 </script>
 </body>
