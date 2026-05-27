@@ -263,6 +263,10 @@ label {
 <!-- config.js 먼저 불러오기 -->
 <script src="config.js"></script>
 <script>
+  // 상태 변수 (중복검사 결과 저장)
+  var idChecked = false;
+  var nameChecked = false;
+
   /* ============================
      📌 아이디 중복검사
      ============================ */
@@ -276,6 +280,7 @@ label {
     if (!idRegex.test(id)) {
       msg.style.color = "red";
       msg.innerText = "⚠️ 아이디 규칙 오류";
+      idChecked = false;
       return;
     }
 
@@ -288,112 +293,153 @@ label {
         if (result.result === "exists") {
           msg.style.color = "red";
           msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+          idChecked = false;
         } else if (result.result === "available") {
           msg.style.color = "green";
           msg.innerText = "✅ 사용 가능한 아이디입니다.";
+          idChecked = true;
         } else {
           msg.style.color = "red";
           msg.innerText = "❌ 알 수 없는 응답";
+          idChecked = false;
         }
       })
       .catch(err => {
         msg.style.color = "red";
         msg.innerText = "❌ 서버 오류: " + err.message;
+        idChecked = false;
       });
   }
 
-/* ============================
-   📌 회원가입 처리
-   ============================ */
-function register() {
-  var id = document.getElementById("id").value.trim();
-  var pw = document.getElementById("pw").value.trim();
-  var pwConfirm = document.getElementById("pwConfirm").value.trim();
-  var name = document.getElementById("name").value.trim();
-  var email = document.getElementById("email").value.trim();
-  var agree1 = document.getElementById("agree1").checked;
-  var agree2 = document.getElementById("agree2").checked;
-  var msg = document.getElementById("message");
+  /* ============================
+     📌 닉네임 중복검사
+     ============================ */
+  function checkNickname() {
+    var name = document.getElementById("name").value.trim();
+    var msg = document.getElementById("nameMessage");
 
-  if (!msg) return;
-
-  // 기본 유효성 검사
-  const idRegex = /^[a-z0-9-_]{5,20}$/;
-  if (!idRegex.test(id)) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 아이디 규칙 오류";
-    return;
-  }
-
-  const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
-  if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 비밀번호 규칙 오류";
-    return;
-  }
-
-  if (pw !== pwConfirm) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
-    return;
-  }
-
-  if (!id || !pw || !name || !email || !agree1 || !agree2) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 모든 항목을 입력하고 약관에 동의해야 합니다.";
-    return;
-  }
-
-  // ✅ 대기 모달 띄우기
-  document.getElementById("loadingModal").style.display = "block";
-
-  // ✅ 서버 호출 (모든 파라미터 전달)
-  fetch(`${CONFIG.USER_URL}?mode=registerUser`
-        + `&id=${encodeURIComponent(id)}`
-        + `&pw=${encodeURIComponent(pw)}`
-        + `&name=${encodeURIComponent(name)}`
-        + `&realname=${encodeURIComponent(name)}`   // 기본값: 닉네임과 동일
-        + `&phone=${encodeURIComponent("N/A")}`     // 기본값
-        + `&carNo=${encodeURIComponent("N/A")}`     // 기본값
-        + `&deviceId=${encodeURIComponent("N/A")}`  // 기본값
-        + `&email=${encodeURIComponent(email)}`)
-    .then(res => res.json())
-    .then(result => {
-      // ✅ 응답 오면 대기 모달 닫기
-      document.getElementById("loadingModal").style.display = "none";
-      console.log("회원가입 응답:", result);
-
-      if (result.result === "pending") {
-        // ✅ 완료 모달 띄우기
-        document.getElementById("modalMessage").innerHTML =
-          `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
-           이메일 인증을 위해 메일함을 확인해주세요.<br>
-           인증을 완료해야 로그인할 수 있습니다.<br>
-           잠시 후 로그인 화면으로 이동합니다...`;
-
-        document.getElementById("registerModal").style.display = "block";
-
-        // ✅ 3초 후 로그인 화면으로 이동
-        setTimeout(() => { goLogin(); }, 3000);
-
-      } else if (result.result === "exists") {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-      } else if (result.result === "missing") {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
-      }
-    })
-    .catch(err => {
-      // 오류 시에도 대기 모달 닫기
-      document.getElementById("loadingModal").style.display = "none";
+    if (!name) {
       msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + err.message;
-    });
-}
+      msg.innerText = "⚠️ 닉네임을 입력하세요.";
+      nameChecked = false;
+      return;
+    }
+
+    msg.style.color = "#2980b9";
+    msg.innerText = "⏳ 닉네임 검사 중...";
+
+    fetch(`${CONFIG.USER_URL}?mode=checkNickname&name=${encodeURIComponent(name)}`)
+      .then(res => res.json())
+      .then(result => {
+        if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 이미 사용 중인 닉네임입니다.";
+          nameChecked = false;
+        } else if (result.result === "available") {
+          msg.style.color = "green";
+          msg.innerText = "✅ 사용 가능한 닉네임입니다.";
+          nameChecked = true;
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 알 수 없는 응답";
+          nameChecked = false;
+        }
+      })
+      .catch(err => {
+        msg.style.color = "red";
+        msg.innerText = "❌ 서버 오류: " + err.message;
+        nameChecked = false;
+      });
+  }
+
+  /* ============================
+     📌 회원가입 처리
+     ============================ */
+  function register() {
+    var id = document.getElementById("id").value.trim();
+    var pw = document.getElementById("pw").value.trim();
+    var pwConfirm = document.getElementById("pwConfirm").value.trim();
+    var name = document.getElementById("name").value.trim();
+    var email = document.getElementById("email").value.trim();
+    var agree1 = document.getElementById("agree1").checked;
+    var agree2 = document.getElementById("agree2").checked;
+    var msg = document.getElementById("message");
+
+    if (!msg) return;
+
+    // 기본 유효성 검사
+    const idRegex = /^[a-z0-9-_]{5,20}$/;
+    if (!idRegex.test(id)) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 아이디 규칙 오류";
+      return;
+    }
+
+    const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
+    if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 비밀번호 규칙 오류";
+      return;
+    }
+
+    if (pw !== pwConfirm) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
+      return;
+    }
+
+    // ✅ 모든 조건 확인 (중복검사 포함)
+    if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
+      return;
+    }
+
+    // ✅ 대기 모달 띄우기
+    document.getElementById("loadingModal").style.display = "block";
+
+    // ✅ 서버 호출
+    fetch(`${CONFIG.USER_URL}?mode=registerUser`
+          + `&id=${encodeURIComponent(id)}`
+          + `&pw=${encodeURIComponent(pw)}`
+          + `&name=${encodeURIComponent(name)}`
+          + `&realname=${encodeURIComponent(name)}`
+          + `&phone=${encodeURIComponent("N/A")}`
+          + `&carNo=${encodeURIComponent("N/A")}`
+          + `&deviceId=${encodeURIComponent("N/A")}`
+          + `&email=${encodeURIComponent(email)}`)
+      .then(res => res.json())
+      .then(result => {
+        document.getElementById("loadingModal").style.display = "none";
+        console.log("회원가입 응답:", result);
+
+        if (result.result === "pending") {
+          document.getElementById("modalMessage").innerHTML =
+            `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
+             이메일 인증을 위해 메일함을 확인해주세요.<br>
+             인증을 완료해야 로그인할 수 있습니다.<br>
+             잠시 후 로그인 화면으로 이동합니다...`;
+
+          document.getElementById("registerModal").style.display = "block";
+          setTimeout(() => { goLogin(); }, 3000);
+
+        } else if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+        } else if (result.result === "missing") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
+        }
+      })
+      .catch(err => {
+        document.getElementById("loadingModal").style.display = "none";
+        msg.style.color = "red";
+        msg.innerText = "❌ 서버 오류: " + err.message;
+      });
+  }
 
   /* ============================
      📌 로그인 처리
@@ -418,7 +464,7 @@ function register() {
           if (result.email_verified === "true") {
             localStorage.setItem("nickname", result.name);
             localStorage.setItem("token", result.token);
-            window.location.href = "main.html";   // 로그인 성공 후 메인 페이지 이동
+            window.location.href = "main.html";
           } else {
             msg.style.color = "red";
             msg.innerText = "⚠️ 이메일 인증을 완료해야 로그인할 수 있습니다.";
@@ -467,50 +513,15 @@ function register() {
   }
 
   /* ============================
-   📌 이메일 인증 버튼 (안내만 출력)
-   ============================ */
+     📌 이메일 인증 버튼 (안내만 출력)
+     ============================ */
   function verifyEmail() {
     var msg = document.getElementById("emailMessage");
     msg.style.color = "#2980b9";
-    msg.innerText = "회원가입 후 메일함에서 인증 버튼을 눌러야 로그인할 수 있습니다.";
+    msg.innerText = "회원가입 후 메일함에서 인증 후 로그인 하세요.";
   }
 
-/* ============================
-   📌 닉네임 중복검사
-   ============================ */
-function checkNickname() {
-  var name = document.getElementById("name").value.trim();
-  var msg = document.getElementById("nameMessage");
-
-  if (!name) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 닉네임을 입력하세요.";
-    return;
-  }
-
-  msg.style.color = "#2980b9";
-  msg.innerText = "⏳ 닉네임 검사 중...";
-
-  // 서버 호출 (닉네임 중복검사)
-  fetch(`${CONFIG.USER_URL}?mode=checkNickname&name=${encodeURIComponent(name)}`)
-    .then(res => res.json())
-    .then(result => {
-      if (result.result === "exists") {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 이미 사용 중인 닉네임입니다.";
-      } else if (result.result === "available") {
-        msg.style.color = "green";
-        msg.innerText = "✅ 사용 가능한 닉네임입니다.";
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "❌ 알 수 없는 응답";
-      }
-    })
-    .catch(err => {
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + err.message;
-    });
-}
 </script>
 </body>
 </html>
+
