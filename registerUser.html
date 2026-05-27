@@ -16,7 +16,6 @@ body {
 }
 
 /* ---------------------- 회원가입 박스 ---------------------- */
-/* 회원가입 박스 */
 .register-box {
   position: relative;
   background: #fff;
@@ -88,44 +87,16 @@ label {
 .secondary-btn { background:#bdc3c7; color:#2c3e50; }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-.terms-group {
-  width: 100%;
-  margin-top: 25px;
-}
-
-.terms-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 15px;
-}
-
-.terms-item {
-  margin-bottom: 15px;
-}
-
-.terms-subtitle {
-  font-size: 15px;
-  font-weight: 600;
-  color: #34495e;
-  margin-bottom: 8px;
-}
-
 .checkbox-group {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-start; /* 좌측 정렬 */
+  margin-bottom: 10px;
 }
 
 .checkbox-group input[type="checkbox"] {
   margin-right: 8px;
 }
-
-.checkbox-group label {
-  font-size: 14px;
-  color: #2c3e50;
-}
-
     
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
@@ -219,22 +190,17 @@ label {
 <div class="terms-group">
   <h3 class="terms-title">약관 동의</h3>
 
-  <div class="terms-item">
-    <h4 class="terms-subtitle">이용약관 동의</h4>
-    <div class="checkbox-group">
-      <input type="checkbox" id="agree1">
-      <label for="agree1">이용약관에 동의합니다</label>
-    </div>
+  <div class="checkbox-group">
+    <input type="checkbox" id="agree1">
+    <label for="agree1">이용약관에 동의합니다</label>
   </div>
 
-  <div class="terms-item">
-    <h4 class="terms-subtitle">개인정보 수집 및 이용 동의</h4>
-    <div class="checkbox-group">
-      <input type="checkbox" id="agree2">
-      <label for="agree2">개인정보 수집 및 이용동의에 수락합니다</label>
-    </div>
+  <div class="checkbox-group">
+    <input type="checkbox" id="agree2">
+    <label for="agree2">개인정보 수집 및 이용동의에 수락합니다</label>
   </div>
 </div>
+
 
 
 
