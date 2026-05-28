@@ -450,41 +450,39 @@ label {
       });
   }
 
-/* ============================
-   📌 회원가입 처리 (디버깅 버전)
-   ============================ */
-function register() {
-  const id = document.getElementById("id").value.trim();
-  const pw = document.getElementById("pw").value.trim();
-  const pwConfirm = document.getElementById("pwConfirm").value.trim();
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const agree1 = document.getElementById("agree1").checked;
-  const agree2 = document.getElementById("agree2").checked;
-  const msg = document.getElementById("message");
-
-  if (!msg) return;
-
-  // 기본 유효성 검사
-  if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
-    return;
-  }
-  if (pw !== pwConfirm) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
-    return;
-  }
-
-  // 대기 모달 표시
-  document.getElementById("loadingModal").style.display = "block";
-
-  // 서버 요청 (POST + JSON body)
-  fetch(`${CONFIG.USER_URL}?mode=registerUser`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  /* ============================
+     📌 회원가입 처리 (디버깅 버전, GET 방식)
+     ============================ */
+  function register() {
+    const id = document.getElementById("id").value.trim();
+    const pw = document.getElementById("pw").value.trim();
+    const pwConfirm = document.getElementById("pwConfirm").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const agree1 = document.getElementById("agree1").checked;
+    const agree2 = document.getElementById("agree2").checked;
+    const msg = document.getElementById("message");
+  
+    if (!msg) return;
+  
+    // 기본 유효성 검사
+    if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
+      return;
+    }
+    if (pw !== pwConfirm) {
+      msg.style.color = "red";
+      msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
+      return;
+    }
+  
+    // 대기 모달 표시
+    document.getElementById("loadingModal").style.display = "block";
+  
+    // 서버 요청 (GET 방식)
+    const params = new URLSearchParams({
+      mode: "registerUser",
       id,
       pw,
       name,
@@ -493,38 +491,38 @@ function register() {
       carNo: "N/A",
       deviceId: "N/A",
       email
-    })
-  })
-    .then(res => res.json())
-    .then(result => {
-      document.getElementById("loadingModal").style.display = "none";
-
-      if (result.result === "pending") {
-        document.getElementById("modalMessage").innerHTML =
-          `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
-           이메일 인증을 위해 메일함을 확인해주세요.<br>
-           인증을 완료해야 로그인할 수 있습니다.<br>
-           잠시 후 로그인 화면으로 이동합니다...`;
-
-        document.getElementById("registerModal").style.display = "block";
-        setTimeout(() => { goLogin(); }, 3000);
-
-      } else if (result.result === "exists") {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
-      }
-    })
-    .catch(err => {
-      document.getElementById("loadingModal").style.display = "none";
-      msg.style.color = "red";
-      msg.innerText = "❌ 서버 오류: " + err.message;
     });
-}
-
   
+    fetch(`${CONFIG.USER_URL}?${params.toString()}`)
+      .then(res => res.json())
+      .then(result => {
+        document.getElementById("loadingModal").style.display = "none";
+  
+        if (result.result === "pending") {
+          document.getElementById("modalMessage").innerHTML =
+            `${result.name || ""}님, 회원가입 신청이 완료되었습니다 🎉<br>
+             이메일 인증을 위해 메일함을 확인해주세요.<br>
+             인증을 완료해야 로그인할 수 있습니다.<br>
+             잠시 후 로그인 화면으로 이동합니다...`;
+  
+          document.getElementById("registerModal").style.display = "block";
+          setTimeout(() => { goLogin(); }, 3000);
+  
+        } else if (result.result === "exists") {
+          msg.style.color = "red";
+          msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
+        }
+      })
+      .catch(err => {
+        document.getElementById("loadingModal").style.display = "none";
+        msg.style.color = "red";
+        msg.innerText = "❌ 서버 오류: " + err.message;
+      });
+  }
+
   /* ============================
      📌 로그인 처리
      ============================ */
