@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>회원가입</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 /* ---------------------- 기본 페이지 ---------------------- */
@@ -204,31 +205,17 @@ label {
 /* ---------------------- 모바일 최적화 ---------------------- */
 @media (max-width:600px) {
   .register-box {
-    max-width:95%; padding:30px 20px;
+    max-width: 100%; 
+    padding: 40px 25px; /* 여백 넉넉하게 */
   }
-  .register-box h2 { font-size:22px; }
-  .register-box p { font-size:13px; line-height:1.6; }
-  .register-box input { font-size:15px; padding:12px; }
-  .input-group button { font-size:14px; padding:14px 18px; }
-  .btn-group button { font-size:15px; padding:14px; }
+  .register-box h2 { font-size: 26px; }
+  .register-box p { font-size: 15px; line-height: 1.8; }
+  .register-box input { font-size: 17px; padding: 14px; }
+  .input-group button { font-size: 16px; padding: 16px 20px; }
+  .btn-group button { font-size: 17px; padding: 16px; }
 }
 
-/* ---------------------- 라벨 추가 최적화 ---------------------- */
-.form-label {
-  display: inline-flex;       /* 라벨을 flex 컨테이너로 */
-  align-items: center;        /* 아이콘과 텍스트 세로 중앙 맞춤 */
-  justify-content: flex-start;/* 좌측 정렬 강제 */
-  font-weight: 600;
-  color: #2c3e50;
-  text-align: left;           /* 혹시 부모 text-align 영향 방지 */
-}
 
-.form-label .icon {
-  margin-right: 3px;          /* 아이콘과 텍스트 간격 */
-  font-size: 16px;            /* 아이콘 크기 조정 */
-}
-
-  
   </style>
 </head>
 
@@ -239,9 +226,7 @@ label {
        아래 정보를 입력하여 계정을 생성하세요.</p>
     
     <!-- 회원 ID 입력 -->
-    <label for="id" class="form-label">
-      <span class="icon">👤</span> 회원 ID 입력
-    </label>
+    <label for="id">👤 회원 ID 입력</label>
     <div class="input-group">
       <input type="text" id="id" 
              placeholder="아이디 (5~20자, 영문 소문자/숫자/-,_)" 
@@ -251,35 +236,27 @@ label {
     <div id="idMessage"></div>
     
     <!-- 비밀번호 입력 -->
-    <label for="pw" class="form-label" style="margin-top:20px;">
-      <span class="icon">🔒</span> 비밀번호 입력
-    </label>
+    <label for="pw" style="margin-top:20px;">🔒 비밀번호 입력</label>
     <div class="input-group">
       <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
       <button id="toggleBtn" onclick="togglePassword()">보이기</button>
     </div>
     
     <!-- 비밀번호 확인 -->
-    <label for="pwConfirm" class="form-label" style="margin-top:15px;">
-      <span class="icon">🔑</span> 비밀번호 확인
-    </label>
+    <label for="pwConfirm" style="margin-top:15px;">🔑 비밀번호 확인</label>
     <div class="input-group short-input">
       <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
     </div>
     
     <!-- 이메일 입력 -->
-    <label for="email" class="form-label" style="margin-top:15px;">
-      <span class="icon">📧</span> 이메일 입력
-    </label>
+    <label for="email" style="margin-top:15px;">📧 이메일 입력</label>
     <div class="input-group short-input">
       <input type="email" id="email" placeholder="이메일 주소 입력" onblur="verifyEmailFormat()">
     </div>
     <span id="emailMessage"></span>
     
     <!-- 닉네임 입력 -->
-    <label for="name" class="form-label" style="margin-top:15px;">
-      <span class="icon">🌟</span> 닉네임 입력
-    </label>
+    <label for="name" style="margin-top:15px;">🌟 닉네임 입력</label>
     <div class="input-group">
       <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
       <button onclick="checkNickname()">확인</button>
