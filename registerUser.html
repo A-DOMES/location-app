@@ -126,8 +126,8 @@ label {
 /* ---------------------- 체크박스 그룹 ---------------------- */
 .terms-wrapper {
   margin-top: 25px;
-  width: 100%;
-  text-align: left;   /* 부모에서 좌측 정렬 */
+  width: auto;        /* 내용 크기만큼만 폭 차지 */
+  text-align: left;   /* 좌측 정렬 */
 }
 
 .terms {
@@ -144,18 +144,24 @@ label {
 }
 
 .checkbox-group {
+  display: inline-flex;   /* 내용 크기만큼만 차지 */
+  align-items: center;
+  justify-content: flex-start;
   margin-bottom: 10px;
+  width: auto;            /* 박스 폭 자동 */
 }
 
 .checkbox-group label {
-  display: flex;      /* 체크박스와 텍스트를 한 줄에 */
+  display: flex;          /* 체크박스와 텍스트 한 줄 */
   align-items: center;
   font-size: 15px;
   color: #2c3e50;
 }
 
 .checkbox-group input[type="checkbox"] {
-  margin-right: 8px;  /* 체크박스와 텍스트 간격 */
+  width: 16px;            /* 체크박스 크기 줄이기 */
+  height: 16px;
+  margin-right: 8px;      /* 체크박스와 텍스트 간격 */
 }
 
 
@@ -257,7 +263,9 @@ label {
     <!-- 약관 동의 (좌측 정렬) -->
     <div class="terms-wrapper">
       <div class="terms">
+        <!-- 타이틀 라벨 -->
         <label for="agree1">이용약관 동의</label>
+        <!-- 체크박스 + 설명 -->
         <div class="checkbox-group">
           <label>
             <input type="checkbox" id="agree1">
@@ -265,7 +273,9 @@ label {
           </label>
         </div>
     
+        <!-- 타이틀 라벨 -->
         <label for="agree2">개인정보 수집 및 이용 동의</label>
+        <!-- 체크박스 + 설명 -->
         <div class="checkbox-group">
           <label>
             <input type="checkbox" id="agree2">
@@ -274,6 +284,7 @@ label {
         </div>
       </div>
     </div>
+
 
 
     <!-- 회원가입 등록 / 취소 버튼 -->
