@@ -126,41 +126,38 @@ label {
 /* ---------------------- 체크박스 그룹 ---------------------- */
 .terms-wrapper {
   margin-top: 25px;
-  width: 100%;               /* 부모 폭 전체 사용 */
-  text-align: left;          /* 좌측 정렬 */
+  width: 100%;
+  text-align: left;   /* 부모에서 좌측 정렬 */
 }
 
 .terms {
-  display: block;            /* 블록 요소로 좌측 배치 */
-  text-align: left;
   width: 100%;
+  text-align: left;
 }
 
 .terms label {
-  display: block;
+  display: block;     /* 제목 라벨은 블록으로 */
   font-weight: 600;
   margin-top: 15px;
   margin-bottom: 8px;
   color: #2c3e50;
-  text-align: left;
 }
 
 .checkbox-group {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* 좌측 정렬 강제 */
   margin-bottom: 10px;
-  width: 100%;
 }
 
-.checkbox-group input[type="checkbox"] {
-  margin-right: 8px;
-}
-
-.checkbox-group span {
+.checkbox-group label {
+  display: flex;      /* 체크박스와 텍스트를 한 줄에 */
+  align-items: center;
   font-size: 15px;
   color: #2c3e50;
 }
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 8px;  /* 체크박스와 텍스트 간격 */
+}
+
 
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
@@ -260,19 +257,24 @@ label {
     <!-- 약관 동의 (좌측 정렬) -->
     <div class="terms-wrapper">
       <div class="terms">
-        <label>이용약관 동의</label>
+        <label for="agree1">이용약관 동의</label>
         <div class="checkbox-group">
-          <input type="checkbox" id="agree1">
-          <span>이용약관에 동의합니다                </span>
+          <label>
+            <input type="checkbox" id="agree1">
+            이용약관에 동의합니다
+          </label>
         </div>
-
-        <label>개인정보 수집 및 이용 동의</label>
+    
+        <label for="agree2">개인정보 수집 및 이용 동의</label>
         <div class="checkbox-group">
-          <input type="checkbox" id="agree2">
-          <span>개인정보 수집 및 이용동의에 수락합니다</span>
+          <label>
+            <input type="checkbox" id="agree2">
+            개인정보 수집 및 이용동의에 수락합니다
+          </label>
         </div>
       </div>
     </div>
+
 
     <!-- 회원가입 등록 / 취소 버튼 -->
     <div class="btn-group">
