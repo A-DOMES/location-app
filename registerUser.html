@@ -81,25 +81,21 @@ label {
   gap: 8px;
 }
 
-.input-group input,
-.input-group button {
+.input-group input {
   flex: 1;
-  height: 44px;              /* 동일한 높이 지정 */
+  height: 44px;              /* 입력창만 동일 높이 지정 */
   padding: 0 12px;           /* 좌우 여백만 */
   font-size: 15px;
-  box-sizing: border-box;
-}
-
-.input-group input {
   border: 1.5px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .input-group button {
-  min-width: 80px;
+  min-width: 80px;           
   border: none;
   border-radius: 8px;
   background: linear-gradient(to right,#3498db,#2980b9);
@@ -107,12 +103,15 @@ label {
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
+  padding: 10px 16px;        /* 버튼은 원래대로 */
+  height: auto;              /* 버튼 높이는 자동 */
 }
 
 /* 버튼 없는 입력창 더 줄이기 (비밀번호 확인, 이메일) */
 .short-input input {
-  max-width: calc(100% - 110px); /* 버튼 공간보다 더 줄여서 균형 맞춤 */
+  max-width: calc(100% - 110px);
 }
+
 
 /* ---------------------- 버튼 그룹 ---------------------- */
 .btn-group {
