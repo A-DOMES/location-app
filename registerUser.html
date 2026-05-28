@@ -207,9 +207,14 @@ label {
   background-color:rgba(0,0,0,0.4);
 }
 .modal-content {
-  background:#fff; margin:20% auto; padding:2rem;
-  border-radius:12px; width:90%; max-width:450px;
-  text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);
+  background:#fff;
+  margin:20% auto;
+  padding:2rem;
+  border-radius:12px;
+  width:92%;          /* 화면의 92%만 차지 → 좌우에 살짝 여백 */
+  max-width:400px;    /* 최대 너비 제한 → 큰 화면에서는 너무 넓지 않게 */
+  text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,0.3);
   position:relative;
 }
 .modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
@@ -506,7 +511,7 @@ label {
              잠시 후 로그인 화면으로 이동합니다...`;
   
           document.getElementById("registerModal").style.display = "block";
-          setTimeout(() => { goLogin(); }, 3000);
+          setTimeout(() => { goLogin(); }, 5000);
   
         } else if (result.result === "exists") {
           msg.style.color = "red";
