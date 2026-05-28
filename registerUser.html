@@ -66,28 +66,28 @@ label {
 /* ---------------------- 입력 그룹 ---------------------- */
 .input-group {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: center;       /* 수직 가운데 정렬 */
   margin-top: 12px;
   gap: 8px;
 }
 
 .input-group input {
   flex: 1;
-  height: 48px;               /* 동일 높이 */
-  line-height: 48px;          /* 버튼과 수직 정렬 맞춤 */
+  height: 48px;              /* 동일 높이 */
+  line-height: 48px;         /* 버튼과 수직 정렬 맞춤 */
   padding: 0 12px;
   font-size: 15px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
   text-align: left;
+  vertical-align: middle;    /* 버튼과 같은 라인에 위치 */
 }
 
 .input-group button {
-  height: 48px;               /* 텍스트박스와 동일 높이 */
+  height: 48px;              /* 텍스트박스와 동일 높이 */
   line-height: 48px;
-  min-width: 80px;            /* 버튼 폭 통일 */
+  min-width: 80px;           /* 버튼 폭 통일 */
   border: none;
   border-radius: 8px;
   background: linear-gradient(to right,#3498db,#2980b9);
@@ -95,11 +95,12 @@ label {
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
+  vertical-align: middle;    /* 입력창과 같은 라인에 위치 */
 }
 
 /* 버튼 없는 입력창도 동일한 길이 유지 */
 .input-group.no-button input {
-  max-width: calc(100% - 88px); /* 버튼 폭 + gap 고려 */
+  max-width: calc(100% - 88px); /* 버튼 폭(80px) + gap(8px) 고려 */
 }
 
 /* ---------------------- 버튼 그룹 ---------------------- */
