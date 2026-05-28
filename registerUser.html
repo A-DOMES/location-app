@@ -202,7 +202,7 @@ label {
 
     <!-- 회원가입 등록 / 취소 버튼 -->
     <div class="btn-group">
-      <button class="primary-btn" onclick="()">회원가입 등록</button>
+      <button class="primary-btn" onclick="register()">회원가입 등록</button>
       <button class="secondary-btn" onclick="close()">취소</button>
     </div>
 
@@ -342,63 +342,39 @@ function register() {
 
   if (!msg) return;
 
-  // 🔍 디버깅 로그
-  console.log("입력값 확인:", {
-    id, pw, pwConfirm, name, email,
-    agree1, agree2, idChecked, nameChecked
-  });
-
   // 기본 유효성 검사
-  const idRegex = /^[a-z0-9-_]{5,20}$/;
-  if (!idRegex.test(id)) {
+  if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
     msg.style.color = "red";
-    msg.innerText = "⚠️ 아이디 규칙 오류";
+    msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
     return;
   }
-
-  const pwRegex = /^[A-Za-z0-9!@#$%^&*()_+]{6,16}$/;
-  if (!pwRegex.test(pw) || /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pw)) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 비밀번호 규칙 오류";
-    return;
-  }
-
   if (pw !== pwConfirm) {
     msg.style.color = "red";
     msg.innerText = "⚠️ 비밀번호가 일치하지 않습니다.";
     return;
   }
 
-  // ✅ 모든 조건 확인 (중복검사 포함)
-  if (!id || !pw || !name || !email || !agree1 || !agree2 || !idChecked || !nameChecked) {
-    msg.style.color = "red";
-    msg.innerText = "⚠️ 모든 항목을 입력하고 중복검사를 완료해야 합니다.";
-    return;
-  }
-
-  // ✅ 대기 모달 띄우기
+  // 대기 모달 표시
   document.getElementById("loadingModal").style.display = "block";
 
-  // 서버 요청 URL 구성
-  const url = `${CONFIG.USER_URL}?mode=registerUser`
-    + `&id=${encodeURIComponent(id)}`
-    + `&pw=${encodeURIComponent(pw)}`
-    + `&name=${encodeURIComponent(name)}`
-    + `&realname=${encodeURIComponent(name)}`
-    + `&phone=${encodeURIComponent("N/A")}`
-    + `&carNo=${encodeURIComponent("N/A")}`
-    + `&deviceId=${encodeURIComponent("N/A")}`
-    + `&email=${encodeURIComponent(email)}`;
-
-  // 🔍 요청 URL 확인
-  console.log("회원가입 요청 URL:", url);
-
-  // ✅ 서버 호출
-  fetch(url)
+  // 서버 요청 (POST + JSON body)
+  fetch(`${CONFIG.USER_URL}?mode=registerUser`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id,
+      pw,
+      name,
+      realname: name,
+      phone: "N/A",
+      carNo: "N/A",
+      deviceId: "N/A",
+      email
+    })
+  })
     .then(res => res.json())
     .then(result => {
       document.getElementById("loadingModal").style.display = "none";
-      console.log("회원가입 응답:", result);
 
       if (result.result === "pending") {
         document.getElementById("modalMessage").innerHTML =
@@ -413,9 +389,6 @@ function register() {
       } else if (result.result === "exists") {
         msg.style.color = "red";
         msg.innerText = "⚠️ 이미 사용 중인 아이디입니다.";
-      } else if (result.result === "missing") {
-        msg.style.color = "red";
-        msg.innerText = "⚠️ 모든 항목을 입력해야 합니다.";
       } else {
         msg.style.color = "red";
         msg.innerText = "❌ 회원가입 실패. 다시 시도하세요.";
