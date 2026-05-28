@@ -66,27 +66,25 @@ label {
 /* ---------------------- 입력 그룹 ---------------------- */
 .input-group {
   display: flex;
-  align-items: center;       /* 수직 가운데 정렬 */
+  align-items: center;       /* 버튼과 텍스트박스 수직 정렬 */
   margin-top: 12px;
   gap: 8px;
 }
 
 .input-group input {
   flex: 1;
-  height: 48px;              /* 동일 높이 */
-  line-height: 48px;         /* 버튼과 수직 정렬 맞춤 */
+  height: 48px;              /* 모든 입력창 동일 높이 */
   padding: 0 12px;
   font-size: 15px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  background-color: #f9f9f9; /* 모든 텍스트박스에 동일 음영 */
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.08); /* 내부 음영 */
   text-align: left;
-  vertical-align: middle;    /* 버튼과 같은 라인에 위치 */
 }
 
 .input-group button {
   height: 48px;              /* 텍스트박스와 동일 높이 */
-  line-height: 48px;
   min-width: 80px;           /* 버튼 폭 통일 */
   border: none;
   border-radius: 8px;
@@ -95,12 +93,11 @@ label {
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  vertical-align: middle;    /* 입력창과 같은 라인에 위치 */
 }
 
-/* 버튼 없는 입력창도 동일한 길이 유지 */
-.input-group.no-button input {
-  max-width: calc(100% - 88px); /* 버튼 폭(80px) + gap(8px) 고려 */
+/* 버튼 없는 입력창 줄이기 (비밀번호 확인, 이메일) */
+.short-input input {
+  max-width: calc(100% - 88px); /* 버튼 공간만큼 줄여서 다른 입력창과 길이 맞춤 */
 }
 
 /* ---------------------- 버튼 그룹 ---------------------- */
@@ -127,16 +124,36 @@ label {
 }
 
 /* ---------------------- 체크박스 그룹 ---------------------- */
-.terms-wrapper { margin-top:25px; text-align:left; }
+.terms-wrapper {
+  margin-top: 25px;
+  text-align: left;
+}
+
 .terms label {
-  display:block; font-weight:600; margin-top:15px; margin-bottom:8px;
-  color:#2c3e50;
+  display: block;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  text-align: left;
 }
+
 .checkbox-group {
-  display:flex; align-items:center; margin-bottom:10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 좌측 정렬 */
+  margin-bottom: 10px;
 }
-.checkbox-group input[type="checkbox"] { margin-right:8px; }
-.checkbox-group span { font-size:15px; color:#2c3e50; }
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.checkbox-group span {
+  font-size: 15px;
+  color: #2c3e50;
+  text-align: left;
+}
 
 /* ---------------------- 닫기 버튼 ---------------------- */
 .close-btn {
@@ -195,7 +212,7 @@ label {
     <p>현재 위치와 이동 경로를 확인할 수 있는 스마트 위치정보 앱입니다.<br>
        아래 정보를 입력하여 계정을 생성하세요.</p>
 
-    <!-- 회원 ID 입력 (그대로 유지) -->
+    <!-- 회원 ID 입력 -->
     <label for="id">회원 ID 입력</label>
     <div class="input-group">
       <input type="text" id="id" 
@@ -205,53 +222,50 @@ label {
     </div>
     <div id="idMessage"></div>
 
-<!-- 비밀번호 입력 -->
-<label for="pw" style="margin-top:20px;">비밀번호 입력</label>
-<div class="input-group">
-  <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
-  <button id="toggleBtn" onclick="togglePassword()">보이기</button>
-</div>
-
-<!-- 비밀번호 확인 -->
-<label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
-<div class="input-group">
-  <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
-</div>
-
-
-<!-- 이메일 입력 -->
-<label for="email" style="margin-top:15px;">이메일 입력</label>
-<div class="input-group">
-  <input type="email" id="email" placeholder="이메일 주소 입력" onblur="verifyEmailFormat()">
-</div>
-<span id="emailMessage"></span>
-
-    
-<!-- 닉네임 입력 -->
-<label for="name" style="margin-top:15px;">닉네임 입력</label>
-<div class="input-group">
-  <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
-  <button onclick="checkNickname()">확인</button>
-</div>
-<span id="nameMessage"></span>
-
-<!-- 약관 동의 -->
-<div class="terms-wrapper">
-  <div class="terms">
-    <label>이용약관 동의</label>
-    <div class="checkbox-group">
-      <input type="checkbox" id="agree1">
-      <span>이용약관에 동의합니다</span>
+    <!-- 비밀번호 입력 -->
+    <label for="pw" style="margin-top:20px;">비밀번호 입력</label>
+    <div class="input-group">
+      <input type="password" id="pw" placeholder="비밀번호 (6~16자, 영문/숫자/특수문자)">
+      <button id="toggleBtn" onclick="togglePassword()">보이기</button>
     </div>
 
-    <label>개인정보 수집 및 이용 동의</label>
-    <div class="checkbox-group">
-      <input type="checkbox" id="agree2">
-      <span>개인정보 수집 및 이용동의에 수락합니다</span>
+    <!-- 비밀번호 확인 (텍스트박스 줄이기) -->
+    <label for="pwConfirm" style="margin-top:15px;">비밀번호 확인</label>
+    <div class="input-group short-input">
+      <input type="password" id="pwConfirm" placeholder="비밀번호 확인">
     </div>
-  </div>
-</div>
 
+    <!-- 이메일 입력 (텍스트박스 줄이기) -->
+    <label for="email" style="margin-top:15px;">이메일 입력</label>
+    <div class="input-group short-input">
+      <input type="email" id="email" placeholder="이메일 주소 입력" onblur="verifyEmailFormat()">
+    </div>
+    <span id="emailMessage"></span>
+
+    <!-- 닉네임 입력 (확인 버튼 유지) -->
+    <label for="name" style="margin-top:15px;">닉네임 입력</label>
+    <div class="input-group">
+      <input type="text" id="name" placeholder="다른 사용자에게 보여질 이름">
+      <button onclick="checkNickname()">확인</button>
+    </div>
+    <span id="nameMessage"></span>
+
+    <!-- 약관 동의 (좌측 정렬) -->
+    <div class="terms-wrapper">
+      <div class="terms">
+        <label>이용약관 동의</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="agree1">
+          <span>이용약관에 동의합니다</span>
+        </div>
+
+        <label>개인정보 수집 및 이용 동의</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="agree2">
+          <span>개인정보 수집 및 이용동의에 수락합니다</span>
+        </div>
+      </div>
+    </div>
 
     <!-- 회원가입 등록 / 취소 버튼 -->
     <div class="btn-group">
