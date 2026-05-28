@@ -217,14 +217,17 @@ label {
 .form-label {
   display: inline-flex;       /* 라벨을 flex 컨테이너로 */
   align-items: center;        /* 아이콘과 텍스트 세로 중앙 맞춤 */
+  justify-content: flex-start;/* 좌측 정렬 강제 */
   font-weight: 600;
   color: #2c3e50;
+  text-align: left;           /* 혹시 부모 text-align 영향 방지 */
 }
 
 .form-label .icon {
-  margin-right: 6px;          /* 아이콘과 텍스트 간격 */
+  margin-right: 3px;          /* 아이콘과 텍스트 간격 */
   font-size: 16px;            /* 아이콘 크기 조정 */
 }
+
   
   </style>
 </head>
