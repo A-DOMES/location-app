@@ -141,24 +141,23 @@ body { display:flex; justify-content:center; align-items:center;
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    // ✅ JSONP 방식 호출
     const callbackName = "handleLoginResponse";
     window[callbackName] = function(result) {
       if (result.result === "success") {
         modal.querySelector("h2").innerText = "✅ 로그인 성공!";
         modal.querySelector("p").innerText = "잠시 후 이동합니다...";
-    
+
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("role", result.role);
         sessionStorage.setItem("userId", id);
         sessionStorage.setItem("token", result.token);
         localStorage.setItem("nickname", result.nickname);
-    
+
         const roleRedirects = {
           "AD": "https://a-domes.github.io/location-pwa/admin.html",
           "RU": "https://a-domes.github.io/location-app/user.html"
         };
-    
+
         setTimeout(() => {
           const targetUrl = roleRedirects[result.role];
           if (targetUrl) {
@@ -167,15 +166,19 @@ body { display:flex; justify-content:center; align-items:center;
             alert("알 수 없는 권한입니다.");
           }
         }, 1500);
-    
+
+      } else if (result.message === "이메일 인증이 필요합니다.") {
+        // 📧 이메일 인증 실패 메시지를 모달에 표시
+        modal.querySelector("h2").innerText = "❌ 로그인 실패";
+        modal.querySelector("p").innerText = "📧 이메일 인증을 먼저 완료해야 로그인할 수 있습니다.";
+        setTimeout(() => { modal.style.display = "none"; }, 3000);
+
       } else {
         modal.style.display = "none";
-        // ✅ 서버에서 내려준 메시지를 그대로 표시
         alert("❌ 로그인 실패: " + result.message);
       }
     };
 
-    // ✅ script 태그를 동적으로 추가해서 JSONP 요청
     const script = document.createElement("script");
     script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
     document.body.appendChild(script);
