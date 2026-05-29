@@ -66,23 +66,24 @@ body { display:flex; justify-content:center; align-items:center;
 .signup-btn:hover { background:linear-gradient(to right,#27ae60,#1e8449); transform:scale(1.03); }
 
 /* ---------------------- 모달 ---------------------- */
-.modal { display:none; position:fixed; z-index:999; left:0; top:0;
-         width:100%; height:100%; background-color:rgba(0,0,0,.3); }
+.modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; 
+         width: 100%; height: 100%; background-color: rgba(0,0,0,.3); /* 모달 배경 반투명 검정 */ }
 
-.modal-content { position:relative; top:50%; transform:translateY(-50%);
-                 background:#fff; padding:30px; border-radius:12px;
-                 width:90%; max-width:400px; text-align:center;
-                 box-shadow:0 4px 15px rgba(0,0,0,.3); margin:0 auto; }
+.modal-content { position: relative; top: 50%; transform: translateY(-50%); 
+                 background: rgba(255,255,255,0.85); /* 모달창 내부 배경 반투명 흰색 */ 
+                 padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; 
+                 box-shadow: 0 4px 15px rgba(0,0,0,.3); margin: 0 auto; /* 그림자와 가운데 정렬 */ }
 
-.modal-content h2 { font-size:24px; margin-bottom:15px; color:#2c3e50; }
-.modal-content p { font-size:18px; color:#555; }
+.modal-content h2 { font-size: 24px; margin-bottom: 15px; color: #2c3e50; /* 제목 스타일 */ }
+
+.modal-content p { font-size: 18px; color: #555; /* 본문 텍스트 스타일 */ }
 
 /* ---------------------- 모바일 전용 스타일 ---------------------- */
 @media (max-width:767px) {
-  .login-box h2 { font-size:20px; }
-  .modal-content { width:80%; max-width:280px; padding:18px; }
-  .modal-content h2 { font-size:18px; }
-  .modal-content p { font-size:14px; }
+  .login-box h2 { font-size: 20px; }
+  .modal-content { width: 80%; max-width: 280px; padding: 18px; }
+  .modal-content h2 { font-size: 18px; }
+  .modal-content p { font-size: 14px; }
 }
 
 </style>
