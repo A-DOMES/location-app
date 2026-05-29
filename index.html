@@ -144,38 +144,50 @@ body { display:flex; justify-content:center; align-items:center;
     const callbackName = "handleLoginResponse";
     window[callbackName] = function(result) {
       if (result.result === "success") {
-        modal.querySelector("h2").innerText = "✅ 로그인 성공!";
-        modal.querySelector("p").innerText = "잠시 후 이동합니다...";
+        // ✅ 이메일 인증 여부 확인 (대소문자 구분 없이)
+        const emailVerified = result.emailVerified 
+          ? result.emailVerified.toString().toLowerCase() 
+          : "false";
 
-        sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("role", result.role);
-        sessionStorage.setItem("userId", id);
-        sessionStorage.setItem("token", result.token);
-        localStorage.setItem("nickname", result.nickname);
+        if (emailVerified === "true") {
+          // 로그인 성공
+          modal.querySelector("h2").innerText = "✅ 로그인 성공!";
+          modal.querySelector("p").innerText = "잠시 후 이동합니다...";
 
-        const roleRedirects = {
-          "AD": "https://a-domes.github.io/location-pwa/admin.html",
-          "RU": "https://a-domes.github.io/location-app/user.html"
-        };
+          sessionStorage.setItem("loggedIn", "true");
+          sessionStorage.setItem("role", result.role);
+          sessionStorage.setItem("userId", id);
+          sessionStorage.setItem("token", result.token);
+          localStorage.setItem("nickname", result.nickname);
 
-        setTimeout(() => {
-          const targetUrl = roleRedirects[result.role];
-          if (targetUrl) {
-            window.location.href = targetUrl;
-          } else {
-            alert("알 수 없는 권한입니다.");
-          }
-        }, 1500);
+          const roleRedirects = {
+            "AD": "https://a-domes.github.io/location-pwa/admin.html",
+            "RU": "https://a-domes.github.io/location-app/user.html"
+          };
 
-      } else if (result.message === "이메일 인증이 필요합니다.") {
-        // 📧 이메일 인증 실패 메시지를 모달에 표시
-        modal.querySelector("h2").innerText = "❌ 로그인 실패";
-        modal.querySelector("p").innerText = "📧 이메일 인증을 먼저 완료해야 로그인할 수 있습니다.";
-        setTimeout(() => { modal.style.display = "none"; }, 3000);
+          setTimeout(() => {
+            const targetUrl = roleRedirects[result.role];
+            if (targetUrl) {
+              window.location.href = targetUrl;
+            } else {
+              modal.querySelector("h2").innerText = "❌ 로그인 실패";
+              modal.querySelector("p").innerText = "알 수 없는 권한입니다.";
+              setTimeout(() => { modal.style.display = "none"; }, 3000);
+            }
+          }, 1500);
+
+        } else {
+          // 📧 이메일 인증 필요
+          modal.querySelector("h2").innerText = "❌ 로그인 실패";
+          modal.querySelector("p").innerText = "📧 이메일 인증을 먼저 완료해야 로그인할 수 있습니다.";
+          setTimeout(() => { modal.style.display = "none"; }, 3000);
+        }
 
       } else {
-        modal.style.display = "none";
-        alert("❌ 로그인 실패: " + result.message);
+        // 그 외 실패 케이스 (차단, 비밀번호 불일치 등)
+        modal.querySelector("h2").innerText = "❌ 로그인 실패";
+        modal.querySelector("p").innerText = result.message || "로그인에 실패했습니다.";
+        setTimeout(() => { modal.style.display = "none"; }, 3000);
       }
     };
 
