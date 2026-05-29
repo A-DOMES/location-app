@@ -145,12 +145,12 @@ body { display:flex; justify-content:center; align-items:center;
     window[callbackName] = function(result) {
       if (result.result === "success") {
         // ✅ 이메일 인증 여부 확인 (대소문자 구분 없이)
-        const emailVerified = result.emailVerified 
-          ? result.emailVerified.toString().toLowerCase() 
+        const emailVerified = result.email_verified 
+          ? result.email_verified.toString().toLowerCase() 
           : "false";
 
         if (emailVerified === "true") {
-          // 로그인 성공
+          // 로그인 성공 처리
           modal.querySelector("h2").innerText = "✅ 로그인 성공!";
           modal.querySelector("p").innerText = "잠시 후 이동합니다...";
 
@@ -191,6 +191,7 @@ body { display:flex; justify-content:center; align-items:center;
       }
     };
 
+    // ✅ JSONP 요청
     const script = document.createElement("script");
     script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
     document.body.appendChild(script);
