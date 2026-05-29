@@ -211,15 +211,20 @@ label {
 }
 
 .modal-content {
-  background:#fff;
-  margin:15% auto;          /* 위쪽은 15% 내려오고 좌우는 auto → 가운데 정렬 */
-  padding:2rem;
-  border-radius:12px;
-  width:90%;                /* 폭을 90%로 줄여서 좌우 여백 확보 */
-  max-width:400px;          /* 큰 화면에서는 최대 400px까지만 */
-  text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,0.3);
-  position:relative;
+  /* 모달창 내부 배경을 흰색 + 투명도 85%로 설정 */
+  background: rgba(255, 255, 255, 0.85);
+
+  /* 위치와 크기 관련 설정 */
+  margin: 15% auto;          /* 화면 위에서 15% 내려오고, 좌우는 가운데 정렬 */
+  padding: 2rem;             /* 내부 여백 */
+  border-radius: 12px;       /* 모서리 둥글게 */
+  width: 90%;                /* 화면 폭의 90% 차지 */
+  max-width: 400px;          /* 최대 폭 제한 */
+
+  /* 텍스트와 그림자 효과 */
+  text-align: center;        /* 텍스트 가운데 정렬 */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3); /* 그림자 효과 */
+  position: relative;        /* 닫기 버튼 등 위치 제어를 위한 상대 위치 */
 }
 
 .modal-content h2 { 
