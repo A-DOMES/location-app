@@ -202,58 +202,49 @@ label {
 
 /* ---------------------- 모달 ---------------------- */
 .modal {
-  display:none; position:fixed; z-index:999;
-  left:0; top:0; width:100%; height:100%;
+  display:none; 
+  position:fixed; 
+  z-index:999;
+  left:0; top:0; 
+  width:100%; height:100%;
   background-color:rgba(0,0,0,0.4);
 }
+
 .modal-content {
   background:#fff;
-  margin:20% auto;
+  margin:15% auto;          /* 위쪽은 15% 내려오고 좌우는 auto → 가운데 정렬 */
   padding:2rem;
   border-radius:12px;
-  width:92%;          /* 화면의 92%만 차지 → 좌우에 살짝 여백 */
-  max-width:400px;    /* 최대 너비 제한 → 큰 화면에서는 너무 넓지 않게 */
+  width:90%;                /* 폭을 90%로 줄여서 좌우 여백 확보 */
+  max-width:400px;          /* 큰 화면에서는 최대 400px까지만 */
   text-align:center;
   box-shadow:0 4px 15px rgba(0,0,0,0.3);
   position:relative;
 }
-.modal-content h2 { font-size:1.5rem; margin-bottom:1rem; color:#2c3e50; }
-.modal-content p { font-size:1.2rem; color:#555; margin-bottom:1.5rem; }
+
+.modal-content h2 { 
+  font-size:1.5rem; 
+  margin-bottom:1rem; 
+  color:#2c3e50; 
+}
+.modal-content p { 
+  font-size:1.2rem; 
+  color:#555; 
+  margin-bottom:1.5rem; 
+}
 
 /* ---------------------- 모바일 최적화 ---------------------- */
 @media (max-width:600px) {
-  .register-box {
-    max-width: 100%; 
-    padding: 30px 20px; /* 여백 줄여서 화면 조금 작게 */
+  .modal-content {
+    width:80%;             /* 모바일에서는 더 줄여서 좌우 여백 확보 */
+    max-width:280px;       /* 작은 화면에서 최대 폭 제한 */
+    padding:18px;
   }
-  .register-box h2 { font-size: 24px; }
-  .register-box p { font-size: 14px; line-height: 1.6; }
-
-  /* 입력창만 높이 조정 */
-  .register-box input {
-    height: 44px;
-    font-size: 15px;
-    padding: 0 12px;     /* 좌우만 여백 */
-    box-sizing: border-box;
-  }
-
-  /* 버튼은 원래 스타일 유지 */
-  .input-group button,
-  .btn-group button {
-    font-size: 14px;
-    padding: 10px 16px;
-    height: auto;        /* 버튼은 자동 높이 */
-  }
+  .modal-content h2 { font-size:18px; }
+  .modal-content p { font-size:14px; }
 }
 
-.input-group {
-  display: flex;
-  align-items: center; /* 세로 중앙 맞춤 */
-}
-
-
-
-
+  
   </style>
 </head>
 
@@ -511,8 +502,8 @@ label {
             ${result.name || ""}님,<br>
             회원가입 신청이 완료되었습니다 🎉<br>
             이메일 인증을 위해 메일함을 확인하세요.<br>
-            인증을 완료해야 로그인 할 수 있습니다.<br><br>
-            잠시 후 로그인 화면으로 이동합니다...
+            인증을 완료해야 로그인 할 수 있습니다.<br>
+            <p>잠시 후 로그인 화면으로 이동합니다...</p>
           `;
        
           document.getElementById("registerModal").style.display = "block";
