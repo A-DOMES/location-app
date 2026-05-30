@@ -2079,7 +2079,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    openModal(document.getElementById("destinationModal"));
+    document.getElementById("destinationModal").style.display = "block";
     return;
   }
 
