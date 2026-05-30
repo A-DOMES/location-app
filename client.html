@@ -507,7 +507,8 @@ let lastSpeedLimitAlertTime = 0;
 // 속도 기록
 let speedHistory = [];
 let startTime = null;   // 주행 시작 시점 (경로 안내 버튼 클릭 시 초기화)
-
+let currentAddress = "주소 정보 없음"; // 최신 주소 저장용
+  
 // 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
 let livePathRenderer = null;
 
@@ -517,13 +518,12 @@ let destinationRenderer = null;
 // 목적지 좌표 및 도착 상태
 let destinationLat = null;
 let destinationLng = null;
-  
+
 // ✅ 도착 안내 제어용 플래그
 let destinationSet = false;       // 목적지가 설정되었는지 여부
 let destinationArrived = false;   // 목적지 도착 안내가 이미 실행되었는지 여부
 let drivingStarted = false;       // 주행 시작 여부
-let currentAddress = "주소 정보 없음"; // 최신 주소 저장용
-  
+
 // 직선 Polyline 객체 (현재 위치 ↔ 목적지 연결선)
 let straightLine = null;
 
@@ -838,6 +838,7 @@ function startTracking() {
         });
         lastGeocodeTime = Date.now();
       }
+
       // ✅ 지도 및 마커 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
       if (!myMarker) {
@@ -881,7 +882,6 @@ function startTracking() {
   });
 }
 
-
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
 
@@ -907,8 +907,6 @@ toggleBtn.addEventListener("click", () => {
     }
   }
 });
-
-
   
 // ---------------------- 드래그 가능하게 적용 ----------------------
 makeDraggableAndResizable(toggleBtn);
@@ -1075,7 +1073,6 @@ function computeSpeedFromGPS(lat, lng, timestamp) {
   updateTravelStats();
 }
 
-
 // ---------------------- 개선된 스무딩 함수 (상황별 자동 적용) ----------------------
 function getSmoothedSpeed(history, baseWindowSize = 7, maxDelta = 10) {
   if (history.length === 0) return 0;
@@ -1142,8 +1139,6 @@ function addPathCoord(newCoord, address = null) {
   updateTravelStats();
 }
 
-
-
 // ----------------------외부에서 사용 할 속도 추가 함수 ----------------------
 function addSpeed(newSpeed) {
   speedHistory.push(newSpeed);
@@ -1207,8 +1202,8 @@ function updateStraightLine() {
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  // ✅ 시작 시점이 없으면 기본값 표시 (pathCoords 없어도 모달은 뜨도록 수정)
-  if (!startTime) {
+  // ✅ 시작 시점이나 경로 좌표가 없으면 초기값 표시
+  if (!startTime || pathCoords.length === 0) {
     document.getElementById("currentSpeed").innerText = "0 km/h";
     document.getElementById("avgSpeed").innerText = "0 km/h";
     document.getElementById("maxSpeed").innerText = "0 km/h";
@@ -1244,30 +1239,32 @@ function updateTravelStats() {
 
   // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
-
+  
   // ✅ 직선거리 & ETA 계산
   let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
     const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
-
+  
+    // ✅ 현재 위치 → 목적지 직선거리 계산
     straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
-
+  
+    // ✅ ETA 계산 (평균속도 기반 → 남은 시간 표시)
     if (avgSpeedValue > 0) {
       const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
       const etaSeconds = etaMinutes * 60;
-
+  
       const hours = Math.floor(etaSeconds / 3600);
       const minutes = Math.floor((etaSeconds % 3600) / 60);
       const seconds = etaSeconds % 60;
-
+  
       etaMsg =
         `${hours.toString().padStart(2,"0")}:` +
         `${minutes.toString().padStart(2,"0")}:` +
         `${seconds.toString().padStart(2,"0")}`;
     }
   }
-
+   
   // ✅ 각 요소에 값 반영
   document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
@@ -1277,10 +1274,41 @@ function updateTravelStats() {
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
 
-  // ✅ 직선 Polyline 갱신
+  // ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
   updateStraightLine();
-}
 
+  // ✅ 목적지 도착 반경을 속도에 따라 자동 조정
+  let detectionRadiusKm = 0.10; // 기본 100m
+  if (currentSpeedValue > 60) {
+    detectionRadiusKm = 0.1; // 100m
+  } else if (currentSpeedValue > 40) {
+    detectionRadiusKm = 0.07; // 70m
+  }
+
+  // ✅ 목적지 도착 시 선 제거 + 안내 (한 번만 실행)
+  if (destinationSet && !destinationArrived && straightDistKm <= detectionRadiusKm) {
+    if (straightLine) {
+      straightLine.setMap(null);
+      straightLine = null;
+    }
+    if (destinationRenderer) {
+      destinationRenderer.setMap(null);
+      destinationRenderer = null;
+    }
+
+    // ✅ 다기능 모달창 표시
+    document.getElementById("modalTitle").innerText = "목적지 도착";
+    document.getElementById("modalMessage").innerText = "목적지에 도착했습니다.";
+    document.getElementById("popupModal").style.display = "block";
+
+    // ✅ 음성 안내
+    speakMessage("목적지에 도착했습니다.");
+
+    drivingStarted = false;
+    destinationArrived = true; // ✅ 이후에는 다시 실행되지 않음
+  }
+}
+  
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
@@ -1291,7 +1319,7 @@ function computeTotalDistance(coords) {
     const curr = new google.maps.LatLng(coords[i].lat, coords[i].lng);
     total += google.maps.geometry.spherical.computeDistanceBetween(prev, curr);
   }
-  return total / 1000; // km 단위
+  return total / 1000; // km 단위 (정수 변환은 호출부에서 처리)
 }
 
 /* ---------------------- 버튼 이벤트 ---------------------- */
@@ -1299,8 +1327,12 @@ function computeTotalDistance(coords) {
 const travelStatsBtn = document.getElementById("openTravelStatsModal");
 if (travelStatsBtn) {
   travelStatsBtn.addEventListener("click", () => {
+    const travelStatsModal = document.getElementById("travelStatsModal");
+    if (travelStatsModal) travelStatsModal.style.display = "block";
+
+    // ✅ 주행 시작 시점 초기화
     if (!startTime) {
-      startTime = Date.now(); // ✅ 초기화 후 다시 세팅
+      startTime = Date.now();
       speedHistory = [];
       maxSpeed = 0;
       avgSpeed = 0;
@@ -1308,38 +1340,7 @@ if (travelStatsBtn) {
       totalDistance = 0;
     }
 
-    const travelStatsModal = document.getElementById("travelStatsModal");
-    if (travelStatsModal) travelStatsModal.style.display = "block";
-
-    updateTravelStats();
-  });
-}
-
-// 경로 안내 버튼
-const startRouteBtn = document.getElementById("startRouteBtn");
-if (startRouteBtn) {
-  startRouteBtn.addEventListener("click", () => {
-    if (!destinationLat || !destinationLng) {
-      alert("먼저 목적지를 검색하세요!");
-      return;
-    }
-
-    drivingMode = "navigation";
-    startTime = Date.now(); // ✅ 주행 시작 시점 초기화
-
-    showRouteToDestination({ lat: destinationLat, lng: destinationLng });
-
-    destinationSet = true;
-    destinationArrived = false;
-    drivingStarted = true;
-
-    document.getElementById("destinationModal").style.display = "none";
-    document.getElementById("searchResultPanel").style.display = "none";
-
-    // ✅ 이동정보 모달 강제 열기
-    const travelStatsModal = document.getElementById("travelStatsModal");
-    if (travelStatsModal) travelStatsModal.style.display = "block";
-
+    // ✅ 이동정보 즉시 갱신 (버튼 누른 순간부터 표시)
     updateTravelStats();
   });
 }
@@ -1348,20 +1349,17 @@ if (startRouteBtn) {
 const resetBtn = document.getElementById("resetPathBtn");
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
-    resetNavigation(); // 기존 초기화 함수 호출
-
-    // ✅ 초기화 후에도 이동정보 모달은 뜨도록 startTime 유지
-    startTime = Date.now();
+    resetNavigation();
+    // ✅ 초기화 시점에 속도/거리 값도 리셋
+    startTime = null;
     speedHistory = [];
     maxSpeed = 0;
     avgSpeed = 0;
     smoothedSpeed = 0;
     totalDistance = 0;
-
     updateTravelStats();
   });
 }
-
 
 // 좌표 박스 닫기 버튼
 const closeBtn = document.getElementById("closeBtn");
