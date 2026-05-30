@@ -2130,16 +2130,24 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   
 // ---------------------- 목적지 모달 열기 버튼 ----------------------
 document.getElementById("openDestinationModal").addEventListener("click", () => {
-  openModal(document.getElementById("destinationModal"));
+  const destinationModal = document.getElementById("destinationModal");
+  if (destinationModal) {
+    destinationModal.style.display = "block"; // 모달창 열기
+  }
 });
 
-// ---------------------- 이동정보 모달 열기 버튼 ----------------------
-document.getElementById("openTravelStatsModal").addEventListener("click", () => {
-  drivingMode = "normal"; // ✅ 일반 주행 모드로 설정
-  if (!startTime) startTime = Date.now(); // ✅ 주행 시작 시점만 초기화
-  updateTravelStats();
-  openModal(document.getElementById("travelStatsModal"));
-});
+
+// ---------------------- 목적지 모달 닫기 버튼 ----------------------
+const closeDestinationModal = document.getElementById("closeDestinationModal");
+if (closeDestinationModal) {
+  closeDestinationModal.addEventListener("click", () => {
+    const destinationModal = document.getElementById("destinationModal");
+    if (destinationModal) {
+      destinationModal.style.display = "none"; // 모달창 닫기
+    }
+  });
+}
+
 
 // ---------------------- 경로 초기화 버튼 ----------------------
 document.getElementById("resetPathBtn").addEventListener("click", () => {
