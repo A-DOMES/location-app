@@ -1894,7 +1894,7 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장
+    // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장 + 지도 표시
     body.querySelectorAll(".search-item").forEach((item) => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1903,6 +1903,13 @@ async function findDestination(inputName, showPanel = true) {
         destinationLng = r.lng;
         document.getElementById("destinationInput").value = r.name;
         panel.style.display = "none"; // 선택 후 패널 닫기
+
+        // 지도에 바로 표시
+        showDestinationOnMap(r.name, r.lat, r.lng, r.address);
+
+        // 경로 안내 버튼 활성화
+        const startBtn = document.getElementById("startRouteBtn");
+        if (startBtn) startBtn.style.display = "inline-block";
       });
     });
 
@@ -1929,7 +1936,7 @@ navigator.geolocation.getCurrentPosition(
 );
 
 
-/* ---------------------- 목적지 검색 버튼 ---------------------- */
+/* ---------------------- 목적지 찾기 버튼 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
@@ -1945,26 +1952,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // 입력값이 있으면 모달 열고 병합된 검색 실행
-  const destinationModal = document.getElementById("destinationModal");
-  if (destinationModal) {
-    destinationModal.style.display = "block";
-    destinationModal.style.visibility = "visible";
-    destinationModal.style.opacity = "1";
-  }
-
-  findDestination(inputName).then(success => {
-    if (success) {
-      console.log("검색 성공: 내 서버 + 구글 데이터 병합 결과 표시됨");
-    } else {
-      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
-    }
-  });
-});
-
-/* ---------------------- 위치검색 버튼 ---------------------- */
-document.getElementById("searchLocationBtn").addEventListener("click", () => {
-  // ✅ 이미 선택된 좌표가 있다면 지도에 마커만 찍기
+  // ✅ 좌표가 이미 선택된 경우 → 지도에 마커 표시, 패널은 다시 뜨지 않음
   if (destinationLat && destinationLng) {
     showDestinationOnMap(
       document.getElementById("destinationInput").value,
@@ -1973,12 +1961,22 @@ document.getElementById("searchLocationBtn").addEventListener("click", () => {
       ""
     );
 
-    // 경로 안내 버튼 활성화
+    const panel = document.getElementById("searchResultPanel");
+    if (panel) panel.style.display = "none";
+
     const startBtn = document.getElementById("startRouteBtn");
     if (startBtn) startBtn.style.display = "inline-block";
-  } else {
-    document.getElementById("destinationResult").innerText = "먼저 목적지를 선택하세요.";
+    return;
   }
+
+  // ✅ 좌표가 아직 선택되지 않은 경우 → 내 서버 + 구글 데이터 병합 검색 실행
+  findDestination(inputName).then(success => {
+    if (success) {
+      console.log("검색 성공: 내 서버 + 구글 데이터 병합 결과 표시됨");
+    } else {
+      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
+    }
+  });
 });
 
   
