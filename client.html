@@ -2132,7 +2132,7 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) {
-    destinationModal.style.display = "block"; // 모달창 열기
+    destinationModal.style.display = "block"; // 무조건 열기
   }
 });
 
@@ -2196,19 +2196,13 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
 
 // ---------------------- 이동정보 모달 열기 버튼 ----------------------
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
-  // 🚗 일반 주행 모드로 설정
   drivingMode = "normal";
-
-  // ✅ 주행 시작 시점 초기화 (없을 경우만)
   if (!startTime) startTime = Date.now();
-
-  // 📊 이동정보 값 갱신
   updateTravelStats();
 
-  // 📌 이동정보 모달 열기
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) {
-    travelStatsModal.style.display = "block"; // 모달창 열기
+    travelStatsModal.style.display = "block"; // 무조건 열기
   }
 });
 
