@@ -1207,7 +1207,6 @@ function updateStraightLine() {
   
 /* ---------------------- 이동정보 업데이트 ---------------------- */
 function updateTravelStats() {
-  // ✅ 시작 시점이 없으면 기본값 표시
   if (!startTime) {
     document.getElementById("currentSpeed").innerText = "0 km/h";
     document.getElementById("avgSpeed").innerText = "0 km/h";
@@ -1219,7 +1218,7 @@ function updateTravelStats() {
     return;
   }
 
-  // 📍 경과 시간 계산
+  // 📍 경과 시간, 속도, 거리 계산 (원본 그대로 유지)
   const now = Date.now();
   const elapsedSeconds = Math.floor((now - startTime) / 1000);
   const hours   = Math.floor(elapsedSeconds / 3600);
@@ -1230,7 +1229,6 @@ function updateTravelStats() {
     `${String(minutes).padStart(2,"0")}:` +
     `${String(seconds).padStart(2,"0")}`;
 
-  // 🚗 속도 계산
   let currentSpeedValue = 0;
   if (speedHistory.length > 0) {
     const recent = speedHistory.slice(-5);
@@ -1241,19 +1239,14 @@ function updateTravelStats() {
     : currentSpeedValue;
   const maxSpeedValue = Math.round(maxSpeed);
 
-  // 🛣️ 이동거리
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
 
-  // 🎯 직선거리 & ETA
-  let straightDistKm = 0;
-  let etaMsg = "미정";
+  let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
     const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
 
-    straightDistKm = (
-      google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000
-    ).toFixed(1);
+    straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
 
     if (avgSpeedValue > 0) {
       const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
@@ -1268,7 +1261,6 @@ function updateTravelStats() {
     }
   }
 
-  // 📌 UI 반영
   document.getElementById("currentSpeed").innerText     = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText         = `${avgSpeedValue} km/h`;
   document.getElementById("maxSpeed").innerText         = `${maxSpeedValue} km/h`;
@@ -1277,44 +1269,32 @@ function updateTravelStats() {
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText              = etaMsg;
 
-  // ➡️ 직선 Polyline 갱신
   updateStraightLine();
 }
 
 /* ---------------------- 총 이동거리 계산 ---------------------- */
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
-
   let total = 0;
   for (let i = 1; i < coords.length; i++) {
     const prev = new google.maps.LatLng(coords[i - 1].lat, coords[i - 1].lng);
     const curr = new google.maps.LatLng(coords[i].lat, coords[i].lng);
     total += google.maps.geometry.spherical.computeDistanceBetween(prev, curr);
   }
-  return total / 1000; // km 단위
+  return total / 1000;
 }
 
+  
 /* ---------------------- 버튼 이벤트 ---------------------- */
-
-// 이동정보 모달 열기 버튼
 const travelStatsBtn = document.getElementById("openTravelStatsModal");
 if (travelStatsBtn) {
   travelStatsBtn.addEventListener("click", () => {
-    if (!startTime) {
-      startTime = Date.now(); // ✅ 초기화 후 다시 세팅
-      speedHistory = [];
-      maxSpeed = 0;
-      avgSpeed = 0;
-      smoothedSpeed = 0;
-      totalDistance = 0;
-    }
     const travelStatsModal = document.getElementById("travelStatsModal");
     if (travelStatsModal) travelStatsModal.style.display = "block";
     updateTravelStats();
   });
 }
 
-// 경로 안내 버튼
 const startRouteBtn = document.getElementById("startRouteBtn");
 if (startRouteBtn) {
   startRouteBtn.addEventListener("click", () => {
@@ -1324,7 +1304,7 @@ if (startRouteBtn) {
     }
 
     drivingMode = "navigation";
-    startTime = Date.now(); // ✅ 주행 시작 시점 초기화
+    startTime = Date.now();
 
     showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 
@@ -1341,25 +1321,13 @@ if (startRouteBtn) {
   });
 }
 
-// 경로 초기화 버튼
 const resetBtn = document.getElementById("resetPathBtn");
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
-    resetNavigation(); // 기존 초기화 함수 호출
-
-    // ✅ 초기화 후에도 이동정보 모달은 뜨도록 startTime 유지
-    startTime = Date.now();
-    speedHistory = [];
-    maxSpeed = 0;
-    avgSpeed = 0;
-    smoothedSpeed = 0;
-    totalDistance = 0;
-
-    updateTravelStats();
+    resetNavigation(true); // 여기서만 초기화 처리
   });
 }
 
-// 좌표 박스 닫기 버튼
 const closeBtn = document.getElementById("closeBtn");
 if (closeBtn) {
   closeBtn.addEventListener("click", () => {
@@ -1368,7 +1336,6 @@ if (closeBtn) {
   });
 }
 
-// 좌표 박스 재열기 버튼
 const reopenBtn = document.getElementById("reopenBtn");
 if (reopenBtn) {
   reopenBtn.addEventListener("click", () => {
@@ -1720,79 +1687,59 @@ function startTravel() {
   updateTravelStats();
 }
   
-/* ---------------------- 경로 초기화 함수 (개선 버전) ---------------------- */
+/* ---------------------- 경로 초기화 함수 ---------------------- */
 function resetNavigation(fullStop = false) {
-  // 📍 위치 추적 중단
   if (watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
 
-  // 🗺️ 경로 초기화
   pathCoords = [];
-  if (pathPolyline) { pathPolyline.setMap(null); pathPolyline = null; }   // 기존 이동 경로 Polyline 제거
-  if (destinationRenderer) { destinationRenderer.setMap(null); destinationRenderer = null; } // 목적지 안내 Polyline 제거
-  if (straightLine) { straightLine.setMap(null); straightLine = null; }  // 직선 Polyline 제거
-  destinationMarkers.forEach(marker => marker.setMap(null)); // 목적지 마커 제거
+  if (pathPolyline) { pathPolyline.setMap(null); pathPolyline = null; }
+  if (destinationRenderer) { destinationRenderer.setMap(null); destinationRenderer = null; }
+  if (straightLine) { straightLine.setMap(null); straightLine = null; }
+  destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
-  // 🎯 목적지 관련 초기화
-  if (destinationCircle) { destinationCircle.setMap(null); destinationCircle = null; } // 목적지 원형 표시 제거
-  if (otherMarker) { otherMarker.setMap(null); otherMarker = null; }                   // 기타 마커 제거
+  if (destinationCircle) { destinationCircle.setMap(null); destinationCircle = null; }
+  if (otherMarker) { otherMarker.setMap(null); otherMarker = null; }
 
   // 🚗 이동정보 초기화
   speedHistory = [];
-  startTime = null;        // 주행시간 초기화
+  startTime = null;
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
-  totalDistance = 0;       // 총 이동거리 초기화
+  totalDistance = 0;
 
-  // 🔄 모드 복귀
-  followUser = true;       // 사용자 중심 모드 복귀
-  drivingStarted = false;  // 운행 안내 상태 초기화
+  followUser = true;
+  drivingStarted = false;
 
-  // 🔊 음성 안내
   speakMessage("경로가 초기화 되었습니다.");
 
-  // 🔘 버튼 상태 초기화
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
 
-  // 📌 알림 모달 자동 닫힘
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
 
-  // 📝 목적지 검색창 흔적 지우기
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
 
-  // 🚗 이동정보 모달 즉시 초기화 → 0 값 반영
   updateTravelStats();
 
-  // ✅ 완전 종료일 때만 목적지 좌표 초기화
   if (fullStop) {
     destinationLat = null;
     destinationLng = null;
   }
 
-  // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
     map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7); // 기본 줌 레벨로 복귀
+    map.setZoom(7);
   }
-}
-
-/* ---------------------- 경로 초기화 버튼 이벤트 ---------------------- */
-const resetBtn = document.getElementById("resetPathBtn");
-if (resetBtn) {
-  resetBtn.addEventListener("click", () => {
-    // 📍 경로 초기화 함수 호출
-    resetNavigation(true); // fullStop 옵션 사용
-  });
 }
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
