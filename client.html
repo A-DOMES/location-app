@@ -1206,8 +1206,8 @@ function updateStraightLine() {
   
 // ---------------------- 이동정보 업데이트 ----------------------
 function updateTravelStats() {
-  // ✅ 시작 시점이나 경로 좌표가 없으면 초기값 표시
-  if (!startTime || pathCoords.length === 0) {
+  // ✅ 시작 시점이 없으면 기본값 표시 (pathCoords 없어도 모달은 뜨도록 수정)
+  if (!startTime) {
     document.getElementById("currentSpeed").innerText = "0 km/h";
     document.getElementById("avgSpeed").innerText = "0 km/h";
     document.getElementById("maxSpeed").innerText = "0 km/h";
@@ -1215,7 +1215,7 @@ function updateTravelStats() {
     document.getElementById("travelDistance").innerText = "0 km";
     document.getElementById("straightDistance").innerText = "0 km";
     document.getElementById("eta").innerText = "미정";
-    return;
+    return; // 모달은 버튼 이벤트에서 강제로 열리므로 여기서 return 가능
   }
 
   // ✅ 경과 시간 계산
@@ -1243,32 +1243,30 @@ function updateTravelStats() {
 
   // ✅ 이동거리 (m → km 변환)
   const totalDistanceKm = (totalDistance / 1000).toFixed(1);
-  
+
   // ✅ 직선거리 & ETA 계산
   let straightDistKm = 0, etaMsg = "미정";
   if (destinationLat && destinationLng && currentLat && currentLng) {
     const currPoint = new google.maps.LatLng(currentLat, currentLng);
     const destPoint = new google.maps.LatLng(destinationLat, destinationLng);
-  
-    // ✅ 현재 위치 → 목적지 직선거리 계산
+
     straightDistKm = (google.maps.geometry.spherical.computeDistanceBetween(currPoint, destPoint) / 1000).toFixed(1);
-  
-    // ✅ ETA 계산 (평균속도 기반 → 남은 시간 표시)
+
     if (avgSpeedValue > 0) {
       const etaMinutes = Math.round(straightDistKm / avgSpeedValue * 60);
       const etaSeconds = etaMinutes * 60;
-  
+
       const hours = Math.floor(etaSeconds / 3600);
       const minutes = Math.floor((etaSeconds % 3600) / 60);
       const seconds = etaSeconds % 60;
-  
+
       etaMsg =
         `${hours.toString().padStart(2,"0")}:` +
         `${minutes.toString().padStart(2,"0")}:` +
         `${seconds.toString().padStart(2,"0")}`;
     }
   }
-   
+
   // ✅ 각 요소에 값 반영
   document.getElementById("currentSpeed").innerText = `${currentSpeedValue} km/h`;
   document.getElementById("avgSpeed").innerText = `${avgSpeedValue} km/h`;
@@ -1278,10 +1276,10 @@ function updateTravelStats() {
   document.getElementById("straightDistance").innerText = `${straightDistKm} km`;
   document.getElementById("eta").innerText = etaMsg;
 
-  // ✅ 직선 Polyline 갱신 (지도 위 선도 실시간으로 업데이트)
+  // ✅ 직선 Polyline 갱신
   updateStraightLine();
 
-  // ✅ 목적지 도착 반경을 속도에 따라 자동 조정
+  // ✅ 목적지 도착 반경 자동 조정
   let detectionRadiusKm = 0.10; // 기본 100m
   if (currentSpeedValue > 60) {
     detectionRadiusKm = 0.1; // 100m
@@ -1289,7 +1287,7 @@ function updateTravelStats() {
     detectionRadiusKm = 0.07; // 70m
   }
 
-  // ✅ 목적지 도착 시 선 제거 + 안내 (한 번만 실행)
+  // ✅ 목적지 도착 시 안내
   if (destinationSet && !destinationArrived && straightDistKm <= detectionRadiusKm) {
     if (straightLine) {
       straightLine.setMap(null);
@@ -1300,19 +1298,17 @@ function updateTravelStats() {
       destinationRenderer = null;
     }
 
-    // ✅ 다기능 모달창 표시
     document.getElementById("modalTitle").innerText = "목적지 도착";
     document.getElementById("modalMessage").innerText = "목적지에 도착했습니다.";
     document.getElementById("popupModal").style.display = "block";
 
-    // ✅ 음성 안내
     speakMessage("목적지에 도착했습니다.");
 
     drivingStarted = false;
-    destinationArrived = true; // ✅ 이후에는 다시 실행되지 않음
+    destinationArrived = true;
   }
 }
-  
+
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
   if (!coords || coords.length < 2) return 0;
@@ -1323,7 +1319,7 @@ function computeTotalDistance(coords) {
     const curr = new google.maps.LatLng(coords[i].lat, coords[i].lng);
     total += google.maps.geometry.spherical.computeDistanceBetween(prev, curr);
   }
-  return total / 1000; // km 단위 (정수 변환은 호출부에서 처리)
+  return total / 1000; // km 단위
 }
 
 /* ---------------------- 버튼 이벤트 ---------------------- */
@@ -1331,10 +1327,6 @@ function computeTotalDistance(coords) {
 const travelStatsBtn = document.getElementById("openTravelStatsModal");
 if (travelStatsBtn) {
   travelStatsBtn.addEventListener("click", () => {
-    const travelStatsModal = document.getElementById("travelStatsModal");
-    if (travelStatsModal) travelStatsModal.style.display = "block";
-
-    // ✅ 주행 시작 시점 초기화
     if (!startTime) {
       startTime = Date.now();
       speedHistory = [];
@@ -1344,10 +1336,13 @@ if (travelStatsBtn) {
       totalDistance = 0;
     }
 
-    // ✅ 이동정보 즉시 갱신 (버튼 누른 순간부터 표시)
+    const travelStatsModal = document.getElementById("travelStatsModal");
+    if (travelStatsModal) travelStatsModal.style.display = "block";
+
     updateTravelStats();
   });
 }
+
 
 // 경로 초기화 버튼
 const resetBtn = document.getElementById("resetPathBtn");
