@@ -1888,11 +1888,12 @@ async function findDestination(inputName, showPanel = true) {
         const mergedList = [...serverMatches, ...googleMatches];
 
         const panel = document.getElementById("searchResultPanel");
-        if (!panel) { resolve(false); return; } // 안전 체크
+        if (!panel) { resolve(false); return; }
         const body = panel.querySelector(".search-body");
-        if (!body) { resolve(false); return; } // 안전 체크
+        if (!body) { resolve(false); return; }
 
         if (mergedList.length > 0) {
+          // ✅ 검색 결과 패널에 리스트 표시
           body.innerHTML = mergedList.map((item, idx) => `
             <div class="search-item" data-index="${idx}">
               <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1902,25 +1903,15 @@ async function findDestination(inputName, showPanel = true) {
 
           if (showPanel) panel.style.display = "block";
 
-          // ✅ 첫 번째 결과 자동 표시
-          const first = mergedList[0];
-          showDestinationOnMap(first.name, first.lat, first.lng, first.address);
-          destinationLat = first.lat;
-          destinationLng = first.lng;
-          document.getElementById("destinationInput").value = first.name;
-          const startBtn = document.getElementById("startRouteBtn");
-          if (startBtn) startBtn.style.display = "inline-block";
-
-          // ✅ 클릭 이벤트
+          // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", () => {
               const idx = item.dataset.index;
               const r = mergedList[idx];
-              showDestinationOnMap(r.name, r.lat, r.lng, r.address);
               destinationLat = r.lat;
               destinationLng = r.lng;
               document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none";
+              panel.style.display = "none"; // 선택 후 패널 닫기
 
               // 구글 결과라면 상세정보 요청
               if (r.source === "구글" && r.placeId) {
@@ -1942,9 +1933,6 @@ async function findDestination(inputName, showPanel = true) {
                   }
                 });
               }
-
-              const startBtn = document.getElementById("startRouteBtn");
-              if (startBtn) startBtn.style.display = "inline-block";
             });
           });
 
@@ -1958,7 +1946,6 @@ async function findDestination(inputName, showPanel = true) {
     );
   });
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
@@ -1974,6 +1961,50 @@ navigator.geolocation.getCurrentPosition(
 );
 
 
+/* ---------------------- 목적지 검색 버튼 ---------------------- */
+document.getElementById("searchDestinationBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("destinationInput").value;
+
+  if (!inputName) {
+    // 입력값이 없을 때 안내 메시지 출력
+    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
+    // 언제든지 목적지 모달 열기
+    const destinationModal = document.getElementById("destinationModal");
+    if (destinationModal) {
+      destinationModal.style.display = "block";
+      destinationModal.style.visibility = "visible";
+      destinationModal.style.opacity = "1";
+    }
+    return;
+  }
+
+  // ✅ 좌표가 이미 선택된 경우 → 지도에 마커 표시, 패널은 다시 뜨지 않음
+  if (destinationLat && destinationLng) {
+    showDestinationOnMap(
+      document.getElementById("destinationInput").value,
+      destinationLat,
+      destinationLng,
+      ""
+    );
+
+    const panel = document.getElementById("searchResultPanel");
+    if (panel) panel.style.display = "none";
+
+    const startBtn = document.getElementById("startRouteBtn");
+    if (startBtn) startBtn.style.display = "inline-block";
+    return;
+  }
+
+  // ✅ 좌표가 아직 선택되지 않은 경우 → 검색 실행 (패널 표시)
+  findDestination(inputName).then(success => {
+    if (success) {
+      console.log("검색 성공: 결과 선택 시 텍스트박스에 반영됨");
+    } else {
+      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
+    }
+  });
+});
+  
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   // ✅ 좌표 저장
