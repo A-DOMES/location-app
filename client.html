@@ -517,12 +517,13 @@ let destinationRenderer = null;
 // 목적지 좌표 및 도착 상태
 let destinationLat = null;
 let destinationLng = null;
-
+  
 // ✅ 도착 안내 제어용 플래그
 let destinationSet = false;       // 목적지가 설정되었는지 여부
 let destinationArrived = false;   // 목적지 도착 안내가 이미 실행되었는지 여부
 let drivingStarted = false;       // 주행 시작 여부
-
+let currentAddress = "주소 정보 없음"; // 최신 주소 저장용
+  
 // 직선 Polyline 객체 (현재 위치 ↔ 목적지 연결선)
 let straightLine = null;
 
@@ -832,11 +833,11 @@ function startTracking() {
               .replace(/^대한민국\s*,?\s*/, "")
               .replace(/\s*,?\s*대한민국$/, "");
             document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+            currentAddress = address; // ✅ 최신 주소 저장
           }
         });
         lastGeocodeTime = Date.now();
       }
-
       // ✅ 지도 및 마커 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
       if (!myMarker) {
@@ -1385,8 +1386,8 @@ function shareLocation() {
     return;
   }
 
-  // ✅ 주소와 구글 지도 링크 생성 (배열에서 가져오기)
-  const address = pathCoords.length > 0 ? (pathCoords[pathCoords.length - 1].address || "주소 정보 없음") : "주소 정보 없음";
+  // ✅ 최신 주소 사용
+  const address = currentAddress || "주소 정보 없음";
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
   // ✅ 명함 스타일 텍스트 구성
