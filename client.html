@@ -2152,18 +2152,24 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
 /* ---------------------- 위치검색 버튼 ---------------------- */
 document.getElementById("searchLocationBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("destinationInput").value;
+
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
     return;
   }
 
+  // ✅ 병합 실행 (모달은 띄우지 않음)
+  findDestination(inputName, false).then(success => {
+    if (success) {
+      console.log("위치검색 성공: 서버+구글 병합 결과 반영됨");
+    } else {
+      console.log("위치검색 실패: 병합 결과 없음");
+    }
+  });
+
   // ✅ 지도에 마커 표시
-  showDestinationOnMap(
-    document.getElementById("destinationInput").value,
-    destinationLat,
-    destinationLng,
-    ""
-  );
+  showDestinationOnMap(inputName, destinationLat, destinationLng, "");
 
   // ✅ 모달 닫기
   const destinationModal = document.getElementById("destinationModal");
