@@ -2069,15 +2069,14 @@ setInterval(async () => {
 }, 5 * 60 * 1000); // 5분마다 실행
 
   
-/* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// 목적지 검색 버튼
+/* ---------------------- 목적지 검색 버튼 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
   if (!inputName) {
     // 입력값이 없을 때 안내 메시지 출력
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
+
     // 언제든지 목적지 모달 열기
     const destinationModal = document.getElementById("destinationModal");
     if (destinationModal) {
@@ -2098,18 +2097,22 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   });
 });
 
-// ---------------------- 경로 안내 버튼 ----------------------
+
+/* ---------------------- 경로 안내 버튼 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
     return;
   }
 
+  // 경로 안내 모드로 전환
   drivingMode = "navigation";
   startTime = Date.now();
 
+  // 지도에 경로 표시
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 
+  // 상태값 갱신
   destinationSet = true;
   destinationArrived = false;
   drivingStarted = true;
@@ -2133,7 +2136,8 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   updateTravelStats();
 });
 
-// ---------------------- 목적지 모달 열기 버튼 ----------------------
+
+/* ---------------------- 목적지 모달 열기 버튼 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) {
@@ -2144,7 +2148,8 @@ document.getElementById("openDestinationModal").addEventListener("click", () => 
   }
 });
 
-// ---------------------- 목적지 모달 닫기 버튼 ----------------------
+
+/* ---------------------- 목적지 모달 닫기 버튼 ---------------------- */
 const closeDestinationModal = document.getElementById("closeDestinationModal");
 if (closeDestinationModal) {
   closeDestinationModal.addEventListener("click", () => {
@@ -2160,7 +2165,8 @@ if (closeDestinationModal) {
   });
 }
 
-// ---------------------- 경로 초기화 버튼 ----------------------
+
+/* ---------------------- 경로 초기화 버튼 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 좌표 배열 초기화
   pathCoords = [];
@@ -2206,7 +2212,8 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   if (popupModal) popupModal.style.display = "block";
 });
 
-// ---------------------- 이동정보 모달 열기 버튼 ----------------------
+
+/* ---------------------- 이동정보 모달 열기 버튼 ---------------------- */
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
   drivingMode = "normal";
   if (!startTime) startTime = Date.now();
@@ -2221,7 +2228,8 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
   }
 });
 
-// ---------------------- 이동정보 모달 닫기 버튼 ----------------------
+
+/* ---------------------- 이동정보 모달 닫기 버튼 ---------------------- */
 const closeQueuedModal = document.getElementById("closeQueuedModal");
 if (closeQueuedModal) {
   closeQueuedModal.addEventListener("click", () => {
@@ -2232,6 +2240,7 @@ if (closeQueuedModal) {
     autoShowTravelStats = false; // 자동 표시 중단
   });
 }
+
 
 
 /* ---------------------- 목적지 자동완성 ---------------------- */
