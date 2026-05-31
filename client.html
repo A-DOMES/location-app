@@ -2103,10 +2103,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   const inputName = document.getElementById("destinationInput").value;
 
   if (!inputName) {
-    // 입력값이 없을 때 안내 메시지 출력
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-
-    // 언제든지 목적지 모달 열기
     const destinationModal = document.getElementById("destinationModal");
     if (destinationModal) {
       destinationModal.style.display = "block";
@@ -2116,7 +2113,6 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // 입력값이 있으면 검색 실행
   findDestination(inputName).then(success => {
     if (success) {
       console.log("검색 성공: 결과 선택 시 지도 반영됨");
@@ -2134,27 +2130,21 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
     return;
   }
 
-  // 경로 안내 모드로 전환
   drivingMode = "navigation";
   startTime = Date.now();
 
-  // 지도에 경로 표시
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 
-  // 상태값 갱신
   destinationSet = true;
   destinationArrived = false;
   drivingStarted = true;
 
-  // 목적지 모달 닫기
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) destinationModal.style.display = "none";
 
-  // 검색결과 패널 닫기
   const searchPanel = document.getElementById("searchResultPanel");
   if (searchPanel) searchPanel.style.display = "none";
 
-  // 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) {
     travelStatsModal.style.display = "block";
@@ -2170,7 +2160,6 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) {
-    // 언제든지 모달 열기
     destinationModal.style.display = "block";
     destinationModal.style.visibility = "visible";
     destinationModal.style.opacity = "1";
@@ -2184,12 +2173,12 @@ if (closeDestinationModal) {
   closeDestinationModal.addEventListener("click", () => {
     const destinationModal = document.getElementById("destinationModal");
     if (destinationModal) {
-      destinationModal.style.display = "none"; // 모달 닫기
+      destinationModal.style.display = "none";
     }
 
     const searchPanel = document.getElementById("searchResultPanel");
     if (searchPanel) {
-      searchPanel.style.display = "none"; // 검색결과 패널도 같이 닫기
+      searchPanel.style.display = "none";
     }
   });
 }
@@ -2197,35 +2186,28 @@ if (closeDestinationModal) {
 
 /* ---------------------- 경로 초기화 버튼 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
-  // 경로 좌표 배열 초기화
   pathCoords = [];
 
-  // 기존 Polyline 제거
   if (pathPolyline) {
     pathPolyline.setMap(null);
     pathPolyline = null;
   }
 
-  // 초기화 버튼 숨기기
   document.getElementById("resetPathBtn").style.display = "none";
 
-  // 목적지 원형 표시 제거
   if (destinationCircle) {
     destinationCircle.setMap(null);
     destinationCircle = null;
   }
 
-  // 모든 목적지 마커 제거
   destinationMarkers.forEach(m => m.setMap(null));
   destinationMarkers = [];
 
-  // 목적지 좌표 및 UI 초기화
   destinationLat = null;
   destinationLng = null;
   document.getElementById("destinationResult").innerHTML = "";
   document.getElementById("startRouteBtn").style.display = "none";
 
-  // 이동정보 값 초기화
   startTime = null;
   speedHistory = [];
   maxSpeed = 0;
@@ -2233,10 +2215,8 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   smoothedSpeed = 0;
   totalDistance = 0;
 
-  // 이동정보 모달 값 갱신
   updateTravelStats();
 
-  // 팝업 모달 직접 열기
   const popupModal = document.getElementById("popupModal");
   if (popupModal) popupModal.style.display = "block";
 });
@@ -2250,7 +2230,6 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) {
-    // 언제든지 모달 열기
     travelStatsModal.style.display = "block";
     travelStatsModal.style.visibility = "visible";
     travelStatsModal.style.opacity = "1";
@@ -2259,14 +2238,15 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 
 
 /* ---------------------- 이동정보 모달 닫기 버튼 ---------------------- */
+// ✅ 중복 선언 제거 → const 한 번만
 const closeQueuedModal = document.getElementById("closeQueuedModal");
 if (closeQueuedModal) {
   closeQueuedModal.addEventListener("click", () => {
     const travelStatsModal = document.getElementById("travelStatsModal");
     if (travelStatsModal) {
-      travelStatsModal.style.display = "none"; // 직접 닫기
+      travelStatsModal.style.display = "none";
     }
-    autoShowTravelStats = false; // 자동 표시 중단
+    autoShowTravelStats = false;
   });
 }
 
