@@ -2077,8 +2077,7 @@ setInterval(async () => {
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// 목적지 찾기 버튼 → 항상 모달 열기 + 병합된 검색 실행
+// 목적지 찾기 버튼 → 모달 열기 + 검색결과 패널 표시
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
@@ -2090,21 +2089,13 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   }
 
   if (inputName.trim()) {
-    findDestination(inputName);
+    findDestination(inputName, true); // ✅ 패널 표시 보장
   } else {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
   }
 });
 
-// 텍스트박스 입력 시 → 병합된 결과 표시
-document.getElementById("destinationInput").addEventListener("input", (e) => {
-  const value = e.target.value;
-  if (value.trim()) {
-    findDestination(value);
-  }
-});
-
-// 위치검색 버튼 → 검색결과창은 띄우지 않고 마커만 찍기
+// 위치검색 버튼 → 좌표가 있으면 마커만 찍기
 document.getElementById("searchLocationBtn").addEventListener("click", () => {
   if (destinationLat && destinationLng) {
     showDestinationOnMap(
