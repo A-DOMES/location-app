@@ -1888,6 +1888,7 @@ async function findDestination(inputName, showPanel = true) {
   const body = panel.querySelector(".search-body");
 
   if (mergedList.length > 0) {
+    // 검색 결과 출력 (출처 태그 포함)
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1897,7 +1898,7 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 선택 이벤트
+    // ✅ 선택 이벤트: 좌표 저장 + 지도 표시 + 모달 닫기
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1922,7 +1923,6 @@ async function findDestination(inputName, showPanel = true) {
     return false;
   }
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
@@ -2081,41 +2081,36 @@ setInterval(async () => {
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// 목적지 검색 버튼
+/* ---------------------- 목적지 검색 버튼 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
   if (!inputName) {
-    // 입력값이 없을 때 안내 메시지 출력
+    // 입력값이 없을 때는 안내 메시지와 함께 목적지 모달만 열림
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    // 언제든지 목적지 모달 열기
-    const destinationModal = document.getElementById("destinationModal");
-    if (destinationModal) {
-      destinationModal.style.display = "block";
-      destinationModal.style.visibility = "visible";
-      destinationModal.style.opacity = "1";
-    }
+    document.getElementById("destinationModal").style.display = "block";
     return;
   }
 
-  // 입력값이 있으면 검색 실행
-  findDestination(inputName).then(success => {
-    if (success) {
-      console.log("검색 성공: 결과 선택 시 지도 반영됨");
-    } else {
-      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
-    }
-  });
+  // ✅ 검색결과 모달은 여기서 한 번만 열림
+  const panel = document.getElementById("searchResultPanel");
+  if (panel.style.display !== "block") {
+    findDestination(inputName).then(success => {
+      if (!success) {
+        document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
+      }
+    });
+  }
 });
 
-// ---------------------- 경로 안내 버튼 ----------------------
+/* ---------------------- 경로 안내 버튼 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
     return;
   }
 
+  // ✅ 경로 안내 시작
   drivingMode = "navigation";
   startTime = Date.now();
 
@@ -2129,11 +2124,11 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) destinationModal.style.display = "none";
 
-  // 검색결과 패널 닫기
+  // 검색결과 모달 닫기 (다시 열지 않음)
   const searchPanel = document.getElementById("searchResultPanel");
   if (searchPanel) searchPanel.style.display = "none";
 
-  // 이동정보 모달 자동 표시
+  // 이동정보 모달 열기
   const travelStatsModal = document.getElementById("travelStatsModal");
   if (travelStatsModal) {
     travelStatsModal.style.display = "block";
@@ -2155,19 +2150,14 @@ document.getElementById("openDestinationModal").addEventListener("click", () => 
   }
 });
 
-// ---------------------- 목적지 모달 닫기 버튼 ----------------------
+/* ---------------------- 목적지 모달 닫기 버튼 ---------------------- */
 const closeDestinationModal = document.getElementById("closeDestinationModal");
 if (closeDestinationModal) {
   closeDestinationModal.addEventListener("click", () => {
-    const destinationModal = document.getElementById("destinationModal");
-    if (destinationModal) {
-      destinationModal.style.display = "none"; // 모달 닫기
-    }
-
-    const searchPanel = document.getElementById("searchResultPanel");
-    if (searchPanel) {
-      searchPanel.style.display = "none"; // 검색결과 패널도 같이 닫기
-    }
+    // 목적지 모달 닫기
+    document.getElementById("destinationModal").style.display = "none";
+    // 검색결과 모달도 같이 닫기
+    document.getElementById("searchResultPanel").style.display = "none";
   });
 }
 
