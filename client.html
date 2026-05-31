@@ -1884,11 +1884,12 @@ async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // 1️⃣ 서버 배열 검색
+  // 1️⃣ 서버 배열 검색 (phone 문자열 처리)
   if (Array.isArray(adminLocations)) {
-    serverMatches = adminLocations.filter(item =>
-      item.phone.trim().toLowerCase().normalize("NFC").includes(name)
-    ).map(item => ({
+    serverMatches = adminLocations.filter(item => {
+      const phoneStr = (item.phone || "").toString().trim().toLowerCase().normalize("NFC");
+      return phoneStr.includes(name);
+    }).map(item => ({
       name: item.phone,
       lat: parseFloat(item.lat),
       lng: parseFloat(item.lng),
@@ -1917,11 +1918,12 @@ async function findDestination(inputName, showPanel = true) {
 
         // ✅ 병합
         const mergedList = [...serverMatches, ...googleMatches];
+        console.log("병합 결과:", mergedList);
 
         const panel = document.getElementById("searchResultPanel");
-        if (!panel) { resolve(false); return; } // 안전 체크
+        if (!panel) { resolve(false); return; }
         const body = panel.querySelector(".search-body");
-        if (!body) { resolve(false); return; } // 안전 체크
+        if (!body) { resolve(false); return; }
 
         if (mergedList.length > 0) {
           body.innerHTML = mergedList.map((item, idx) => `
@@ -1931,7 +1933,7 @@ async function findDestination(inputName, showPanel = true) {
             </div>
           `).join("");
 
-          if (showPanel) panel.style.display = "block";
+          if (showPanel) panel.style.display = "block"; // ✅ 목적지 찾기에서만 모달 표시
 
           // ✅ 첫 번째 결과 자동 표시
           const first = mergedList[0];
@@ -1982,14 +1984,13 @@ async function findDestination(inputName, showPanel = true) {
           resolve(true);
         } else {
           body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-          panel.style.display = "block";
+          if (showPanel) panel.style.display = "block"; // showPanel이 true일 때만 표시
           resolve(false);
         }
       }
     );
   });
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
@@ -2105,7 +2106,7 @@ setInterval(async () => {
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
 
-// 목적지 검색 버튼
+// 목적지 검색 버튼 → 검색결과 모달창 표시
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
@@ -2114,8 +2115,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // ✅ 모달을 다시 띄우지 않고 검색만 실행
-  findDestination(inputName).then(success => {
+  findDestination(inputName, true).then(success => {
     if (success) {
       console.log("검색 성공: 결과 선택 시 지도 반영됨");
     } else {
@@ -2124,6 +2124,31 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   });
 });
 
+// 위치검색 버튼 → 모달창은 뜨지 않고 지도만 표시
+document.getElementById("searchLocationBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("destinationInput").value;
+
+  if (!destinationLat || !destinationLng) {
+    alert("먼저 목적지를 검색하세요!");
+    return;
+  }
+
+  // ✅ 병합은 내부적으로만 실행, 모달창은 표시하지 않음
+  findDestination(inputName, false);
+
+  // ✅ 지도에 마커 표시
+  showDestinationOnMap(inputName, destinationLat, destinationLng, "");
+
+  // ✅ 목적지 모달 닫기
+  const destinationModal = document.getElementById("destinationModal");
+  if (destinationModal) destinationModal.style.display = "none";
+
+  // ✅ 경로 안내 버튼 활성화
+  const startBtn = document.getElementById("startRouteBtn");
+  if (startBtn) startBtn.style.display = "inline-block";
+});
+
+  
 // ---------------------- 경로 안내 버튼 ----------------------
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   if (!destinationLat || !destinationLng) {
