@@ -1854,7 +1854,7 @@ async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // 1️⃣ 내 서버 배열 검색 (phone 필드 기준)
+  // 1️⃣ 내 서버 배열 검색 (phone 필드 기준 → 실제 name 값이 들어옴)
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1867,24 +1867,27 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // 2️⃣ 구글 API 결과는 이미 전역 배열 googleResults 에 저장되어 있다고 가정
+  // 2️⃣ 구글 API 배열 검색 (이미 window.googleResults에 저장되어 있음)
   let googleMatches = [];
   if (Array.isArray(window.googleResults)) {
     googleMatches = window.googleResults.filter(r =>
       r.name.trim().toLowerCase().normalize("NFC").includes(name)
-    );
+    ).map(r => ({
+      name: r.name,
+      lat: r.lat,
+      lng: r.lng,
+      address: r.address,
+      source: "구글"
+    }));
   }
 
-  // ✅ 병합 (내 서버 + 구글 결과)
+  // ✅ 병합
   const mergedList = [...serverMatches, ...googleMatches];
 
   const panel = document.getElementById("searchResultPanel");
-  if (!panel) return false;
   const body = panel.querySelector(".search-body");
-  if (!body) return false;
 
   if (mergedList.length > 0) {
-    // 검색 결과 패널에 표시
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1894,22 +1897,21 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장 + 지도 표시
-    body.querySelectorAll(".search-item").forEach((item) => {
+    // ✅ 선택 이벤트
+    body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
         const r = mergedList[idx];
         destinationLat = r.lat;
         destinationLng = r.lng;
         document.getElementById("destinationInput").value = r.name;
-        panel.style.display = "none"; // 선택 후 패널 닫기
+        panel.style.display = "none";
 
-        // 지도에 바로 표시
+        // 지도에 표시
         showDestinationOnMap(r.name, r.lat, r.lng, r.address);
 
         // 경로 안내 버튼 활성화
-        const startBtn = document.getElementById("startRouteBtn");
-        if (startBtn) startBtn.style.display = "inline-block";
+        document.getElementById("startRouteBtn").style.display = "inline-block";
       });
     });
 
