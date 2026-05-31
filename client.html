@@ -1854,7 +1854,7 @@ async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // 1️⃣ 내 서버 배열 검색 (phone 필드 기준 → 실제 name 값이 들어옴)
+  // 1️⃣ 내 서버 배열 검색 (phone 필드 기준)
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1867,15 +1867,15 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // 2️⃣ 구글 API 배열 검색 (이미 window.googleResults에 저장되어 있음)
+  // 2️⃣ 구글 배열 검색 (phone 필드 기준)
   let googleMatches = [];
   if (Array.isArray(window.googleResults)) {
     googleMatches = window.googleResults.filter(r =>
-      r.name.trim().toLowerCase().normalize("NFC").includes(name)
+      r.phone.trim().toLowerCase().normalize("NFC").includes(name)
     ).map(r => ({
-      name: r.name,
-      lat: r.lat,
-      lng: r.lng,
+      name: r.phone,
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lng),
       address: r.address,
       source: "구글"
     }));
@@ -1888,7 +1888,7 @@ async function findDestination(inputName, showPanel = true) {
   const body = panel.querySelector(".search-body");
 
   if (mergedList.length > 0) {
-    // 검색 결과 출력 (출처 태그 포함)
+    // 검색 결과 출력
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1898,7 +1898,7 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 선택 이벤트: 좌표 저장 + 지도 표시 + 모달 닫기
+    // ✅ 선택 이벤트
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1923,6 +1923,7 @@ async function findDestination(inputName, showPanel = true) {
     return false;
   }
 }
+
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
@@ -1981,7 +1982,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   });
 });
 
-  
+
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
   // ✅ 좌표 저장
@@ -1995,8 +1996,8 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   // ✅ 목적지를 찍으면 지도중심모드로 전환
   followUser = false;  
-  
-  // ---------------------- 목적지 원형 ----------------------
+
+  // 목적지 원형
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
@@ -2008,7 +2009,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 ----------------------
+  // 목적지 마커
   const marker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -2039,7 +2040,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
   marker.addListener("click", () => {
     map.setCenter(pos);
     map.setZoom(18);
@@ -2055,53 +2055,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   });
 }
 
-/* ---------------------- 1분마다 서버 위치 갱신 ---------------------- */
-setInterval(async () => {
-  await loadAdminLocations(); // 서버에서 최신 위치 가져오기
-
-  if (Array.isArray(adminLocations)) {
-    destinationMarkers.forEach(marker => {
-      // marker.title 에는 검색 시 넣어둔 phone 값이 들어있다고 가정
-      const match = adminLocations.find(item => item.phone === marker.getTitle());
-      if (match) {
-        const newLat = parseFloat(match.lat);
-        const newLng = parseFloat(match.lng);
-        const pos = new google.maps.LatLng(newLat, newLng);
-
-        // 위치가 바뀌었으면 기존 마커를 옮겨줌
-        if (marker.getPosition().lat() !== newLat ||
-            marker.getPosition().lng() !== newLng) {
-          marker.setPosition(pos);
-          console.log(`📍 ${match.phone} 위치 갱신:`, newLat, newLng);
-        }
-      }
-    });
-  }
-}, 5 * 60 * 1000); // 5분마다 실행
-
-  
-/* ---------------------- 버튼 이벤트 연결 ---------------------- */
-/* ---------------------- 목적지 검색 버튼 ---------------------- */
-document.getElementById("searchDestinationBtn").addEventListener("click", () => {
-  const inputName = document.getElementById("destinationInput").value;
-
-  if (!inputName) {
-    // 입력값이 없을 때는 안내 메시지와 함께 목적지 모달만 열림
-    document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    document.getElementById("destinationModal").style.display = "block";
-    return;
-  }
-
-  // ✅ 검색결과 모달은 여기서 한 번만 열림
-  const panel = document.getElementById("searchResultPanel");
-  if (panel.style.display !== "block") {
-    findDestination(inputName).then(success => {
-      if (!success) {
-        document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
-      }
-    });
-  }
-});
 
 /* ---------------------- 경로 안내 버튼 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
@@ -2139,7 +2092,7 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   updateTravelStats();
 });
 
-// ---------------------- 목적지 모달 열기 버튼 ----------------------
+/* ---------------------- 목적지 모달 열기 버튼 ---------------------- */
 document.getElementById("openDestinationModal").addEventListener("click", () => {
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) {
@@ -2161,7 +2114,7 @@ if (closeDestinationModal) {
   });
 }
 
-// ---------------------- 경로 초기화 버튼 ----------------------
+/* ---------------------- 경로 초기화 버튼 ---------------------- */
 document.getElementById("resetPathBtn").addEventListener("click", () => {
   // 경로 좌표 배열 초기화
   pathCoords = [];
@@ -2207,7 +2160,7 @@ document.getElementById("resetPathBtn").addEventListener("click", () => {
   if (popupModal) popupModal.style.display = "block";
 });
 
-// ---------------------- 이동정보 모달 열기 버튼 ----------------------
+/* ---------------------- 이동정보 모달 열기 버튼 ---------------------- */
 document.getElementById("openTravelStatsModal").addEventListener("click", () => {
   drivingMode = "normal";
   if (!startTime) startTime = Date.now();
@@ -2222,7 +2175,7 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
   }
 });
 
-// ---------------------- 이동정보 모달 닫기 버튼 ----------------------
+/* ---------------------- 이동정보 모달 닫기 버튼 ---------------------- */
 const closeQueuedModal = document.getElementById("closeQueuedModal");
 if (closeQueuedModal) {
   closeQueuedModal.addEventListener("click", () => {
