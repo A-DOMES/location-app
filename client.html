@@ -1839,8 +1839,7 @@ function makeDraggableModal(element) {
 /* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
 async function loadAdminLocations() {
   try {
-    // 사용자 서버에서 위치 데이터 가져오기
-    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations");
+    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
     adminLocations = await res.json(); // 배열 저장
     console.log("사용자 서버에서 가져온 데이터:", adminLocations);
   } catch (err) {
@@ -1849,12 +1848,12 @@ async function loadAdminLocations() {
 }
 
 
-/* ---------------------- 목적지 검색 기능 (내 서버 + 구글 데이터 병합) ---------------------- */
+/* ---------------------- 목적지 검색 기능 (구글 API 중복 호출 제거) ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // 1️⃣ 내 서버 배열 검색 (phone 필드 기준)
+  // 1️⃣ 서버 배열 검색
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1875,7 +1874,7 @@ async function findDestination(inputName, showPanel = true) {
     );
   }
 
-  // ✅ 병합 (내 서버 + 구글 결과)
+  // ✅ 병합
   const mergedList = [...serverMatches, ...googleMatches];
 
   const panel = document.getElementById("searchResultPanel");
@@ -1884,7 +1883,6 @@ async function findDestination(inputName, showPanel = true) {
   if (!body) return false;
 
   if (mergedList.length > 0) {
-    // 검색 결과 패널에 표시
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1894,7 +1892,7 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장 + 지도 표시
+    // ✅ 클릭 이벤트: 선택 시 텍스트박스에 값 입력 + 좌표 저장
     body.querySelectorAll(".search-item").forEach((item) => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1903,13 +1901,6 @@ async function findDestination(inputName, showPanel = true) {
         destinationLng = r.lng;
         document.getElementById("destinationInput").value = r.name;
         panel.style.display = "none"; // 선택 후 패널 닫기
-
-        // 지도에 바로 표시
-        showDestinationOnMap(r.name, r.lat, r.lng, r.address);
-
-        // 경로 안내 버튼 활성화
-        const startBtn = document.getElementById("startRouteBtn");
-        if (startBtn) startBtn.style.display = "inline-block";
       });
     });
 
@@ -1936,13 +1927,14 @@ navigator.geolocation.getCurrentPosition(
 );
 
 
-/* ---------------------- 목적지 찾기 버튼 ---------------------- */
+/* ---------------------- 목적지 검색 버튼 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
   if (!inputName) {
-    // 입력값이 없을 때 안내 메시지 출력 + 모달 열기
+    // 입력값이 없을 때 안내 메시지 출력
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
+    // 언제든지 목적지 모달 열기
     const destinationModal = document.getElementById("destinationModal");
     if (destinationModal) {
       destinationModal.style.display = "block";
@@ -1969,16 +1961,15 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // ✅ 좌표가 아직 선택되지 않은 경우 → 내 서버 + 구글 데이터 병합 검색 실행
+  // ✅ 좌표가 아직 선택되지 않은 경우 → 검색 실행 (패널 표시)
   findDestination(inputName).then(success => {
     if (success) {
-      console.log("검색 성공: 내 서버 + 구글 데이터 병합 결과 표시됨");
+      console.log("검색 성공: 결과 선택 시 텍스트박스에 반영됨");
     } else {
       document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
     }
   });
 });
-
   
 /* ---------------------- 지도 표시 + 모달 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
