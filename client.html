@@ -2151,6 +2151,13 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 });
 
 /* ---------------------- 위치검색 버튼 ---------------------- */
+// 목적지 찾기 버튼 → 병합 결과 모달창 표시
+document.getElementById("searchDestinationBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("destinationInput").value;
+  findDestination(inputName, true); // ✅ showPanel = true → 모달창 표시
+});
+
+// 위치검색 버튼 → 모달창은 뜨지 않고 지도만 표시
 document.getElementById("searchLocationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
@@ -2159,25 +2166,15 @@ document.getElementById("searchLocationBtn").addEventListener("click", () => {
     return;
   }
 
-  // ✅ 병합 실행 (모달은 띄우지 않음)
-  findDestination(inputName, false).then(success => {
-    if (success) {
-      console.log("위치검색 성공: 서버+구글 병합 결과 반영됨");
-    } else {
-      console.log("위치검색 실패: 병합 결과 없음");
-    }
-  });
+  // ✅ 병합 실행은 내부적으로만 (모달창은 띄우지 않음)
+  findDestination(inputName, false);
 
   // ✅ 지도에 마커 표시
   showDestinationOnMap(inputName, destinationLat, destinationLng, "");
 
-  // ✅ 모달 닫기
+  // ✅ 목적지 모달 닫기
   const destinationModal = document.getElementById("destinationModal");
   if (destinationModal) destinationModal.style.display = "none";
-
-  // ✅ 검색결과 패널 닫기
-  const searchPanel = document.getElementById("searchResultPanel");
-  if (searchPanel) searchPanel.style.display = "none";
 
   // ✅ 경로 안내 버튼 활성화
   const startBtn = document.getElementById("startRouteBtn");
