@@ -1930,12 +1930,12 @@ async function findDestination(inputName, showPanel = true) {
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
     googleMatches = googleLocations.filter(loc =>
-      (loc.name && loc.name.toLowerCase().includes(name)) ||
+      loc.name && loc.name.toLowerCase().includes(name) ||
       (loc.address && loc.address.toLowerCase().includes(name))
     ).map(loc => ({
       name: loc.name,
-      lat: Number(loc.lat),
-      lng: Number(loc.lng),
+      lat: parseFloat(loc.lat),
+      lng: parseFloat(loc.lng),
       address: loc.address,
       source: "구글"
     }));
