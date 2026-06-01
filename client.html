@@ -1938,7 +1938,7 @@ async function findDestination(inputName, showPanel = true) {
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
     googleMatches = googleLocations.filter(loc =>
-      loc.name.toLowerCase().includes(name) ||
+      (loc.name && loc.name.toLowerCase().includes(name)) ||
       (loc.address && loc.address.toLowerCase().includes(name))
     ).map(loc => ({
       name: loc.name,
@@ -1948,6 +1948,7 @@ async function findDestination(inputName, showPanel = true) {
       source: "구글"
     }));
   }
+
 
   // ✅ 서버 + 구글 결과 병합
   const mergedList = [...serverMatches, ...googleMatches];
