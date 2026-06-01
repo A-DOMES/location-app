@@ -1963,14 +1963,9 @@ async function findDestination(inputName, showPanel = true) {
       </div>
     `).join("");
 
-    // ✅ 모달창은 입력 이벤트에서만 뜨도록 제어
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 첫 번째 결과는 텍스트박스와 좌표만 저장
-    const first = mergedList[0];
-    destinationLat = first.lat;
-    destinationLng = first.lng;
-    document.getElementById("destinationInput").value = first.name; // 텍스트박스에 반영
+    // ❌ 입력값을 덮어쓰지 않음 → 사용자가 입력한 글자는 그대로 유지
 
     // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장만)
     body.querySelectorAll(".search-item").forEach(item => {
