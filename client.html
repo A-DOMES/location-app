@@ -1944,77 +1944,79 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // ⚠️ 현재는 구글 Places API 직접 호출
-  // → 배열 기반으로 바꾸려면 googleLocations.filter() 사용 예정
-  const service = new google.maps.places.PlacesService(map);
-  return new Promise((resolve) => {
-    service.textSearch(
-      { query: inputName, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
-      (results, status) => {
-        let googleMatches = [];
-        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-          googleMatches = results.map(r => ({
-            name: r.name,
-            lat: r.geometry.location.lat(),
-            lng: r.geometry.location.lng(),
-            address: r.formatted_address,
-            source: "구글",
-            placeId: r.place_id
-          }));
-        }
+  // ✅ 구글 배열 데이터 검색 (googleLocations 활용)
+  let googleMatches = [];
+  if (Array.isArray(googleLocations)) {
+    googleMatches = googleLocations.filter(loc =>
+      loc.name.toLowerCase().includes(name) ||
+      (loc.address && loc.address.toLowerCase().includes(name))
+    ).map(loc => ({
+      name: loc.name,
+      lat: parseFloat(loc.lat),
+      lng: parseFloat(loc.lng),
+      address: loc.address,
+      source: "구글"
+    }));
+  }
 
-        // ✅ 서버 + 구글 결과 병합
-        const mergedList = [...serverMatches, ...googleMatches];
-        const panel = document.getElementById("searchResultPanel");
-        const body = panel ? panel.querySelector(".search-body") : null;
+  // ✅ 서버 + 구글 결과 병합
+  const mergedList = [...serverMatches, ...googleMatches];
+  const panel = document.getElementById("searchResultPanel");
+  const body = panel ? panel.querySelector(".search-body") : null;
 
-        if (mergedList.length > 0 && body) {
-          // ✅ 검색결과 리스트 표시 (카드형 UI)
-          body.innerHTML = mergedList.map((item, idx) => `
-            <div class="search-item" data-index="${idx}">
-              <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
-              <div class="search-address">🏠 ${item.address}</div>
-            </div>
-          `).join("");
+  if (mergedList.length > 0 && body) {
+    // ✅ 검색결과 리스트 표시
+    body.innerHTML = mergedList.map((item, idx) => `
+      <div class="search-item" data-index="${idx}">
+        <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
+        <div class="search-address">🏠 ${item.address}</div>
+      </div>
+    `).join("");
 
-          // ✅ showPanel이 true일 때만 패널 표시
-          if (showPanel) {
-            panel.style.display = "block";
-          }
+    // ✅ showPanel이 true일 때만 모달창 표시
+    if (showPanel) {
+      panel.style.display = "block";
+    }
 
-          // ✅ 첫 번째 결과는 지도에 바로 표시
-          const first = mergedList[0];
-          showDestinationOnMap(first.name, first.lat, first.lng, first.address);
-          destinationLat = first.lat;
-          destinationLng = first.lng;
-          document.getElementById("destinationInput").value = first.name;
-          document.getElementById("startRouteBtn").style.display = "inline-block";
+    // ✅ 첫 번째 결과는 지도에 표시
+    const first = mergedList[0];
+    showDestinationOnMap(first.name, first.lat, first.lng, first.address);
+    destinationLat = first.lat;
+    destinationLng = first.lng;
+    document.getElementById("destinationInput").value = first.name;
+    document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 각 결과 클릭 시 지도/입력창 갱신
-          body.querySelectorAll(".search-item").forEach((item) => {
-            item.addEventListener("click", (e) => {
-              const idx = e.currentTarget.dataset.index;
-              const r = mergedList[idx];
+    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장 + 마커 표시)
+    body.querySelectorAll(".search-item").forEach(item => {
+      item.addEventListener("click", () => {
+        const idx = item.dataset.index;
+        const r = mergedList[idx];
 
-              showDestinationOnMap(r.name, r.lat, r.lng, r.address);
-              destinationLat = r.lat;
-              destinationLng = r.lng;
-              document.getElementById("destinationInput").value = r.name;
-              panel.style.display = "none";
-              document.getElementById("startRouteBtn").style.display = "inline-block";
-            });
-          });
+        // 텍스트박스에 선택된 이름 반영
+        document.getElementById("destinationInput").value = r.name;
 
-          resolve(true);
-        } else {
-          // ✅ 검색결과 없음 처리
-          if (body) body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-          if (showPanel && panel) panel.style.display = "block";
-          resolve(false);
-        }
-      }
-    );
-  });
+        // 목적지 좌표 저장
+        destinationLat = r.lat;
+        destinationLng = r.lng;
+
+        // 지도에 목적지 표시
+        showDestinationOnMap(r.name, r.lat, r.lng, r.address);
+
+        // 검색결과 패널 닫기
+        panel.style.display = "none";
+
+        // 경로안내 버튼 활성화
+        document.getElementById("startRouteBtn").style.display = "inline-block";
+      });
+    });
+
+    return true;
+  } else {
+    // ✅ 검색결과 없음 처리
+    if (body) body.innerHTML = "<div>검색 결과가 없습니다.</div>";
+    if (showPanel && panel) panel.style.display = "block";
+    return false;
+  }
 }
 
 
@@ -2155,7 +2157,7 @@ document.getElementById("destinationInput").addEventListener("input", () => {
 
 /* ---------------------- 위치검색 버튼 이벤트 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
-  const inputName = document.getElementById("destinationInput").value;
+  const inputName = document.getElementById("destinationInput").value.trim();
 
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
@@ -2163,7 +2165,11 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
   }
 
   // ✅ 위치검색 버튼 클릭 시: 모달은 안 띄우고 지도에 마커 표시 + 경로안내 버튼 활성화
-  findDestination(inputName, false);
+  findDestination(inputName, false).then(found => {
+    if (!found) {
+      document.getElementById("destinationResult").innerText = "검색된 목적지가 없습니다.";
+    }
+  });
 });
 
 
@@ -2179,7 +2185,7 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   drivingMode = "navigation";
   startTime = Date.now(); // ✅ 주행 시작 시점 초기화
 
-  // ✅ 경로 안내 실행 (내 위치 → 목적지 직선 경로 표시)
+  // ✅ 경로 안내 실행 (내 위치 → 목적지 직선 또는 pathCoords 기반 경로 표시)
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 
   // ✅ 목적지 상태 플래그 갱신
