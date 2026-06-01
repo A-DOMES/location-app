@@ -1882,7 +1882,6 @@ async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // ✅ 내 서버 데이터 검색
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1895,7 +1894,6 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // ✅ 구글 Places API 검색
   const service = new google.maps.places.PlacesService(map);
   return new Promise((resolve) => {
     service.textSearch(
@@ -1918,7 +1916,6 @@ async function findDestination(inputName, showPanel = true) {
         const body = panel.querySelector(".search-body");
 
         if (mergedList.length > 0) {
-          // ✅ 검색결과 리스트 표시
           body.innerHTML = mergedList.map((item, idx) => `
             <div class="search-item" data-index="${idx}">
               <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1936,10 +1933,10 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 클릭 이벤트 (currentTarget 사용)
+          // ✅ 클릭 이벤트 (항상 반응하도록 currentTarget 사용)
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", (e) => {
-              const idx = e.currentTarget.dataset.index; // ← 반드시 currentTarget
+              const idx = e.currentTarget.dataset.index;
               const r = mergedList[idx];
               showDestinationOnMap(r.name, r.lat, r.lng, r.address);
               destinationLat = r.lat;
@@ -1960,7 +1957,7 @@ async function findDestination(inputName, showPanel = true) {
     );
   });
 }
-
+  
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
   (pos) => {
@@ -1985,7 +1982,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
   map.setZoom(15);
   followUser = false;
 
-  // ✅ 기존 마커/원형 제거
   destinationMarkers.forEach(m => m.setMap(null));
   destinationMarkers = [];
   if (destinationCircle) destinationCircle.setMap(null);
@@ -2065,31 +2061,28 @@ setInterval(async () => {
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
-// 위치검색 버튼 클릭 시 → 병합된 결과 모달창 표시
+document.getElementById("openDestinationModal").addEventListener("click", () => {
+  openModal(document.getElementById("destinationModal"));
+});
+
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
-    openModal(document.getElementById("destinationModal"));
     return;
   }
-
-  findDestination(inputName, true).then(success => {
-    if (!success) {
-      document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
-    }
-  });
+  findDestination(inputName, true);
 });
 
-// 텍스트박스 입력 시 → 모달창 띄우지 않고 데이터만 준비
-document.getElementById("destinationInput").addEventListener("input", (e) => {
-  const keyword = e.target.value;
-  if (keyword) {
-    findDestination(keyword, false); // 모달창은 띄우지 않음
-  }
+document.getElementById("openTravelStatsModal").addEventListener("click", () => {
+  drivingMode = "normal";
+  if (!startTime) startTime = Date.now();
+  updateTravelStats();
+  autoShowTravelStats = true; // ✅ 다시 열 때 초기화
+  openModal(document.getElementById("travelStatsModal"));
 });
 
-// ---------------------- 경로 안내 버튼 ----------------------
+/* ---------------------- 경로 안내 버튼 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
   if (!destinationLat || !destinationLng) {
     alert("먼저 목적지를 검색하세요!");
@@ -2118,7 +2111,7 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
 
   // ✅ 이동정보 모달 자동 표시
   const travelStatsModal = document.getElementById("travelStatsModal");
-  if (travelStatsModal) travelStatsModal.style.display = "block";
+  if (travelStatsModal) openModal(travelStatsModal);
 
   updateTravelStats();
 });
@@ -2179,9 +2172,7 @@ if (closeQueuedModal) {
     document.getElementById("travelStatsModal").style.display = "none";
     autoShowTravelStats = false; // 닫으면 자동 표시 중단
   });
-}
-
-  
+}  
 
 /* ---------------------- 목적지 자동완성 ---------------------- */
 function initAutocomplete() {
@@ -2311,30 +2302,20 @@ function checkRadarPOIs(myPos) {
 
  
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
-function showQueuedModal(title, content) {
-  const modal = document.getElementById("queuedModal");
-  document.getElementById("queuedModalTitle").innerText = title;
-  document.getElementById("queuedModalBody").innerHTML = content;
-  openModal(modal);
-}
-
 function openModal(modal) {
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
   modal.style.display = 'block';
-  modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
+  modal.style.visibility = "visible";
+  modal.style.opacity = "1";
+  const content = modal.querySelector('.modal-content');
+  if (content) content.style.transform = "translate(-50%, -50%)";
 }
 
 function closeModal(modal) {
   if (modal) {
     modal.style.display = "none";
-    modal.style.visibility = "hidden";
-    modal.style.opacity = "0";
+    // ❌ visibility/opacity는 건드리지 않음
   }
-}
-
-function openPopupModal(modal) {
-  openModal(modal);
-  setTimeout(() => closeModal(modal), 3000);
 }
   
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
