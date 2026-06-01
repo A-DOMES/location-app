@@ -1920,7 +1920,7 @@ async function loadAdminLocations() {
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
 
-  // ✅ 내 서버 데이터 검색 (사람)
+  // ✅ 내 서버 데이터 검색
   let serverMatches = [];
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
@@ -1934,11 +1934,11 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // ✅ 구글 배열 데이터 검색 (목적지)
+  // ✅ 구글 배열 데이터 검색
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
     googleMatches = googleLocations.filter(loc =>
-      (loc.name && loc.name.toLowerCase().includes(name)) ||
+      loc.name.toLowerCase().includes(name) ||
       (loc.address && loc.address.toLowerCase().includes(name))
     ).map(loc => ({
       name: loc.name,
@@ -1949,14 +1949,13 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-
   // ✅ 서버 + 구글 결과 병합
   const mergedList = [...serverMatches, ...googleMatches];
   const panel = document.getElementById("searchResultPanel");
   const body = panel ? panel.querySelector(".search-body") : null;
 
   if (mergedList.length > 0 && body) {
-    // ✅ 검색결과 리스트를 카드형으로 표시
+    // ✅ 검색결과 리스트 표시
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1966,7 +1965,13 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장 + 마커 표시)
+    // ✅ 첫 번째 결과는 텍스트박스와 좌표만 저장 (마커는 찍지 않음)
+    const first = mergedList[0];
+    destinationLat = first.lat;
+    destinationLng = first.lng;
+    document.getElementById("destinationInput").value = first.name;
+
+    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장만)
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1979,11 +1984,8 @@ async function findDestination(inputName, showPanel = true) {
         destinationLat = r.lat;
         destinationLng = r.lng;
 
-        // ✅ 지도에 마커 표시
-        showDestinationOnMap(r.name, r.lat, r.lng, r.address);
-
-        // ✅ 경로안내 버튼 활성화
-        document.getElementById("startRouteBtn").style.display = "inline-block";
+        // ⚠️ 여기서는 마커를 찍지 않음
+        // ⚠️ 경로안내 버튼도 활성화하지 않음
 
         // 검색결과 패널 닫기
         panel.style.display = "none";
