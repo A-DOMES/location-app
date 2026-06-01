@@ -1920,7 +1920,7 @@ async function loadAdminLocations() {
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
 
-  // ✅ 내 서버 데이터 검색
+  // ✅ 내 서버 데이터 검색 (사람)
   let serverMatches = [];
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
@@ -1934,7 +1934,7 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // ✅ 구글 배열 데이터 검색 (API 아님, 배열만 사용)
+  // ✅ 구글 배열 데이터 검색 (목적지)
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
     googleMatches = googleLocations.filter(loc =>
@@ -1965,9 +1965,7 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ❌ 입력값을 덮어쓰지 않음 → 사용자가 입력한 글자는 그대로 유지
-
-    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장만)
+    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장 + 마커 표시)
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1980,8 +1978,11 @@ async function findDestination(inputName, showPanel = true) {
         destinationLat = r.lat;
         destinationLng = r.lng;
 
-        // ⚠️ 여기서는 마커를 찍지 않음
-        // ⚠️ 경로안내 버튼도 활성화하지 않음
+        // ✅ 지도에 마커 표시
+        showDestinationOnMap(r.name, r.lat, r.lng, r.address);
+
+        // ✅ 경로안내 버튼 활성화
+        document.getElementById("startRouteBtn").style.display = "inline-block";
 
         // 검색결과 패널 닫기
         panel.style.display = "none";
@@ -1996,6 +1997,7 @@ async function findDestination(inputName, showPanel = true) {
     return false;
   }
 }
+
 
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
