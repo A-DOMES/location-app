@@ -2094,16 +2094,15 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
 
-  // ✅ 입력값이 없으면 안내 메시지 표시
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     return;
   }
 
-  // ✅ 위치검색 버튼 클릭 시에는 모달창을 다시 띄우지 않음
-  // showPanel = false → 검색결과 패널은 뜨지 않고 지도에 마커만 표시됨
-  findDestination(inputName, false);
+  // ✅ 위치검색 버튼 클릭 시 내서버+구글 병합 결과 모달만 띄움
+  findDestination(inputName, true);
 });
+
 
   
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
