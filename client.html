@@ -2090,6 +2090,15 @@ document.getElementById("openTravelStatsModal").addEventListener("click", () => 
   openModal(document.getElementById("travelStatsModal"));
 });
 
+/* ---------------------- 텍스트 입력 이벤트 ---------------------- */
+document.getElementById("destinationInput").addEventListener("input", () => {
+  const inputName = document.getElementById("destinationInput").value.trim();
+  if (inputName) {
+    // ✅ 자동검색: 내 서버 + 구글 병합 결과 모달 표시
+    findDestination(inputName, true);
+  }
+});
+
 /* ---------------------- 위치검색 버튼 이벤트 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
@@ -2099,10 +2108,9 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // ✅ 위치검색 버튼 클릭 시 내서버+구글 병합 결과 모달만 띄움
-  findDestination(inputName, true);
+  // ✅ 위치검색 버튼 클릭 시: 모달은 안 띄우고, 지도에 마커 표시 + 경로안내 버튼 활성화
+  findDestination(inputName, false);
 });
-
 
   
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
