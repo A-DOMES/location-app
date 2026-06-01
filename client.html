@@ -1870,21 +1870,18 @@ function makeDraggableModal(element) {
 /* ---------------------- 사용자 서버에서 데이터 가져오기 ---------------------- */
 async function loadAdminLocations() {
   try {
-    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations"); // 사용자 서버 호출
-    adminLocations = await res.json(); // 배열 저장
-    console.log("사용자 서버에서 가져온 데이터:", adminLocations);
+    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations");
+    adminLocations = await res.json();
   } catch (err) {
     console.error("사용자 서버 호출 오류:", err);
   }
 }
-
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // 1️⃣ 서버 배열 검색
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1897,7 +1894,6 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // 2️⃣ 구글 API 검색
   const service = new google.maps.places.PlacesService(map);
   return new Promise((resolve) => {
     service.textSearch(
@@ -1915,13 +1911,9 @@ async function findDestination(inputName, showPanel = true) {
           }));
         }
 
-        // ✅ 병합
         const mergedList = [...serverMatches, ...googleMatches];
-
         const panel = document.getElementById("searchResultPanel");
-        if (!panel) { resolve(false); return; } // 안전 체크
         const body = panel.querySelector(".search-body");
-        if (!body) { resolve(false); return; } // 안전 체크
 
         if (mergedList.length > 0) {
           body.innerHTML = mergedList.map((item, idx) => `
@@ -1933,16 +1925,6 @@ async function findDestination(inputName, showPanel = true) {
 
           if (showPanel) panel.style.display = "block";
 
-          // ✅ 첫 번째 결과 자동 표시
-          const first = mergedList[0];
-          showDestinationOnMap(first.name, first.lat, first.lng, first.address);
-          destinationLat = first.lat;
-          destinationLng = first.lng;
-          document.getElementById("destinationInput").value = first.name;
-          const startBtn = document.getElementById("startRouteBtn");
-          if (startBtn) startBtn.style.display = "inline-block";
-
-          // ✅ 클릭 이벤트
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", () => {
               const idx = item.dataset.index;
@@ -1952,44 +1934,20 @@ async function findDestination(inputName, showPanel = true) {
               destinationLng = r.lng;
               document.getElementById("destinationInput").value = r.name;
               panel.style.display = "none";
-
-              // 구글 결과라면 상세정보 요청
-              if (r.source === "구글" && r.placeId) {
-                service.getDetails({
-                  placeId: r.placeId,
-                  fields: ["formatted_phone_number","website","opening_hours","rating","types"]
-                }, (place, detailStatus) => {
-                  if (detailStatus === google.maps.places.PlacesServiceStatus.OK) {
-                    const infoPanel = document.getElementById("destinationResult");
-                    if (infoPanel) {
-                      infoPanel.innerHTML = `
-                        ${place.rating ? `<div class="search-rating">⭐ ${place.rating}</div>` : ""}
-                        ${place.formatted_phone_number ? `<div class="search-phone">📞 ${place.formatted_phone_number}</div>` : ""}
-                        ${place.website ? `<div class="search-website">🌐 <a href="${place.website}" target="_blank">${place.website}</a></div>` : ""}
-                        ${place.opening_hours ? `<div class="search-hours">🕒 ${place.opening_hours.weekday_text.join("<br>")}</div>` : ""}
-                        ${place.types ? `<div class="search-type">🏷 ${place.types.join(", ")}</div>` : ""}
-                      `;
-                    }
-                  }
-                });
-              }
-
-              const startBtn = document.getElementById("startRouteBtn");
-              if (startBtn) startBtn.style.display = "inline-block";
+              document.getElementById("startRouteBtn").style.display = "inline-block";
             });
           });
 
           resolve(true);
         } else {
           body.innerHTML = "<div>검색 결과가 없습니다.</div>";
-          panel.style.display = "block";
+          if (showPanel) panel.style.display = "block";
           resolve(false);
         }
       }
     );
   });
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
@@ -2005,21 +1963,21 @@ navigator.geolocation.getCurrentPosition(
 );
 
 
-/* ---------------------- 지도 표시 + 모달 ---------------------- */
+/* ---------------------- 목적지 표시 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  // ✅ 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
-
   const pos = new google.maps.LatLng(lat, lng);
 
   map.setCenter(pos);
-  map.setZoom(7);
+  map.setZoom(15);
+  followUser = false;
 
-  // ✅ 목적지를 찍으면 지도중심모드로 전환
-  followUser = false;  
-  
-  // ---------------------- 목적지 원형 ----------------------
+  // ✅ 기존 마커/원형 제거
+  destinationMarkers.forEach(m => m.setMap(null));
+  destinationMarkers = [];
+  if (destinationCircle) destinationCircle.setMap(null);
+
   destinationCircle = new google.maps.Circle({
     strokeColor: "#1976d2",
     strokeOpacity: 0.9,
@@ -2031,7 +1989,6 @@ function showDestinationOnMap(title, lat, lng, address="") {
     radius: 40
   });
 
-  // ---------------------- 목적지 마커 ----------------------
   const marker = new google.maps.Marker({
     position: pos,
     map: map,
@@ -2044,7 +2001,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
       scale: 2,
       anchor: new google.maps.Point(12, 24)
     },
-    animation: google.maps.Animation.BOUNCE,
+    animation: google.maps.Animation.DROP,
     title: title
   });
 
@@ -2062,20 +2019,12 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 마커 클릭 시에는 안내하지 않고, 정보만 표시
-  marker.addListener("click", () => {
-    map.setCenter(pos);
-    map.setZoom(18);
-
-    document.getElementById("destinationResult").innerHTML = `
-      <div style="text-align:left">
-        📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
-        🏠 주소: ${address}
-      </div>`;
-
-    openModal(document.getElementById("destinationModal"));
-  });
+  document.getElementById("destinationResult").innerHTML = `
+    <div style="text-align:left">
+      📍 목적지: ${title}<br>
+      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🏠 주소: ${address}
+    </div>`;
 }
 
 /* ---------------------- 1분마다 서버 위치 갱신 ---------------------- */
@@ -2104,8 +2053,7 @@ setInterval(async () => {
 
   
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
-
-// 목적지 검색 버튼
+// 위치검색 버튼 클릭 시 → 병합된 결과 모달창 표시
 document.getElementById("searchDestinationBtn").addEventListener("click", () => {
   const inputName = document.getElementById("destinationInput").value;
   if (!inputName) {
@@ -2114,14 +2062,19 @@ document.getElementById("searchDestinationBtn").addEventListener("click", () => 
     return;
   }
 
-  // ✅ 모달을 다시 띄우지 않고 검색만 실행
-  findDestination(inputName).then(success => {
-    if (success) {
-      console.log("검색 성공: 결과 선택 시 지도 반영됨");
-    } else {
+  findDestination(inputName, true).then(success => {
+    if (!success) {
       document.getElementById("destinationResult").innerText = "검색 결과가 없습니다.";
     }
   });
+});
+
+// 텍스트박스 입력 시 → 모달창 띄우지 않고 데이터만 준비
+document.getElementById("destinationInput").addEventListener("input", (e) => {
+  const keyword = e.target.value;
+  if (keyword) {
+    findDestination(keyword, false); // 모달창은 띄우지 않음
+  }
 });
 
 // ---------------------- 경로 안내 버튼 ----------------------
@@ -2354,13 +2307,8 @@ function showQueuedModal(title, content) {
 }
 
 function openModal(modal) {
-  // ✅ 모든 모달 닫기 → 중첩 방지
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-
-  // ✅ 선택 모달 열기
   modal.style.display = 'block';
-
-  // ✅ 중앙 정렬 보정
   modal.querySelector('.modal-content').style.transform = "translate(-50%, -50%)";
 }
 
@@ -2372,13 +2320,10 @@ function closeModal(modal) {
   }
 }
 
-
 function openPopupModal(modal) {
   openModal(modal);
-  // ✅ 자동 닫힘 시간 3초로 조정
   setTimeout(() => closeModal(modal), 3000);
 }
-
   
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
@@ -2409,7 +2354,7 @@ document.querySelectorAll('.close').forEach(btn => {
 });
 
   
-// ✅ ESC 키로 모달 닫기
+// ESC 키로 모달 닫기
 document.addEventListener('keydown', e => {
   if (e.key === "Escape") {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
