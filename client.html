@@ -1966,11 +1966,11 @@ async function findDestination(inputName, showPanel = true) {
     // ✅ 모달창은 입력 이벤트에서만 뜨도록 제어
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 첫 번째 결과는 텍스트박스와 좌표만 저장 (마커는 찍지 않음)
+    // ✅ 첫 번째 결과는 텍스트박스와 좌표만 저장
     const first = mergedList[0];
     destinationLat = first.lat;
     destinationLng = first.lng;
-    document.getElementById("destinationInput").value = first.name;
+    document.getElementById("destinationInput").value = first.name; // 텍스트박스에 반영
 
     // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장만)
     body.querySelectorAll(".search-item").forEach(item => {
