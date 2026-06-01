@@ -1927,9 +1927,12 @@ async function findDestination(inputName, showPanel = true) {
             </div>
           `).join("");
 
-          if (showPanel) panel.style.display = "block";
+          // ✅ showPanel이 true일 때만 모달창 표시 (텍스트 입력 시)
+          if (showPanel) {
+            panel.style.display = "block";
+          }
 
-          // ✅ 첫 번째 결과 자동 표시
+          // ✅ 첫 번째 결과 자동 표시 (위치검색 버튼 클릭 시에도 동작)
           const first = mergedList[0];
           showDestinationOnMap(first.name, first.lat, first.lng, first.address);
           destinationLat = first.lat;
@@ -1937,10 +1940,10 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 클릭 이벤트 (항상 반응하도록 currentTarget 사용)
+          // ✅ 클릭 이벤트 (항목 선택 시 지도에 표시 + 버튼 표시)
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", (e) => {
-              const idx = e.currentTarget.dataset.index; // ← 반드시 currentTarget
+              const idx = e.currentTarget.dataset.index;
               const r = mergedList[idx];
 
               // ✅ 선택한 항목을 지도에 표시
@@ -1970,6 +1973,7 @@ async function findDestination(inputName, showPanel = true) {
     );
   });
 }
+
 
   
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
