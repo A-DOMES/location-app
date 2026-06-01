@@ -508,54 +508,44 @@ let lastSpeedLimitAlertTime = 0;
 let speedHistory = [];
 let startTime = null;   // 주행 시작 시점 (경로 안내 버튼 클릭 시 초기화)
 
-// 실시간 이동 경로 렌더러 (내 위치를 따라가며 그려지는 경로)
+// 실시간 이동 경로 렌더러
 let livePathRenderer = null;
 
-// 목적지 안내 경로 렌더러 (목적지를 설정했을 때 고정된 안내 경로)
+// 목적지 안내 경로 렌더러
 let destinationRenderer = null;
 
 // 목적지 좌표 및 도착 상태
 let destinationLat = null;
 let destinationLng = null;
+let destinationSet = false;
+let destinationArrived = false;
+let drivingStarted = false;
 
-// ✅ 도착 안내 제어용 플래그
-let destinationSet = false;       // 목적지가 설정되었는지 여부
-let destinationArrived = false;   // 목적지 도착 안내가 이미 실행되었는지 여부
-let drivingStarted = false;       // 주행 시작 여부
-
-// 직선 Polyline 객체 (현재 위치 ↔ 목적지 연결선)
+// 직선 Polyline 객체
 let straightLine = null;
 
-let currentSpeed = 0;       // 현재 속도 (km/h)
-let lastPosition = null;    // 이전 위치 저장
-let lastTimestamp = null;   // 이전 위치 시간 저장
+let currentSpeed = 0;
+let lastPosition = null;
+let lastTimestamp = null;
 
-// 🚗 서버에서 가져온 차량 위치 데이터
+// 🚗 서버/구글 데이터
 let adminLocations = []; 
 let googleLocations = [];   // 구글 Places 결과 저장용
-  
-// 기본값: 사람 중심 모드
+
 let followUser = true; 
-
-// 목적지 마커 배열
 let destinationMarkers = []; 
-
-// 초기화시 발생된 위도/경도값 저장변수
 let watchId = null;  
-
-// 목적지 관련변수 (마지막 좌표 기록)
 let lastLat = null;
 let lastLng = null;
 
-// 트래픽 최적화를 위한 변수  
 let avgSpeed = 0;
 let maxSpeed = 0;
-let lastUpdateTime = 0;   // 갱신 주기 제어용
-let currentSpeedLimit = null; // 현재 위치의 제한속도 값
+let lastUpdateTime = 0;
+let currentSpeedLimit = null;
 
-// ✅ 보호구역/속도 제한 관련 배열 안전 초기화
-const schoolZones = [];        // 학교 구역 데이터
-const dynamicSpeedZones = [];  // 동적 속도 구역 데이터
+// ✅ 보호구역/속도 제한 관련 배열
+const schoolZones = [];
+const dynamicSpeedZones = [];
 
   
 const poiIcons = {
@@ -570,7 +560,7 @@ const poiIcons = {
   local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
 };
 
-  // ---------------------- 구글 API 호출 → 배열에 저장 ----------------------
+// ---------------------- 구글 Places API 호출 → 배열에 저장 ----------------------
 function preloadGooglePlaces() {
   const service = new google.maps.places.PlacesService(map);
   service.textSearch(
@@ -591,7 +581,7 @@ function preloadGooglePlaces() {
       }
     }
   );
-} 
+}
   
   // ---------------------- 유틸 함수 ----------------------
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -735,6 +725,10 @@ function initMap() {
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userPos);
 
+        // ✅ 현재 위치 저장
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+
         myMarker = new google.maps.Marker({
           position: userPos,
           map,
@@ -750,7 +744,7 @@ function initMap() {
         updateRadarPolygon(userPos, 0);
         startTracking();
 
-        // ✅ 여기서 구글 Places API 호출 → 배열에 저장
+        // ✅ 구글 Places API 호출
         preloadGooglePlaces();
 
         const loadingMsg = document.getElementById("loadingMessage");
@@ -760,22 +754,25 @@ function initMap() {
         }
       },
       () => {
+        // 위치 못 가져와도 기본 좌표 설정
+        currentLat = 37.5663; // 서울
+        currentLng = 126.9779;
+
         startTracking();
-        preloadGooglePlaces(); // 위치 못 가져와도 배열은 채워줌
+        preloadGooglePlaces();
       },
       { enableHighAccuracy: true }
     );
   }
 }
 
-
+// ---------------------- 지도 스타일 업데이트 ----------------------
 function updateMapStyle(map) {
   const body = document.body;
   body.classList.remove("map-roadmap", "map-satellite");
   const type = map.getMapTypeId();
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
-
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
@@ -1916,10 +1913,10 @@ async function findDestination(inputName, showPanel = true) {
   let serverMatches = [];
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
-      item.phone.trim().toLowerCase().normalize("NFC").includes(name)
+      item.phone && item.phone.trim().toLowerCase().normalize("NFC").includes(name)
     ).map(item => ({
       name: item.phone,
-      lat: Number(item.lat),
+      lat: Number(item.lat),   // 문자열일 경우만 숫자로 변환
       lng: Number(item.lng),
       address: item.address,
       source: "내서버"
@@ -1929,16 +1926,20 @@ async function findDestination(inputName, showPanel = true) {
   // ✅ 구글 배열 데이터 검색
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
-    googleMatches = googleLocations.filter(loc =>
-      loc.name && loc.name.toLowerCase().includes(name) ||
-      (loc.address && loc.address.toLowerCase().includes(name))
-    ).map(loc => ({
-      name: loc.name,
-      lat: parseFloat(loc.lat),
-      lng: parseFloat(loc.lng),
-      address: loc.address,
-      source: "구글"
-    }));
+    googleMatches = googleLocations
+      .filter(loc => {
+        const n = name.toLowerCase();
+        const hasName = loc.name && loc.name.toLowerCase().includes(n);
+        const hasAddr = loc.address && loc.address.toLowerCase().includes(n);
+        return hasName || hasAddr;
+      })
+      .map(loc => ({
+        name: loc.name,
+        lat: loc.lat,   // 이미 숫자라면 그대로 사용
+        lng: loc.lng,
+        address: loc.address,
+        source: "구글"
+      }));
   }
 
   // ✅ 서버 + 구글 결과 병합
@@ -1957,16 +1958,13 @@ async function findDestination(inputName, showPanel = true) {
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 검색결과 클릭 처리 (텍스트박스 반영 + 좌표 저장 + 마커 표시 + 버튼 활성화)
+    // ✅ 검색결과 클릭 처리
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
         const r = mergedList[idx];
 
-        // 텍스트박스에 선택된 이름 반영
         document.getElementById("destinationInput").value = r.name;
-
-        // 목적지 좌표 저장
         destinationLat = r.lat;
         destinationLng = r.lng;
 
@@ -1976,14 +1974,12 @@ async function findDestination(inputName, showPanel = true) {
         // ✅ 경로안내 버튼 활성화
         document.getElementById("startRouteBtn").style.display = "inline-block";
 
-        // 검색결과 패널 닫기
         panel.style.display = "none";
       });
     });
 
     return true;
   } else {
-    // ✅ 검색결과 없음 처리
     if (body) body.innerHTML = "<div>검색 결과가 없습니다.</div>";
     if (showPanel && panel) panel.style.display = "block";
     return false;
@@ -2013,7 +2009,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   // ✅ 지도 중심 이동 및 확대
   map.setCenter(pos);
-  map.setZoom(15);
+  map.setZoom(7);
   followUser = false;
 
   // ✅ 기존 목적지 마커/원 제거
