@@ -1882,7 +1882,7 @@ async function findDestination(inputName, showPanel = true) {
   const name = inputName.trim().toLowerCase().normalize("NFC");
   let serverMatches = [];
 
-  // ✅ 내 서버 데이터에서 검색
+  // ✅ 내 서버 데이터 검색
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations.filter(item =>
       item.phone.trim().toLowerCase().normalize("NFC").includes(name)
@@ -1913,13 +1913,13 @@ async function findDestination(inputName, showPanel = true) {
           }));
         }
 
-        // ✅ 서버 + 구글 결과 병합
+        // ✅ 병합된 결과
         const mergedList = [...serverMatches, ...googleMatches];
         const panel = document.getElementById("searchResultPanel");
         const body = panel.querySelector(".search-body");
 
         if (mergedList.length > 0) {
-          // ✅ 검색결과 리스트 표시
+          // ✅ 결과 리스트 표시
           body.innerHTML = mergedList.map((item, idx) => `
             <div class="search-item" data-index="${idx}">
               <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1929,7 +1929,7 @@ async function findDestination(inputName, showPanel = true) {
 
           if (showPanel) panel.style.display = "block";
 
-          // ✅ 첫 번째 결과 자동으로 지도에 표시 + 경로 안내 버튼 표시
+          // ✅ 첫 번째 결과 자동 표시 + 버튼 표시
           const first = mergedList[0];
           showDestinationOnMap(first.name, first.lat, first.lng, first.address);
           destinationLat = first.lat;
@@ -1937,10 +1937,10 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 각 결과 클릭 시 해당 위치로 마커 갱신
+          // ✅ 각 결과 클릭 이벤트 등록
           body.querySelectorAll(".search-item").forEach((item) => {
-            item.addEventListener("click", () => {
-              const idx = item.dataset.index;
+            item.addEventListener("click", (e) => {
+              const idx = e.currentTarget.dataset.index; // ← currentTarget 사용
               const r = mergedList[idx];
               showDestinationOnMap(r.name, r.lat, r.lng, r.address);
               destinationLat = r.lat;
@@ -1953,7 +1953,7 @@ async function findDestination(inputName, showPanel = true) {
 
           resolve(true);
         } else {
-          // ✅ 검색결과 없음 처리
+          // ✅ 결과 없음 처리
           body.innerHTML = "<div>검색 결과가 없습니다.</div>";
           if (showPanel) panel.style.display = "block";
           resolve(false);
@@ -1962,7 +1962,6 @@ async function findDestination(inputName, showPanel = true) {
     );
   });
 }
-
 
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
 navigator.geolocation.getCurrentPosition(
