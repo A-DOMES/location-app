@@ -1913,13 +1913,12 @@ async function findDestination(inputName, showPanel = true) {
           }));
         }
 
-        // ✅ 병합된 결과
         const mergedList = [...serverMatches, ...googleMatches];
         const panel = document.getElementById("searchResultPanel");
         const body = panel.querySelector(".search-body");
 
         if (mergedList.length > 0) {
-          // ✅ 결과 리스트 표시
+          // ✅ 검색결과 리스트 표시
           body.innerHTML = mergedList.map((item, idx) => `
             <div class="search-item" data-index="${idx}">
               <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1929,7 +1928,7 @@ async function findDestination(inputName, showPanel = true) {
 
           if (showPanel) panel.style.display = "block";
 
-          // ✅ 첫 번째 결과 자동 표시 + 버튼 표시
+          // ✅ 첫 번째 결과 자동 표시
           const first = mergedList[0];
           showDestinationOnMap(first.name, first.lat, first.lng, first.address);
           destinationLat = first.lat;
@@ -1937,10 +1936,10 @@ async function findDestination(inputName, showPanel = true) {
           document.getElementById("destinationInput").value = first.name;
           document.getElementById("startRouteBtn").style.display = "inline-block";
 
-          // ✅ 각 결과 클릭 이벤트 등록
+          // ✅ 클릭 이벤트 (currentTarget 사용)
           body.querySelectorAll(".search-item").forEach((item) => {
             item.addEventListener("click", (e) => {
-              const idx = e.currentTarget.dataset.index; // ← currentTarget 사용
+              const idx = e.currentTarget.dataset.index; // ← 반드시 currentTarget
               const r = mergedList[idx];
               showDestinationOnMap(r.name, r.lat, r.lng, r.address);
               destinationLat = r.lat;
@@ -1953,7 +1952,6 @@ async function findDestination(inputName, showPanel = true) {
 
           resolve(true);
         } else {
-          // ✅ 결과 없음 처리
           body.innerHTML = "<div>검색 결과가 없습니다.</div>";
           if (showPanel) panel.style.display = "block";
           resolve(false);
