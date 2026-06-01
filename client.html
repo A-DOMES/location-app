@@ -1934,7 +1934,7 @@ async function findDestination(inputName, showPanel = true) {
     }));
   }
 
-  // ✅ 구글 배열 데이터 검색
+  // ✅ 구글 배열 데이터 검색 (API 아님, 배열만 사용)
   let googleMatches = [];
   if (Array.isArray(googleLocations)) {
     googleMatches = googleLocations.filter(loc =>
@@ -1963,6 +1963,7 @@ async function findDestination(inputName, showPanel = true) {
       </div>
     `).join("");
 
+    // ✅ 모달창은 입력 이벤트에서만 뜨도록 제어
     if (showPanel) panel.style.display = "block";
 
     // ✅ 첫 번째 결과는 텍스트박스와 좌표만 저장 (마커는 찍지 않음)
