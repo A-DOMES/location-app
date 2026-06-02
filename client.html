@@ -2415,13 +2415,16 @@ async function showRouteToDestination(destination) {
     ]);
   }
 
-  // ✅ 경로안내 버튼을 누른 순간부터 시간 시작
+  // ✅ 경로안내 버튼을 누른 순간부터 주행시간 시작
   drivingStarted = true;
   startTime = Date.now();   // 주행 시작 시점 기록
   console.log("경로 안내 버튼 클릭 → 시간 시작:", startTime);
+
+  // ✅ 이동정보 모달창 열기 (속도, 평균속도, 도착예상 표시)
+  openModal(document.getElementById("travelInfoModal"));
 }
 
-/* ---------------------- 주행시간만 초 단위로 갱신 ---------------------- */
+/* ---------------------- 주행시간 갱신 ---------------------- */
 setInterval(() => {
   if (startTime) {
     const elapsedMs = Date.now() - startTime;        // 경과 시간(ms)
@@ -2435,12 +2438,13 @@ setInterval(() => {
       travelTimeEl.innerText = `${min}분 ${sec}초`;
     }
   }
-}, 1000); // 무조건 1초마다 실행 → 속도와 무관하게 항상 부드럽게 표시
+}, 1000); // 1초마다 실행 → 부드럽게 표시
+// 👉 만약 불안정하면 여기 숫자를 5000으로 바꿔서 5초 주기로 되돌리면 됩니다.
 
 /* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
 setInterval(() => {
   updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
-}, 5000); // 이 주기는 배열 갱신 주기에 맞춰 자유롭게 변경 가능
+}, 5000); // 구글 API 주기에 맞춰 5초마다 실행
 
 /* ---------------------- 위치 갱신 시 지나온 경로 추가 ---------------------- */
 function updateTraveledPath(lat, lng) {
