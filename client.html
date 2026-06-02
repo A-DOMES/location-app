@@ -1909,61 +1909,60 @@ function handleDestinationSelection(r) {
   if (panel) panel.style.display = "none";
 }
 
-/* ---------------------- 목적지 검색 기능 (서버 + pathCoords 병합) ---------------------- */
 async function findDestination(inputName, showPanel = true) {
-  // ✅ 입력값 정리: 소문자 변환 + NFC 정규화
+  // 입력값 정리
   const name = inputName.trim().toLowerCase().normalize("NFC");
 
-// ✅ 내 서버 데이터 검색 (phone + address 기준)
-let serverMatches = [];
-if (Array.isArray(adminLocations)) {
-  serverMatches = adminLocations
-    .filter(item => {
-      const phone = (item.phone || "").toLowerCase().normalize("NFC");
-      const addr = (item.address || "").toLowerCase().normalize("NFC");
-      return phone.includes(name) || addr.includes(name);
-    })
-    .map(item => ({
-      name: item.phone || "서버 기록",
-      lat: Number(item.lat),
-      lng: Number(item.lng),
-      address: item.address || "주소 정보 없음",
-      source: "내서버"
-    }));
-}
+  // ---------------------- 서버 데이터 검색 ----------------------
+  let serverMatches = [];
+  if (Array.isArray(adminLocations)) {
+    serverMatches = adminLocations
+      .filter(item => {
+        const phone = (item.phone || "").toLowerCase().normalize("NFC");
+        const addr = (item.address || "").toLowerCase().normalize("NFC");
+        return phone.includes(name) || addr.includes(name);
+      })
+      .map(item => ({
+        name: item.phone || "서버 기록",
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        address: item.address || "주소 정보 없음",
+        source: "내서버"
+      }));
+  }
 
-// ✅ pathCoords 배열 검색 (address 기준)
-let pathMatches = [];
-if (Array.isArray(pathCoords)) {
-  pathMatches = pathCoords
-    .filter(item => {
-      const target = (item.address || "").replace(/\s+/g, "").toLowerCase().normalize("NFC");
-      const keyword = name.replace(/\s+/g, "");
-      return target.includes(keyword);
-    })
-    .map(item => ({
-      name: "경로 기록",
-      lat: Number(item.lat),
-      lng: Number(item.lng),
-      address: item.address || "주소 정보 없음",
-      source: "내경로"
-    }));
-}
+  // ---------------------- pathCoords 배열 검색 ----------------------
+  let pathMatches = [];
+  if (Array.isArray(pathCoords)) {
+    pathMatches = pathCoords
+      .filter(item => {
+        const target = (item.address || "")
+          .replace(/\s+/g, "")
+          .toLowerCase()
+          .normalize("NFC");
+        const keyword = name.replace(/\s+/g, "");
+        return target.includes(keyword);
+      })
+      .map(item => ({
+        name: "경로 기록",
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        address: item.address || "주소 정보 없음",
+        source: "내경로"
+      }));
+  }
 
-  // ✅ 서버 + pathCoords 결과 병합
+  // ---------------------- 병합 ----------------------
   const mergedList = [...serverMatches, ...pathMatches];
   const panel = document.getElementById("searchResultPanel");
   const body = panel ? panel.querySelector(".search-body") : null;
 
-  // ✅ 서버 + pathCoords 결과 병합
-console.log("검색어:", name);
-console.log("서버 결과:", serverMatches);
-console.log("경로 결과:", pathMatches);
-console.log("병합 결과:", mergedList);
-
+  console.log("검색어:", name);
+  console.log("서버 결과:", serverMatches);
+  console.log("경로 결과:", pathMatches);
+  console.log("병합 결과:", mergedList);
 
   if (mergedList.length > 0 && body) {
-    // ✅ 검색결과 리스트 표시 (카드형 UI)
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1973,7 +1972,6 @@ console.log("병합 결과:", mergedList);
 
     if (showPanel) panel.style.display = "block";
 
-    // ✅ 검색결과 클릭 처리 → 공통 함수 호출
     body.querySelectorAll(".search-item").forEach(item => {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
@@ -1982,14 +1980,14 @@ console.log("병합 결과:", mergedList);
       });
     });
 
-    return mergedList; // ✅ 검색 성공 → 결과 배열 반환
+    return mergedList;
   } else {
-    // ✅ 검색 결과 없음 처리
     if (body) body.innerHTML = "<div>검색 결과가 없습니다.</div>";
     if (showPanel && panel) panel.style.display = "block";
-    return []; // ✅ 검색 실패 → 빈 배열 반환
+    return [];
   }
 }
+
 
   
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
