@@ -1905,7 +1905,7 @@ function handleDestinationSelection(r) {
 }
 
 
-/* ---------------------- 목적지 검색 기능 (실시간 구글 검색) ---------------------- */
+/* ---------------------- 목적지 검색 기능 (서버 데이터 기반) ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   // ✅ 입력값 정리: 소문자 변환 + NFC 정규화
   const name = inputName.trim().toLowerCase().normalize("NFC");
@@ -1926,19 +1926,8 @@ async function findDestination(inputName, showPanel = true) {
       }));
   }
 
-  // ✅ 구글 Places API 실시간 검색 호출 (주소는 제외, 좌표/이름만 사용)
-  const googleMatchesRaw = await searchGooglePlacesLive(name);
-  const googleMatches = googleMatchesRaw.map(item => ({
-    name: item.name,
-    lat: item.geometry.location.lat,
-    lng: item.geometry.location.lng,
-    // 주소는 pathCoords에서 참조하거나 필요 시 Geocoder 호출
-    address: item.formatted_address || "주소 정보 없음",
-    source: "구글"
-  }));
-
-  // ✅ 서버 + 구글 결과 병합
-  const mergedList = [...serverMatches, ...googleMatches];
+  // ✅ 서버 결과만 사용
+  const mergedList = [...serverMatches];
   const panel = document.getElementById("searchResultPanel");
   const body = panel ? panel.querySelector(".search-body") : null;
 
@@ -1958,8 +1947,6 @@ async function findDestination(inputName, showPanel = true) {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
         const r = mergedList[idx];
-        // 📌 클릭 시에는 텍스트박스에 기록 + 좌표 저장만 하고,
-        // 지도 마커 표시와 경로안내 버튼 활성화는 "위치검색 버튼"에서 처리
         handleDestinationSelection(r);
       });
     });
