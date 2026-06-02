@@ -506,7 +506,7 @@ let destinationLat = null;
 let destinationLng = null;
 let destinationSet = false;
 let destinationArrived = false;
-
+  
 let drivingStarted = false;
 
 // 최근 알림 시간 (중복 알림 방지용)
@@ -523,7 +523,8 @@ let livePathRenderer = null;
 
 // 목적지 안내 경로 렌더러
 let destinationRenderer = null;
-
+let traveledPath = null;
+  
 // 직선 Polyline 객체
 let straightLine = null;
 
@@ -2149,37 +2150,37 @@ document.getElementById("destinationInput").addEventListener("input", () => {
 
 /* ---------------------- 위치검색 버튼 이벤트 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
-  // ✅ 입력값 가져오기 (목적지 이름)
+  // ✅ 입력값 가져오기
   const inputName = document.getElementById("destinationInput").value.trim();
 
-  // ✅ 입력값이 없으면 안내 메시지 출력 후 종료
+  // ✅ 입력값 없으면 안내 메시지
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     return;
   }
 
-  // ✅ 목적지 검색 실행 (모달은 띄우지 않음)
+  // ✅ 검색 실행
   const results = await findDestination(inputName, false);
 
-  // ✅ 검색 결과 중 입력값과 일치하는 항목 찾기
+  // ✅ 결과 중 입력값과 일치하는 항목 찾기
   let match = results.find(r => r.name === inputName || r.address.includes(inputName));
 
-  // ✅ 검색 결과가 없더라도 좌표가 저장되어 있으면 fallback 처리
+  // ✅ fallback 처리 (좌표가 저장되어 있으면 사용)
   if (!match && destinationLat && destinationLng) {
     match = { name: inputName, lat: destinationLat, lng: destinationLng, address: "" };
   }
 
   if (match) {
-    // ✅ 지도에 목적지 마커 표시 + 모달창 정보 출력
+    // ✅ 지도에 마커 표시 + 모달창 정보 출력
     showDestinationOnMap(match.name, Number(match.lat), Number(match.lng), match.address);
 
     // ✅ 경로안내 버튼 활성화
     document.getElementById("startRouteBtn").style.display = "inline-block";
 
-    // ✅ 검색 모달 닫기 (UX 개선: 검색 후 목적지 모달만 남기기)
-    closeModal(document.getElementById("searchModal"));
+    // ✅ 검색 결과 패널 닫기 (UX 개선)
+    closeModal(document.getElementById("searchResultPanel"));
   } else {
-    // ✅ 검색 결과가 없을 때 안내 메시지 출력
+    // ✅ 검색 결과 없음 안내
     document.getElementById("destinationResult").innerText = "검색된 목적지가 없습니다.";
   }
 });
@@ -2355,6 +2356,15 @@ function speakMessage(message) {
 }
 
 
+// ✅ 초기화 (지도 준비가 끝난 시점에서 실행)
+traveledPath = new google.maps.Polyline({
+  geodesic: true,
+  strokeColor: "#FFFF00",   // 노란색
+  strokeOpacity: 1.0,
+  strokeWeight: 4,
+  map: map
+});
+  
 /* ---------------------- 운행 안내 함수 ---------------------- */
 async function showRouteToDestination(destination) {
   // ✅ 기존 안내선 제거 (중복 표시 방지)
@@ -2377,13 +2387,11 @@ async function showRouteToDestination(destination) {
 
   // ✅ 지나온 경로(pathCoords) + 목적지 연결
   if (pathCoords.length > 0) {
-    // 이미 기록된 경로가 있으면 → 경로 끝점 + 목적지 연결
     destinationRenderer.setPath(
       pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
         .concat(new google.maps.LatLng(destinationLat, destinationLng))
     );
   } else {
-    // 경로 기록이 없으면 → 현재 위치 + 목적지 직선 연결
     destinationRenderer.setPath([
       new google.maps.LatLng(currentLat, currentLng),
       new google.maps.LatLng(destinationLat, destinationLng)
@@ -2415,6 +2423,12 @@ setInterval(() => {
 setInterval(() => {
   updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
 }, 5000); // 구글 API 주기에 맞춰 5초마다 실행
+
+/* ---------------------- 위치 갱신 시 지나온 경로 추가 ---------------------- */
+function updateTraveledPath(lat, lng) {
+  pathCoords.push({ lat, lng }); // 좌표 기록
+  traveledPath.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
+}
 
 
 /* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
