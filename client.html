@@ -1447,20 +1447,21 @@ function shareLocation() {
     return;
   }
 
-  // ✅ 주소는 pathCoords 배열의 마지막 값에서 가져옴
-  const address = pathCoords.length > 0 
-    ? (pathCoords[pathCoords.length - 1].address || "주소 정보 없음") 
-    : "주소 정보 없음";
+  // ✅ googleLocations에서 주소 가져오기
+  let address = "주소 정보 없음";
+  if (googleLocations.length > 0 && googleLocations[0].formatted_address) {
+    address = googleLocations[0].formatted_address;
+  }
 
   // ✅ 구글 지도 링크 생성
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
-  // ✅ 공유용 텍스트 구성 (명함 스타일)
+  // ✅ 공유용 텍스트 구성
   const textToCopy =
     "━━━━━━━━━━━━━━━━━━\n" +
     "📍 내 현재 위치 정보\n" +
     "━━━━━━━━━━━━━━━━━━\n" +
-    `이름: minkoo\n` + // ⚠️ 사용자 이름은 하드코딩 → 변수화 권장
+    `이름: minkoo\n` +
     `위도: ${currentLat.toFixed(6)}\n` +
     `경도: ${currentLng.toFixed(6)}\n` +
     `주소: ${address}\n\n` +
@@ -1783,44 +1784,44 @@ function resetNavigation(fullStop = false) {
   // 🗺️ 경로 및 지도 요소 초기화
   pathCoords = [];
   if (pathPolyline) {
-    pathPolyline.setMap(null);   // 이동 경로 Polyline 제거
+    pathPolyline.setMap(null);
     pathPolyline = null;
   }
   if (destinationRenderer) {
-    destinationRenderer.setMap(null); // 목적지 안내 Polyline 제거
+    destinationRenderer.setMap(null);
     destinationRenderer = null;
   }
   if (straightLine) {
-    straightLine.setMap(null);   // 직선 Polyline 제거
+    straightLine.setMap(null);
     straightLine = null;
   }
-  destinationMarkers.forEach(marker => marker.setMap(null)); // 목적지 마커 제거
+  destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
 
   // 🎯 목적지 관련 표시 초기화
   if (destinationCircle) {
-    destinationCircle.setMap(null); // 목적지 원형 제거
+    destinationCircle.setMap(null);
     destinationCircle = null;
   }
   if (otherMarker) {
-    otherMarker.setMap(null);       // 기타 마커 제거
+    otherMarker.setMap(null);
     otherMarker = null;
   }
 
   // 🚗 이동정보 초기화
   speedHistory = [];
-  startTime = null;        // 주행시간 초기화
+  startTime = null;
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
-  totalDistance = 0;       // 총 이동거리 초기화
+  totalDistance = 0;
 
   // 🔄 모드 복귀
-  followUser = true;       // 사용자 중심 모드 복귀
-  drivingStarted = false;  // 운행 안내 상태 초기화
+  followUser = true;
+  drivingStarted = false;
 
   // 🔊 음성 안내
   speakMessage("경로가 초기화 되었습니다.");
@@ -1828,10 +1829,6 @@ function resetNavigation(fullStop = false) {
   // 🔘 버튼 상태 초기화
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
-
-  // 📌 알림 모달 자동 닫힘
-  const popupModal = document.getElementById("popupModal");
-  if (popupModal) openPopupModal(popupModal);
 
   // 📝 목적지 검색창 흔적 지우기
   const destInput = document.getElementById("destinationInput");
@@ -1849,9 +1846,18 @@ function resetNavigation(fullStop = false) {
   // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
     map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7); // 기본 줌 레벨로 복귀
+    map.setZoom(7);
+  }
+
+  // 📌 다기능 모달창에 메시지 표시
+  const popupModal = document.getElementById("popupModal");
+  if (popupModal) {
+    document.getElementById("modalTitle").innerText = "알림";
+    document.getElementById("modalMessage").innerText = "경로가 초기화되었습니다.";
+    openModal(popupModal);
   }
 }
+
 
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
