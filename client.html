@@ -2022,7 +2022,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   // ✅ 지도 중심 이동 및 확대
   map.setCenter(pos);
-  map.setZoom(16);
+  map.setZoom(7);
   followUser = false;
 
   // ✅ 기존 목적지 마커/원 제거
@@ -2111,7 +2111,7 @@ setInterval(async () => {
       }
     });
   }
-}, 1 * 60 * 1000); // ✅ 5분마다 실행 (300,000ms)
+}, 1 * 60 * 1000); // ✅ 1분마다 실행 (300,000ms)
 
 
 /* ---------------------- 버튼 이벤트 연결 ---------------------- */
