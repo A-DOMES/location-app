@@ -562,26 +562,40 @@ const poiIcons = {
 
 // ---------------------- 구글 Places API 호출 → 배열에 저장 ----------------------
 function preloadGooglePlaces() {
+  // ✅ 구글 PlacesService 객체 생성 (지도 객체 map 기반)
   const service = new google.maps.places.PlacesService(map);
+
+  // ✅ 텍스트 검색 실행
+  //    query: "학교" → 검색 키워드
+  //    location: 현재 위치 좌표 (currentLat, currentLng)
+  //    radius: 반경 5000m 내 검색
   service.textSearch(
     { query: "학교", location: { lat: currentLat, lng: currentLng }, radius: 5000 },
     (results, status) => {
+      // ✅ 검색 성공 시 결과 처리
       if (status === google.maps.places.PlacesServiceStatus.OK) {
         results.forEach(r => {
+          // ✅ 중복 placeId 방지 → 이미 배열에 있으면 추가하지 않음
           if (!googleLocations.some(item => item.placeId === r.place_id)) {
+            // ✅ 결과를 배열에 저장
             googleLocations.push({
-              name: r.name,
-              lat: r.geometry.location.lat(),
-              lng: r.geometry.location.lng(),
-              address: r.formatted_address,
-              placeId: r.place_id
+              name: r.name,                          // 장소 이름
+              lat: r.geometry.location.lat(),        // 위도
+              lng: r.geometry.location.lng(),        // 경도
+              address: r.formatted_address,          // 주소
+              placeId: r.place_id,                   // 구글 고유 ID
+              source: "구글"                         // 데이터 출처 표시
             });
           }
         });
+
+        // ✅ 디버깅 로그: 배열에 저장된 구글 데이터 확인
+        console.log("✅ 구글 데이터 로드 완료:", googleLocations);
       }
     }
   );
 }
+
   
   // ---------------------- 유틸 함수 ----------------------
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -693,60 +707,66 @@ makeDraggableModal(statsModal, statsHandle);
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
+  // ✅ 지도 객체 생성
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 7,
-    gestureHandling: "greedy",
-    mapTypeId: "roadmap",
+    zoom: 7,                       // 기본 줌 레벨
+    gestureHandling: "greedy",     // 마우스/터치 제스처 허용
+    mapTypeId: "roadmap",          // 지도 타입: 일반 도로 지도
     heading: 0,
     tilt: 0,
-    rotateControl: true
+    rotateControl: true            // 회전 컨트롤 허용
   });
 
+  // ✅ 지도 스타일 업데이트 (사용자 정의 함수)
   updateMapStyle(map);
 
-  // ✅ 우클릭 이벤트 추가
+  // ✅ 우클릭 이벤트 추가 → 줌 레벨 초기화
   map.addListener("rightclick", () => {
     map.setZoom(7);
   });
 
-  // ✅ polyline 초기화
+  // ✅ 이동 경로 Polyline 초기화
   pathPolyline = new google.maps.Polyline({
-    path: pathCoords,
-    geodesic: true,
-    strokeColor: "#1976d2",
-    strokeOpacity: 1.0,
-    strokeWeight: 8,
+    path: pathCoords,              // 이동 경로 좌표 배열
+    geodesic: true,                // 지구 곡률 반영
+    strokeColor: "#1976d2",        // 선 색상 (파란색 계열)
+    strokeOpacity: 1.0,            // 불투명도
+    strokeWeight: 8,               // 선 두께
     map: map
   });
 
+  // ✅ 브라우저 Geolocation API 사용 → 현재 위치 가져오기
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
+        // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userPos);
-
-        // ✅ 현재 위치 저장
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
 
+        // ✅ 내 위치 마커 표시
         myMarker = new google.maps.Marker({
           position: userPos,
           map,
           title: "내 위치"
         });
 
+        // ✅ 마커 클릭 시 → 내 위치로 이동 + 확대
         myMarker.addListener("click", () => {
           map.setCenter(userPos);
           map.setZoom(18);
         });
 
+        // ✅ 레이더/원형 표시 및 추적 시작
         drawMultipleCircles(userPos);
         updateRadarPolygon(userPos, 0);
         startTracking();
 
-        // ✅ 구글 Places API 호출
+        // ✅ 구글 Places API 호출 → 배열에 저장
         preloadGooglePlaces();
 
+        // ✅ 로딩 메시지 숨기기
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
           loadingMsg.style.display = "none";
@@ -754,17 +774,19 @@ function initMap() {
         }
       },
       () => {
-        // 위치 못 가져와도 기본 좌표 설정
-        currentLat = 37.5663; // 서울
+        // ⚠️ 위치 가져오기 실패 시 → 기본 좌표(서울) 설정
+        currentLat = 37.5663;
         currentLng = 126.9779;
 
+        // ✅ 추적 및 구글 데이터 호출 계속 진행
         startTracking();
         preloadGooglePlaces();
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true } // ✅ 고정밀 모드
     );
   }
 }
+
 
 // ---------------------- 지도 스타일 업데이트 ----------------------
 function updateMapStyle(map) {
@@ -1686,6 +1708,10 @@ window.onload = async () => {
   makeDraggableAndResizable(document.getElementById("resetPathBtn"));
   makeDraggableModal(document.querySelector(".modal-content"));
 
+  // 3️⃣ 구글 Places API 데이터 미리 배열에 저장
+  //    → 앱 실행 시 한 번만 호출하여 googleLocations 배열에 결과를 넣어둠
+  preloadGooglePlaces();
+
   // ✅ 기존 구글 Autocomplete 제거
   // initAutocomplete(); → 삭제
 
@@ -1702,7 +1728,7 @@ window.onload = async () => {
       return;
     }
 
-    // ✅ 배열 기반 검색 실행
+    // ✅ 배열 기반 검색 실행 (내서버 + 구글 병합)
     findDestination(inputName, true).then(found => {
       if (!found) {
         body.innerHTML = "<div>검색 결과가 없습니다.</div>";
@@ -1907,20 +1933,23 @@ async function loadAdminLocations() {
 
 /* ---------------------- 목적지 검색 기능 ---------------------- */
 async function findDestination(inputName, showPanel = true) {
+  // ✅ 입력값 정리: 소문자 변환 + NFC 정규화
   const name = inputName.trim().toLowerCase().normalize("NFC");
 
   // ✅ 내 서버 데이터 검색
   let serverMatches = [];
   if (Array.isArray(adminLocations)) {
-    serverMatches = adminLocations.filter(item =>
-      item.phone && item.phone.trim().toLowerCase().normalize("NFC").includes(name)
-    ).map(item => ({
-      name: item.phone,
-      lat: Number(item.lat),   // 문자열일 경우만 숫자로 변환
-      lng: Number(item.lng),
-      address: item.address,
-      source: "내서버"
-    }));
+    serverMatches = adminLocations
+      .filter(item =>
+        item.phone && item.phone.trim().toLowerCase().normalize("NFC").includes(name)
+      )
+      .map(item => ({
+        name: item.phone,             // 서버 데이터에서 phone을 이름으로 사용
+        lat: Number(item.lat),        // 문자열일 경우 숫자로 변환
+        lng: Number(item.lng),
+        address: item.address,
+        source: "내서버"              // 출처 표시
+      }));
   }
 
   // ✅ 구글 배열 데이터 검색
@@ -1929,16 +1958,16 @@ async function findDestination(inputName, showPanel = true) {
     googleMatches = googleLocations
       .filter(loc => {
         const n = name.toLowerCase();
-        const hasName = loc.name && loc.name.toLowerCase().includes(n);
-        const hasAddr = loc.address && loc.address.toLowerCase().includes(n);
+        const hasName = loc.name && loc.name.toLowerCase().includes(n);   // 이름 매칭
+        const hasAddr = loc.address && loc.address.toLowerCase().includes(n); // 주소 매칭
         return hasName || hasAddr;
       })
       .map(loc => ({
-        name: loc.name,
-        lat: loc.lat,   // 이미 숫자라면 그대로 사용
+        name: loc.name,               // 구글 데이터 이름
+        lat: loc.lat,                 // 이미 숫자라면 그대로 사용
         lng: loc.lng,
         address: loc.address,
-        source: "구글"
+        source: "구글"                // 출처 표시
       }));
   }
 
@@ -1948,7 +1977,7 @@ async function findDestination(inputName, showPanel = true) {
   const body = panel ? panel.querySelector(".search-body") : null;
 
   if (mergedList.length > 0 && body) {
-    // ✅ 검색결과 리스트 표시
+    // ✅ 검색결과 리스트 표시 (카드형 UI)
     body.innerHTML = mergedList.map((item, idx) => `
       <div class="search-item" data-index="${idx}">
         <div class="search-title">📍 ${item.name} <span style="font-size:12px;color:#777;">[${item.source}]</span></div>
@@ -1964,7 +1993,10 @@ async function findDestination(inputName, showPanel = true) {
         const idx = item.dataset.index;
         const r = mergedList[idx];
 
+        // ✅ 입력창에 선택된 이름 반영
         document.getElementById("destinationInput").value = r.name;
+
+        // ✅ 목적지 좌표 저장
         destinationLat = r.lat;
         destinationLng = r.lng;
 
@@ -1974,17 +2006,20 @@ async function findDestination(inputName, showPanel = true) {
         // ✅ 경로안내 버튼 활성화
         document.getElementById("startRouteBtn").style.display = "inline-block";
 
+        // ✅ 검색 패널 닫기
         panel.style.display = "none";
       });
     });
 
-    return true;
+    return true; // ✅ 검색 성공
   } else {
+    // ✅ 검색 결과 없음 처리
     if (body) body.innerHTML = "<div>검색 결과가 없습니다.</div>";
     if (showPanel && panel) panel.style.display = "block";
-    return false;
+    return false; // ✅ 검색 실패
   }
 }
+
 
   
 /* ---------------------- 초기 위치 가져오기 ---------------------- */
@@ -2003,6 +2038,7 @@ navigator.geolocation.getCurrentPosition(
 
 /* ---------------------- 목적지 표시 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
+  // ✅ 목적지 좌표 저장 (전역 변수에 기록)
   destinationLat = lat;
   destinationLng = lng;
   const pos = new google.maps.LatLng(lat, lng);
@@ -2010,23 +2046,23 @@ function showDestinationOnMap(title, lat, lng, address="") {
   // ✅ 지도 중심 이동 및 확대
   map.setCenter(pos);
   map.setZoom(7);
-  followUser = false;
+  followUser = false; // 사용자 중심 모드 해제
 
-  // ✅ 기존 목적지 마커/원 제거
+  // ✅ 기존 목적지 마커/원 제거 (중복 표시 방지)
   destinationMarkers.forEach(m => m.setMap(null));
   destinationMarkers = [];
   if (destinationCircle) destinationCircle.setMap(null);
 
-  // ✅ 목적지 원형 표시
+  // ✅ 목적지 원형 표시 (반경 40m)
   destinationCircle = new google.maps.Circle({
-    strokeColor: "#1976d2",
-    strokeOpacity: 0.9,
-    strokeWeight: 2,
-    fillColor: "#1976d2",
-    fillOpacity: 0.25,
+    strokeColor: "#1976d2",     // 테두리 색상 (파란색 계열)
+    strokeOpacity: 0.9,         // 테두리 불투명도
+    strokeWeight: 2,            // 테두리 두께
+    fillColor: "#1976d2",       // 내부 색상
+    fillOpacity: 0.25,          // 내부 불투명도
     map,
     center: pos,
-    radius: 40
+    radius: 40                  // 반경 (미터)
   });
 
   // ✅ 목적지 마커 생성
@@ -2034,18 +2070,20 @@ function showDestinationOnMap(title, lat, lng, address="") {
     position: pos,
     map: map,
     icon: {
+      // 커스텀 아이콘 (빨간색 핀 모양)
       path: "M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3-7-7-7z",
-      fillColor: "#FF3B3B",
+      fillColor: "#FF3B3B",     // 빨간색
       fillOpacity: 0.95,
-      strokeColor: "#fff",
+      strokeColor: "#fff",      // 흰색 테두리
       strokeWeight: 2,
       scale: 2,
-      anchor: new google.maps.Point(12, 24)
+      anchor: new google.maps.Point(12, 24) // 아이콘 기준점
     },
-    animation: google.maps.Animation.DROP,
-    title: title
+    animation: google.maps.Animation.DROP, // 드롭 애니메이션
+    title: title                           // 마커 제목
   });
 
+  // ✅ 목적지 마커 배열에 추가 (관리용)
   destinationMarkers.push(marker);
 
   // ✅ 마커 정보창 (mouseover 시 표시)
@@ -2061,7 +2099,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 목적지 결과 영역 표시
+  // ✅ 목적지 결과 영역 표시 (UI 업데이트)
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
@@ -2319,7 +2357,7 @@ function speakMessage(message) {
 
 /* ---------------------- 운행 안내 함수 ---------------------- */
 async function showRouteToDestination(destination) {
-  // ✅ 기존 안내선 제거
+  // ✅ 기존 안내선 제거 (중복 표시 방지)
   if (destinationRenderer) {
     destinationRenderer.setMap(null);
     destinationRenderer = null;
@@ -2327,23 +2365,25 @@ async function showRouteToDestination(destination) {
 
   // ✅ 새 안내선 준비 (빨간색 Polyline)
   destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#FF0000",
-    strokeWeight: 6,
-    strokeOpacity: 0.8,
-    map: map
+    strokeColor: "#FF0000",   // 빨간색 안내선
+    strokeWeight: 6,          // 두께
+    strokeOpacity: 0.8,       // 불투명도
+    map: map                  // 지도에 표시
   });
 
-  // ✅ 목적지 좌표 저장
+  // ✅ 목적지 좌표 저장 (전역 변수에 기록)
   destinationLat = destination.lat;
   destinationLng = destination.lng;
 
-  // ✅ 지나온 경로 + 목적지 연결
+  // ✅ 지나온 경로(pathCoords) + 목적지 연결
   if (pathCoords.length > 0) {
+    // 이미 기록된 경로가 있으면 → 경로 끝점 + 목적지 연결
     destinationRenderer.setPath(
       pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
         .concat(new google.maps.LatLng(destinationLat, destinationLng))
     );
   } else {
+    // 경로 기록이 없으면 → 현재 위치 + 목적지 직선 연결
     destinationRenderer.setPath([
       new google.maps.LatLng(currentLat, currentLng),
       new google.maps.LatLng(destinationLat, destinationLng)
@@ -2352,39 +2392,46 @@ async function showRouteToDestination(destination) {
 
   // ✅ 음성 안내 (최초 실행 시만)
   if (!drivingStarted) {
-    speakMessage("경로 안내를 시작합니다.");
-    drivingStarted = true;
+    speakMessage("경로 안내를 시작합니다."); // 음성 출력
+    drivingStarted = true;                   // 안내 시작 플래그
   }
 }
 
 // ✅ 이동정보 모달 갱신 (5초마다 실행)
 setInterval(() => {
-  updateTravelStats();
+  updateTravelStats(); // 이동거리, 속도, 시간 등 갱신
 }, 5000);
 
 
 /* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
 function checkRadarPOIs(myPos) {
-  // ✅ 배열 기반 필터링 (googleLocations에서 특정 유형만 탐지)
+  // ✅ 배열 기반 필터링
+  // googleLocations 배열에서 특정 유형(type)이 포함된 장소만 탐지
   const radarTypes = ["cafe", "restaurant", "pharmacy", "gas_station"];
   const matches = googleLocations.filter(loc =>
     radarTypes.some(type => loc.type && loc.type.includes(type))
   );
 
+  // ✅ 탐지된 장소들 각각 처리
   matches.forEach(place => {
+    // ✅ 탐지된 장소 좌표 생성
     const poiPos = new google.maps.LatLng(place.lat, place.lng);
+
+    // ✅ 현재 위치(myPos)와 탐지된 장소 간 거리 계산
     const distance = google.maps.geometry.spherical.computeDistanceBetween(
       new google.maps.LatLng(myPos.lat, myPos.lng),
       poiPos
     );
 
+    // ✅ 레이더 반경 내에 있는 경우만 처리
     if (distance <= radarRadiusMeters) {
+      // ✅ 모달창에 표시할 메시지 구성
       const message = `<div class="alert-message">
         <p>📍 레이더 반경 내 탐지: ${place.name}</p>
         <p>거리: ${distance.toFixed(1)} m</p>
       </div>`;
 
-      // ✅ 모달창 표시
+      // ✅ 모달창 표시 (알림용)
       showQueuedModal("레이더 탐지", message);
 
       // ✅ 음성 안내 추가
@@ -2395,6 +2442,7 @@ function checkRadarPOIs(myPos) {
 
 
 /* ---------------------- 모달 열기/닫기 공통 함수 ---------------------- */
+
 /* ---------------------- 모달 열기 함수 ---------------------- */
 function openModal(modal) {
   // ✅ 모든 모달을 닫고, 지정한 모달만 열기
@@ -2422,6 +2470,7 @@ function closeModal(modal) {
 /* ---------------------- 모달 닫기 버튼 처리 ---------------------- */
 document.querySelectorAll('.close').forEach(btn => {
   btn.addEventListener('click', () => {
+    // ✅ 닫기 버튼이 속한 모달 찾기
     const modal = btn.closest('.modal');
     if (modal) closeModal(modal);
 
@@ -2455,7 +2504,6 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
   }
 });
-
 
 </script>
 </body>
