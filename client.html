@@ -499,13 +499,16 @@ let totalDistance = 0;        // 누적 이동 거리
 let modalQueue = [];
 let modalTimer = null;
 
- // 목적지 찾기 및 위치검색관련 변수 
+// ✅ 목적지 관련 변수 (중복 제거)
 let destinationCircle = null;
 let destinationMarkers = [];
 let destinationLat = null;
 let destinationLng = null;
+let destinationSet = false;
+let destinationArrived = false;
 
-  
+let drivingStarted = false;
+
 // 최근 알림 시간 (중복 알림 방지용)
 let lastSchoolZoneAlertTime = 0;
 let lastDynamicZoneAlertTime = 0;  
@@ -521,13 +524,6 @@ let livePathRenderer = null;
 // 목적지 안내 경로 렌더러
 let destinationRenderer = null;
 
-// 목적지 좌표 및 도착 상태
-let destinationLat = null;
-let destinationLng = null;
-let destinationSet = false;
-let destinationArrived = false;
-let drivingStarted = false;
-
 // 직선 Polyline 객체
 let straightLine = null;
 
@@ -540,7 +536,6 @@ let adminLocations = [];
 let googleLocations = [];   // 구글 Places 결과 저장용
 
 let followUser = true; 
-let destinationMarkers = []; 
 let watchId = null;  
 let lastLat = null;
 let lastLng = null;
