@@ -2432,9 +2432,13 @@ setInterval(() => {
     const sec = elapsedSec % 60;                     // 초 계산
 
     // ✅ 화면에 표시 (DOM 업데이트)
-    document.getElementById("travelTime").innerText = `${min}분 ${sec}초`;
+    const travelTimeEl = document.getElementById("travelTime");
+    if (travelTimeEl) {
+      travelTimeEl.innerText = `${min}분 ${sec}초`;
+    }
   }
-}, 1000); // 1초마다 실행 → 주행시간은 부드럽게 표시
+}, 1000); // 무조건 1초마다 실행
+
 
 /* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
 setInterval(() => {
