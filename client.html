@@ -5,7 +5,7 @@
   <title>내 위치 지도</title>
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry&callback=initMap"></script>
 
 
 <style>
@@ -691,13 +691,22 @@ function initMap() {
     map.setZoom(7);
   });
 
-  // ✅ 이동 경로 Polyline 초기화
+  // ✅ 이동 경로 Polyline 초기화 (경로 기록용)
   pathPolyline = new google.maps.Polyline({
-    path: pathCoords,              // 이동 경로 좌표 배열
-    geodesic: true,                // 지구 곡률 반영
-    strokeColor: "#1976d2",        // 선 색상 (파란색 계열)
-    strokeOpacity: 1.0,            // 불투명도
-    strokeWeight: 8,               // 선 두께
+    path: pathCoords,
+    geodesic: true,
+    strokeColor: "#1976d2",
+    strokeOpacity: 1.0,
+    strokeWeight: 8,
+    map: map
+  });
+
+  // ✅ 지나온 경로 Polyline 초기화 (노란색)
+  traveledPath = new google.maps.Polyline({
+    geodesic: true,
+    strokeColor: "#FFFF00",
+    strokeOpacity: 1.0,
+    strokeWeight: 4,
     map: map
   });
 
@@ -705,7 +714,6 @@ function initMap() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
-        // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userPos);
         currentLat = pos.coords.latitude;
@@ -729,9 +737,6 @@ function initMap() {
         updateRadarPolygon(userPos, 0);
         startTracking();
 
-        // ❌ 구글 Places API 배열 호출 제거
-        // preloadGooglePlaces(); → 삭제
-
         // ✅ 로딩 메시지 숨기기
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
@@ -743,11 +748,9 @@ function initMap() {
         // ⚠️ 위치 가져오기 실패 시 → 기본 좌표(서울) 설정
         currentLat = 37.5663;
         currentLng = 126.9779;
-
-        // ✅ 추적 시작 (구글 데이터는 검색 시점에만 호출)
         startTracking();
       },
-      { enableHighAccuracy: true } // ✅ 고정밀 모드
+      { enableHighAccuracy: true }
     );
   }
 }
@@ -2435,15 +2438,21 @@ setInterval(() => {
   
 /* ---------------------- 경로 기록 함수 ---------------------- */
 function updateTraveledPath(lat, lng, address = "") {
+  // ✅ traveledPath가 초기화되지 않았으면 안전하게 종료
+  if (!traveledPath) {
+    console.warn("traveledPath가 아직 초기화되지 않았습니다.");
+    return;
+  }
+
   // ✅ 좌표와 주소를 함께 배열에 저장
-  //    - lat, lng: 실시간 GPS 좌표
-  //    - address: Geocoder로 변환된 주소 (없으면 빈 문자열)
   pathCoords.push({ lat, lng, address });
 
   // ✅ Polyline 갱신 (지도에 이동 경로 표시)
-  traveledPath.setPath(
-    pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
-  );
+  if (pathCoords.length > 0) {
+    traveledPath.setPath(
+      pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
+    );
+  }
 }
 
 
