@@ -2076,6 +2076,23 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
+  // ✅ 마커 클릭 시 지도 이동 + 모달 표시
+  marker.addListener("click", () => {
+    map.setCenter(marker.getPosition());
+    map.setZoom(16);
+
+    // 모달창 열기
+    openModal(document.getElementById("destinationModal"));
+
+    // 모달 내용 갱신
+    document.getElementById("destinationResult").innerHTML = `
+      <div style="text-align:left">
+        📍 목적지: ${title}<br>
+        🌐 좌표: (${destinationLat.toFixed(5)}, ${destinationLng.toFixed(5)})<br>
+        🏠 주소: ${address}
+      </div>`;
+  });
+
   // ✅ 목적지 결과 영역 표시
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
@@ -2084,7 +2101,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
       🏠 주소: ${address}
     </div>`;
 
-  // ✅ 모달창 열기
+  // ✅ 모달창 열기 (최초 표시 시)
   openModal(document.getElementById("destinationModal"));
 }
 
