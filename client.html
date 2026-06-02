@@ -2214,6 +2214,9 @@ document.getElementById("startRouteBtn").addEventListener("click", () => {
   drivingMode = "navigation";
   startTime = Date.now(); // ✅ 주행 시작 시점 초기화
 
+  // ✅ 음성 안내 추가
+  speakMessage("경로 안내를 시작합니다.");
+
   // ✅ 경로 안내 실행 (내 위치 → 목적지 직선 또는 pathCoords 기반 경로 표시)
   showRouteToDestination({ lat: destinationLat, lng: destinationLng });
 
