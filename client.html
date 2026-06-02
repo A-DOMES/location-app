@@ -534,7 +534,6 @@ let lastTimestamp = null;
 
 // 🚗 서버/구글 데이터
 let adminLocations = []; 
-let googleLocations = [];   // 구글 Places 결과 저장용
 
 let followUser = true; 
 let watchId = null;  
@@ -562,42 +561,6 @@ const poiIcons = {
   city_hall: "https://cdn-icons-png.flaticon.com/512/148/148947.png",
   local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
 };
-
-/* ---------------------- 구글 Places API 실시간 검색 ---------------------- */
-function searchGooglePlacesLive(query) {
-  // ✅ Promise로 감싸서 async/await 사용 가능하게 처리
-  return new Promise((resolve, reject) => {
-    // ✅ 구글 PlacesService 객체 생성 (지도 객체 map 기반)
-    const service = new google.maps.places.PlacesService(map);
-
-    // ✅ 텍스트 검색 실행
-    //    query: 사용자가 입력한 검색 키워드
-    //    location: 현재 위치 좌표 (currentLat, currentLng)
-    //    radius: 반경 5000m 내 검색 (구글 API 제한 있음)
-    service.textSearch(
-      { query, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
-      (results, status) => {
-        // ✅ 검색 성공 시 결과 처리
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          const liveResults = results.map(r => ({
-            name: r.name,                          // 장소 이름
-            lat: r.geometry.location.lat(),        // 위도
-            lng: r.geometry.location.lng(),        // 경도
-            address: r.formatted_address,          // 주소
-            placeId: r.place_id,                   // 구글 고유 ID
-            source: "구글(실시간)"                 // 데이터 출처 표시
-          }));
-
-          // ✅ 결과 반환
-          resolve(liveResults);
-        } else {
-          // ⚠️ 검색 실패 시 빈 배열 반환
-          resolve([]);
-        }
-      }
-    );
-  });
-}
 
   
   // ---------------------- 유틸 함수 ----------------------
