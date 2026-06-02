@@ -2376,12 +2376,12 @@ function speakMessage(message) {
 // ✅ 초기화 (지도 준비가 끝난 시점에서 실행)
 traveledPath = new google.maps.Polyline({
   geodesic: true,
-  strokeColor: "#FFFF00",   // 노란색
+  strokeColor: "#FFFF00",   // 지나온 길은 노란색
   strokeOpacity: 1.0,
   strokeWeight: 4,
   map: map
 });
-  
+
 /* ---------------------- 운행 안내 함수 ---------------------- */
 async function showRouteToDestination(destination) {
   // ✅ 기존 안내선 제거 (중복 표시 방지)
@@ -2392,7 +2392,7 @@ async function showRouteToDestination(destination) {
 
   // ✅ 새 안내선 준비 (빨간색 Polyline)
   destinationRenderer = new google.maps.Polyline({
-    strokeColor: "#FF0000",   // 빨간색 안내선
+    strokeColor: "#FF0000",   // 목적지 안내선은 빨간색
     strokeWeight: 6,          // 두께
     strokeOpacity: 0.8,       // 불투명도
     map: map                  // 지도에 표시
@@ -2415,12 +2415,10 @@ async function showRouteToDestination(destination) {
     ]);
   }
 
-  // ✅ 음성 안내 (최초 실행 시만)
-  if (!drivingStarted) {
-    speakMessage("경로 안내를 시작합니다."); // 음성 출력
-    drivingStarted = true;                   // 안내 시작 플래그
-    startTime = Date.now();                  // 주행 시작 시점 기록
-  }
+  // ✅ 경로안내 버튼을 누른 순간부터 시간 시작
+  drivingStarted = true;
+  startTime = Date.now();   // 주행 시작 시점 기록
+  console.log("경로 안내 버튼 클릭 → 시간 시작:", startTime);
 }
 
 /* ---------------------- 주행시간만 초 단위로 갱신 ---------------------- */
@@ -2437,19 +2435,19 @@ setInterval(() => {
       travelTimeEl.innerText = `${min}분 ${sec}초`;
     }
   }
-}, 1000); // 무조건 1초마다 실행
-
+}, 1000); // 무조건 1초마다 실행 → 속도와 무관하게 항상 부드럽게 표시
 
 /* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
 setInterval(() => {
   updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
-}, 5000); // 구글 API 주기에 맞춰 5초마다 실행
+}, 5000); // 이 주기는 배열 갱신 주기에 맞춰 자유롭게 변경 가능
 
 /* ---------------------- 위치 갱신 시 지나온 경로 추가 ---------------------- */
 function updateTraveledPath(lat, lng) {
   pathCoords.push({ lat, lng }); // 좌표 기록
   traveledPath.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
 }
+
 
 
 /* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
