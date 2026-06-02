@@ -2149,35 +2149,40 @@ document.getElementById("destinationInput").addEventListener("input", () => {
 
 /* ---------------------- 위치검색 버튼 이벤트 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
+  // ✅ 입력값 가져오기 (목적지 이름)
   const inputName = document.getElementById("destinationInput").value.trim();
 
+  // ✅ 입력값이 없으면 안내 메시지 출력 후 종료
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     return;
   }
 
-  // ✅ 검색 실행 (모달은 안 띄움)
+  // ✅ 목적지 검색 실행 (모달은 띄우지 않음)
   const results = await findDestination(inputName, false);
 
-  // ✅ 텍스트박스 값과 일치하는 항목 찾기
+  // ✅ 검색 결과 중 입력값과 일치하는 항목 찾기
   let match = results.find(r => r.name === inputName || r.address.includes(inputName));
 
-  // ✅ match가 없더라도 좌표가 저장되어 있다면 fallback 처리
+  // ✅ 검색 결과가 없더라도 좌표가 저장되어 있으면 fallback 처리
   if (!match && destinationLat && destinationLng) {
     match = { name: inputName, lat: destinationLat, lng: destinationLng, address: "" };
   }
 
   if (match) {
-    // ✅ 지도에 마커 표시 + 모달창 정보 출력
+    // ✅ 지도에 목적지 마커 표시 + 모달창 정보 출력
     showDestinationOnMap(match.name, Number(match.lat), Number(match.lng), match.address);
 
     // ✅ 경로안내 버튼 활성화
     document.getElementById("startRouteBtn").style.display = "inline-block";
+
+    // ✅ 검색 모달 닫기 (UX 개선: 검색 후 목적지 모달만 남기기)
+    closeModal(document.getElementById("searchModal"));
   } else {
+    // ✅ 검색 결과가 없을 때 안내 메시지 출력
     document.getElementById("destinationResult").innerText = "검색된 목적지가 없습니다.";
   }
 });
-
 
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
@@ -2389,13 +2394,27 @@ async function showRouteToDestination(destination) {
   if (!drivingStarted) {
     speakMessage("경로 안내를 시작합니다."); // 음성 출력
     drivingStarted = true;                   // 안내 시작 플래그
+    startTime = Date.now();                  // 주행 시작 시점 기록
   }
 }
 
-// ✅ 이동정보 모달 갱신 (5초마다 실행)
+/* ---------------------- 주행시간만 초 단위로 갱신 ---------------------- */
 setInterval(() => {
-  updateTravelStats(); // 이동거리, 속도, 시간 등 갱신
-}, 5000);
+  if (startTime) {
+    const elapsedMs = Date.now() - startTime;        // 경과 시간(ms)
+    const elapsedSec = Math.floor(elapsedMs / 1000); // 초 단위 변환
+    const min = Math.floor(elapsedSec / 60);         // 분 계산
+    const sec = elapsedSec % 60;                     // 초 계산
+
+    // ✅ 화면에 표시 (DOM 업데이트)
+    document.getElementById("travelTime").innerText = `${min}분 ${sec}초`;
+  }
+}, 1000); // 1초마다 실행 → 주행시간은 부드럽게 표시
+
+/* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
+setInterval(() => {
+  updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
+}, 5000); // 구글 API 주기에 맞춰 5초마다 실행
 
 
 /* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
