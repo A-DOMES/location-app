@@ -2013,7 +2013,7 @@ navigator.geolocation.getCurrentPosition(
 
 /* ---------------------- 목적지 표시 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  // ✅ 목적지 좌표 저장 (전역 변수에 기록)
+  // ✅ 목적지 좌표 저장
   destinationLat = lat;
   destinationLng = lng;
   const pos = new google.maps.LatLng(lat, lng);
@@ -2021,9 +2021,9 @@ function showDestinationOnMap(title, lat, lng, address="") {
   // ✅ 지도 중심 이동 및 확대
   map.setCenter(pos);
   map.setZoom(16);
-  followUser = false; // 사용자 중심 모드 해제
+  followUser = false;
 
-  // ✅ 기존 목적지 마커/원 제거 (중복 표시 방지)
+  // ✅ 기존 목적지 마커/원 제거
   destinationMarkers.forEach(m => m.setMap(null));
   destinationMarkers = [];
   if (destinationCircle) destinationCircle.setMap(null);
@@ -2053,7 +2053,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
       scale: 2,
       anchor: new google.maps.Point(12, 24)
     },
-    animation: google.maps.Animation.BOUNCE, // ✅ 통통거리 애니메이션
+    animation: google.maps.Animation.BOUNCE,
     title: title
   });
 
@@ -2062,10 +2062,9 @@ function showDestinationOnMap(title, lat, lng, address="") {
     marker.setAnimation(null);
   }, 5000);
 
-  // ✅ 목적지 마커 배열에 추가 (관리용)
   destinationMarkers.push(marker);
 
-  // ✅ 마커 정보창 (mouseover 시 표시)
+  // ✅ 마커 정보창
   const infoWindow = new google.maps.InfoWindow({
     content: `
       <div style="text-align:left">
@@ -2078,7 +2077,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   marker.addListener("mouseover", () => infoWindow.open(map, marker));
   marker.addListener("mouseout", () => infoWindow.close());
 
-  // ✅ 목적지 결과 영역 표시 (UI 업데이트)
+  // ✅ 목적지 결과 영역 표시
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
