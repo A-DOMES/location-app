@@ -797,17 +797,21 @@ function updateMapStyle(map) {
   body.classList.add(type === "roadmap" ? "map-roadmap" : "map-satellite");
 }
 
-/* ---------------------- 위치 추적 ---------------------- */
+// ---------------------- 위치 추적 ----------------------
 function startTracking() {
   const geocoder = new google.maps.Geocoder();
 
-  // ✅ 위치 추적 시작 (위치가 바뀔 때마다 콜백 실행)
+  // ✅ 위치 추적 시작 (watchPosition: 위치가 바뀔 때마다 콜백 실행)
   navigator.geolocation.watchPosition(pos => {
     const now = Date.now();
     const lat = pos.coords.latitude;   // 현재 위도
     const lng = pos.coords.longitude;  // 현재 경도
 
-    // ✅ 속도 계산 (좌표 기반)
+    // ❌ 기존: 브라우저 제공 speed 사용 (대부분 null/0이라 무의미)
+    // const speed = pos.coords.speed || 0;
+    // const speedKmh = speed * 3.6;
+
+    // ✅ 수정: 좌표 기반 속도 계산 강제 실행 (걷기에서도 자연스럽게 반영)
     computeSpeedFromGPS(lat, lng, now);
 
     // ✅ 이동 거리 계산 (경로 그리기용)
@@ -830,37 +834,47 @@ function startTracking() {
       lastLat = lat;
       lastLng = lng;
 
+      // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
+
+      // ✅ 방향 계산 (heading 값 없을 경우 직접 bearing 계산)
+      let heading = pos.coords.heading || 0; 
+      if (!heading || heading === 0) {
+        if (pathCoords.length > 1) {
+          const last = pathCoords[pathCoords.length - 1];
+          const prev = pathCoords[pathCoords.length - 2];
+          heading = getBearing(prev.lat(), prev.lng(), last.lat(), last.lng());
+        } else {
+          heading = lastHeading ?? 0;
+        }
+      }
+      lastHeading = heading;
+      const directionLabel = getDirectionLabel(heading);
+
+      // ✅ 현재 위치 정보 표시 (UI 갱신)
+      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+      document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
+      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
 
       // ✅ 주소 갱신 (지오코딩은 일정 주기마다만 실행)
       if (Date.now() - lastGeocodeTime > geocodeInterval) {
         document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
           if (status === "OK" && results[0]) {
-            // ✅ 주소 문자열 정리 (대한민국 제거)
             let address = results[0].formatted_address
               .replace(/^대한민국\s*,?\s*/, "")
               .replace(/\s*,?\s*대한민국$/, "");
-
-            // ✅ UI에 표시
             document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
-
-            // ✅ 좌표 + 주소 함께 기록
-            updateTraveledPath(lat, lng, address);
-          } else {
-            // ✅ 주소 변환 실패 시 좌표만 기록
-            updateTraveledPath(lat, lng, "주소 정보 없음");
           }
         });
         lastGeocodeTime = Date.now();
-      } else {
-        // ✅ 주소 갱신 주기가 아닐 때는 좌표만 기록
-        updateTraveledPath(lat, lng);
       }
 
       // ✅ 지도 및 마커 갱신
-      updateLocationDisplay(currentLat, currentLng, pos.coords.heading || 0);
+      updateLocationDisplay(currentLat, currentLng, heading);
       if (!myMarker) {
         myMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "내 위치" });
       } else {
@@ -872,17 +886,18 @@ function startTracking() {
 
       // ✅ 원형 표시 및 레이더 보정
       drawMultipleCircles({ lat, lng });
-      updateRadarPolygon({ lat, lng }, pos.coords.heading || 0);
+      updateRadarPolygon({ lat, lng }, heading);
 
       // ✅ 경로 polyline 갱신 (5m 이상 이동 기준 유지 → 경로 깔끔)
+      updatePathPolyline(currentLat, currentLng);
       if (pathCoords.length > 1) {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
 
-      // ✅ 이동정보 업데이트
+      // ✅ 이동정보 업데이트 (속도는 2m 기준 + 스무딩 적용)
       updateTravelStats();
 
-      // ✅ 보호구역/속도 제한 체크
+      // ✅ 보호구역/속도 제한 체크 (배열 기반으로 나중에 수정 가능)
       checkSpeedLimit(currentLat, currentLng, currentSpeed);
       checkSchoolZones(currentLat, currentLng);
       checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
