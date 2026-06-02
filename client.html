@@ -1954,7 +1954,6 @@ async function findDestination(inputName, showPanel = true) {
   const body = panel ? panel.querySelector(".search-body") : null;
 
   // ✅ 서버 + pathCoords 결과 병합
-const mergedList = [...serverMatches, ...pathMatches];
 console.log("검색어:", name);
 console.log("서버 결과:", serverMatches);
 console.log("경로 결과:", pathMatches);
