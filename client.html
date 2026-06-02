@@ -1931,20 +1931,20 @@ async function findDestination(inputName, showPanel = true) {
       }));
   }
 
-  // ✅ pathCoords 배열 검색 (구글 Places 대체)
+  // ✅ pathCoords 배열 검색
   let pathMatches = [];
   if (Array.isArray(pathCoords)) {
     pathMatches = pathCoords
       .filter(item =>
-        (item.name && item.name.trim().toLowerCase().normalize("NFC").includes(name)) ||
-        (item.address && item.address.trim().toLowerCase().normalize("NFC").includes(name))
+        (item.name && item.name.toLowerCase().includes(name)) ||
+        (item.address && item.address.toLowerCase().includes(name))
       )
       .map(item => ({
         name: item.name || "경로 기록",
         lat: Number(item.lat),
         lng: Number(item.lng),
         address: item.address || "주소 정보 없음",
-        source: "내경로"              // 출처 표시
+        source: "내경로"
       }));
   }
 
