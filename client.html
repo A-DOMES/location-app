@@ -1930,14 +1930,15 @@ async function findDestination(inputName, showPanel = true) {
       }));
   }
 
-  // ✅ pathCoords 배열 검색
+  // ✅ pathCoords 배열 검색 (name 또는 address 기준으로 매칭)
   let pathMatches = [];
   if (Array.isArray(pathCoords)) {
     pathMatches = pathCoords
-      .filter(item =>
-        (item.name && item.name.toLowerCase().includes(name)) ||
-        (item.address && item.address.toLowerCase().includes(name))
-      )
+      .filter(item => {
+        // name과 address 중 하나라도 있으면 문자열로 변환
+        const target = (item.name || item.address || "").toLowerCase();
+        return target.includes(name);
+      })
       .map(item => ({
         name: item.name || "경로 기록",
         lat: Number(item.lat),
@@ -1946,6 +1947,7 @@ async function findDestination(inputName, showPanel = true) {
         source: "내경로"
       }));
   }
+
 
   // ✅ 서버 + pathCoords 결과 병합
   const mergedList = [...serverMatches, ...pathMatches];
