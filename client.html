@@ -1947,12 +1947,12 @@ function handleDestinationSelection(r) {
   if (panel) panel.style.display = "none";
 }
 
-/* ---------------------- 목적지 검색 기능 (실시간 구글 검색) ---------------------- */
+/* ---------------------- 목적지 검색 기능 (서버 + pathCoords 병합) ---------------------- */
 async function findDestination(inputName, showPanel = true) {
   // ✅ 입력값 정리: 소문자 변환 + NFC 정규화
   const name = inputName.trim().toLowerCase().normalize("NFC");
 
-  // ✅ 내 서버 데이터 검색
+  // ✅ 내 서버 데이터 검색 (기존 로직 그대로 유지)
   let serverMatches = [];
   if (Array.isArray(adminLocations)) {
     serverMatches = adminLocations
@@ -1968,11 +1968,25 @@ async function findDestination(inputName, showPanel = true) {
       }));
   }
 
-  // ✅ 구글 Places API 실시간 검색 호출
-  const googleMatches = await searchGooglePlacesLive(name);
+  // ✅ pathCoords 배열 검색 (구글 Places 대체)
+  let pathMatches = [];
+  if (Array.isArray(pathCoords)) {
+    pathMatches = pathCoords
+      .filter(item =>
+        (item.name && item.name.trim().toLowerCase().normalize("NFC").includes(name)) ||
+        (item.address && item.address.trim().toLowerCase().normalize("NFC").includes(name))
+      )
+      .map(item => ({
+        name: item.name || "경로 기록",
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        address: item.address || "주소 정보 없음",
+        source: "내경로"              // 출처 표시
+      }));
+  }
 
-  // ✅ 서버 + 구글 결과 병합
-  const mergedList = [...serverMatches, ...googleMatches];
+  // ✅ 서버 + pathCoords 결과 병합
+  const mergedList = [...serverMatches, ...pathMatches];
   const panel = document.getElementById("searchResultPanel");
   const body = panel ? panel.querySelector(".search-body") : null;
 
@@ -1992,8 +2006,6 @@ async function findDestination(inputName, showPanel = true) {
       item.addEventListener("click", () => {
         const idx = item.dataset.index;
         const r = mergedList[idx];
-        // 📌 클릭 시에는 텍스트박스에 기록 + 좌표 저장만 하고,
-        // 지도 마커 표시와 경로안내 버튼 활성화는 "위치검색 버튼"에서 처리
         handleDestinationSelection(r);
       });
     });
@@ -2319,7 +2331,7 @@ if (closeQueuedModal) {
 }  
 
 
-/* ---------------------- 목적지 자동완성 (배열 기반) ---------------------- */
+/* ---------------------- 목적지 자동완성 (pathCoords 기반) ---------------------- */
 function initAutocomplete() {
   const input = document.getElementById("destinationInput");
   const panel = document.getElementById("searchResultPanel");
@@ -2332,9 +2344,9 @@ function initAutocomplete() {
       return;
     }
 
-    // ✅ 배열 기반 필터링 (googleLocations에서 검색)
-    const matches = googleLocations.filter(loc =>
-      loc.name.toLowerCase().includes(keyword) ||
+    // ✅ 배열 기반 필터링 (pathCoords에서 검색)
+    const matches = pathCoords.filter(loc =>
+      (loc.name && loc.name.toLowerCase().includes(keyword)) ||
       (loc.address && loc.address.toLowerCase().includes(keyword))
     );
 
@@ -2342,8 +2354,8 @@ function initAutocomplete() {
       // ✅ 검색결과 리스트 표시
       body.innerHTML = matches.map((item, idx) => `
         <div class="search-item" data-index="${idx}">
-          <div class="search-title">📍 ${item.name}</div>
-          <div class="search-address">🏠 ${item.address}</div>
+          <div class="search-title">📍 ${item.name || "경로 기록"}</div>
+          <div class="search-address">🏠 ${item.address || "주소 정보 없음"}</div>
         </div>
       `).join("");
 
@@ -2354,10 +2366,10 @@ function initAutocomplete() {
         el.addEventListener("click", e => {
           const idx = e.currentTarget.dataset.index;
           const r = matches[idx];
-          showDestinationOnMap(r.name, r.lat, r.lng, r.address);
+          showDestinationOnMap(r.name || "경로 기록", r.lat, r.lng, r.address);
           destinationLat = r.lat;
           destinationLng = r.lng;
-          input.value = r.name;
+          input.value = r.name || "경로 기록";
           panel.style.display = "none";
           document.getElementById("startRouteBtn").style.display = "inline-block";
         });
@@ -2472,18 +2484,16 @@ function updateTraveledPath(lat, lng, address = "") {
 }
 
 
-/* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
+/* ---------------------- 레이더 반경 내 탐지 (pathCoords 기반) ---------------------- */
 function checkRadarPOIs(myPos) {
-  // ✅ 배열 기반 필터링
-  // googleLocations 배열에서 특정 유형(type)이 포함된 장소만 탐지
+  // ✅ pathCoords 배열에서 특정 유형(type)이 포함된 장소만 탐지
   const radarTypes = ["cafe", "restaurant", "pharmacy", "gas_station"];
-  const matches = googleLocations.filter(loc =>
+  const matches = pathCoords.filter(loc =>
     radarTypes.some(type => loc.type && loc.type.includes(type))
   );
 
   // ✅ 탐지된 장소들 각각 처리
   matches.forEach(place => {
-    // ✅ 탐지된 장소 좌표 생성
     const poiPos = new google.maps.LatLng(place.lat, place.lng);
 
     // ✅ 현재 위치(myPos)와 탐지된 장소 간 거리 계산
@@ -2492,19 +2502,14 @@ function checkRadarPOIs(myPos) {
       poiPos
     );
 
-    // ✅ 레이더 반경 내에 있는 경우만 처리
     if (distance <= radarRadiusMeters) {
-      // ✅ 모달창에 표시할 메시지 구성
       const message = `<div class="alert-message">
-        <p>📍 레이더 반경 내 탐지: ${place.name}</p>
+        <p>📍 레이더 반경 내 탐지: ${place.name || "경로 기록"}</p>
         <p>거리: ${distance.toFixed(1)} m</p>
       </div>`;
 
-      // ✅ 모달창 표시 (알림용)
       showQueuedModal("레이더 탐지", message);
-
-      // ✅ 음성 안내 추가
-      speakMessage(`레이더 반경 내 ${place.name} 발견, 거리 ${distance.toFixed(0)} 미터`);
+      speakMessage(`레이더 반경 내 ${place.name || "경로 기록"} 발견, 거리 ${distance.toFixed(0)} 미터`);
     }
   });
 }
