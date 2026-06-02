@@ -2013,10 +2013,10 @@ navigator.geolocation.getCurrentPosition(
 
 /* ---------------------- 목적지 표시 ---------------------- */
 function showDestinationOnMap(title, lat, lng, address="") {
-  // ✅ 목적지 좌표 저장
-  destinationLat = lat;
-  destinationLng = lng;
-  const pos = new google.maps.LatLng(lat, lng);
+  // ✅ 좌표를 반드시 숫자로 변환
+  destinationLat = Number(lat);
+  destinationLng = Number(lng);
+  const pos = new google.maps.LatLng(destinationLat, destinationLng);
 
   // ✅ 지도 중심 이동 및 확대
   map.setCenter(pos);
@@ -2069,7 +2069,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
     content: `
       <div style="text-align:left">
         📍 목적지: ${title}<br>
-        🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+        🌐 좌표: (${destinationLat.toFixed(5)}, ${destinationLng.toFixed(5)})<br>
         🏠 주소: ${address}
       </div>`
   });
@@ -2081,9 +2081,12 @@ function showDestinationOnMap(title, lat, lng, address="") {
   document.getElementById("destinationResult").innerHTML = `
     <div style="text-align:left">
       📍 목적지: ${title}<br>
-      🌐 좌표: (${lat.toFixed(5)}, ${lng.toFixed(5)})<br>
+      🌐 좌표: (${destinationLat.toFixed(5)}, ${destinationLng.toFixed(5)})<br>
       🏠 주소: ${address}
     </div>`;
+
+  // ✅ 모달창 열기 (좌표 정보 표시)
+  openModal(document.getElementById("destinationModal"));
 }
 
 /* ---------------------- 1분마다 서버 위치 갱신 ---------------------- */
@@ -2166,8 +2169,8 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
   }
 
   if (match) {
-    // ✅ 지도에 마커 표시
-    showDestinationOnMap(match.name, match.lat, match.lng, match.address);
+    // ✅ 지도에 마커 표시 + 모달창 정보 출력
+    showDestinationOnMap(match.name, Number(match.lat), Number(match.lng), match.address);
 
     // ✅ 경로안내 버튼 활성화
     document.getElementById("startRouteBtn").style.display = "inline-block";
@@ -2175,6 +2178,7 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     document.getElementById("destinationResult").innerText = "검색된 목적지가 없습니다.";
   }
 });
+
 
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
