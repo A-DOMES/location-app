@@ -2144,20 +2144,23 @@ document.getElementById("destinationInput").addEventListener("input", () => {
 
 /* ---------------------- 위치검색 버튼 이벤트 ---------------------- */
 document.getElementById("searchDestinationBtn").addEventListener("click", async () => {
-  // ✅ 텍스트박스 입력값 가져오기
   const inputName = document.getElementById("destinationInput").value.trim();
 
-  // ✅ 입력값이 없으면 안내 메시지 표시
   if (!inputName) {
     document.getElementById("destinationResult").innerText = "목적지를 입력하세요.";
     return;
   }
 
-  // ✅ 위치검색 버튼 클릭 시: 검색 실행 (모달은 안 띄움)
+  // ✅ 검색 실행 (모달은 안 띄움)
   const results = await findDestination(inputName, false);
 
   // ✅ 텍스트박스 값과 일치하는 항목 찾기
-  const match = results.find(r => r.name === inputName || r.address.includes(inputName));
+  let match = results.find(r => r.name === inputName || r.address.includes(inputName));
+
+  // ✅ match가 없더라도 좌표가 저장되어 있다면 fallback 처리
+  if (!match && destinationLat && destinationLng) {
+    match = { name: inputName, lat: destinationLat, lng: destinationLng, address: "" };
+  }
 
   if (match) {
     // ✅ 지도에 마커 표시
@@ -2166,11 +2169,9 @@ document.getElementById("searchDestinationBtn").addEventListener("click", async 
     // ✅ 경로안내 버튼 활성화
     document.getElementById("startRouteBtn").style.display = "inline-block";
   } else {
-    // ✅ 검색 결과 없음 처리
     document.getElementById("destinationResult").innerText = "검색된 목적지가 없습니다.";
   }
 });
-
 
 /* ---------------------- 경로 안내 버튼 이벤트 ---------------------- */
 document.getElementById("startRouteBtn").addEventListener("click", () => {
