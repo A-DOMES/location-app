@@ -1476,6 +1476,11 @@ function shareLocation() {
     document.getElementById("addressBox").innerText = `주소: ${address}`;
     document.getElementById("timeBox").innerText = new Date().toLocaleTimeString();
 
+    // ✅ 10초 후 주소 자동 제거 (사용자 혼동 방지)
+    setTimeout(() => {
+      document.getElementById("addressBox").innerText = "";
+    }, 10000);
+
     // ✅ 구글 지도 링크 생성
     const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
