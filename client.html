@@ -1459,6 +1459,11 @@ function shareLocation() {
     return;
   }
 
+  // ✅ 사용자 이름 변수 (앱에서 설정/로그인 시 받아오기)
+  const userName = window.appUserName || "사용자"; 
+  // ⚠️ 예시: appUserName이라는 글로벌 변수에 사용자 이름을 저장해둔다고 가정
+  // 실제 구현에서는 로그인 정보, 입력값, 프로필 설정 등에서 가져와야 함
+
   // ✅ 버튼 클릭 시점에 주소 요청 (지오코딩 실행)
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode({ location: { lat: currentLat, lng: currentLng } }, (results, status) => {
@@ -1470,11 +1475,10 @@ function shareLocation() {
         .replace(/\s*,?\s*대한민국$/, "");
     }
 
-    // ✅ 모달창에 현재 좌표와 주소 표시
+    // ✅ 모달창에 현재 좌표와 주소 표시 (주소만 갱신)
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("addressBox").innerText = `주소: ${address}`;
-    document.getElementById("timeBox").innerText = new Date().toLocaleTimeString();
 
     // ✅ 10초 후 주소 자동 제거 (사용자 혼동 방지)
     setTimeout(() => {
@@ -1489,7 +1493,7 @@ function shareLocation() {
       "━━━━━━━━━━━━━━━━━━\n" +
       "📍 내 현재 위치 정보\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
-      `이름: minkoo\n` + // ⚠️ 사용자 이름은 하드코딩 → 변수화 권장
+      `이름: ${userName}\n` + // ✅ 사용자 이름 변수 사용
       `위도: ${currentLat.toFixed(6)}\n` +
       `경도: ${currentLng.toFixed(6)}\n` +
       `주소: ${address}\n\n` +
