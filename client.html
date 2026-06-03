@@ -817,21 +817,23 @@ function startTracking() {
       );
     }
 
-    // ✅ 디자인된 아이콘 정의
+    // ✅ 디자인된 아이콘 정의 (크기 확대)
     const defaultIcon = {
       url: "icons/default-marker.png", // 처음 표시할 기본 마커 이미지
-      scaledSize: new google.maps.Size(40, 40),
-      anchor: new google.maps.Point(20, 40)
+      scaledSize: new google.maps.Size(80, 80), // ✅ 크기를 크게 (예: 80x80)
+      anchor: new google.maps.Point(40, 80)     // ✅ 기준점: 이미지 하단 중앙 (발 위치)
     };
+    
     const personIcon = {
       url: "icons/person-marker.png", // 사람 아이콘 이미지
-      scaledSize: new google.maps.Size(40, 40),
-      anchor: new google.maps.Point(20, 40)
+      scaledSize: new google.maps.Size(80, 80), // 크기 동일하게 확대
+      anchor: new google.maps.Point(40, 80)
     };
+    
     const carIcon = {
       url: "icons/car-marker.png", // 자동차 아이콘 이미지
-      scaledSize: new google.maps.Size(40, 40),
-      anchor: new google.maps.Point(20, 40)
+      scaledSize: new google.maps.Size(80, 80), // 크기 동일하게 확대
+      anchor: new google.maps.Point(40, 80)
     };
 
     // ✅ 마커 최초 생성: 처음 화면에서 기본 마커 표시
