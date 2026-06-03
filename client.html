@@ -1470,6 +1470,12 @@ function shareLocation() {
         .replace(/\s*,?\s*대한민국$/, "");
     }
 
+    // ✅ 모달창에 현재 좌표와 주소 표시
+    document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+    document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+    document.getElementById("addressBox").innerText = `주소: ${address}`;
+    document.getElementById("timeBox").innerText = new Date().toLocaleTimeString();
+
     // ✅ 구글 지도 링크 생성
     const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
