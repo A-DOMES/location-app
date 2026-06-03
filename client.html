@@ -2475,14 +2475,13 @@ setInterval(() => {
 }, 5000); // 구글 GPS 주기에 맞춰 5초마다 실행
 
 /* ---------------------- 경로 기록 함수 ---------------------- */
-function updateTraveledPath(lat, lng, address = "") {
-  // ✅ 좌표(lat, lng)는 항상 기록 → 데이터 손실 방지
-  pathCoords.push({ lat, lng, address });
+function updateTraveledPath(lat, lng) {
+  // ✅ 좌표(lat, lng)만 기록 → 주소는 저장하지 않음
+  pathCoords.push({ lat, lng });
 
   // ❌ Polyline은 여기서 즉시 갱신하지 않음
   //    → 지도에는 5초마다만 반영되도록 setInterval에서 처리
 }
-
 
 /* ---------------------- 주소 갱신 타이머 ---------------------- */
 setInterval(() => {
