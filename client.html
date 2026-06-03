@@ -1459,10 +1459,10 @@ function shareLocation() {
     return;
   }
 
-  // ✅ 사용자 이름 변수 (앱에서 설정/로그인 시 받아오기)
-  const userName = window.appUserName || "사용자"; 
-  // ⚠️ 예시: appUserName이라는 글로벌 변수에 사용자 이름을 저장해둔다고 가정
-  // 실제 구현에서는 로그인 정보, 입력값, 프로필 설정 등에서 가져와야 함
+  // ✅ 구글 로그인 시 가져온 사용자 이름 사용
+  // ⚠️ 예시: 구글 로그인 성공 시 window.googleUserName에 이름을 저장했다고 가정
+  const userName = window.googleUserName || "사용자"; 
+  // 실제 구현에서는 Google Identity Services(OAuth)로 로그인 후 profile.name을 가져와서 저장해야 함
 
   // ✅ 버튼 클릭 시점에 주소 요청 (지오코딩 실행)
   const geocoder = new google.maps.Geocoder();
@@ -1493,7 +1493,7 @@ function shareLocation() {
       "━━━━━━━━━━━━━━━━━━\n" +
       "📍 내 현재 위치 정보\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
-      `이름: ${userName}\n` + // ✅ 사용자 이름 변수 사용
+      `이름: ${userName}\n` + // ✅ 구글 계정 이름 반영
       `위도: ${currentLat.toFixed(6)}\n` +
       `경도: ${currentLng.toFixed(6)}\n` +
       `주소: ${address}\n\n` +
@@ -1512,7 +1512,6 @@ function shareLocation() {
 
 // ✅ 버튼 이벤트 연결
 document.getElementById("shareBtn").addEventListener("click", shareLocation);
-
 
 // ---------------------- 원형 표시 ----------------------
 function drawMultipleCircles(myPos) {
