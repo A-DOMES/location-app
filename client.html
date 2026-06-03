@@ -799,18 +799,22 @@ function updateMapStyle(map) {
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
-  const geocoder = new google.maps.Geocoder(); // ✅ 주소 변환용 Geocoder 객체 생성
+  const geocoder = new google.maps.Geocoder();
 
   // ✅ 위치 추적 시작 (watchPosition: 위치가 바뀔 때마다 콜백 실행)
   navigator.geolocation.watchPosition(pos => {
     const now = Date.now();
-    const lat = pos.coords.latitude;   // ✅ 현재 위도
-    const lng = pos.coords.longitude;  // ✅ 현재 경도
+    const lat = pos.coords.latitude;   // 현재 위도
+    const lng = pos.coords.longitude;  // 현재 경도
 
-    // ✅ 속도 계산 (좌표 기반으로 직접 계산 → 걷기/차량 모두 반영)
+    // ❌ 기존: 브라우저 제공 speed 사용 (대부분 null/0이라 무의미)
+    // const speed = pos.coords.speed || 0;
+    // const speedKmh = speed * 3.6;
+
+    // ✅ 수정: 좌표 기반 속도 계산 강제 실행 (걷기에서도 자연스럽게 반영)
     computeSpeedFromGPS(lat, lng, now);
 
-    // ✅ 이동 거리 계산 (polyline 갱신 기준)
+    // ✅ 이동 거리 계산 (경로 그리기용)
     let distanceMoved = 0;
     if (lastLat !== null && lastLng !== null) {
       distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
@@ -830,17 +834,17 @@ function startTracking() {
       lastLat = lat;
       lastLng = lng;
 
-      // ✅ 현재 좌표값 갱신
+      // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
 
-      // ✅ 방향 계산 (heading 값 없을 경우 bearing 직접 계산)
+      // ✅ 방향 계산 (heading 값 없을 경우 직접 bearing 계산)
       let heading = pos.coords.heading || 0; 
       if (!heading || heading === 0) {
         if (pathCoords.length > 1) {
           const last = pathCoords[pathCoords.length - 1];
           const prev = pathCoords[pathCoords.length - 2];
-          heading = getBearing(prev.lat, prev.lng, last.lat, last.lng);
+          heading = getBearing(prev.lat(), prev.lng(), last.lat(), last.lng());
         } else {
           heading = lastHeading ?? 0;
         }
@@ -848,37 +852,25 @@ function startTracking() {
       lastHeading = heading;
       const directionLabel = getDirectionLabel(heading);
 
-      // ✅ UI 갱신 (좌표, 방향, 시간)
+      // ✅ 현재 위치 정보 표시 (UI 갱신)
       const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
       document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
       document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
       document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
       document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
 
-      // ✅ 주소 갱신 (Geocoder 호출 → 일정 주기마다 실행)
+      // ✅ 주소 갱신 (지오코딩은 일정 주기마다만 실행)
       if (Date.now() - lastGeocodeTime > geocodeInterval) {
         document.getElementById("addressBox").innerHTML = `<small>주소 불러오는 중...</small>`;
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
           if (status === "OK" && results[0]) {
-            // ✅ 주소 문자열 정리 (대한민국 제거)
             let address = results[0].formatted_address
               .replace(/^대한민국\s*,?\s*/, "")
               .replace(/\s*,?\s*대한민국$/, "");
-
-            // ✅ UI에 주소 표시
             document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
-
-            // ✅ 경로 기록 시 주소까지 함께 저장
-            updateTraveledPath(lat, lng, address);
-          } else {
-            // ❌ 주소를 못 얻었을 경우 좌표만 저장
-            updateTraveledPath(lat, lng, "");
           }
         });
         lastGeocodeTime = Date.now();
-      } else {
-        // ✅ 주소 갱신 주기가 아닐 때는 좌표만 저장
-        updateTraveledPath(lat, lng, "");
       }
 
       // ✅ 지도 및 마커 갱신
@@ -902,10 +894,10 @@ function startTracking() {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
 
-      // ✅ 이동정보 업데이트 (속도, 거리 등)
+      // ✅ 이동정보 업데이트 (속도는 2m 기준 + 스무딩 적용)
       updateTravelStats();
 
-      // ✅ 보호구역/속도 제한 체크
+      // ✅ 보호구역/속도 제한 체크 (배열 기반으로 나중에 수정 가능)
       checkSpeedLimit(currentLat, currentLng, currentSpeed);
       checkSchoolZones(currentLat, currentLng);
       checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
@@ -918,9 +910,9 @@ function startTracking() {
     console.error("위치 추적 오류:", err);
     document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
   }, {
-    enableHighAccuracy: true, // ✅ 높은 정확도 요청
-    maximumAge: 3000,         // ✅ 최근 3초 이내 위치 캐시 허용
-    timeout: 20000            // ✅ GPS 응답 대기 시간 20초
+    enableHighAccuracy: true, // 높은 정확도 요청
+    maximumAge: 3000,         // 최근 3초 이내 위치 캐시 허용
+    timeout: 20000            // GPS 응답 대기 시간 20초
   });
 }
 
@@ -2438,31 +2430,29 @@ async function showRouteToDestination(destination) {
 /* ---------------------- 주행시간 갱신 ---------------------- */
 setInterval(() => {
   if (startTime) {
-    const elapsedMs = Date.now() - startTime;        // 경과 시간(ms)
-    const elapsedSec = Math.floor(elapsedMs / 1000); // 초 단위 변환
-    const min = Math.floor(elapsedSec / 60);         // 분 계산
-    const sec = elapsedSec % 60;                     // 초 계산
+    const elapsedMs = Date.now() - startTime;
+    const elapsedSec = Math.floor(elapsedMs / 1000);
+    const min = Math.floor(elapsedSec / 60);
+    const sec = elapsedSec % 60;
 
-    // ✅ 화면에 표시 (DOM 업데이트)
     const travelTimeEl = document.getElementById("travelTime");
     if (travelTimeEl) {
       travelTimeEl.innerText = `${min}분 ${sec}초`;
     }
   }
 }, 1000); // 1초마다 실행 → 부드럽게 표시
-// 👉 만약 불안정하면 여기 숫자를 5000으로 바꿔서 5초 주기로 되돌리면 됩니다.
+// 👉 필요 시 5000으로 바꿔서 5초 주기로도 가능
 
 /* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
 setInterval(() => {
   updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
-}, 5000); // 구글 API 주기에 맞춰 5초마다 실행
+}, 5000); // 구글 GPS 주기에 맞춰 5초마다 실행
 
-  
 /* ---------------------- 경로 기록 함수 ---------------------- */
 function updateTraveledPath(lat, lng, address = "") {
-  // ✅ 좌표와 주소를 함께 배열에 저장
-  //    - lat, lng: 실시간 GPS 좌표
-  //    - address: Geocoder로 변환된 주소 (없으면 빈 문자열)
+  // ✅ 좌표(lat, lng)는 항상 기록 → 실시간 이동 추적
+  // ✅ 주소(address)는 기본적으로 빈 문자열로 두고,
+  //    별도의 타이머(setInterval)에서만 갱신하도록 설계
   pathCoords.push({ lat, lng, address });
 
   // ✅ Polyline 갱신 (지도에 이동 경로 표시)
@@ -2470,6 +2460,26 @@ function updateTraveledPath(lat, lng, address = "") {
     pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
   );
 }
+
+/* ---------------------- 주소 갱신 타이머 ---------------------- */
+setInterval(() => {
+  if (pathCoords.length === 0) return;
+
+  const lastPos = pathCoords[pathCoords.length - 1];
+  geocoder.geocode({ location: { lat: lastPos.lat, lng: lastPos.lng } }, (results, status) => {
+    if (status === "OK" && results[0]) {
+      let address = results[0].formatted_address
+        .replace(/^대한민국\s*,?\s*/, "")
+        .replace(/\s*,?\s*대한민국$/, "");
+
+      // ✅ UI에 주소 표시
+      document.getElementById("addressBox").innerHTML = `<small>주소: ${address}</small>`;
+
+      // ✅ 마지막 좌표 객체에 주소 업데이트
+      lastPos.address = address;
+    }
+  });
+}, geocodeInterval); // 60초마다 실행
 
 
 /* ---------------------- 레이더 반경 내 탐지 (배열 기반) ---------------------- */
