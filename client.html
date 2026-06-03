@@ -2451,20 +2451,25 @@ setInterval(() => {
 /* ---------------------- 이동거리/속도 등은 5초마다 갱신 ---------------------- */
 setInterval(() => {
   updateTravelStats(); // 이동거리, 속도, 평균속도 등 갱신
+
+  // ✅ 5초마다 Polyline 갱신 (지도에 이동 경로 표시)
+  if (pathCoords.length > 1) {
+    traveledPath.setPath(
+      pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
+    );
+    document.getElementById("resetPathBtn").style.display = "inline-block";
+  }
 }, 5000); // 구글 GPS 주기에 맞춰 5초마다 실행
 
 /* ---------------------- 경로 기록 함수 ---------------------- */
 function updateTraveledPath(lat, lng, address = "") {
-  // ✅ 좌표(lat, lng)는 항상 기록 → 실시간 이동 추적
-  // ✅ 주소(address)는 기본적으로 빈 문자열로 두고,
-  //    별도의 타이머(setInterval)에서만 갱신하도록 설계
+  // ✅ 좌표(lat, lng)는 항상 기록 → 데이터 손실 방지
   pathCoords.push({ lat, lng, address });
 
-  // ✅ Polyline 갱신 (지도에 이동 경로 표시)
-  traveledPath.setPath(
-    pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng))
-  );
+  // ❌ Polyline은 여기서 즉시 갱신하지 않음
+  //    → 지도에는 5초마다만 반영되도록 setInterval에서 처리
 }
+
 
 /* ---------------------- 주소 갱신 타이머 ---------------------- */
 setInterval(() => {
