@@ -988,9 +988,9 @@ function updatePathPolyline(lat, lng, address = null) {
   if (!pathPolyline) {
     pathPolyline = new google.maps.Polyline({
       geodesic: true,
-      strokeColor: "#0000FF", // 파란색
-      strokeOpacity: 1.0,
-      strokeWeight: 3,
+      strokeColor: "#0000FF", // 선 색상 (파란색 예시)
+      strokeOpacity: 1.0,     // 불투명도
+      strokeWeight: 5,        // 선 두께 (기본 2 → 5로 두껍게)
       map: map
     });
   }
