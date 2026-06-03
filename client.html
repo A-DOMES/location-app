@@ -744,11 +744,11 @@ function initMap() {
       pos => {
         // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userPos);
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
+        map.setCenter(userPos);
 
-        // ✅ 내 위치 마커 표시
+        // ✅ 내 위치 마커 표시 (최초 생성)
         myMarker = new google.maps.Marker({
           position: userPos,
           map,
@@ -766,9 +766,6 @@ function initMap() {
         updateRadarPolygon(userPos, 0);
         startTracking();
 
-        // ❌ 구글 Places API 배열 호출 제거
-        // preloadGooglePlaces(); → 삭제
-
         // ✅ 로딩 메시지 숨기기
         const loadingMsg = document.getElementById("loadingMessage");
         if (loadingMsg) {
@@ -780,13 +777,45 @@ function initMap() {
         // ⚠️ 위치 가져오기 실패 시 → 기본 좌표(서울) 설정
         currentLat = 37.5663;
         currentLng = 126.9779;
+        const fallbackPos = { lat: currentLat, lng: currentLng };
+        map.setCenter(fallbackPos);
 
-        // ✅ 추적 시작 (구글 데이터는 검색 시점에만 호출)
+        // ✅ 기본 마커 표시
+        myMarker = new google.maps.Marker({
+          position: fallbackPos,
+          map,
+          title: "기본 위치 (서울)"
+        });
+
+        // ✅ 추적 시작
         startTracking();
       },
       { enableHighAccuracy: true } // ✅ 고정밀 모드
     );
   }
+}
+
+// ---------------------- 위치 갱신 ----------------------
+// ✅ 주행 중 좌표가 갱신될 때 호출되는 함수 예시
+function updateCurrentPosition(lat, lng) {
+  currentLat = lat;
+  currentLng = lng;
+
+  const newPos = { lat, lng };
+
+  // ✅ 마커 위치 갱신
+  if (myMarker) {
+    myMarker.setPosition(newPos);
+  }
+
+  // ✅ Polyline 경로 갱신
+  pathCoords.push(newPos);
+  if (pathPolyline) {
+    pathPolyline.setPath(pathCoords);
+  }
+
+  // ✅ 지도 중심 갱신 (선택적)
+  map.setCenter(newPos);
 }
 
 // ---------------------- 지도 스타일 업데이트 ----------------------
