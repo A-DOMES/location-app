@@ -11,7 +11,7 @@ const CONFIG = {
   CLIENT_URL: "client.html",
 
   // ✅ 브이월드 API 키
-  API_KEY: "여기에_발급받은_API_KEY",
+  API_KEY: "48BF8F59-D37C-3BA1-916E-1E5B135EC360",
   
   // ✅ 구글 지도 Map ID (환경별)
   mapIds: {
