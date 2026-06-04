@@ -9,6 +9,9 @@ const CONFIG = {
 
   // ✅ client.html (조회용 페이지)
   CLIENT_URL: "client.html",
+
+  // ✅ 브이월드 API 키
+  API_KEY: "여기에_발급받은_API_KEY",
   
   // ✅ 구글 지도 Map ID (환경별)
   mapIds: {
