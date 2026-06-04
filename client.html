@@ -350,20 +350,13 @@ button:hover{background-color:#1565c0;}
 }
 
 /* ---------------------- 국토부 부동산 버튼 ---------------------- */
-.map {
-  width: 100%;
-  height: 600px;
+#openLandBuildingModal {
+  padding: 8px 14px; background: #388e3c; color: white;
+  border: none; border-radius: 6px; cursor: pointer;
+  font-size: 16px; transition: background 0.3s;
 }
-button {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 10px;
-  background: #0078d7;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
+#openLandBuildingModal:hover { background: #2e7d32; }
+
   
 </style>
   
@@ -398,23 +391,31 @@ button {
   </div>
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
-  <!-- 지도 컨트롤 영역 안에 버튼 추가 -->
+  <!-- 지도 컨트롤 영역 -->
   <div id="mapControls">
+    <!-- 경로 초기화 버튼 -->
     <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
+    <!-- 목적지 찾기 버튼 -->
     <button id="openDestinationModal">📍 목적지 찾기</button>
+    <!-- 이동정보 버튼 -->
     <button id="openTravelStatsModal">🚗 이동 정보</button>
-    <!-- ✅ 토지·건축물 버튼 추가 -->
-    <button onclick="showLandBuilding()">🏠 토지·건축물 정보</button>
-  </div>
+    </div>
 
-<!-- 팝업 영역 추가 -->
-<div id="landBuildingPopup" class="modal" style="display:none;">
-  <div class="modal-header">
-    <span class="modal-title">🏠 토지·건축물 정보</span>
-    <button class="close-btn" onclick="closeLandBuildingPopup()">×</button>
-  </div>
-  <div class="modal-body" id="landBuildingInfo">
-    <!-- 클릭 시 정보가 동적으로 들어옴 -->
+<!-- ✅ 추가: 토지·건축물 정보 버튼 -->
+<div id="landBuildingControls">
+  <button id="openLandBuildingModal">🏠 토지·건축물 정보</button>
+</div>
+
+<!-- ✅ 추가: 토지·건축물 모달 -->
+<div id="landBuildingModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">🏠 토지·건축물 정보</h2>
+      <span id="closeLandBuildingModal" class="close">✖</span>
+    </div>
+    <div id="landBuildingContent">
+      <!-- 지번, 면적, 건축물 용도 등 표시 -->
+    </div>
   </div>
 </div>
   
@@ -500,7 +501,6 @@ button {
     <!-- 목적지 내용이 동적으로 들어옴 -->
   </div>
 </div>
-
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
