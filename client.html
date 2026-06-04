@@ -119,10 +119,12 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 .map-roadmap #locationBox span { color:#d32f2f; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
 .map-roadmap #locationBox small { color:#000; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
 
+
 /* ---------------------- 경로 초기화 버튼 스타일 ---------------------- */
 #resetPathBtn { position:absolute; top:170px; left:5px; width:160px; height:50px; line-height:50px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:999px; font-size:20px; font-weight:700; color:#1976d2; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:none; z-index:9999; text-align:center; white-space:nowrap; transition:transform 0.2s ease, background 0.3s ease, color 0.3s ease; padding:0; }
 #resetPathBtn:hover { background:#e3f2fd; transform:scale(1.1); }
 #resetPathBtn:active { transform:scale(0.95); }
+
 
 /* ---------------------- 모달창 ---------------------- */
 .modal-header { display:flex; justify-content:center; align-items:center; margin-bottom:10px; position:relative; }
@@ -137,7 +139,6 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 #modalActions button { margin:6px; padding:8px 14px; background:#1976d2; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; transition:transform 0.2s ease, background 0.3s ease; }
 #modalActions button:hover { background:#1565c0; transform:scale(1.05); }
 
-
 /* ---------------------- 지도/위성 모드 대응 ---------------------- */
 /* 모달창 */
 .map-satellite #popupModal .modal-content {background:rgba(0,0,0,0.6);border:2px solid #fff;color:#fff;}
@@ -147,9 +148,8 @@ header { padding:15px; text-align:center; background:#1976d2; color:white; font-
 .map-roadmap #popupModal #modalMessage {color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff;}
 
 /* 버튼 */
-.map-satellite #mapControls button, .map-satellite #toggleFollowBtn, .map-satellite #searchDestinationBtn, .map-satellite #startRouteBtn {background:rgba(255,255,255,0.85);color:#000;}
-.map-roadmap #mapControls button, .map-roadmap #toggleFollowBtn, .map-roadmap #searchDestinationBtn, .map-roadmap #startRouteBtn {background:rgba(255,255,255,0.5);color:#000;}
-
+.map-satellite #mapControls button, .map-satellite #toggleFollowBtn, .map-satellite #searchDestinationBtn, .map-satellite #startRouteBtn {background:rgba(255,255,255,0.85);color:#000 !important;}
+.map-roadmap #mapControls button, .map-roadmap #toggleFollowBtn, .map-roadmap #searchDestinationBtn, .map-roadmap #startRouteBtn {background:rgba(255,255,255,0.5);color:#1976d2 !important;}
 
 /* ---------------------- 목각파임 효과 ---------------------- */
 .map-satellite #popupModal .modal-title, .map-satellite #popupModal #modalMessage, .map-satellite #popupModal #modalActions button { color:#fff; text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
