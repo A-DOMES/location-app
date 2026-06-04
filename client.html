@@ -6,6 +6,8 @@
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script>
+<!-- body 끝 부분에 추가 -->
+<script src="land_building_overlay.js"></script>
 
 
 <style>
@@ -378,15 +380,25 @@ button:hover{background-color:#1565c0;}
   </div>
   <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
 
-  <!-- 지도 컨트롤 영역 -->
+  <!-- 지도 컨트롤 영역 안에 버튼 추가 -->
   <div id="mapControls">
-    <!-- 경로 초기화 버튼 -->
     <button id="resetPathBtn" style="display:none;">🔄 경로 초기화</button>
-    <!-- 목적지 찾기 버튼 -->
     <button id="openDestinationModal">📍 목적지 찾기</button>
-    <!-- 이동정보 버튼 -->
     <button id="openTravelStatsModal">🚗 이동 정보</button>
-    </div>
+    <!-- ✅ 토지·건축물 버튼 추가 -->
+    <button onclick="showLandBuilding()">🏠 토지·건축물 정보</button>
+  </div>
+
+<!-- 팝업 영역 추가 -->
+<div id="landBuildingPopup" class="modal" style="display:none;">
+  <div class="modal-header">
+    <span class="modal-title">🏠 토지·건축물 정보</span>
+    <button class="close-btn" onclick="closeLandBuildingPopup()">×</button>
+  </div>
+  <div class="modal-body" id="landBuildingInfo">
+    <!-- 클릭 시 정보가 동적으로 들어옴 -->
+  </div>
+</div>
   
   <!-- 다기능 모달창 -->
   <div id="popupModal" class="modal">
@@ -453,8 +465,6 @@ button:hover{background-color:#1565c0;}
     </div>
   </div>
 </div>
-
-
 
 <!-- ✅ 토글 버튼 추가-->
 <div id="toggleFollowBtn">
