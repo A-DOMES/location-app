@@ -805,107 +805,86 @@ function updateMapStyle(map) {
 
 // ---------------------- 위치 추적 ----------------------
 function startTracking() {
-  // ✅ 위치 추적 시작 (watchPosition: 위치가 바뀔 때마다 콜백 실행)
-  navigator.geolocation.watchPosition(pos => {
-    const now = Date.now();
-    const lat = pos.coords.latitude;   // 현재 위도
-    const lng = pos.coords.longitude;  // 현재 경도
+  // ✅ 브라우저에서 내 위치를 실시간 추적
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const heading = pos.coords.heading || lastHeading || 0;
 
-    // ✅ 좌표 기반 속도 계산 (걷기에서도 자연스럽게 반영)
-    computeSpeedFromGPS(lat, lng, now);
-
-    // ✅ 이동 거리 계산 (경로 그리기용)
-    let distanceMoved = 0;
-    if (lastLat !== null && lastLng !== null) {
-      distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
-        new google.maps.LatLng(lastLat, lastLng),
-        new google.maps.LatLng(lat, lng)
-      );
+    // ✅ 내 마커 갱신 (위도/경도 기반)
+    if (!myMarker) {
+      myMarker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: "내 위치"
+      });
+    } else {
+      myMarker.setPosition({ lat, lng });
     }
 
-    // ✅ 속도에 따른 최소 주기 설정
-    let minInterval = 5000; // 기본 5초
-    if (currentSpeed > 60) minInterval = 3000;   // 차량 고속 → 3초
-    else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
+    // ✅ 레이더 갱신 (항상 실행)
+    updateRadarPolygon({ lat, lng }, heading);
 
-    // ✅ 조건: 최소 주기 경과 OR 일정 거리 이상 이동 시 갱신
-    if ((now - lastUpdateTime > minInterval) || distanceMoved > 5) {
-      lastUpdateTime = now;
-      lastLat = lat;
-      lastLng = lng;
+    // ✅ 경로 기록용 (내 이동 경로 저장)
+    pathCoords.push(new google.maps.LatLng(lat, lng));
+    updatePathPolyline(lat, lng);
 
-      // ✅ 좌표값 갱신
-      currentLat = lat;
-      currentLng = lng;
+    // ✅ 지도 중심 옵션
+    if (followUser) map.setCenter({ lat, lng });
 
-      // ✅ 방향 계산 (heading 값 없을 경우 bearing 계산)
-      let heading = pos.coords.heading || 0; 
-      if (!heading || heading === 0) {
-        if (pathCoords.length > 1) {
-          const last = pathCoords[pathCoords.length - 1];
-          const prev = pathCoords[pathCoords.length - 2];
-          heading = getBearing(prev.lat(), prev.lng(), last.lat(), last.lng());
-        } else {
-          heading = lastHeading ?? 0;
-        }
-      }
-      lastHeading = heading;
-      const directionLabel = getDirectionLabel(heading);
+    // ✅ 이동정보 갱신
+    updateTravelStats();
 
-      // ✅ 현재 위치 정보 표시 (UI 갱신)
-      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
-      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
-      document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
-      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
-
-      // ✅ 지도 및 마커 갱신 (구글 기본 마커 사용)
-      updateLocationDisplay(currentLat, currentLng, heading);
-      if (!myMarker) {
-        myMarker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          title: "내 위치" // 기본 구글 마커
-        });
-      } else {
-        myMarker.setPosition({ lat, lng });
-      }
-
-      // ✅ 지도 중심 이동 여부 (followUser 옵션)
-      if (followUser) map.setCenter({ lat, lng });
-
-      // ✅ 원형 표시 및 레이더 보정
-      drawMultipleCircles({ lat, lng });
-      updateRadarPolygon({ lat, lng }, heading);
-
-      // ✅ 경로 polyline 갱신 (5m 이상 이동 기준 유지 → 경로 깔끔)
-      updatePathPolyline(currentLat, currentLng);
-      if (pathCoords.length > 1) {
-        document.getElementById("resetPathBtn").style.display = "inline-block";
-      }
-
-      // ✅ 이동정보 업데이트 (속도, 거리, 시간 등)
-      updateTravelStats();
-
-      // ✅ 보호구역/속도 제한 체크
-      checkSpeedLimit(currentLat, currentLng, currentSpeed);
-      checkSchoolZones(currentLat, currentLng);
-      checkDynamicSpeedZones(currentLat, currentLng, currentSpeed);
-
-      // ✅ 레이더 탐지
-      checkRadarPOIs({ lat, lng });
-    }
+    // ✅ 마지막 heading 저장
+    lastHeading = heading;
   }, err => {
-    // ✅ 오류 처리
     console.error("위치 추적 오류:", err);
-    document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
   }, {
-    enableHighAccuracy: true, // 높은 정확도 요청
-    maximumAge: 3000,         // 최근 3초 이내 위치 캐시 허용
-    timeout: 20000            // GPS 응답 대기 시간 20초
+    enableHighAccuracy: true,
+    maximumAge: 3000,
+    timeout: 20000
   });
 }
 
+/* ---------------------- 다른 사용자 (서버 path 기반) ---------------------- */
+function loadData() {
+  // ✅ 서버에서 다른 사용자 데이터 가져오기
+  fetch("/api/users")
+    .then(res => res.json())
+    .then(users => {
+      users.forEach(user => {
+        if (user.path && user.path.length > 0) {
+          const pathCoords = user.path.map(p => new google.maps.LatLng(p.lat, p.lng));
+          const lastPos = pathCoords[pathCoords.length - 1];
+
+          // ✅ 다른 사용자 마커 갱신 (path 기반)
+          if (!user.marker) {
+            user.marker = new google.maps.Marker({
+              position: lastPos,
+              map,
+              title: user.name
+            });
+          } else {
+            user.marker.setPosition(lastPos);
+          }
+
+          // ✅ 레이더 갱신 (마커 위치에 맞춰 붙음)
+          updateRadarPolygon(lastPos, user.heading);
+
+          // ✅ 경로 polyline 갱신
+          if (!user.polyline) {
+            user.polyline = new google.maps.Polyline({
+              path: pathCoords,
+              map,
+              strokeColor: "#FF0000"
+            });
+          } else {
+            user.polyline.setPath(pathCoords);
+          }
+        }
+      });
+    });
+}
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
@@ -1784,87 +1763,64 @@ function startTravel() {
   updateTravelStats();
 }
   
-/* ---------------------- 경로 초기화 함수 (개선 버전) ---------------------- */
+/* ---------------------- 경로 초기화 ---------------------- */
 function resetNavigation(fullStop = false) {
-  // 📍 위치 추적 중단 (watchPosition 해제)
-  if (watchId) {
+  // ✅ 내 마커 추적은 완전 종료(fullStop=true)일 때만 중단
+  if (fullStop && watchId) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
 
-  // 🗺️ 경로 및 지도 요소 초기화
+  // ✅ 기존 Polyline, 마커, 원형 등 초기화 (공통 로직)
   pathCoords = [];
-  if (pathPolyline) {
-    pathPolyline.setMap(null);   // 이동 경로 Polyline 제거
-    pathPolyline = null;
-  }
-  if (destinationRenderer) {
-    destinationRenderer.setMap(null); // 목적지 안내 Polyline 제거
-    destinationRenderer = null;
-  }
-  if (straightLine) {
-    straightLine.setMap(null);   // 직선 Polyline 제거
-    straightLine = null;
-  }
-  destinationMarkers.forEach(marker => marker.setMap(null)); // 목적지 마커 제거
+  if (pathPolyline) { pathPolyline.setMap(null); pathPolyline = null; }
+  if (destinationRenderer) { destinationRenderer.setMap(null); destinationRenderer = null; }
+  if (straightLine) { straightLine.setMap(null); straightLine = null; }
+  destinationMarkers.forEach(marker => marker.setMap(null));
   destinationMarkers = [];
+  if (destinationCircle) { destinationCircle.setMap(null); destinationCircle = null; }
+  if (otherMarker) { otherMarker.setMap(null); otherMarker = null; }
 
-  // 🎯 목적지 관련 표시 초기화
-  if (destinationCircle) {
-    destinationCircle.setMap(null); // 목적지 원형 제거
-    destinationCircle = null;
-  }
-  if (otherMarker) {
-    otherMarker.setMap(null);       // 기타 마커 제거
-    otherMarker = null;
-  }
-
-  // 🚗 이동정보 초기화
+  // ✅ 이동정보 초기화
   speedHistory = [];
-  startTime = null;        // 주행시간 초기화
+  startTime = null;
   lastLat = null;
   lastLng = null;
   lastTimestamp = null;
   smoothedSpeed = 0;
   avgSpeed = 0;
   maxSpeed = 0;
-  totalDistance = 0;       // 총 이동거리 초기화
+  totalDistance = 0;
 
-  // 🔄 모드 복귀
-  followUser = true;       // 사용자 중심 모드 복귀
-  drivingStarted = false;  // 운행 안내 상태 초기화
+  // ✅ 모드 복귀
+  followUser = true;
+  drivingStarted = false;
 
-  // 🔊 음성 안내
+  // ✅ 안내 메시지
   speakMessage("경로가 초기화 되었습니다.");
 
-  // 🔘 버튼 상태 초기화
+  // ✅ 버튼/모달/UI 초기화
   const resetBtn = document.getElementById("resetPathBtn");
   if (resetBtn) resetBtn.style.display = "none";
-
-  // 📌 알림 모달 자동 닫힘
   const popupModal = document.getElementById("popupModal");
   if (popupModal) openPopupModal(popupModal);
-
-  // 📝 목적지 검색창 흔적 지우기
   const destInput = document.getElementById("destinationInput");
   if (destInput) destInput.value = "";
-
-  // 🚗 이동정보 모달 즉시 초기화 → 0 값 반영
   updateTravelStats();
 
-  // ✅ 완전 종료(fullStop=true)일 때만 목적지 좌표 초기화
+  // ✅ 목적지 좌표 초기화 (완전 종료일 때만)
   if (fullStop) {
     destinationLat = null;
     destinationLng = null;
   }
 
-  // ✅ 지도 중심 및 줌 레벨 복귀
+  // ✅ 지도 중심 복귀
   if (currentLat && currentLng) {
     map.setCenter(new google.maps.LatLng(currentLat, currentLng));
-    map.setZoom(7); // 기본 줌 레벨로 복귀
+    map.setZoom(7);
   }
 }
-
+  
 /* ---------------------- 모달창 드래그 가능하게 만들기 ---------------------- */
 function makeDraggableModal(element) {
   let isDragging = false, offsetX, offsetY;
