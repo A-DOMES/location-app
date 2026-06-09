@@ -569,6 +569,27 @@ const poiIcons = {
   local_government_office: "https://cdn-icons-png.flaticon.com/512/148/148947.png"
 };
 
+// ---------------------- 내 위치 서버 기록 ----------------------
+// 📌 이 함수는 현재 좌표를 서버에 보내서 구글시트 Path(I/J열)에 기록되도록 합니다.
+function sendMyLocationToServer(pos) {
+  fetch(CONFIG.ADMIN_URL, {
+    method: "POST",
+    body: new URLSearchParams({
+      mode: "location",          // 로그인 이후는 location 모드
+      phone: currentUserPhone,   // 내 계정 식별자
+      lat: pos.lat,              // 현재 위도
+      lng: pos.lng,              // 현재 경도
+      status: "정상",            // 상태값
+      token: CONFIG.TOKEN        // 인증 토큰
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("서버 기록 응답:", data);
+  })
+  .catch(err => console.error("서버 기록 실패:", err));
+}
+  
 /* ---------------------- 구글 Places API 실시간 검색 ---------------------- */
 function searchGooglePlacesLive(query) {
   // ✅ Promise로 감싸서 async/await 사용 가능하게 처리
@@ -894,6 +915,12 @@ function startTracking() {
 
       // ✅ 레이더 탐지
       checkRadarPOIs({ lat, lng });
+
+      // ✅ 서버에 내 위치 기록
+      sendMyLocationToServer({
+        lat: currentLat,
+        lng: currentLng
+      });
     }
   }, err => {
     // ✅ 오류 처리
