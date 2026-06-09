@@ -788,7 +788,7 @@ function initMap() {
     );
   }
 }
-  
+
 // ---------------------- 지도 스타일 업데이트 ----------------------
 function updateMapStyle(map) {
   const body = document.body;
@@ -808,7 +808,7 @@ function startTracking() {
     // ✅ 좌표 기반 속도 계산 (걷기에서도 자연스럽게 반영)
     computeSpeedFromGPS(lat, lng, now);
 
-    // ✅ 이동 거리 계산 (경로 그리기용)
+    // ✅ 이동 거리 계산
     let distanceMoved = 0;
     if (lastLat !== null && lastLng !== null) {
       distanceMoved = google.maps.geometry.spherical.computeDistanceBetween(
@@ -817,22 +817,70 @@ function startTracking() {
       );
     }
 
-    // ✅ 속도에 따른 최소 주기 설정
+    // ✅ 디자인된 아이콘 정의 (크기와 anchor 최적화)
+    const defaultIcon = {
+      url: "icons/default-marker.png", // 기본 마커 이미지
+      scaledSize: new google.maps.Size(140, 140), // 크기를 크게 (예: 140x140)
+      anchor: new google.maps.Point(70, 140)      // 하단 중앙 기준점
+    };
+    
+    const personIcon = {
+      url: "icons/person-marker.png", // 사람 아이콘
+      scaledSize: new google.maps.Size(140, 140),
+      anchor: new google.maps.Point(70, 140)
+    };
+    
+    const carIcon = {
+      url: "icons/car-marker.png", // 자동차 아이콘
+      scaledSize: new google.maps.Size(140, 140),
+      anchor: new google.maps.Point(70, 140)
+    };
+
+    // ✅ 마커 최초 생성: 처음 화면에서 기본 마커 표시
+    if (!myMarker) {
+      myMarker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: "내 위치",
+        icon: defaultIcon // 기본 디자인 마커
+      });
+      map.setCenter({ lat, lng }); // 첫 위치로 지도 중심 이동
+    }
+
+    // ✅ 조건: 최소 주기 경과 OR 일정 거리 이상 이동 시 갱신
     let minInterval = 5000; // 기본 5초
     if (currentSpeed > 60) minInterval = 3000;   // 차량 고속 → 3초
     else if (currentSpeed < 10) minInterval = 10000; // 걷기 → 10초
 
-    // ✅ 조건: 최소 주기 경과 OR 일정 거리 이상 이동 시 갱신
     if ((now - lastUpdateTime > minInterval) || distanceMoved > 5) {
       lastUpdateTime = now;
       lastLat = lat;
       lastLng = lng;
-
-      // ✅ 좌표값 갱신
       currentLat = lat;
       currentLng = lng;
 
-      // ✅ 방향 계산 (heading 값 없을 경우 bearing 계산)
+      // ✅ 마커 위치 갱신
+      myMarker.setPosition({ lat, lng });
+
+      // ✅ 5m 이상 이동했을 때만 아이콘 교체
+      if (distanceMoved > 5) {
+        if (currentSpeed > 15) {
+          myMarker.setIcon(carIcon);   // 15km/h 이상 → 자동차 아이콘
+        } else {
+          myMarker.setIcon(personIcon); // 15km/h 이하 → 사람 아이콘
+        }
+      }
+
+      // ✅ 지도 중심 이동 여부
+      if (followUser) map.setCenter({ lat, lng });
+
+      // ✅ UI 갱신
+      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
+      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
+      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
+      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
+
+      // ✅ 방향 계산 및 표시
       let heading = pos.coords.heading || 0; 
       if (!heading || heading === 0) {
         if (pathCoords.length > 1) {
@@ -845,41 +893,16 @@ function startTracking() {
       }
       lastHeading = heading;
       const directionLabel = getDirectionLabel(heading);
-
-      // ✅ 현재 위치 정보 표시 (UI 갱신)
-      const timeString = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-      document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
-      document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
       document.getElementById("directionBox").innerText = `현재 방향: ${directionLabel}`;
-      document.getElementById("timeBox").innerText = `갱신 시간: ${timeString}`;
 
-      // ✅ 지도 및 마커 갱신 (구글 기본 마커 사용)
+      // ✅ 경로 및 기타 UI 갱신
       updateLocationDisplay(currentLat, currentLng, heading);
-      if (!myMarker) {
-        myMarker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          title: "내 위치" // 기본 구글 마커
-        });
-      } else {
-        myMarker.setPosition({ lat, lng });
-      }
-
-      // ✅ 지도 중심 이동 여부 (followUser 옵션)
-      if (followUser) map.setCenter({ lat, lng });
-
-      // ✅ 원형 표시 및 레이더 보정
-      drawMultipleCircles({ lat, lng });
-      updateRadarPolygon({ lat, lng }, heading);
-
-      // ✅ 경로 polyline 갱신 (5m 이상 이동 기준 유지 → 경로 깔끔)
       updatePathPolyline(currentLat, currentLng);
+      updateTravelStats();
+
       if (pathCoords.length > 1) {
         document.getElementById("resetPathBtn").style.display = "inline-block";
       }
-
-      // ✅ 이동정보 업데이트 (속도, 거리, 시간 등)
-      updateTravelStats();
 
       // ✅ 보호구역/속도 제한 체크
       checkSpeedLimit(currentLat, currentLng, currentSpeed);
@@ -890,7 +913,6 @@ function startTracking() {
       checkRadarPOIs({ lat, lng });
     }
   }, err => {
-    // ✅ 오류 처리
     console.error("위치 추적 오류:", err);
     document.getElementById("loadingMessage").innerText = "위치 정보를 가져올 수 없습니다. 권한을 확인하세요.";
   }, {
@@ -1442,7 +1464,7 @@ function shareLocation() {
   geocoder.geocode({ location: { lat: currentLat, lng: currentLng } }, (results, status) => {
     let address = "주소 정보 없음";
     if (status === "OK" && results[0]) {
-      // ✅ 대한민국 표기 제거 (필요 시)
+      // 대한민국 표기 제거 (필요 시)
       address = results[0].formatted_address
         .replace(/^대한민국\s*,?\s*/, "")
         .replace(/\s*,?\s*대한민국$/, "");
@@ -1452,20 +1474,17 @@ function shareLocation() {
     document.getElementById("latBox").innerText = `위도: ${currentLat.toFixed(6)}`;
     document.getElementById("lngBox").innerText = `경도: ${currentLng.toFixed(6)}`;
     document.getElementById("addressBox").innerText = `주소: ${address}`;
-
-    // ✅ 10초 후 주소 자동 제거 (사용자 혼동 방지)
-    setTimeout(() => {
-      document.getElementById("addressBox").innerText = "";
-    }, 10000);
+    document.getElementById("timeBox").innerText = new Date().toLocaleTimeString();
 
     // ✅ 구글 지도 링크 생성
     const shareUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
 
-    // ✅ 공유용 텍스트 구성 (명함 스타일, 이름 제거)
+    // ✅ 공유용 텍스트 구성 (명함 스타일)
     const textToCopy =
       "━━━━━━━━━━━━━━━━━━\n" +
       "📍 내 현재 위치 정보\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
+      `이름: minkoo\n` + // ⚠️ 사용자 이름은 하드코딩 → 변수화 권장
       `위도: ${currentLat.toFixed(6)}\n` +
       `경도: ${currentLng.toFixed(6)}\n` +
       `주소: ${address}\n\n` +
@@ -1484,6 +1503,7 @@ function shareLocation() {
 
 // ✅ 버튼 이벤트 연결
 document.getElementById("shareBtn").addEventListener("click", shareLocation);
+
 
 // ---------------------- 원형 표시 ----------------------
 function drawMultipleCircles(myPos) {
