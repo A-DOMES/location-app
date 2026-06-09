@@ -915,12 +915,6 @@ function startTracking() {
 
       // ✅ 레이더 탐지
       checkRadarPOIs({ lat, lng });
-
-      // ✅ 서버에 내 위치 기록
-      sendMyLocationToServer({
-        lat: currentLat,
-        lng: currentLng
-      });
     }
   }, err => {
     // ✅ 오류 처리
@@ -933,6 +927,16 @@ function startTracking() {
   });
 }
 
+// ---------------------- 1분마다 서버에 위치 전송 ----------------------  
+      // ✅ 서버에 내 위치 기록
+      setInterval(() => {
+        if (currentLat && currentLng) {
+          sendMyLocationToServer({
+            lat: currentLat,
+            lng: currentLng
+          });
+        }
+      }, 60000); // 60초마다 실행
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
