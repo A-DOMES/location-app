@@ -936,7 +936,7 @@ function startTracking() {
             lng: currentLng
           });
         }
-      }, 60000); // 60초마다 실행
+      },  CONFIG.UPDATE_INTERVAL); // config.js에서 60000ms로 정의
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
