@@ -575,20 +575,19 @@ function sendMyLocationToServer(pos) {
   fetch(CONFIG.ADMIN_URL, {
     method: "POST",
     body: new URLSearchParams({
-      mode: "location",          // 로그인 이후는 location 모드
-      phone: currentUserPhone,   // 내 계정 식별자
-      lat: pos.lat,              // 현재 위도
-      lng: pos.lng,              // 현재 경도
-      status: "정상",            // 상태값
-      token: CONFIG.TOKEN        // 인증 토큰
+      mode: "location",
+      phone: pos.phone,   // ✅ 닉네임(고유값) 전달
+      lat: pos.lat,
+      lng: pos.lng,
+      status: "정상"
+      // token은 생략 가능
     })
   })
   .then(res => res.json())
-  .then(data => {
-    console.log("서버 기록 응답:", data);
-  })
+  .then(data => console.log("서버 기록 응답:", data))
   .catch(err => console.error("서버 기록 실패:", err));
 }
+
   
 /* ---------------------- 구글 Places API 실시간 검색 ---------------------- */
 function searchGooglePlacesLive(query) {
@@ -928,15 +927,17 @@ function startTracking() {
 }
 
 // ---------------------- 1분마다 서버에 위치 전송 ----------------------  
-      // ✅ 서버에 내 위치 기록
-      setInterval(() => {
-        if (currentLat && currentLng) {
-          sendMyLocationToServer({
-            lat: currentLat,
-            lng: currentLng
-          });
-        }
-      },  CONFIG.DEFAULT_INTERVAL); // config.js에서 정의된 60000ms 사용
+// ✅ 서버에 내 위치 기록
+setInterval(() => {
+  if (currentLat && currentLng && currentUserPhone) {
+    sendMyLocationToServer({
+      phone: currentUserPhone,   // ✅ 닉네임(고유값) 추가
+      lat: currentLat,
+      lng: currentLng
+    });
+  }
+}, CONFIG.DEFAULT_INTERVAL); // config.js에서 정의된 60000ms 사용
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 const toggleBtn = document.getElementById("toggleFollowBtn");
