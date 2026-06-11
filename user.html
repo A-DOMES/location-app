@@ -368,17 +368,30 @@ function sendLocation() {
   showModal("위치정보 전송 중입니다...\n잠시만 기다려주세요.");
 
   const token = sessionStorage.getItem("token");
-  const phone = document.getElementById("phone").value;
+  const phoneInput = document.getElementById("phone").value.trim();
+  const nickname = localStorage.getItem("nickname");
+
+  // 🚫 원천 차단: 닉네임과 토큰 검증
+  if (!token) {
+    closeModal();
+    showModal("❌ 토큰이 유효하지 않습니다.\n다시 로그인하세요.", true);
+    return;
+  }
+  if (!nickname || nickname.toLowerCase() !== phoneInput.toLowerCase()) {
+    closeModal();
+    showModal("❌ 닉네임 값이 로그인 시점과 다릅니다.\n위치 전송을 할 수 없습니다.", true);
+    return;
+  }
 
   navigator.geolocation.getCurrentPosition(function(position) {
     const params = new URLSearchParams({
-      phone: phone,
+      phone: phoneInput,
       status: "정상",
       lat: position.coords.latitude,
       lng: position.coords.longitude,
       time: new Date().toISOString(),
       token: token,
-      mode: "login"   // ✅ 이 줄 추가
+      mode: "login"   // ✅ 로그인 모드 지정
     });
 
     fetch(CONFIG.ADMIN_URL, {
@@ -396,6 +409,7 @@ function sendLocation() {
     showModal("위치 정보를 가져오지 못했습니다:\n" + error.message, true);
   });
 }
+
 
 function handleSendLocation(result) {
   console.log("[DEBUG] handleSendLocation 응답:", result);
