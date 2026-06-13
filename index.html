@@ -12,9 +12,9 @@
   <!-- 📌 Font Awesome 아이콘 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- 📌 PWA 매니페스트 연결 -->
-  <link rel="manifest" href="/location-pwa/manifest.json">
-  <meta name="theme-color" content="#2196F3">  
+  <!-- 📌 PWA 매니페스트 연결 (사용자용) -->
+  <link rel="manifest" href="/location-app/manifest.json">
+  <meta name="theme-color" content="#2196F3"> 
   
 <style>
 /* ---------------------- 기본 페이지 ---------------------- */
@@ -210,6 +210,14 @@ body { display:flex; justify-content:center; align-items:center;
   window.login = login;
   window.goRegister = goRegister;
 </script>
+
+
+  <!-- 📌 사용자용 서비스워커 등록 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/location-app/serviceworker.js');
+    }
+  </script>
 
 </body>
 </html>
