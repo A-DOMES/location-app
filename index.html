@@ -212,12 +212,13 @@ body { display:flex; justify-content:center; align-items:center;
 </script>
 
 
-  <!-- 📌 사용자용 서비스워커 등록 -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/location-app/serviceworker.js');
-    }
-  </script>
-
+<!-- 📌 사용자용 서비스워커 등록 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/location-app/service-worker.js')
+      .then(reg => console.log('User Service Worker registered:', reg))
+      .catch(err => console.error('User Service Worker registration failed:', err));
+  }
+</script>
 </body>
 </html>
