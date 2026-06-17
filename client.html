@@ -5,9 +5,8 @@
   <title>내 위치 지도</title>
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
-<script async defer 
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes&callback=initMap">
-</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script>
+
 
 <style>
 /* ---------------------- 기본 페이지 스타일 ---------------------- */
@@ -474,55 +473,10 @@ button:hover{background-color:#1565c0;}
   </div>
 </div>
 
-
   
-<!-- 지도 위에 오버레이 버튼 컨트롤 -->
-<div id="overlayControls" 
-     style="position:absolute;top:10px;left:10px;z-index:999;
-            background:#fff;padding:8px;border-radius:4px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.3);">
-
-  <button onclick="showLandBuilding()" 
-          style="font-size:18px; font-weight:bold; padding:6px 14px;">
-    토지·건축물
-  </button>
-
-  <button onclick="showLandUseInfo()" 
-          style="font-size:18px; font-weight:bold; padding:6px 14px; margin-left:6px;">
-    토지이용계획
-  </button>
-
-  <button onclick="showRealEstateInfo()" 
-          style="font-size:18px; font-weight:bold; padding:6px 14px; margin-left:6px;">
-    실거래가
-  </button>
-</div>
-
-
-<!-- 통합 팝업 (상단에 표시, 글자 크게) -->
-<div id="infoPopup" 
-     style="display:none;position:absolute;top:20px;left:20px;z-index:999;
-            background:#fff;padding:12px;border:1px solid #ccc;border-radius:4px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.3);">
-  <div id="infoContent">
-    <h3 style="font-size:18px; margin-bottom:10px;">📍 조회 결과</h3>
-    <div id="landBuildingInfo" style="font-size:16px; line-height:1.6;"></div>
-    <div id="realEstateInfo" style="font-size:16px; line-height:1.6;"></div>
-    <div id="landUseInfo" style="font-size:16px; line-height:1.6;"></div>
-  </div>
-  <button onclick="closeInfoPopup()">닫기</button>
-</div>
-
-
-
-
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
-
-<script src="real_estate_overlay.js"></script>
-<script src="landuse_overlay.js"></script>
-<script src="land_building_overlay.js"></script>
-
+  
 <script>  
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;
@@ -785,8 +739,8 @@ makeDraggableModal(statsModal, statsHandle);
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
-  // ✅ 지도 객체 생성 (전역 window.map에 저장)
-  window.map = new google.maps.Map(document.getElementById("map"), {
+  // ✅ 지도 객체 생성
+  map = new google.maps.Map(document.getElementById("map"), {
     zoom: 7,                       // 기본 줌 레벨
     gestureHandling: "greedy",     // 마우스/터치 제스처 허용
     mapTypeId: "roadmap",          // 지도 타입: 일반 도로 지도
@@ -796,11 +750,11 @@ function initMap() {
   });
 
   // ✅ 지도 스타일 업데이트 (사용자 정의 함수)
-  updateMapStyle(window.map);
+  updateMapStyle(map);
 
   // ✅ 우클릭 이벤트 추가 → 줌 레벨 초기화
-  window.map.addListener("rightclick", () => {
-    window.map.setZoom(7);
+  map.addListener("rightclick", () => {
+    map.setZoom(7);
   });
 
   // ✅ 이동 경로 Polyline 초기화
@@ -810,7 +764,7 @@ function initMap() {
     strokeColor: "#1976d2",        // 선 색상 (파란색 계열)
     strokeOpacity: 1.0,            // 불투명도
     strokeWeight: 8,               // 선 두께
-    map: window.map
+    map: map
   });
 
   // ✅ 브라우저 Geolocation API 사용 → 현재 위치 가져오기
@@ -819,27 +773,30 @@ function initMap() {
       pos => {
         // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        window.window.map.setCenter(userPos);
+        map.setCenter(userPos);
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
 
         // ✅ 내 위치 마커 표시
         myMarker = new google.maps.Marker({
           position: userPos,
-          map: window.map,
+          map,
           title: "내 위치"
         });
 
         // ✅ 마커 클릭 시 → 내 위치로 이동 + 확대
         myMarker.addListener("click", () => {
-          window.window.map.setCenter(userPos);
-          window.map.setZoom(18);
+          map.setCenter(userPos);
+          map.setZoom(18);
         });
 
         // ✅ 레이더/원형 표시 및 추적 시작
         drawMultipleCircles(userPos);
         updateRadarPolygon(userPos, 0);
         startTracking();
+
+        // ❌ 구글 Places API 배열 호출 제거
+        // preloadGooglePlaces(); → 삭제
 
         // ✅ 로딩 메시지 숨기기
         const loadingMsg = document.getElementById("loadingMessage");
@@ -853,14 +810,13 @@ function initMap() {
         currentLat = 37.5663;
         currentLng = 126.9779;
 
-        // ✅ 추적 시작
+        // ✅ 추적 시작 (구글 데이터는 검색 시점에만 호출)
         startTracking();
       },
       { enableHighAccuracy: true } // ✅ 고정밀 모드
     );
   }
 }
-
   
 // ---------------------- 지도 스타일 업데이트 ----------------------
 function updateMapStyle(map) {
@@ -939,7 +895,7 @@ function startTracking() {
       }
 
       // ✅ 지도 중심 이동 여부 (followUser 옵션)
-      if (followUser) window.map.setCenter({ lat, lng });
+      if (followUser) map.setCenter({ lat, lng });
 
       // ✅ 원형 표시 및 레이더 보정
       drawMultipleCircles({ lat, lng });
@@ -1001,14 +957,14 @@ toggleBtn.addEventListener("click", () => {
   if (followUser) {
     // ✅ 사람 중심 모드 → 현재 위치 기준으로 지도 이동
     if (currentLat && currentLng) {
-      window.map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+      map.setCenter(new google.maps.LatLng(currentLat, currentLng));
       map.setZoom(16);
     }
   } else {
     // ✅ 지도 중심 모드 → 경로 마지막 좌표 기준으로 지도 이동
     if (pathCoords.length > 0) {
       const lastPoint = pathCoords[pathCoords.length - 1];
-      window.map.setCenter(new google.maps.LatLng(lastPoint.lat, lastPoint.lng));
+      map.setCenter(new google.maps.LatLng(lastPoint.lat, lastPoint.lng));
       map.setZoom(7);
     }
   }
@@ -1066,7 +1022,7 @@ function updatePathPolyline(lat, lng, address = null) {
   pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
 
   // ⚠️ 필요 시 사람 중심 모드에서 지도 중심 이동 가능
-  // window.map.setCenter(new google.maps.LatLng(lat, lng));
+  // map.setCenter(new google.maps.LatLng(lat, lng));
   // map.setZoom(16);
 }
 
@@ -1351,12 +1307,12 @@ function updateTravelStats() {
   }
 
   // ✅ 평균속도: 전체 기록 평균
-  let avgSpeedValue = speedHistory.length > 1
+  const avgSpeedValue = speedHistory.length > 1
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
     : currentSpeedValue;
 
   // ✅ 최고속도
-  let maxSpeedValue = Math.round(maxSpeed);
+  const maxSpeedValue = Math.round(maxSpeed);
 
   // ✅ 보정 로직: 움직일 때만 +4km/h
   if (currentSpeedValue > 0) currentSpeedValue += 4;
@@ -1442,7 +1398,6 @@ function updateTravelStats() {
     destinationArrived = true;
   }
 }
-
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
@@ -1945,7 +1900,7 @@ function resetNavigation(fullStop = false) {
 
   // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
-    window.map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+    map.setCenter(new google.maps.LatLng(currentLat, currentLng));
     map.setZoom(7); // 기본 줌 레벨로 복귀
   }
 }
@@ -2119,7 +2074,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   const pos = new google.maps.LatLng(destinationLat, destinationLng);
 
   // ✅ 지도 중심 이동 및 확대
-  window.map.setCenter(pos);
+  map.setCenter(pos);
   map.setZoom(7);
   followUser = false;
 
@@ -2175,7 +2130,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   // ✅ 마커 클릭 시 지도 이동 + 모달 표시
   marker.addListener("click", () => {
-    window.map.setCenter(marker.getPosition());
+    map.setCenter(marker.getPosition());
     map.setZoom(16);
 
     // 모달창 열기
