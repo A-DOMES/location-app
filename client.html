@@ -817,7 +817,7 @@ function initMap() {
       pos => {
         // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        window.map.setCenter(userPos);
+        window.window.map.setCenter(userPos);
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
 
@@ -830,7 +830,7 @@ function initMap() {
 
         // ✅ 마커 클릭 시 → 내 위치로 이동 + 확대
         myMarker.addListener("click", () => {
-          window.map.setCenter(userPos);
+          window.window.map.setCenter(userPos);
           window.map.setZoom(18);
         });
 
@@ -937,7 +937,7 @@ function startTracking() {
       }
 
       // ✅ 지도 중심 이동 여부 (followUser 옵션)
-      if (followUser) map.setCenter({ lat, lng });
+      if (followUser) window.map.setCenter({ lat, lng });
 
       // ✅ 원형 표시 및 레이더 보정
       drawMultipleCircles({ lat, lng });
@@ -999,14 +999,14 @@ toggleBtn.addEventListener("click", () => {
   if (followUser) {
     // ✅ 사람 중심 모드 → 현재 위치 기준으로 지도 이동
     if (currentLat && currentLng) {
-      map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+      window.map.setCenter(new google.maps.LatLng(currentLat, currentLng));
       map.setZoom(16);
     }
   } else {
     // ✅ 지도 중심 모드 → 경로 마지막 좌표 기준으로 지도 이동
     if (pathCoords.length > 0) {
       const lastPoint = pathCoords[pathCoords.length - 1];
-      map.setCenter(new google.maps.LatLng(lastPoint.lat, lastPoint.lng));
+      window.map.setCenter(new google.maps.LatLng(lastPoint.lat, lastPoint.lng));
       map.setZoom(7);
     }
   }
@@ -1064,7 +1064,7 @@ function updatePathPolyline(lat, lng, address = null) {
   pathPolyline.setPath(pathCoords.map(c => new google.maps.LatLng(c.lat, c.lng)));
 
   // ⚠️ 필요 시 사람 중심 모드에서 지도 중심 이동 가능
-  // map.setCenter(new google.maps.LatLng(lat, lng));
+  // window.map.setCenter(new google.maps.LatLng(lat, lng));
   // map.setZoom(16);
 }
 
@@ -1943,7 +1943,7 @@ function resetNavigation(fullStop = false) {
 
   // ✅ 지도 중심 및 줌 레벨 복귀
   if (currentLat && currentLng) {
-    map.setCenter(new google.maps.LatLng(currentLat, currentLng));
+    window.map.setCenter(new google.maps.LatLng(currentLat, currentLng));
     map.setZoom(7); // 기본 줌 레벨로 복귀
   }
 }
@@ -2117,7 +2117,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
   const pos = new google.maps.LatLng(destinationLat, destinationLng);
 
   // ✅ 지도 중심 이동 및 확대
-  map.setCenter(pos);
+  window.map.setCenter(pos);
   map.setZoom(7);
   followUser = false;
 
@@ -2173,7 +2173,7 @@ function showDestinationOnMap(title, lat, lng, address="") {
 
   // ✅ 마커 클릭 시 지도 이동 + 모달 표시
   marker.addListener("click", () => {
-    map.setCenter(marker.getPosition());
+    window.map.setCenter(marker.getPosition());
     map.setZoom(16);
 
     // 모달창 열기
