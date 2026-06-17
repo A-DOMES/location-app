@@ -475,14 +475,15 @@ button:hover{background-color:#1565c0;}
 
 
   
-<!-- 토지·건축물 오버레이 버튼 -->
-<button onclick="showLandBuilding()">토지·건축물 오버레이</button>
-
-<!-- 내 위치 추적 버튼 -->
-<button onclick="trackMyLocation()">내 위치 추적</button>
+<!-- 지도 위에 오버레이 버튼 컨트롤 -->
+<div id="overlayControls" 
+     style="position:absolute;top:10px;left:10px;z-index:999;background:#fff;padding:5px;border-radius:4px;">
+  <button onclick="showLandBuilding()">토지·건축물 오버레이</button>
+  <button onclick="trackMyLocation()">내 위치 추적</button>
+</div>
 
 <!-- 통합 팝업 -->
-<div id="infoPopup" style="display:none;">
+<div id="infoPopup" style="display:none;position:absolute;bottom:20px;left:20px;z-index:999;background:#fff;padding:10px;border:1px solid #ccc;">
   <div id="infoContent">
     <h3>📍 위치 정보</h3>
     <div id="landBuildingInfo"></div>
@@ -491,6 +492,7 @@ button:hover{background-color:#1565c0;}
   </div>
   <button onclick="closeInfoPopup()">닫기</button>
 </div>
+
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
