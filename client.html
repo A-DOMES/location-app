@@ -474,30 +474,31 @@ button:hover{background-color:#1565c0;}
 </div>
 
 
-<button onclick="showLandBuilding()">토지·건축물 오버레이</button>
-<button onclick="showRealEstateInfo(127.0, 37.5)">실거래가 조회</button>
-<button onclick="showLandUseInfo(127.0, 37.5)">토지이용계획 조회</button>
-
-<!-- 실거래가 팝업 -->
-<div id="realEstatePopup" style="display:none;">
-  <pre id="realEstateInfo"></pre>
-  <button onclick="closeRealEstatePopup()">닫기</button>
-</div>
-
-<!-- 토지이용계획 팝업 -->
-<div id="landUsePopup" style="display:none;">
-  <pre id="landUseInfo"></pre>
-  <button onclick="closeLandUsePopup()">닫기</button>
-</div>
-
   
+<!-- 토지·건축물 오버레이 버튼 -->
+<button onclick="showLandBuilding()">토지·건축물 오버레이</button>
+
+<!-- 내 위치 추적 버튼 -->
+<button onclick="trackMyLocation()">내 위치 추적</button>
+
+<!-- 통합 팝업 -->
+<div id="infoPopup" style="display:none;">
+  <div id="infoContent">
+    <h3>📍 위치 정보</h3>
+    <div id="landBuildingInfo"></div>
+    <div id="realEstateInfo"></div>
+    <div id="landUseInfo"></div>
+  </div>
+  <button onclick="closeInfoPopup()">닫기</button>
+</div>
+
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
 <script src="map.js"></script>
 <script src="real_estate_overlay.js"></script>
 <script src="landuse_overlay.js"></script>
 <script src="land_building_overlay.js"></script>
-  
+
 <script>  
 // ---------------------- 전역 변수 ----------------------
 let map, myMarker, pathPolyline;
