@@ -481,17 +481,20 @@ button:hover{background-color:#1565c0;}
   <button onclick="showLandBuilding()">토지·건축물</button>
 </div>
 
-<!-- 통합 팝업 -->
+<!-- 통합 팝업 (상단에 표시, 글자 크게) -->
 <div id="infoPopup" 
-     style="display:none;position:absolute;bottom:20px;left:20px;z-index:999;background:#fff;padding:10px;border:1px solid #ccc;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+     style="display:none;position:absolute;top:20px;left:20px;z-index:999;
+            background:#fff;padding:12px;border:1px solid #ccc;border-radius:4px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.3);">
   <div id="infoContent">
-    <h3>📍 조회 결과</h3>
-    <div id="landBuildingInfo"></div>
-    <div id="realEstateInfo"></div>
-    <div id="landUseInfo"></div>
+    <h3 style="font-size:18px; margin-bottom:10px;">📍 조회 결과</h3>
+    <div id="landBuildingInfo" style="font-size:16px; line-height:1.6;"></div>
+    <div id="realEstateInfo" style="font-size:16px; line-height:1.6;"></div>
+    <div id="landUseInfo" style="font-size:16px; line-height:1.6;"></div>
   </div>
   <button onclick="closeInfoPopup()">닫기</button>
 </div>
+
 
 
 
