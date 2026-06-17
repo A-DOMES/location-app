@@ -2,9 +2,13 @@
 // config.js가 먼저 로드되어 있어야 함
 const API_KEY = CONFIG.API_KEY;
 
-function showLandUseInfo() {
+// 토지이용계획 조회 함수 (전역 노출)
+window.showLandUseInfo = function() {
+  // 기존에 등록된 클릭 이벤트 제거 (중복 방지)
+  google.maps.event.clearListeners(window.map, "click");
+
   // 지도 클릭 이벤트 → 브이월드 토지이용계획 API 호출
-  map.addListener("click", (e) => {
+  window.map.addListener("click", (e) => {
     const lat = e.latLng.lat();
     const lon = e.latLng.lng();
 
@@ -31,4 +35,4 @@ function showLandUseInfo() {
         document.getElementById("infoPopup").style.display = "block";
       });
   });
-}
+};
