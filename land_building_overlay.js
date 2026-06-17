@@ -1,40 +1,41 @@
-// 브이월드 API 키 입력
 // land_building_overlay.js
 // config.js가 먼저 로드되어 있어야 함
 const API_KEY = CONFIG.API_KEY;
 
-// 버튼 클릭 시 토지·건축물 오버레이
+let landOverlay = null;
+let buildingOverlay = null;
+
 function showLandBuilding() {
-  // 토지 지적도 레이어
-  var landLayer = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      // http → https로 수정 (보안상 권장)
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Cadastre/{z}/{y}/{x}.png`
-    })
-  });
+  // 대한민국 전체 범위 예시 (실제 서비스에 맞게 조정 필요)
+  const bounds = {
+    north: 38.5,
+    south: 34.0,
+    east: 129.5,
+    west: 125.0
+  };
 
-  // 건축물 레이어
-  var buildingLayer = new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      // 동일하게 https로 수정
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Building/{z}/{y}/{x}.png`
-    })
-  });
+  // 토지 지적도 오버레이
+  landOverlay = new google.maps.GroundOverlay(
+    `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Cadastre/{z}/{y}/{x}.png`,
+    bounds
+  );
+  landOverlay.setMap(map);
 
-  map.addLayer(landLayer);
-  map.addLayer(buildingLayer);
+  // 건축물 오버레이
+  buildingOverlay = new google.maps.GroundOverlay(
+    `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Building/{z}/{y}/{x}.png`,
+    bounds
+  );
+  buildingOverlay.setMap(map);
 
-  // 클릭 이벤트 → 통합 팝업 표시
-  map.on('click', function(evt) {
-    var coord = ol.proj.toLonLat(evt.coordinate);
-    var lon = coord[0];
-    var lat = coord[1];
+  // 지도 클릭 이벤트 → 브이월드 데이터 API 호출
+  map.addListener("click", (e) => {
+    const lat = e.latLng.lat();
+    const lon = e.latLng.lng();
 
-    // 브이월드 데이터 API 호출 (http → https로 수정)
     fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_C_ADSIDO,LT_C_ADEMD,LT_C_ADEDO,LT_P_BULD`)
       .then(response => response.json())
       .then(data => {
-        // JSON 전체 출력 대신 주요 속성만 추려서 표시
         const features = data.response?.result?.featureCollection?.features;
         if (features && features.length > 0) {
           const props = features[0].properties;
@@ -51,7 +52,6 @@ function showLandBuilding() {
         document.getElementById("infoPopup").style.display = "block";
       })
       .catch(error => {
-        // 에러 처리 추가
         console.error("브이월드 API 호출 실패:", error);
         document.getElementById("landBuildingInfo").innerHTML = "데이터를 불러오지 못했습니다.";
         document.getElementById("infoPopup").style.display = "block";
