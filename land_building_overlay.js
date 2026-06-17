@@ -2,31 +2,28 @@
 // config.js가 먼저 로드되어 있어야 함
 const API_KEY = CONFIG.API_KEY;
 
-let landOverlay = null;
-let buildingOverlay = null;
-
 function showLandBuilding() {
-  // 대한민국 전체 범위 예시 (실제 서비스에 맞게 조정 필요)
-  const bounds = {
-    north: 38.5,
-    south: 34.0,
-    east: 129.5,
-    west: 125.0
-  };
-
-  // 토지 지적도 오버레이
-  landOverlay = new google.maps.GroundOverlay(
-    `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Cadastre/{z}/{y}/{x}.png`,
-    bounds
-  );
-  landOverlay.setMap(map);
+  // 지적도 오버레이
+  const cadastreLayer = new google.maps.ImageMapType({
+    getTileUrl: function(coord, zoom) {
+      return `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Cadastre/${zoom}/${coord.y}/${coord.x}.png`;
+    },
+    tileSize: new google.maps.Size(256, 256),
+    maxZoom: 19,
+    name: "Cadastre"
+  });
+  map.overlayMapTypes.insertAt(0, cadastreLayer);
 
   // 건축물 오버레이
-  buildingOverlay = new google.maps.GroundOverlay(
-    `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Building/{z}/{y}/{x}.png`,
-    bounds
-  );
-  buildingOverlay.setMap(map);
+  const buildingLayer = new google.maps.ImageMapType({
+    getTileUrl: function(coord, zoom) {
+      return `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Building/${zoom}/${coord.y}/${coord.x}.png`;
+    },
+    tileSize: new google.maps.Size(256, 256),
+    maxZoom: 19,
+    name: "Building"
+  });
+  map.overlayMapTypes.insertAt(1, buildingLayer);
 
   // 지도 클릭 이벤트 → 브이월드 데이터 API 호출
   map.addListener("click", (e) => {
