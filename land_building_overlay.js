@@ -1,6 +1,5 @@
 // land_building_overlay.js
 // config.js가 먼저 로드되어 있어야 함
-const API_KEY = CONFIG.API_KEY;
 
 // 토지·건축물 조회 함수 (전역 노출)
 window.showLandBuilding = function() {
@@ -10,7 +9,7 @@ window.showLandBuilding = function() {
   // 지적도 오버레이
   const cadastreLayer = new google.maps.ImageMapType({
     getTileUrl: function(coord, zoom) {
-      return `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Cadastre/${zoom}/${coord.y}/${coord.x}.png`;
+      return `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Cadastre/${zoom}/${coord.y}/${coord.x}.png`;
     },
     tileSize: new google.maps.Size(256, 256),
     maxZoom: 19,
@@ -21,7 +20,7 @@ window.showLandBuilding = function() {
   // 건축물 오버레이
   const buildingLayer = new google.maps.ImageMapType({
     getTileUrl: function(coord, zoom) {
-      return `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Building/${zoom}/${coord.y}/${coord.x}.png`;
+      return `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Building/${zoom}/${coord.y}/${coord.x}.png`;
     },
     tileSize: new google.maps.Size(256, 256),
     maxZoom: 19,
@@ -34,7 +33,7 @@ window.showLandBuilding = function() {
     const lat = e.latLng.lat();
     const lon = e.latLng.lng();
 
-    fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_C_ADSIDO,LT_C_ADEMD,LT_C_ADEDO,LT_P_BULD`)
+    fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_C_ADSIDO,LT_C_ADEMD,LT_C_ADEDO,LT_P_BULD`)
       .then(response => response.json())
       .then(data => {
         const features = data.response?.result?.featureCollection?.features;
