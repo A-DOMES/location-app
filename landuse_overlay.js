@@ -2,9 +2,9 @@
 // config.js가 먼저 로드되어 있어야 함
 const API_KEY = CONFIG.API_KEY;
 
-// 버튼 클릭 시 토지이용계획 조회
+// 토지이용계획 조회 함수
 function showLandUseInfo(lon, lat) {
-  // 토지이용계획 API 호출 예시
+  // 토지이용계획 API 호출
   fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
     .then(response => response.json())
     .then(data => {
@@ -18,16 +18,13 @@ function showLandUseInfo(lon, lat) {
       } else {
         document.getElementById("landUseInfo").innerHTML = "토지이용계획 데이터를 찾을 수 없습니다.";
       }
-      document.getElementById("landUsePopup").style.display = "block";
+
+      // ✅ 통합 팝업 열기
+      document.getElementById("infoPopup").style.display = "block";
     })
     .catch(error => {
       console.error("토지이용계획 API 호출 실패:", error);
       document.getElementById("landUseInfo").innerHTML = "데이터를 불러오지 못했습니다.";
-      document.getElementById("landUsePopup").style.display = "block";
+      document.getElementById("infoPopup").style.display = "block";
     });
-}
-
-// 팝업 닫기
-function closeLandUsePopup() {
-  document.getElementById("landUsePopup").style.display = "none";
 }
