@@ -37,12 +37,15 @@ function showLandBuilding() {
         if (features && features.length > 0) {
           const props = features[0].properties;
           document.getElementById("landBuildingInfo").innerHTML = `
-            <b>필지코드:</b> ${props.PNU || '정보 없음'}<br>
-            <b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
-            <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}
+            <span style="font-size:17px; font-weight:bold;">
+              <b>필지코드:</b> ${props.PNU || '정보 없음'}<br>
+              <b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
+              <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}
+            </span>
           `;
         } else {
-          document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터를 찾을 수 없습니다.";
+          document.getElementById("landBuildingInfo").innerHTML = 
+            "<span style='font-size:16px; font-weight:bold;'>토지·건축물 데이터를 찾을 수 없습니다.</span>";
         }
 
         // ✅ 통합 팝업 열기
@@ -50,7 +53,8 @@ function showLandBuilding() {
       })
       .catch(error => {
         console.error("브이월드 API 호출 실패:", error);
-        document.getElementById("landBuildingInfo").innerHTML = "데이터를 불러오지 못했습니다.";
+        document.getElementById("landBuildingInfo").innerHTML = 
+          "<span style='font-size:16px; font-weight:bold;'>데이터를 불러오지 못했습니다.</span>";
         document.getElementById("infoPopup").style.display = "block";
       });
   });
