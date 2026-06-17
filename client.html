@@ -783,8 +783,8 @@ makeDraggableModal(statsModal, statsHandle);
 
 // ---------------------- 지도 초기화 ----------------------
 function initMap() {
-  // ✅ 지도 객체 생성
-  map = new google.maps.Map(document.getElementById("map"), {
+  // ✅ 지도 객체 생성 (전역 window.map에 저장)
+  window.map = new google.maps.Map(document.getElementById("map"), {
     zoom: 7,                       // 기본 줌 레벨
     gestureHandling: "greedy",     // 마우스/터치 제스처 허용
     mapTypeId: "roadmap",          // 지도 타입: 일반 도로 지도
@@ -794,11 +794,11 @@ function initMap() {
   });
 
   // ✅ 지도 스타일 업데이트 (사용자 정의 함수)
-  updateMapStyle(map);
+  updateMapStyle(window.map);
 
   // ✅ 우클릭 이벤트 추가 → 줌 레벨 초기화
-  map.addListener("rightclick", () => {
-    map.setZoom(7);
+  window.map.addListener("rightclick", () => {
+    window.map.setZoom(7);
   });
 
   // ✅ 이동 경로 Polyline 초기화
@@ -808,7 +808,7 @@ function initMap() {
     strokeColor: "#1976d2",        // 선 색상 (파란색 계열)
     strokeOpacity: 1.0,            // 불투명도
     strokeWeight: 8,               // 선 두께
-    map: map
+    map: window.map
   });
 
   // ✅ 브라우저 Geolocation API 사용 → 현재 위치 가져오기
@@ -817,30 +817,27 @@ function initMap() {
       pos => {
         // ✅ 현재 위치 좌표 저장
         const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userPos);
+        window.map.setCenter(userPos);
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
 
         // ✅ 내 위치 마커 표시
         myMarker = new google.maps.Marker({
           position: userPos,
-          map,
+          map: window.map,
           title: "내 위치"
         });
 
         // ✅ 마커 클릭 시 → 내 위치로 이동 + 확대
         myMarker.addListener("click", () => {
-          map.setCenter(userPos);
-          map.setZoom(18);
+          window.map.setCenter(userPos);
+          window.map.setZoom(18);
         });
 
         // ✅ 레이더/원형 표시 및 추적 시작
         drawMultipleCircles(userPos);
         updateRadarPolygon(userPos, 0);
         startTracking();
-
-        // ❌ 구글 Places API 배열 호출 제거
-        // preloadGooglePlaces(); → 삭제
 
         // ✅ 로딩 메시지 숨기기
         const loadingMsg = document.getElementById("loadingMessage");
@@ -854,13 +851,14 @@ function initMap() {
         currentLat = 37.5663;
         currentLng = 126.9779;
 
-        // ✅ 추적 시작 (구글 데이터는 검색 시점에만 호출)
+        // ✅ 추적 시작
         startTracking();
       },
       { enableHighAccuracy: true } // ✅ 고정밀 모드
     );
   }
 }
+
   
 // ---------------------- 지도 스타일 업데이트 ----------------------
 function updateMapStyle(map) {
