@@ -2,7 +2,11 @@
 // config.js가 먼저 로드되어 있어야 함
 const API_KEY = CONFIG.API_KEY;
 
-function showLandBuilding() {
+// 토지·건축물 조회 함수 (전역 노출)
+window.showLandBuilding = function() {
+  // 기존에 등록된 클릭 이벤트 제거 (중복 방지)
+  google.maps.event.clearListeners(window.map, "click");
+
   // 지적도 오버레이
   const cadastreLayer = new google.maps.ImageMapType({
     getTileUrl: function(coord, zoom) {
@@ -12,7 +16,7 @@ function showLandBuilding() {
     maxZoom: 19,
     name: "Cadastre"
   });
-  map.overlayMapTypes.insertAt(0, cadastreLayer);
+  window.map.overlayMapTypes.insertAt(0, cadastreLayer);
 
   // 건축물 오버레이
   const buildingLayer = new google.maps.ImageMapType({
@@ -23,10 +27,10 @@ function showLandBuilding() {
     maxZoom: 19,
     name: "Building"
   });
-  map.overlayMapTypes.insertAt(1, buildingLayer);
+  window.map.overlayMapTypes.insertAt(1, buildingLayer);
 
   // 지도 클릭 이벤트 → 브이월드 데이터 API 호출
-  map.addListener("click", (e) => {
+  window.map.addListener("click", (e) => {
     const lat = e.latLng.lat();
     const lon = e.latLng.lng();
 
@@ -58,4 +62,4 @@ function showLandBuilding() {
         document.getElementById("infoPopup").style.display = "block";
       });
   });
-}
+};
