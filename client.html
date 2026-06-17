@@ -1306,17 +1306,18 @@ function updateTravelStats() {
     currentSpeedValue = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
   }
 
+  // ✅ 보정 로직: 움직일 때만 +4km/h
+  if (currentSpeedValue > 0) currentSpeedValue += 4;
+
   // ✅ 평균속도: 전체 기록 평균
-  const avgSpeedValue = speedHistory.length > 1
+  let avgSpeedValue = speedHistory.length > 1
     ? Math.round(speedHistory.reduce((a,b)=>a+b,0) / speedHistory.length)
     : currentSpeedValue;
 
-  // ✅ 최고속도
-  const maxSpeedValue = Math.round(maxSpeed);
-
-  // ✅ 보정 로직: 움직일 때만 +4km/h
-  if (currentSpeedValue > 0) currentSpeedValue += 4;
   if (avgSpeedValue > 0) avgSpeedValue += 4;
+
+  // ✅ 최고속도
+  let maxSpeedValue = Math.round(maxSpeed);
   if (maxSpeedValue > 0) maxSpeedValue += 4;
 
   // ✅ 이동거리 (m → km 변환)
@@ -1398,6 +1399,7 @@ function updateTravelStats() {
     destinationArrived = true;
   }
 }
+
   
 // ---------------------- 총 이동거리 계산 ----------------------
 function computeTotalDistance(coords) {
