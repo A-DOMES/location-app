@@ -120,30 +120,20 @@ input[type="text"] {
 
 /* =========================== ✅ 국토부 버튼 =========================== */
 #guktoBtn img {
-  width:90px;                       /* 버튼 크기 */
-  height:90px;
-  border-radius:12px;
-  background:linear-gradient(to bottom, #64b5f6, #1976d2);
-  box-shadow:0 4px 8px rgba(0,0,0,0.2);
-  cursor:pointer;
-  transition:transform 0.2s ease, background 0.3s ease;
+  width:90px;                       /* 구글 지도 버튼과 동일한 폭 */
+  height:90px;                      /* 구글 지도 버튼과 동일한 높이 */
+  border-radius:12px;               /* 모서리 둥글게 */
+  background:linear-gradient(to bottom, #64b5f6, #1976d2); /* 파란색 그라데이션 */
+  box-shadow:0 4px 8px rgba(0,0,0,0.2); /* 그림자 */
+  cursor:pointer;                   /* 커서 모양 */
+  transition:transform 0.2s ease, background 0.3s ease; /* 애니메이션 */
 }
 #guktoBtn img:hover {
-  background:linear-gradient(to bottom, #90caf9, #1565c0);
-  transform:scale(1.05);
+  background:linear-gradient(to bottom, #90caf9, #1565c0); /* 호버 시 밝게 */
+  transform:scale(1.05);            /* 살짝 커짐 */
 }
 
-/* =========================== ✅ 국토부 라벨 =========================== */
-#guktoBtn + span {
-  font-size:18px;
-  font-weight:bold;
-  color:#1565c0;
-  margin-left:20px;                 /* 버튼과 같은 좌측 라인 */
-  margin-top:2px;                   /* ✅ 버튼과 라벨 사이 간격 줄임 */
-  display:block;
-}
-
-/* =========================== ✅ 위치 전송/해제 버튼 (PC용) =========================== */
+/* =========================== ✅ 위치 전송/해제 버튼 가로 배치 =========================== */
 .button-row {
   display:flex;                     /* 가로 배치 */
   justify-content:center;           /* 가운데 정렬 */
@@ -153,13 +143,13 @@ input[type="text"] {
 
 #sendBtn, #stopBtn {
   flex:1;                           /* 버튼 폭 균등 분배 */
-  height:70px;                      /* ✅ PC에서는 버튼 높이를 기존 50px → 70px */
-  font-size:20px;                   /* 글자 크기 키움 */
+  height:70px;                      /* ✅ 버튼 높이를 기존 50px → 70px로 키움 */
+  font-size:20px;                   /* ✅ 글자 크기도 키움 */
   border:none;                      /* 테두리 없음 */
-  border-radius:10px;               /* 모서리 둥글게 */
+  border-radius:10px;                /* 모서리 둥글게 */
   cursor:pointer;                   /* 커서 모양 */
   color:white;                      /* 글자색 흰색 */
-  transition:transform 0.2s ease, background 0.3s ease; /* 호버 애니메이션 */
+  transition:transform 0.2s ease, background 0.3s ease; /* ✅ 호버 애니메이션 */
 }
 #sendBtn {
   background:linear-gradient(to bottom, #42a5f5, #1976d2); /* 파란색 버튼 */
@@ -177,43 +167,87 @@ input[type="text"] {
   transform:none;
 }
 
+/* =========================== ✅ 모달창 전체 영역 (PC용) =========================== */
+.modal {
+  position:fixed; left:0; top:0;
+  width:100%; height:100%;
+  background-color:rgba(0,0,0,0.4); /* 반투명 배경 */
+  z-index:1000;
+  display:flex;
+  justify-content:center;           /* 가로 중앙 */
+  align-items:center;               /* ✅ PC에서는 화면 중앙 */
+}
+.modal-content {
+  background-color:#fefefe;
+  padding:14px;
+  border:2px solid #2196F3;
+  border-radius:10px;
+  width:80%;                        /* ✅ PC에서는 크게 */
+  max-width:520px;                  /* ✅ 폭 제한 넓게 */
+  text-align:center;
+  font-size:20px;                   /* ✅ 글자도 크게 */
+  background:linear-gradient(135deg, #e3f2fd, #bbdefb); /* 파란색 그라데이션 */
+  box-shadow:0 6px 16px rgba(0,0,0,0.2);
+  margin:0 auto;
+  margin-top:2px;                   /* ✅ PC에서 모달창을 아래로 내림 */
+}
+
 /* =========================== ✅ 모바일 대응 =========================== */
 @media (max-width:767px) {
   header h2 { font-size:22px; }
   .info-box { font-size:15px; }
 
-  /* ✅ 위치 전송/해제 버튼 (모바일 전용 크기 조정) */
-  .button-row {
-    flex-direction:column;   /* 모바일에서는 세로 배치 */
-    gap:8px;                 /* 버튼 사이 간격 */
-  }
-  #sendBtn, #stopBtn {
-    font-size:14px;          /* 모바일에서는 글자 더 크게 */
-    height:150px;            /* ✅ 모바일에서 버튼 높이를 크게 (기존 42px → 150px) */
-    width:100%;              /* 화면 폭 꽉 채움 */
-    max-width:none;
-    margin-left:0;
-    margin-right:0;
-  }
-
-  /* ✅ 국토부 버튼도 모바일에서 구글 지도 버튼과 동일 크기 */
-  #guktoBtn img {
-    width:60px; height:60px; /* 모바일에서는 구글 지도 버튼과 동일 */
+  /* 지도 버튼 (모바일용) */
+  .map-btn {
+    width:60px; height:60px;        /* ✅ 모바일에서는 작게 */
     margin-left:10px;
     margin-top:10px;
     border-radius:10px;
     background:linear-gradient(to bottom, #64b5f6, #1976d2);
     box-shadow:0 3px 6px rgba(0,0,0,0.15);
   }
-  /* ✅ 국토부 라벨 (모바일용) */
+
+  /* ✅ 국토부 버튼도 구글 지도 버튼과 동일 크기 */
+  #guktoBtn img {
+    width:60px; height:60px;        /* 모바일에서 구글 지도 버튼과 동일 */
+    margin-left:10px;
+    margin-top:10px;
+    border-radius:10px;
+    background:linear-gradient(to bottom, #64b5f6, #1976d2);
+    box-shadow:0 3px 6px rgba(0,0,0,0.15);
+  }
+  /* ✅ 국토부 라벨 */
   #guktoBtn + span {
     font-size:14px;
     font-weight:bold;
     color:#1565c0;
-    margin-top:1px;          /* 버튼과 라벨 간격 최소화 */
+    margin-top:4px;
     display:block;
     text-align:left;
     margin-left:10px;
+  }
+
+  input[type="text"] {
+    font-size:14px;
+    height:32px;
+    width:100%;
+    max-width:none;
+    margin-left:20px;
+    margin-right:0;
+  }
+
+  /* ✅ 위치 전송/해제 버튼 (모바일용 - 크게) */
+  .button-row {
+    flex-direction:column;
+    gap:8px;
+  }
+  #sendBtn, #stopBtn {
+    font-size:20px;                 /* 글자 크기 키움 */
+    height:250px;                   /* ✅ 모바일에서는 버튼 높이를 크게 (기존 42px → 120px) */
+    width:100%;
+    max-width:none;
+    margin-left:0;
+    margin-right:0;
   }
 
   .warning { font-size:15px; }
