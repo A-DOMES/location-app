@@ -187,28 +187,28 @@ input[type="text"] {
   <!-- ✅ 입력창 및 구글 지도 버튼 -->
   <section class="info-box">
     <form id="locationForm" method="POST">
-      <div class="input-group" style="margin-left:-15px;"> <!-- ✅ 좌측으로 살짝 이동 -->
-        <!-- 구글 지도 버튼 (위치 전송 성공 시 표시) -->
-        <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
+      <div class="input-group" style="margin-left:8px;"> <!-- 구글 지도 버튼 살짝 우측 이동 -->
+        <!-- 구글 지도 버튼 -->
+        <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden; margin-right:12px;">
           <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
         </a>
 
-        <!-- 텍스트 입력창 (폭 그대로 유지) -->
+        <!-- 텍스트 입력창 (그대로 유지) -->
         <input type="text" name="phone" id="phone" 
                placeholder="회원가입 닉네임 또는 전화번호 입력"
                style="width:310px; height:40px;">
       </div>
 
       <!-- ✅ 국토부 아이콘 + 위치 전송/해제 버튼 레이아웃 -->
-      <div style="display:flex; align-items:flex-start; gap:40px; margin-top:25px; margin-left:-15px;"> <!-- ✅ 전체 블록 좌측 이동 -->
-        <!-- 국토부 아이콘 -->
-        <a href="geoportal.html" target="_blank" id="guktoBtn">
+      <div style="display:flex; align-items:flex-start; gap:28px; margin-top:25px; margin-left:8px;">
+        <!-- 국토부 아이콘 (구글 지도 버튼과 동일한 크기, 살짝 더 아래로 내림, 간격 확보) -->
+        <a href="geoportal.html" target="_blank" id="guktoBtn" style="margin-right:12px;">
           <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
-               style="width:90px; height:90px; object-fit:cover; margin-top:10px;">
+               style="width:90px; height:90px; object-fit:cover; margin-top:12px;">
         </a>
 
-        <!-- 위치 전송/해제 버튼 (세로 정렬, 텍스트박스와 동일한 길이, 간격 줄임) -->
-        <div style="display:flex; flex-direction:column; gap:4px;">
+        <!-- 위치 전송/해제 버튼 (텍스트박스와 동일한 폭, 좌측 라인 맞춤) -->
+        <div style="display:flex; flex-direction:column; gap:6px;">
           <button type="button" id="sendBtn" onclick="sendLocation()" 
                   style="width:310px; height:60px;">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()" 
