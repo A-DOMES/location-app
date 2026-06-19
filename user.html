@@ -188,21 +188,38 @@ input[type="text"] {
     <h2>A-DOMES | 위치 전송</h2>
   </header>
 
-  <!-- ✅ 입력창 및 국토부 버튼 -->
+  <!-- ✅ 입력창 및 구글 지도 버튼 -->
   <section class="info-box">
     <form id="locationForm" method="POST">
-      <div class="input-group">
-        <!-- ✅ 국토부 버튼 -->
-        <a href="geoportal.html" target="_blank" id="guktoBtn">
-          <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn">
+      <div class="input-group" style="margin-left:8px;">
+        <!-- ✅ 구글 지도 버튼 -->
+        <a href="client.html" target="_blank" id="mapBtn" 
+           style="visibility:hidden; margin-right:4px;">
+          <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
         </a>
-        <!-- ✅ 텍스트 입력창 (3px 우측 이동 반영) -->
+
+        <!-- ✅ 텍스트 입력창 (3px 우측 이동) -->
         <input type="text" name="phone" id="phone" 
-               placeholder="회원가입 닉네임 또는 전화번호 입력">
+               placeholder="회원가입 닉네임 또는 전화번호 입력"
+               style="width:310px; height:40px; margin-left:17px;">
       </div>
-      <!-- ✅ 위치 전송 / 해제 버튼 (3px 우측 이동 반영) -->
-      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+
+      <!-- ✅ 국토부 버튼 + 위치 전송/해제 버튼 레이아웃 -->
+      <div style="display:flex; align-items:flex-start; gap:28px; margin-top:28px; margin-left:4px;">
+        <!-- ✅ 국토부 버튼 -->
+        <a href="geoportal.html" target="_blank" id="guktoBtn" style="margin-right:6px;">
+          <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
+               style="width:90px; height:90px; object-fit:cover; margin-top:16px;">
+        </a>
+
+        <!-- ✅ 위치 전송/해제 버튼 (국토부 버튼 오른쪽에 배치) -->
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <button type="button" id="sendBtn" onclick="sendLocation()" 
+                  style="width:310px; height:60px; margin-left:3px;">위치 전송</button>
+          <button type="button" id="stopBtn" onclick="stopLocation()" 
+                  style="width:310px; height:60px; margin-left:3px;">위치정보 해제</button>
+        </div>
+      </div>
     </form>
   </section>
 
@@ -212,6 +229,7 @@ input[type="text"] {
     <p>
       📡 나의 현재 위치 전송 및 자동 갱신<br>
       🗺️ 전국 지도 검색 및 직선 거리 확인<br>
+      🏢 국토부 지도 및 부동산 정보 확인<br>
       👥 회원 이름으로 상대 위치 확인<br>
       🚸 보호구역 · 속도제한 · 기타 알림<br>
       <span class="desc">위치전송 버튼을 누르면 입력한 값과 현재 위치가 사용자 서버에 기록됩니다.</span>
