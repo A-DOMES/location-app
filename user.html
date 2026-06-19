@@ -193,26 +193,26 @@ input[type="text"] {
           <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
         </a>
 
-        <!-- 텍스트 입력창 (폭 줄임) -->
+        <!-- 텍스트 입력창 (폭 그대로 유지) -->
         <input type="text" name="phone" id="phone" 
                placeholder="회원가입 닉네임 또는 전화번호 입력"
-               style="width:260px; height:40px;">
+               style="width:310px; height:40px;">
       </div>
 
       <!-- ✅ 국토부 아이콘 + 위치 전송/해제 버튼 레이아웃 -->
-      <div style="display:flex; align-items:flex-start; gap:40px; margin-top:30px;">
-        <!-- 국토부 아이콘 (구글 지도 버튼과 같은 크기, 아래로 내림) -->
+      <div style="display:flex; align-items:flex-start; gap:40px; margin-top:45px;">
+        <!-- 국토부 아이콘 (구글 지도 버튼과 같은 크기, 아래로 더 내림, 꽉 채움) -->
         <a href="geoportal.html" target="_blank" id="guktoBtn">
           <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
-               style="width:90px; height:90px; margin-top:15px;">
+               style="width:90px; height:90px; object-fit:cover; margin-top:25px;">
         </a>
 
-        <!-- 위치 전송/해제 버튼 (세로 정렬, 간격 줄임, 우측 이동) -->
-        <div style="display:flex; flex-direction:column; gap:6px; margin-left:20px;">
+        <!-- 위치 전송/해제 버튼 (세로 정렬, 텍스트박스와 동일한 길이, 간격 줄임, 우측 이동) -->
+        <div style="display:flex; flex-direction:column; gap:4px; margin-left:20px;">
           <button type="button" id="sendBtn" onclick="sendLocation()" 
-                  style="width:240px; height:60px;">위치 전송</button>
+                  style="width:310px; height:60px;">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()" 
-                  style="width:240px; height:60px;">위치정보 해제</button>
+                  style="width:310px; height:60px;">위치정보 해제</button>
         </div>
       </div>
     </form>
