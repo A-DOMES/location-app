@@ -118,6 +118,22 @@ input[type="text"] {
   transform:scale(1.05);            /* 살짝 커짐 */
 }
 
+/* =========================== ✅ 국토부 버튼 =========================== */
+#guktoBtn img {
+  width:90px;
+  height:90px;
+  border-radius:12px;
+  background:linear-gradient(to bottom, #64b5f6, #1976d2);
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
+  cursor:pointer;
+  transition:transform 0.2s ease, background 0.3s ease;
+}
+#guktoBtn img:hover {
+  background:linear-gradient(to bottom, #90caf9, #1565c0);
+  transform:scale(1.05);
+}
+
+  
 /* =========================== ✅ 위치 전송 / 해제 버튼 =========================== */
 #sendBtn, #stopBtn {
   margin-left:0; margin-right:auto;
@@ -228,19 +244,34 @@ input[type="text"] {
     <h2>A-DOMES | 위치 전송</h2>
   </header>
 
-  <!-- ✅ 입력창 및 버튼 -->
-  <section class="info-box">
-    <form id="locationForm" method="POST">
-      <div class="input-group">
-        <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
-          <img src="btn-current.png" alt="지도 버튼" class="map-btn">
-        </a>
-        <input type="text" name="phone" id="phone" placeholder="회원가입 닉네임 또는 전화번호 입력">
+<!-- ✅ 입력창 및 버튼 -->
+<section class="info-box">
+  <form id="locationForm" method="POST">
+    <div class="input-group">
+      <!-- 지도 버튼 -->
+      <a href="client.html" target="_blank" id="mapBtn" style="visibility:hidden;">
+        <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+      </a>
+      <!-- 입력창 -->
+      <input type="text" name="phone" id="phone" 
+             placeholder="회원가입 닉네임 또는 전화번호 입력">
+    </div>
+
+    <!-- 국토부 버튼 + 위치 전송/해제 버튼 -->
+    <div class="input-group" style="margin-top:20px;">
+      <!-- 국토부 버튼 -->
+      <a href="geoportal.html" target="_blank" id="guktoBtn">
+        <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn">
+      </a>
+      <!-- 위치 전송/해제 버튼 -->
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </div>
-      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-    </form>
-  </section>
+    </div>
+  </form>
+</section>
+
 
   <!-- ✅ 주요 기능 (배경색 없음) -->
   <section class="info-box features">
