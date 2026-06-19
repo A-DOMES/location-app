@@ -188,33 +188,32 @@ input[type="text"] {
   <section class="info-box">
     <form id="locationForm" method="POST">
       <div class="input-group" style="margin-left:8px;">
-        <!-- 구글 지도 버튼 (좌측으로 조금 이동) -->
+        <!-- 구글 지도 버튼 (현재 상태 그대로) -->
         <a href="client.html" target="_blank" id="mapBtn" 
-           style="visibility:hidden; margin-left:-8px; margin-right:4px;">
+           style="visibility:hidden; margin-right:4px;">
           <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
         </a>
 
-        <!-- 텍스트 입력창 (그대로 유지) -->
+        <!-- 텍스트 입력창 (우측으로 3px 이동) -->
         <input type="text" name="phone" id="phone" 
                placeholder="회원가입 닉네임 또는 전화번호 입력"
-               style="width:310px; height:40px; margin-left:14px;">
+               style="width:310px; height:40px; margin-left:17px;">
       </div>
 
       <!-- ✅ 국토부 아이콘 + 위치 전송/해제 버튼 레이아웃 -->
       <div style="display:flex; align-items:flex-start; gap:28px; margin-top:28px; margin-left:4px;">
-        <!-- 국토부 아이콘 (좌측으로 조금 이동) -->
-        <a href="geoportal.html" target="_blank" id="guktoBtn" 
-           style="margin-left:-8px; margin-right:6px;">
+        <!-- 국토부 아이콘 (현재 상태 그대로) -->
+        <a href="geoportal.html" target="_blank" id="guktoBtn" style="margin-right:6px;">
           <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
                style="width:90px; height:90px; object-fit:cover; margin-top:16px;">
         </a>
 
-        <!-- 위치 전송/해제 버튼 (현재 상태 그대로 유지) -->
+        <!-- 위치 전송/해제 버튼 (우측으로 3px 이동) -->
         <div style="display:flex; flex-direction:column; gap:2px;">
           <button type="button" id="sendBtn" onclick="sendLocation()" 
-                  style="width:310px; height:60px;">위치 전송</button>
+                  style="width:310px; height:60px; margin-left:3px;">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()" 
-                  style="width:310px; height:60px;">위치정보 해제</button>
+                  style="width:310px; height:60px; margin-left:3px;">위치정보 해제</button>
         </div>
       </div>
     </form>
@@ -237,7 +236,6 @@ input[type="text"] {
   <!-- ✅ 지도 표시 영역 -->
   <div id="map"></div>
 </div>
-
   
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
