@@ -196,11 +196,11 @@ input[type="text"] {
         <!-- 텍스트 입력창 (그대로 유지) -->
         <input type="text" name="phone" id="phone" 
                placeholder="회원가입 닉네임 또는 전화번호 입력"
-               style="width:310px; height:40px; margin-left:12px;">
+               style="width:310px; height:40px; margin-left:14px;">
       </div>
 
       <!-- ✅ 국토부 아이콘 + 위치 전송/해제 버튼 레이아웃 -->
-      <div style="display:flex; align-items:flex-start; gap:28px; margin-top:27px; margin-left:4px;">
+      <div style="display:flex; align-items:flex-start; gap:28px; margin-top:28px; margin-left:4px;">
         <!-- 국토부 아이콘 (구글 지도 버튼과 동일한 크기, 살짝 더 아래로 내림, 간격 확보) -->
         <a href="geoportal.html" target="_blank" id="guktoBtn" style="margin-right:6px;">
           <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
@@ -208,7 +208,7 @@ input[type="text"] {
         </a>
 
         <!-- 위치 전송/해제 버튼 (텍스트박스와 동일한 폭, 좌측 라인 맞춤) -->
-        <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="display:flex; flex-direction:column; gap:2px;">
           <button type="button" id="sendBtn" onclick="sendLocation()" 
                   style="width:310px; height:60px;">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()" 
