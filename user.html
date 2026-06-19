@@ -133,6 +133,17 @@ input[type="text"] {
   transform:scale(1.05);            /* 살짝 커짐 */
 }
 
+/* =========================== ✅ 국토부 라벨 =========================== */
+#guktoBtn + span {
+  font-size:18px;                   /* 라벨 글자 크기 */
+  font-weight:bold;                 /* 굵게 */
+  color:#1565c0;                    /* 파란색 글자 */
+  margin-left:20px;                 /* 버튼과 같은 좌측 라인 */
+  margin-top:2px;                   /* ✅ 버튼과 라벨 사이 간격 줄임 (기존 8px → 2px) */
+  display:block;                    /* 블록 요소로 표시 */
+}
+
+
 /* =========================== ✅ 위치 전송/해제 버튼 가로 배치 =========================== */
 .button-row {
   display:flex;                     /* 가로 배치 */
@@ -242,8 +253,8 @@ input[type="text"] {
     gap:8px;
   }
   #sendBtn, #stopBtn {
-    font-size:20px;                 /* 글자 크기 키움 */
-    height:120px;                   /* ✅ 모바일에서는 버튼 높이를 크게 (기존 42px → 120px) */
+    font-size:15px;                 /* 글자 크기 키움 */
+    height:1800px;                   /* ✅ 모바일에서는 버튼 높이를 크게 (기존 42px → 120px) */
     width:100%;
     max-width:none;
     margin-left:0;
@@ -297,7 +308,7 @@ input[type="text"] {
         <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn">
       </a>
       <!-- ✅ 국토부 라벨 -->
-      <span style="margin-left:30px; font-size:18px; color:#1565c0; font-weight:bold;">국토부</span>
+      <span style="margin-left:20px; font-size:18px; color:#1565c0; font-weight:bold;">국토부</span>
     </div>
   </form>
 </section>
