@@ -34,7 +34,7 @@ body {
 
 /* =========================== ✅ 헤더 영역 =========================== */
 header {
-  background-color: #1976d2;
+  background:linear-gradient(to right, #1976d2, #64b5f6); /* ✅ 파란색 그라데이션 */
   padding: 10px;
   text-align: center;
   border-radius: 8px;
@@ -168,6 +168,8 @@ input[type="text"] {
   justify-content:center;    /* 가로 중앙 */
   align-items:center;        /* ✅ 세로 중앙 (flex-start → center로 수정) */
 }
+
+/* =========================== ✅ 모달창 내용 박스 =========================== */
 .modal-content {
   background-color:#fefefe;
   padding:14px;
@@ -184,13 +186,6 @@ input[type="text"] {
 
 /* =========================== ✅ 모바일 대응 =========================== */
 @media (max-width:767px) {
-  input[type="text"] {
-    margin-left:10px;   /* ✅ 모바일에서도 좌측으로 붙이기 */
-    font-size:14px;
-    height:32px;
-    width:100%;
-  }
-
   .modal {
     align-items:center; /* ✅ 모바일에서도 중앙 정렬 유지 */
   }
