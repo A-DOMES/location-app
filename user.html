@@ -240,6 +240,7 @@ input[type="text"] {
   }
 }
 
+
 </style>
 </head>
   
@@ -254,24 +255,22 @@ input[type="text"] {
 <section class="info-box">
   <form id="locationForm" method="POST">
     <div class="input-group">
-      <!-- 구글 지도 버튼 -->
+      <!-- ✅ 구글 지도 버튼 -->
       <a href="client.html" target="_blank" id="mapBtn">
-        <img src="btn-current.png" alt="지도 버튼" class="map-btn">
+        <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
       </a>
-      <!-- 입력창 -->
+      <!-- ✅ 텍스트 입력창 -->
       <input type="text" name="phone" id="phone" 
              placeholder="회원가입 닉네임 또는 전화번호 입력">
     </div>
 
-    <!-- 위치 전송/해제 버튼 (구글 지도 버튼 아래) -->
+    <!-- ✅ 위치 전송/해제 버튼 (구글 지도 버튼 아래, 가로 배치) -->
     <div class="button-row">
       <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
       <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
     </div>
   </form>
 </section>
-
-
 
   <!-- ✅ 주요 기능 (배경색 없음) -->
   <section class="info-box features">
