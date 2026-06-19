@@ -200,8 +200,8 @@ input[type="text"] {
   /* 지도 버튼 (모바일용) */
   .map-btn {
     width:60px; height:60px;        /* ✅ 모바일에서는 작게 */
-    margin-left:10px;               /* 모바일에서는 여백 줄임 */
-    margin-top:10px;                /* ✅ 아래로 조금 내려오도록 */
+    margin-left:10px;
+    margin-top:10px;
     border-radius:10px;
     background:linear-gradient(to bottom, #64b5f6, #1976d2);
     box-shadow:0 3px 6px rgba(0,0,0,0.15);
@@ -210,37 +210,52 @@ input[type="text"] {
   input[type="text"] {
     font-size:14px;
     height:32px;
-    width:100%;                     /* 모바일에서는 꽉 채움 */
+    width:100%;
     max-width:none;
-    margin-left:20px;                /* 모바일에서는 좌측 여백 줄임 */
+    margin-left:20px;
     margin-right:0;
   }
 
-  /* ✅ 위치 전송/해제 버튼 (모바일용 - 높이 2배로 증가) */
+  /* ✅ 위치 전송/해제 버튼 (모바일용 - 크게) */
   .button-row {
-    flex-direction:column;          /* 모바일에서는 세로 배치 */
+    flex-direction:column;
     gap:8px;
   }
   #sendBtn, #stopBtn {
-    font-size:16px;                 /* 글자 크기 조금 키움 */
-    height:250px;                    /* ✅ 기존 42px → 84px (2배 높이) */
-    width:100%;                     /* 모바일에서는 버튼도 꽉 채움 */
+    font-size:20px;                 /* 글자 크기 키움 */
+    height:250px;                   /* ✅ 버튼 높이를 크게 */
+    width:100%;
     max-width:none;
     margin-left:0;
     margin-right:0;
   }
 
+  /* ✅ 국토부 버튼도 같은 크기로 */
+  #guktoBtn img {
+    width:100%;                     /* 화면 폭 꽉 채움 */
+    height:250px;                   /* 위치 전송 버튼과 동일한 높이 */
+    border-radius:12px;
+  }
+  /* 국토부 라벨도 크게 */
+  #guktoBtn + span {
+    font-size:20px;
+    font-weight:bold;
+    color:#1565c0;
+    margin-top:8px;
+    display:block;
+    text-align:center;
+  }
+
   .warning { font-size:15px; }
 
-  .modal { align-items:flex-start; } /* ✅ 모바일에서는 위쪽 기준 */
+  .modal { align-items:flex-start; }
   .modal-content {
-    margin-top:160px;               /* ✅ 모바일에서는 위에서 100px 내려옴 */
-    width:90%;                      /* 모바일에서는 폭 더 넓게 */
+    margin-top:160px;
+    width:90%;
     max-width:300px;
-    font-size:16px;                 /* 모바일에서는 글자 작게 */
+    font-size:16px;
   }
 }
-
 
 </style>
 </head>
