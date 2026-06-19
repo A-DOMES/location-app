@@ -198,15 +198,15 @@ input[type="text"] {
       </div>
 
       <!-- ✅ 국토부 아이콘 + 위치 전송/해제 버튼 레이아웃 -->
-      <div style="display:flex; align-items:flex-start; gap:20px; margin-top:25px;">
-        <!-- 국토부 아이콘 (구글 지도 버튼과 같은 크기, 아래쪽 여백 추가) -->
+      <div style="display:flex; align-items:flex-start; gap:30px; margin-top:25px;">
+        <!-- 국토부 아이콘 (구글 지도 버튼과 같은 크기) -->
         <a href="geoportal.html" target="_blank" id="guktoBtn">
           <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn" 
-               style="width:90px; height:90px; margin-top:10px;">
+               style="width:90px; height:90px;">
         </a>
 
-        <!-- 위치 전송/해제 버튼 (세로 정렬, 좌측 라인 맞춤, 간격 줄임) -->
-        <div style="display:flex; flex-direction:column; gap:6px; margin-left:-30px;">
+        <!-- 위치 전송/해제 버튼 (세로 정렬, 간격 줄임, 좌측 라인 맞춤) -->
+        <div style="display:flex; flex-direction:column; gap:6px; margin-left:0;">
           <button type="button" id="sendBtn" onclick="sendLocation()" 
                   style="width:240px; height:60px;">위치 전송</button>
           <button type="button" id="stopBtn" onclick="stopLocation()" 
