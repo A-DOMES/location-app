@@ -205,7 +205,7 @@ input[type="text"] {
   }
   #sendBtn, #stopBtn {
     flex:none;               /* ✅ flex 자동 분배 제거 */
-    height:40px;            /* 원하는 높이 */
+    height:40px;             /* 원하는 높이 */
     font-size:18px;          /* 글자 크기 */
     width:100%;
     margin-left:0;
@@ -214,14 +214,29 @@ input[type="text"] {
 
   .warning { font-size:15px; }
 
-  .modal { align-items:flex-start; }
+  /* ✅ 모달창 (모바일용) */
+  .modal {
+    position:fixed; left:0; top:0;
+    width:100%; height:100%;
+    background-color:rgba(0,0,0,0.4); /* 반투명 배경 */
+    z-index:1000;
+    display:flex;             /* 중앙 정렬 */
+    justify-content:center;
+    align-items:flex-start;   /* 모바일에서는 위쪽에 붙이기 */
+  }
   .modal-content {
-    margin-top:160px;
+    margin-top:160px;         /* 모바일에서 아래로 내림 */
     width:90%;
     max-width:300px;
     font-size:16px;
+    background-color:#fefefe;
+    border:2px solid #2196F3;
+    border-radius:10px;
+    text-align:center;
+    box-shadow:0 6px 16px rgba(0,0,0,0.2);
   }
 }
+
 </style>
 </head>
   
