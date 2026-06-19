@@ -178,13 +178,14 @@ input[type="text"] {
 /* =========================== ✅ 모바일 대응 =========================== */
 @media (max-width: 480px) {
   .modal-content {
-    width:95%;           /* 모바일에서는 거의 전체 폭 */
-    max-width:none;       /* 폭 제한 해제 */
-    font-size:16px;       /* 글자 크기 줄임 */
-    padding:10px;         /* 내부 여백 줄임 */
-    margin-top:20px;      /* 모바일에서는 위쪽으로 조금 내림 */
+    width: 90%;          /* 모바일에서는 화면 폭의 90%만 사용 */
+    max-width: 360px;    /* 최대 폭 제한 (예: 360px) */
+    font-size: 16px;     /* 글자 크기 줄임 */
+    padding: 10px;       /* 내부 여백 줄임 */
+    margin-top: 40px;    /* 모바일에서는 위쪽으로 조금 내림 */
   }
 }
+
 
 </style>
 </head>
