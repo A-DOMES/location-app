@@ -243,6 +243,11 @@ input[type="text"] {
         <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </div>
 
+      <!-- ✅ 국토부 버튼 -->
+      <div class="input-group" style="margin-top:20px;">
+        <a href="geoportal.html" target="_blank" id="guktoBtn">
+          <img src="Copilot-map.png" alt="국토부 지도 버튼" class="map-btn">
+        </a>
         <!-- ✅ 국토부 라벨 -->
         <span style="margin-left:16px; font-size:16px; color:#1565c0; font-weight:bold;">
           국토부
@@ -251,8 +256,8 @@ input[type="text"] {
     </form>
   </section>
 
-  <!-- ✅ 주요 기능 (배경색 있음) -->
-  <section class="info-box features">
+  <!-- ✅ 주요 기능 (카드 안에서 꽉 차게) -->
+  <section class="info-box features" style="width:100%; box-sizing:border-box;">
     <h3>주요 기능</h3>
     <p>
       📡 나의 현재 위치 전송 및 자동 갱신<br>
@@ -268,7 +273,6 @@ input[type="text"] {
   <!-- ✅ 지도 표시 영역 -->
   <div id="map"></div>
 </div>
-
 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
