@@ -36,7 +36,7 @@
   <script src="config.js"></script>
 
   <script>
-    // ✅ WMTS 기본 지도 레이어
+    // ✅ WMTS 기본 지도 레이어 (config.js의 CONFIG.API_KEY 사용)
     const wmtsLayer = new ol.layer.Tile({
       source: new ol.source.XYZ({
         url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Base/{z}/{y}/{x}.png`
