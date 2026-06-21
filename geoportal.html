@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>GeoPortal 국토부 지도</title>
-  <!-- ✅ OpenLayers CDN -->
+
+  <!-- ✅ OpenLayers 최신 CDN (jsDelivr) -->
+  <!-- 스타일시트: 지도 기본 UI 스타일 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
+  <!-- 스크립트: OpenLayers 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/ol/ol.js"></script>
+
   <style>
+    /* 페이지 기본 스타일 */
     body { font-family: Arial, sans-serif; margin:0; }
     #map { width:100%; height:600px; }
+
+    /* 팝업 스타일 */
     #infoPopup {
       display:none;
       position:absolute; top:20px; right:20px;
@@ -37,7 +44,7 @@
   <script src="config.js"></script>
 
   <script>
-    // ✅ WMTS 기본 지도 레이어 (config.js의 CONFIG.API_KEY 사용)
+    // ✅ WMTS 기본 지도 레이어 (브이월드 API Key 사용)
     const wmtsLayer = new ol.layer.Tile({
       source: new ol.source.XYZ({
         url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Base/{z}/{y}/{x}.png`
@@ -46,26 +53,26 @@
 
     // ✅ 지도 초기화
     const map = new ol.Map({
-      target: 'map',
-      layers: [wmtsLayer],
+      target: 'map',          // 지도를 표시할 div ID
+      layers: [wmtsLayer],    // 기본 배경지도 레이어
       view: new ol.View({
-        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심
-        zoom: 7
+        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심 좌표
+        zoom: 7                                   // 초기 확대 수준
       })
     });
 
-    // ✅ 팝업 닫기
+    // ✅ 팝업 닫기 함수
     function closeInfoPopup() {
       document.getElementById("infoPopup").style.display = "none";
     }
 
     // ✅ 지도 클릭 이벤트 → 브이월드 API 호출
     map.on('click', function(evt) {
-      const coord = ol.proj.toLonLat(evt.coordinate);
+      const coord = ol.proj.toLonLat(evt.coordinate); // 클릭 좌표를 경위도로 변환
       const lon = coord[0];
       const lat = coord[1];
 
-      // 토지·건축물 조회
+      // 1. 토지·건축물 조회
       fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD`)
         .then(res => res.json())
         .then(data => {
@@ -80,7 +87,7 @@
           }
         });
 
-      // 토지이용계획 조회
+      // 2. 토지이용계획 조회
       fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
         .then(res => res.json())
         .then(data => {
@@ -95,7 +102,7 @@
           }
         });
 
-      // 실거래가 조회
+      // 3. 실거래가 조회
       fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS`)
         .then(res => res.json())
         .then(data => {
