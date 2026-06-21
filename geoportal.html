@@ -6,10 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- OpenLayers CSS & JS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
-  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
 
   <style>
+    /* ---------------------- 페이지 기본 ---------------------- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
     /* ---------------------- 페이지 헤더 ---------------------- */
     .page-header {
       width:100%; height:60px;
@@ -22,7 +30,8 @@
     #map {
       width:100%;
       height:calc(100vh - 60px); /* 헤더 높이를 제외한 전체 화면 */
-      position:relative; z-index:1;
+      position: relative;
+      z-index: 1; /* 다른 요소보다 위로 */
     }
 
     /* ---------------------- 레이어 선택 UI ---------------------- */
@@ -71,7 +80,7 @@
 
   <!-- ✅ API Key 설정 -->
   <script src="config.js"></script>
-
+  
   <script>
     // ✅ WMTS 공통 설정
     const projection = ol.proj.get('EPSG:3857');
