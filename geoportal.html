@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoPortal 지도</title>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css">
+  <script src="https://openlayers.org/en/latest/build/ol.js"></script>
+</head>
+<body>
+  <h2>GeoPortal 국토부 지도</h2>
+  <div id="map" style="width:100%; height:600px;"></div>
+
+  <script>
+    // ✅ 국토부 WMTS 타일 불러오기 (예시 URL, 실제는 API Key 필요)
+    const wmtsLayer = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: "https://api.vworld.kr/req/wmts/1.0.0/YOUR_API_KEY/Base/{z}/{y}/{x}.png"
+      })
+    });
+
+    const map = new ol.Map({
+      target: 'map',
+      layers: [wmtsLayer],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심
+        zoom: 7
+      })
+    });
+  </script>
+</body>
+</html>
