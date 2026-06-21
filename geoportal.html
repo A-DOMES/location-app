@@ -10,24 +10,34 @@
   <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
 
   <style>
-    body { margin:0; font-family:Arial,sans-serif; }
-    /* ---------------------- 지도 영역 ---------------------- */
-    #map {
-      width: 100%;
-      height: 100vh; /* PC/모바일 모두 화면 전체 높이 */
-    }
-    .layer-switcher {
-      position:absolute; top:10px; left:10px;
-      background:#fff; padding:8px; border:1px solid #ccc;
-      font-size:14px;
-    }
-    #infoPopup {
-      display:none; position:absolute; top:20px; right:20px;
-      background:#fff; border:2px solid #1976d2; padding:10px; z-index:1000;
-      width:320px; max-width:90%; font-size:14px;
-    }
-    #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
-    #infoPopup button { margin-top:8px; }
+/* ---------------------- 전체 페이지 기본 ---------------------- */
+html, body { height:100%; margin:0; padding:0; font-family:Arial,sans-serif; }
+
+/* ---------------------- 지도 영역 ---------------------- */
+#map { width:100%; height:100vh; position:relative; z-index:0; }
+
+/* ---------------------- 타이틀 영역 ---------------------- */
+/* 지도 상단 중앙에 제목을 띄워 사용자에게 현재 페이지의 역할을 알려줌 */
+h2 { position:absolute; top:10px; left:50%; transform:translateX(-50%);
+     margin:0; padding:6px 12px; background:rgba(255,255,255,0.85);
+     border-radius:4px; font-size:18px; color:#1976d2; z-index:1000; }
+
+/* ---------------------- 레이어 선택 UI ---------------------- */
+/* 지도 좌측 상단에 레이어 on/off 체크박스 표시 */
+.layer-switcher { position:absolute; top:60px; left:10px;
+                  background:#fff; padding:8px; border:1px solid #ccc;
+                  font-size:14px; z-index:1000; }
+
+/* ---------------------- 팝업 영역 ---------------------- */
+/* 지도 클릭 시 조회 결과를 보여주는 팝업 */
+#infoPopup { display:none; position:absolute; top:20px; right:20px;
+             background:#fff; border:2px solid #1976d2; padding:10px;
+             z-index:1000; width:320px; max-width:90%; font-size:14px; }
+
+#infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
+
+#infoPopup button { margin-top:8px; }
+
   </style>
 </head>
 <body>
