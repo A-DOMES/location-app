@@ -2,29 +2,116 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>GeoPortal 지도</title>
+  <title>GeoPortal 국토부 지도</title>
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css">
   <script src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; }
+    #map { width:100%; height:600px; }
+    #infoPopup {
+      display:none;
+      position:absolute; top:20px; right:20px;
+      background:#fff; border:2px solid #1976d2;
+      padding:10px; z-index:1000;
+      width:300px; font-size:14px;
+    }
+    #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
+    #infoPopup button { margin-top:8px; }
+  </style>
 </head>
 <body>
   <h2>GeoPortal 국토부 지도</h2>
-  <div id="map" style="width:100%; height:600px;"></div>
+  <div id="map"></div>
+
+  <!-- ✅ 팝업 영역 -->
+  <div id="infoPopup">
+    <h3>조회 결과</h3>
+    <div id="landBuildingInfo"></div>
+    <div id="landUseInfo"></div>
+    <div id="realEstateInfo"></div>
+    <button onclick="closeInfoPopup()">닫기</button>
+  </div>
 
   <script>
-    // ✅ 국토부 WMTS 타일 불러오기 (예시 URL, 실제는 API Key 필요)
+    const API_KEY = "YOUR_API_KEY"; // ✅ 브이월드 API Key 입력
+
+    // ✅ WMTS 기본 지도 레이어
     const wmtsLayer = new ol.layer.Tile({
       source: new ol.source.XYZ({
-        url: "https://api.vworld.kr/req/wmts/1.0.0/YOUR_API_KEY/Base/{z}/{y}/{x}.png"
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`
       })
     });
 
+    // ✅ 지도 초기화
     const map = new ol.Map({
       target: 'map',
       layers: [wmtsLayer],
       view: new ol.View({
-        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심
+        center: ol.proj.fromLonLat([127.0, 37.5]),
         zoom: 7
       })
+    });
+
+    // ✅ 팝업 닫기
+    function closeInfoPopup() {
+      document.getElementById("infoPopup").style.display = "none";
+    }
+
+    // ✅ 지도 클릭 이벤트 → 세 가지 데이터 조회
+    map.on('click', function(evt) {
+      const coord = ol.proj.toLonLat(evt.coordinate);
+      const lon = coord[0];
+      const lat = coord[1];
+
+      // 토지·건축물 조회
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_C_ADSIDO,LT_C_ADEMD,LT_C_ADEDO,LT_P_BULD`)
+        .then(res => res.json())
+        .then(data => {
+          const features = data.response?.result?.featureCollection?.features;
+          if (features?.length > 0) {
+            const props = features[0].properties;
+            document.getElementById("landBuildingInfo").innerHTML =
+              `<b>필지코드:</b> ${props.PNU || '정보 없음'}<br>
+               <b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
+               <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}`;
+          } else {
+            document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터 없음";
+          }
+        });
+
+      // 토지이용계획 조회
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
+        .then(res => res.json())
+        .then(data => {
+          const features = data.response?.result?.featureCollection?.features;
+          if (features?.length > 0) {
+            const props = features[0].properties;
+            document.getElementById("landUseInfo").innerHTML =
+              `<b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}<br>
+               <b>세부지역:</b> ${props.DETAIL_ZONE || '정보 없음'}`;
+          } else {
+            document.getElementById("landUseInfo").innerHTML = "토지이용계획 데이터 없음";
+          }
+        });
+
+      // 실거래가 조회
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS`)
+        .then(res => res.json())
+        .then(data => {
+          const features = data.response?.result?.featureCollection?.features;
+          if (features?.length > 0) {
+            const props = features[0].properties;
+            document.getElementById("realEstateInfo").innerHTML =
+              `<b>거래금액:</b> ${props.DEAL_AMOUNT || '정보 없음'}<br>
+               <b>거래일자:</b> ${props.DEAL_YMD || '정보 없음'}<br>
+               <b>건물명:</b> ${props.BLD_NM || '정보 없음'}`;
+          } else {
+            document.getElementById("realEstateInfo").innerHTML = "실거래가 데이터 없음";
+          }
+        });
+
+      // ✅ 팝업 열기
+      document.getElementById("infoPopup").style.display = "block";
     });
   </script>
 </body>
