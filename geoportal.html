@@ -13,7 +13,7 @@
       position:absolute; top:20px; right:20px;
       background:#fff; border:2px solid #1976d2;
       padding:10px; z-index:1000;
-      width:300px; font-size:14px;
+      width:320px; font-size:14px;
     }
     #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
     #infoPopup button { margin-top:8px; }
@@ -32,13 +32,14 @@
     <button onclick="closeInfoPopup()">닫기</button>
   </div>
 
-  <script>
-    const API_KEY = "YOUR_API_KEY"; // ✅ 브이월드 API Key 입력
+  <!-- ✅ config.js 불러오기 (API_KEY 포함) -->
+  <script src="config.js"></script>
 
-    // ✅ WMTS 기본 지도 레이어
+  <script>
+    // ✅ WMTS 기본 지도 레이어 (config.js의 CONFIG.API_KEY 사용)
     const wmtsLayer = new ol.layer.Tile({
       source: new ol.source.XYZ({
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Base/{z}/{y}/{x}.png`
       })
     });
 
@@ -47,7 +48,7 @@
       target: 'map',
       layers: [wmtsLayer],
       view: new ol.View({
-        center: ol.proj.fromLonLat([127.0, 37.5]),
+        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심
         zoom: 7
       })
     });
@@ -57,22 +58,21 @@
       document.getElementById("infoPopup").style.display = "none";
     }
 
-    // ✅ 지도 클릭 이벤트 → 세 가지 데이터 조회
+    // ✅ 지도 클릭 이벤트 → 브이월드 API 호출
     map.on('click', function(evt) {
       const coord = ol.proj.toLonLat(evt.coordinate);
       const lon = coord[0];
       const lat = coord[1];
 
       // 토지·건축물 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_C_ADSIDO,LT_C_ADEMD,LT_C_ADEDO,LT_P_BULD`)
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD`)
         .then(res => res.json())
         .then(data => {
           const features = data.response?.result?.featureCollection?.features;
           if (features?.length > 0) {
             const props = features[0].properties;
             document.getElementById("landBuildingInfo").innerHTML =
-              `<b>필지코드:</b> ${props.PNU || '정보 없음'}<br>
-               <b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
+              `<b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
                <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}`;
           } else {
             document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터 없음";
@@ -80,7 +80,7 @@
         });
 
       // 토지이용계획 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
         .then(res => res.json())
         .then(data => {
           const features = data.response?.result?.featureCollection?.features;
@@ -95,7 +95,7 @@
         });
 
       // 실거래가 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS`)
+      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS`)
         .then(res => res.json())
         .then(data => {
           const features = data.response?.result?.featureCollection?.features;
