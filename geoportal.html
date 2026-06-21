@@ -5,14 +5,8 @@
   <title>GeoPortal 국토부 지도</title>
 
   <!-- ✅ OpenLayers CSS & JS -->
-<!-- OpenLayers CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
-
-<!-- OpenLayers JS -->
-<script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-
-
-
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
+  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
 
   <style>
     body { margin:0; font-family:Arial,sans-serif; }
@@ -66,7 +60,7 @@
       matrixIds[z] = z;
     }
 
-    // ✅ 레이어 생성 함수 (Base, Satellite, Cadastral, Gray, Midnight, Hybrid, Terrain)
+    // ✅ 레이어 생성 함수
     function createLayer(layerName, format='image/png') {
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
@@ -100,7 +94,7 @@
       target: 'map',
       layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
       view: new ol.View({
-        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심 좌표
+        center: ol.proj.fromLonLat([127.0, 37.5]),
         zoom: 7
       })
     });
@@ -119,57 +113,70 @@
       document.getElementById("infoPopup").style.display = "none";
     }
 
-    // ✅ 지도 클릭 이벤트 → 브이월드 데이터 API 호출
+    // ✅ JSONP 콜백 함수들
+    function landBuildingCallback(data) {
+      if (data.response?.result?.featureCollection?.features?.length > 0) {
+        const props = data.response.result.featureCollection.features[0].properties;
+        document.getElementById("landBuildingInfo").innerHTML =
+          `<b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
+           <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}`;
+      } else {
+        document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터 없음";
+      }
+    }
+
+    function landUseCallback(data) {
+      if (data.response?.result?.featureCollection?.features?.length > 0) {
+        const props = data.response.result.featureCollection.features[0].properties;
+        document.getElementById("landUseInfo").innerHTML =
+          `<b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}<br>
+           <b>세부지역:</b> ${props.DETAIL_ZONE || '정보 없음'}`;
+      } else {
+        document.getElementById("landUseInfo").innerHTML = "토지이용계획 데이터 없음";
+      }
+    }
+
+    function realEstateCallback(data) {
+      if (data.response?.result?.featureCollection?.features?.length > 0) {
+        const props = data.response.result.featureCollection.features[0].properties;
+        document.getElementById("realEstateInfo").innerHTML =
+          `<b>거래금액:</b> ${props.DEAL_AMOUNT || '정보 없음'}<br>
+           <b>거래일자:</b> ${props.DEAL_YMD || '정보 없음'}<br>
+           <b>건물명:</b> ${props.BLD_NM || '정보 없음'}`;
+      } else {
+        document.getElementById("realEstateInfo").innerHTML = "실거래가 데이터 없음";
+      }
+    }
+
+    // ✅ JSONP 호출 함수들
+    function loadLandBuilding(lon, lat) {
+      const script = document.createElement("script");
+      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD&output=jsonp&callback=landBuildingCallback`;
+      document.body.appendChild(script);
+    }
+
+    function loadLandUse(lon, lat) {
+      const script = document.createElement("script");
+      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE&output=jsonp&callback=landUseCallback`;
+      document.body.appendChild(script);
+    }
+
+    function loadRealEstate(lon, lat) {
+      const script = document.createElement("script");
+      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS&output=jsonp&callback=realEstateCallback`;
+      document.body.appendChild(script);
+    }
+
+    // ✅ 지도 클릭 이벤트 → JSONP 호출
     map.on('click', function(evt) {
       const coord = ol.proj.toLonLat(evt.coordinate);
       const lon = coord[0];
       const lat = coord[1];
 
-      // 1. 토지·건축물 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          if (features?.length > 0) {
-            const props = features[0].properties;
-            document.getElementById("landBuildingInfo").innerHTML =
-              `<b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
-               <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}`;
-          } else {
-            document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터 없음";
-          }
-        });
-
-      // 2. 토지이용계획 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          if (features?.length > 0) {
-            const props = features[0].properties;
-            document.getElementById("landUseInfo").innerHTML =
-              `<b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}<br>
-               <b>세부지역:</b> ${props.DETAIL_ZONE || '정보 없음'}`;
-          } else {
-            document.getElementById("landUseInfo").innerHTML = "토지이용계획 데이터 없음";
-          }
-        });
-
-      // 실거래가 조회
-      fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          if (features?.length > 0) {
-            const props = features[0].properties;
-            document.getElementById("realEstateInfo").innerHTML =
-              `<b>거래금액:</b> ${props.DEAL_AMOUNT || '정보 없음'}<br>
-               <b>거래일자:</b> ${props.DEAL_YMD || '정보 없음'}<br>
-               <b>건물명:</b> ${props.BLD_NM || '정보 없음'}`;
-          } else {
-            document.getElementById("realEstateInfo").innerHTML = "실거래가 데이터 없음";
-          }
-        });
+      // ✅ JSONP 방식으로 각 조회 실행
+      loadLandBuilding(lon, lat);   // 토지·건축물 조회
+      loadLandUse(lon, lat);        // 토지이용계획 조회
+      loadRealEstate(lon, lat);     // 실거래가 조회
 
       // ✅ 팝업 열기
       document.getElementById("infoPopup").style.display = "block";
