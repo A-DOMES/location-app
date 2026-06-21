@@ -114,14 +114,23 @@
       });
     }
 
-    // ✅ 주요 레이어들 정의 (💡 안 나오던 세 가지 레이어 이름만 명세에 맞춰 수정)
+    // ✅ 주요 레이어들 정의 (💡 지적도, Gray, Midnight 명세 완벽 반영본)
     const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
     const satLayer = createLayer('Satellite','image/jpeg');
-    const cadLayer = createLayer('Cadastral');
-    const grayLayer = createLayer('gray');          // 💡 대문자 Gray -> 소문자 gray로 변경
-    const midnightLayer = createLayer('midnight');  // 💡 대문자 Midnight -> 소문자 midnight로 변경
+    
+    // 💡 대문자 C를 소문자 c로 수정 (확대하면 지적도 선이 나타납니다)
+    const cadLayer = createLayer('cadastral'); 
+    
+    // 💡 브이월드 2D 표준 백지도의 공식 명칭은 'white'입니다
+    const grayLayer = createLayer('white');          
+    
+    // 💡 대문자 M을 소문자 m으로 유지
+    const midnightLayer = createLayer('midnight');  
+    
     const hybridLayer = createLayer('Hybrid');
-    const terrainLayer = createLayer('white');       // 💡 Terrain 대신 투명 배경 2D 지형 매핑용 white 변경
+    
+    // 💡 2D에서 공백을 막기 위해 투명 레이어로 안전 대체
+    const terrainLayer = createLayer('white');     
 
     // ✅ 지도 초기화
     const map = new ol.Map({
