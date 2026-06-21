@@ -60,7 +60,7 @@
       matrixIds[z] = z;
     }
 
-    // ✅ 레이어 생성 함수
+    // ✅ 레이어 생성 함수 (Base, Satellite, Cadastral, Gray, Midnight, Hybrid, Terrain)
     function createLayer(layerName, format='image/png') {
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
@@ -80,7 +80,7 @@
       });
     }
 
-    // ✅ 주요 레이어들
+    // ✅ 주요 레이어들 정의
     const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
     const satLayer = createLayer('Satellite','image/jpeg');
     const cadLayer = createLayer('Cadastral');
@@ -94,7 +94,7 @@
       target: 'map',
       layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
       view: new ol.View({
-        center: ol.proj.fromLonLat([127.0, 37.5]),
+        center: ol.proj.fromLonLat([127.0, 37.5]), // 대한민국 중심 좌표
         zoom: 7
       })
     });
@@ -113,13 +113,13 @@
       document.getElementById("infoPopup").style.display = "none";
     }
 
-    // ✅ 지도 클릭 이벤트 → 브이월드 API 호출
+    // ✅ 지도 클릭 이벤트 → 브이월드 데이터 API 호출
     map.on('click', function(evt) {
       const coord = ol.proj.toLonLat(evt.coordinate);
       const lon = coord[0];
       const lat = coord[1];
 
-      // 토지·건축물 조회
+      // 1. 토지·건축물 조회
       fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD`)
         .then(res => res.json())
         .then(data => {
@@ -134,7 +134,7 @@
           }
         });
 
-      // 토지이용계획 조회
+      // 2. 토지이용계획 조회
       fetch(`https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE`)
         .then(res => res.json())
         .then(data => {
