@@ -97,9 +97,10 @@
     function createLayer(layerName, format='image/png') {
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
-          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+          // 👉 URL은 루트까지만 주고, requestEncoding: 'REST'로 설정
+          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/`,
           layer: layerName,
-          matrixSet: 'EPSG:3857',
+          matrixSet: 'korean',   // ✅ EPSG:3857 대신 korean 사용
           format: format,
           projection: projection,
           tileGrid: new ol.tilegrid.WMTS({
@@ -107,12 +108,13 @@
             resolutions: resolutions,
             matrixIds: matrixIds
           }),
-          style: 'default'
-          requestEncoding: 'REST'   // ✅ 이 부분 추가
+          style: 'default',      // ✅ 쉼표 추가
+          requestEncoding: 'REST'
         }),
         visible: false
       });
     }
+
 
     // ✅ 주요 레이어들 정의
     const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
