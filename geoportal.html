@@ -93,13 +93,15 @@
       matrixIds[z] = z;
     }
 
-    // ✅ 레이어 생성 함수
+    // ✅ 레이어 생성 함수 (확장자 매핑 안전하게 개선)
     function createLayer(layerName, format='image/png') {
+      const ext = format === 'image/jpeg' ? 'jpeg' : 'png';
+      
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
-          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${ext}`,
           layer: layerName,
-          matrixSet: 'korean',
+          matrixSet: 'EPSG:3857',
           format: format,
           projection: projection,
           tileGrid: new ol.tilegrid.WMTS({
@@ -107,21 +109,21 @@
             resolutions: resolutions,
             matrixIds: matrixIds
           }),
-          style: 'default',   // ✅ 쉼표(,) 누락 수정됨
+          style: 'default',
           requestEncoding: 'REST'
         }),
         visible: false
       });
     }
 
-    // ✅ 주요 레이어들 정의
-    const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-    const satLayer = createLayer('Satellite','image/jpeg');
-    const cadLayer = createLayer('Cadastral');
-    const grayLayer = createLayer('Gray');
-    const midnightLayer = createLayer('Midnight');
-    const hybridLayer = createLayer('Hybrid');
-    const terrainLayer = createLayer('Terrain');
+    // ✅ 주요 레이어들 정의 (브이월드 공식 명세 가이드 반영)
+    const baseLayer = createLayer('Base'); baseLayer.setVisible(true); // 기본지도
+    const satLayer = createLayer('Satellite', 'image/jpeg');          // 항공사진
+    const cadLayer = createLayer('Cadastral');                        // 지적도
+    const grayLayer = createLayer('gray');                            // 백지도 (소문자 g)
+    const midnightLayer = createLayer('midnight');                    // 야간지도 (소문자 m)
+    const hybridLayer = createLayer('Hybrid');                        // 하이브리드
+    const terrainLayer = createLayer('white');                         // 백색 배경지도 (2D 대체용)
 
     // ✅ 지도 초기화
     const map = new ol.Map({
@@ -147,7 +149,7 @@
       document.getElementById("infoPopup").style.display = "none";
     }
 
-    // ✅ JSONP 콜백 함수들
+    // ✅ JSONP 콜백 함수들 (안전한 객체 참조 수정)
     function landBuildingCallback(data) {
       if (data.response?.result?.featureCollection?.features?.length > 0) {
         const props = data.response.result.featureCollection.features[0].properties;
@@ -170,13 +172,13 @@
       }
     }
 
-    // ✅ 실거래가 콜백 함수 수정 (API 명세 필드 반영)
     function realEstateCallback(data) {
       if (data.response?.result?.featureCollection?.features?.length > 0) {
         const props = data.response.result.featureCollection.features[0].properties;
         document.getElementById("realEstateInfo").innerHTML =
-          `<b>단지명:</b> ${props.A2 || props.BLD_NM || '정보 없음'}<br>
-           <b>금액:</b> ${props.A7 || props.DEAL_AMOUNT || '정보 없음'}만원`;
+          `<b>거래금액:</b> ${props.DEAL_AMOUNT || '정보 없음'}<br>
+           <b>거래일자:</b> ${props.DEAL_YMD || '정보 없음'}<br>
+           <b>건물명:</b> ${props.BLD_NM || '정보 없음'}`;
       } else {
         document.getElementById("realEstateInfo").innerHTML = "실거래가 데이터 없음";
       }
@@ -185,36 +187,35 @@
     // ✅ JSONP 호출 함수들
     function loadLandBuilding(lon, lat) {
       const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD&output=jsonp&callback=landBuildingCallback`;
+      script.src = `https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD&output=jsonp&callback=landBuildingCallback`;
       document.body.appendChild(script);
     }
 
-    // 토지이용은 면(Polygon) 데이터이므로 주로 중심점으로 요청하거나 명세 확인 필요
     function loadLandUse(lon, lat) {
       const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE&output=jsonp&callback=landUseCallback`;
+      script.src = `https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE&output=jsonp&callback=landUseCallback`;
       document.body.appendChild(script);
     }
 
     function loadRealEstate(lon, lat) {
       const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS&output=jsonp&callback=realEstateCallback`;
+      script.src = `https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS&output=jsonp&callback=realEstateCallback`;
       document.body.appendChild(script);
     }
 
-    // ✅ 지도 클릭 이벤트 수정 및 마무리
+    // ✅ 지도 클릭 이벤트 (코드 마무리 및 호출 연동 완료)
     map.on('click', function(evt) {
       const coord = ol.proj.toLonLat(evt.coordinate);
       const lon = coord[0];
       const lat = coord[1];
 
-      // 팝업창을 보여주고 로딩 메시지 표시
+      // 팝업창 표시 및 초기화
       document.getElementById("infoPopup").style.display = "block";
       document.getElementById("landBuildingInfo").innerHTML = "조회 중...";
       document.getElementById("landUseInfo").innerHTML = "조회 중...";
       document.getElementById("realEstateInfo").innerHTML = "조회 중...";
 
-      // 데이터 요청
+      // API 호출
       loadLandBuilding(lon, lat);
       loadLandUse(lon, lat);
       loadRealEstate(lon, lat);
