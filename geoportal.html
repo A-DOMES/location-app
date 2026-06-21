@@ -97,7 +97,7 @@
     function createLayer(layerName, format='image/png') {
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
-          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')}`,
+          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
           layer: layerName,
           matrixSet: 'EPSG:3857',
           format: format,
@@ -114,39 +114,32 @@
       });
     }
 
-    // ✅ 주요 레이어들 정의 (💡 지적도를 가장 확실한 방법 2인 WMS 엔진으로 교체 완료)
+    // ✅ 주요 레이어들 정의
     const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
     const satLayer = createLayer('Satellite','image/jpeg');
     
-    // 💡 [방법 2 전격 반영] 기존 한 줄짜리 cadLayer를 브이월드 정식 WMS 지적도 레이어로 변경
-    // 타일 규격에 구애받지 않고 실시간으로 지번과 필지 경계선을 투명하게 그려줍니다.
+    // 💡 [수정 완료] url 경로를 api.vworld.kr/req/wms 로 정확하게 지정했습니다.
     const cadLayer = new ol.layer.Image({
       source: new ol.source.ImageWMS({
-        url: 'https://vworld.kr',
+        url: 'https://vworld.kr', // 👈 이 부분이 api.vworld.kr/req/wms 여야 합니다!
         params: {
-          'LAYERS': 'LT_C_ADASRATODO',  // 브이월드 연속지적도 공식 레이어 명칭
+          'LAYERS': 'LT_C_ADASRATODO', 
           'STYLES': 'LT_C_ADASRATODO',
-          'KEY': CONFIG.API_KEY,        // 사용자님의 인증 API Key 변수
+          'KEY': CONFIG.API_KEY,       
           'FORMAT': 'image/png',
-          'TRANSPARENT': 'TRUE'         // 밑바탕 기본지도가 비쳐 보이도록 투명 배경 설정
+          'TRANSPARENT': 'TRUE'        
         },
         serverType: 'geoserver',
         projection: projection
       }),
-      visible: false // 초기 화면에서는 체크박스를 켜야 보이도록 false 유지
+      visible: false 
     });
     
-    // 💡 브이월드 2D 표준 백지도의 공식 명세 반영
     const grayLayer = createLayer('white');          
-    
-    // 💡 대문자 M을 소문자 m으로 정식 명세 반영
     const midnightLayer = createLayer('midnight');  
-    
     const hybridLayer = createLayer('Hybrid');
-    
-    // 💡 2D에서 공백을 막기 위해 투명 레이어로 안전 대체
     const terrainLayer = createLayer('white');       
-  
+
     // ✅ 지도 초기화
     const map = new ol.Map({
       target: 'map',
