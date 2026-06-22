@@ -15,29 +15,30 @@
   
   /* ---------------------- 페이지 헤더 ---------------------- */
   .page-header {
-    width:100%; height:60px;
+    width:100%; height:48px; /* 높이 줄임 */
     background:#1976d2; color:#fff;
     display:flex; align-items:center; justify-content:space-between;
-    font-size:20px; font-weight:bold; margin:0;
-    padding:0 12px;
+    font-size:18px; font-weight:bold; margin:0;
+    padding:0 10px; /* 좌우 패딩도 살짝 줄임 */
   }
   .header-left { display:flex; align-items:center; }
-  .header-title { flex:1; text-align:center; }
+  .header-title { flex:1; text-align:center; font-size:16px; }
   
   /* 지도 버튼 (헤더 좌측 상단) */
   #mapToggleBtn {
     display:flex; align-items:center; gap:6px;
     background:#1976d2; color:#fff;
     border:none;
-    padding:8px 14px;
+    padding:6px 12px; /* 버튼 크기를 헤더 높이에 맞게 줄임 */
     border-radius:12px; /* 둥근 사각형 */
     font-size:14px;
     cursor:pointer;
-    opacity:0;
+    opacity:0; /* 기본은 투명 */
     transition:opacity 0.4s ease;
   }
-  #mapToggleBtn.show { display:flex; opacity:1; }
+  #mapToggleBtn.show { opacity:1; }
   #mapToggleBtn svg { flex-shrink:0; }
+
   
   /* ---------------------- 지도 영역 ---------------------- */
   #map {
@@ -109,7 +110,7 @@
   <!-- ✅ 상단 헤더 -->
   <header class="page-header">
     <div class="header-left">
-      <button id="mapToggleBtn" style="display:none;">
+      <button id="mapToggleBtn">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
           <path d="M9 3l-7 2v16l7-2 6 2 7-2V3l-7 2-6-2zm0 2.18l4 1.33v12.31l-4-1.33V5.18zm-2 .66v12.31l-3 1V6.84l3-1zm10 0v12.31l-3 1V6.84l3-1z"/>
         </svg>
