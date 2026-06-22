@@ -239,10 +239,10 @@ const cadLayer = new ol.layer.Image({
   }),
   visible: false
 });
-const grayLayer = createLayer('gray');       
-const midnightLayer = createLayer('midnight'); // ◀ 대문자 M에서 소문자 m으로 수정
-const hybridLayer = createLayer('Hybrid');
-const terrainLayer = createLayer('Terrain'); 
+const grayLayer = createLayer('gray');         // ✅ 소문자 gray가 맞습니다!
+const midnightLayer = createLayer('midnight'); // ✅ 소문자 midnight이 맞습니다!
+const hybridLayer = createLayer('Hybrid');     // ✅ 첫글자 대문자 Hybrid가 맞습니다.
+const terrainLayer = createLayer('Terrain');   // ✅ 첫글자 대문자 Terrain이 맞습니다.
 
 // ✅ 지도 초기화
 const map = new ol.Map({
