@@ -66,6 +66,7 @@
       z-index:1000;
       width:120px;                   /* ✅ 기존보다 넓게 지정 */
       max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
+      cursor: move;                  /* ✅ 드래그 가능 표시 */
     }    
     .layer-header { 
       position:relative; 
@@ -102,22 +103,22 @@
     }
 
 
-    /* ✅ 팝업 영역 */
-/* 조회결과 모달창 */
+/* ✅ 조회결과 모달창 */
 #infoPopup {
   position: absolute;
-  top: 50%;
+  top: 60px;          /* ✅ 화면 상단에서 조금 내려오게 */
   left: 50%;
-  transform: translate(-50%, -50%);   /* ✅ 화면 정중앙 */
+  transform: translateX(-50%); /* ✅ 가로 중앙 정렬만 */
   width: 320px;
   background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
   border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   z-index: 2000;
   cursor: move;   /* ✅ 드래그 가능 표시 */
 }
+
 
 /* 닫기 버튼 */
 #infoPopup .close-btn {
@@ -354,49 +355,61 @@
     mapToggleBtn.classList.remove('show');
   });
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
-const infoPopup = document.getElementById("infoPopup");
-let isDraggingPopup = false, offsetXPopup, offsetYPopup;
+// ✅ 공통 드래그 함수 (PC + 모바일)
+function makeDraggable(element) {
+  let isDragging = false, offsetX, offsetY;
 
-// PC 마우스 드래그
-infoPopup.addEventListener('mousedown', (e) => {
-  isDraggingPopup = true;
-  offsetXPopup = e.clientX - infoPopup.offsetLeft;
-  offsetYPopup = e.clientY - infoPopup.offsetTop;
-  infoPopup.style.transform = ''; // 중앙정렬 해제
-});
+  // PC 마우스 드래그
+  element.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - element.offsetLeft;
+    offsetY = e.clientY - element.offsetTop;
+    element.style.transform = ''; // 중앙정렬 해제
+  });
 
-document.addEventListener('mousemove', (e) => {
-  if (isDraggingPopup) {
-    infoPopup.style.left = (e.clientX - offsetXPopup) + 'px';
-    infoPopup.style.top = (e.clientY - offsetYPopup) + 'px';
-  }
-});
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      element.style.left = (e.clientX - offsetX) + 'px';
+      element.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
 
-document.addEventListener('mouseup', () => {
-  isDraggingPopup = false;
-});
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
 
-// 모바일 터치 드래그
-infoPopup.addEventListener('touchstart', (e) => {
-  isDraggingPopup = true;
-  const touch = e.touches[0];
-  offsetXPopup = touch.clientX - infoPopup.offsetLeft;
-  offsetYPopup = touch.clientY - infoPopup.offsetTop;
-  infoPopup.style.transform = ''; // 중앙정렬 해제
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (isDraggingPopup) {
+  // 모바일 터치 드래그
+  element.addEventListener('touchstart', (e) => {
+    isDragging = true;
     const touch = e.touches[0];
-    infoPopup.style.left = (touch.clientX - offsetXPopup) + 'px';
-    infoPopup.style.top = (touch.clientY - offsetYPopup) + 'px';
-  }
-});
+    offsetX = touch.clientX - element.offsetLeft;
+    offsetY = touch.clientY - element.offsetTop;
+    element.style.transform = ''; // 중앙정렬 해제
+  });
 
-document.addEventListener('touchend', () => {
-  isDraggingPopup = false;
-});
+  document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+      const touch = e.touches[0];
+      element.style.left = (touch.clientX - offsetX) + 'px';
+      element.style.top = (touch.clientY - offsetY) + 'px';
+    }
+  });
+
+  document.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+}
+
+// ✅ 적용 대상
+const layerSwitcher = document.querySelector('.layer-switcher');
+const infoPopup = document.getElementById('infoPopup');
+
+// 항목선택 모달창 드래그 가능
+makeDraggable(layerSwitcher);
+
+// 조회결과 팝업창 드래그 가능
+makeDraggable(infoPopup);
+
 
 </script>
 
