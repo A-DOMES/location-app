@@ -221,7 +221,7 @@ function createLayer(layerName, format='image/png') {
   });
 }
 
-// ✅ 주요 레이어 정의 (대소문자 수정 완료)
+// ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
 const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
 const satLayer = createLayer('Satellite', 'image/jpeg');
 const cadLayer = new ol.layer.Image({
@@ -239,16 +239,16 @@ const cadLayer = new ol.layer.Image({
   }),
   visible: false
 });
-const midnightLayer = createLayer('midnight'); // ✅ 소문자 midnight이 맞습니다!
-const hybridLayer = createLayer('Hybrid');     // ✅ 첫글자 대문자 Hybrid가 맞습니다.
+const midnightLayer = createLayer('midnight'); 
+const hybridLayer = createLayer('Hybrid');     
 
-// ✅ 지도 초기화
+// ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
 const map = new ol.Map({
   target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
+  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
   view: new ol.View({
-    center: ol.proj.fromLonLat([126.9780, 37.5665]), // 초기 중심지를 서울 시청 근처로 변경 (데이터 확인 용이)
-    zoom: 7 // 데이터 조회가 원활하도록 기본 줌 레벨을 확대
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+    zoom: 7 
   })
 });
 
