@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- ✅ OpenLayers CSS & JS -->
-  <link rel="stylesheet" href="https://jsdelivr.net">
-  <script src="https://jsdelivr.net"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
 
   <style>
     /* ✅ 페이지 기본 레이아웃 */
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow: hidden; }
+    html, body { margin:0; padding:0; width:100%; height:100%; }
 
     /* ✅ 상단 헤더 */
     .page-header {
@@ -19,25 +19,16 @@
       top:0; left:0;
       width:100%; height:48px;
       background:#1976d2; color:#fff;
-      display:flex; align-items:center; justify-content: space-between;
+      display:flex; align-items:center;
+      font-size:18px; font-weight:bold;
       margin:0; padding:0 10px;
-      box-sizing: border-box;
       z-index:2000;     /* 모달창보다 위에 표시 */
     }
     .header-left { display:flex; align-items:center; }
-
-    /* ✅ 헤더 내 통합 주소 검색창 스타일 */
-    .header-search {
-      display: flex; align-items: center;
-      background: #fff; padding: 2px 8px;
-      border-radius: 20px; width: 200px; max-width: 50%;
-    }
-    #searchKeyword {
-      border: none; outline: none; width: 100%;
-      font-size: 13px; padding: 4px; border-radius: 20px;
-    }
-    #searchBtn {
-      background: none; border: none; cursor: pointer; font-size: 14px; padding: 0;
+    .header-title {
+      position:absolute;
+      left:50%; transform:translateX(-50%);
+      font-size:16px; text-align:center;
     }
 
     /* ✅ 지도보기 버튼 */
@@ -61,52 +52,41 @@
       z-index:1;
     }
 
-    /* ✅ GPS 버튼 스타일 (지도 내 우측 하단 고정) */
-    #gpsBtn {
-      position: absolute;
-      bottom: 20px; right: 20px;
-      width: 46px; height: 46px;
-      background: #fff; border: 1px solid #ccc;
-      border-radius: 50%; font-size: 22px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-      cursor: pointer; z-index: 999;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #gpsBtn:active { background: #f0f0f0; }
-
     /* ✅ 레이어 선택 모달창 */
     .layer-switcher {
       position:absolute;
-      top:60px;
-      left: 75px;
-      background:rgba(255,255,255,0.85); /* 반투명 */
+      top:50px;
+      left:20%;                      /* 화면 가운데 기준 (50) */
+      transform:translateX(-50%);    /* 가운데 정렬 */
+      background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
       padding:12px;
       border:1px solid #ccc;
       border-radius:8px;
       font-size:15px;
       z-index:1000;
-      width:130px;                   
+      width:120px;                   /* ✅ 기존보다 넓게 지정 */
+      max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
     }    
     .layer-header { 
       position:relative; 
       margin-bottom:8px; 
     } 
     .layer-title {
-      text-align:center;      
+      text-align:center;      /* ✅ 타이틀만 중앙 정렬 */
       font-weight:bold;
-      font-size:16px;
+      font-size:18px;
       color:#1976d2;
-      display: block;
     }
 
     .close-btn {
       position:absolute;
-      top:0; right:0;   
-      width:22px; height:22px;
+      top:0;
+      right:0;   /* ✅ 모달창 우측 상단 끝부분 고정 */
+      width:24px; height:24px;
       border-radius:50%;
       background:rgba(25,118,210,0.2);
       border:none; color:#1976d2;
-      font-size:14px; font-weight:bold;
+      font-size:16px; font-weight:bold;
       cursor:pointer;
       display:flex; align-items:center; justify-content:center;
     }
@@ -114,7 +94,6 @@
     .layer-items label {
       display:flex; align-items:center;
       margin:4px 0;
-      cursor: pointer;
     }
     
     .layer-items input[type="checkbox"] {
@@ -122,75 +101,63 @@
       margin-right:6px;
     }
 
-    /* ✅ 조회결과 모달창 */
-    #infoPopup {
-      position: absolute;
-      top: 60px;          
-      left: 50%;
-      width: 320px;
-      background: rgba(255, 255, 255, 0.95); 
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 14px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-      z-index: 2000;
-      box-sizing: border-box;
-    }
 
-    #infoPopup h3 { margin: 0 0 10px 0; font-size: 16px; color: #333; }
+/* ✅ 조회결과 모달창 */
+#infoPopup {
+  position: absolute;
+  top: 60px;          /* ✅ 화면 상단에서 조금 내려오게 */
+  left: 50%;
+  transform: translateX(-50%); /* ✅ 가로 중앙 정렬만 */
+  width: 320px;
+  background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 2000;
+  cursor: move;   /* ✅ 드래그 가능 표시 */
+}
 
-    /* 팝업 내 정보 항목 공통 디자인 */
-    #infoPopup div {
-      padding: 6px 0;
-      font-size: 13.5px;
-      border-bottom: 1px solid #eee;
-      line-height: 1.4;
-    }
-    #infoPopup div:last-child { border-bottom: none; }
+/* 닫기 버튼 */
+#infoPopup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;          /* ✅ 원형 버튼 */
+  background: #f44336;         /* 빨간색 배경 */
+  color: #fff;                 /* 흰색 X */
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
-    /* 주소 표시 영역 전용 스타일 강조 */
-    #addressInfo { background: #f5f5f5; padding: 6px !important; border-radius: 4px; margin-bottom: 4px; }
+#infoPopup .close-btn:hover {
+  background: #d32f2f;         /* hover 시 진한 빨강 */
+}
 
-    /* 조회결과 팝업용 닫기 버튼 */
-    #infoPopup .close-btn {
-      position: absolute;
-      top: 8px; right: 8px;
-      width: 26px; height: 26px;
-      border-radius: 50%;          
-      background: #f44336;         
-      color: #fff;                 
-      font-weight: bold; font-size: 14px;
-      border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #infoPopup .close-btn:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
-
-  <!-- ✅ 상단 헤더 (검색창 내장형) -->
+  <!-- ✅ 상단 헤더 -->
   <header class="page-header">
     <div class="header-left">
       <button id="mapToggleBtn">
-        <svg xmlns="http://w3.org" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
           <path d="M9 3l-7 2v16l7-2 6 2 7-2V3l-7 2-6-2zm0 2.18l4 1.33v12.31l-4-1.33V5.18zm-2 .66v12.31l-3 1V6.84l3-1zm10 0v12.31l-3 1V6.84l3-1z"/>
         </svg>
         <span>지도보기</span>
       </button>
     </div>
-    
-    <!-- 💡 검색창 기능 추가 -->
-    <div class="header-search">
-      <input type="text" id="searchKeyword" placeholder="주소, 아파트명 검색">
-      <button id="searchBtn">🔍</button>
-    </div>
+    <div class="header-title">국토부 지도</div>
   </header>
 
   <!-- ✅ 지도 영역 -->
   <div id="map"></div>
-
-  <!-- ✅ GPS 내 위치 찾기 버튼 -->
-  <button id="gpsBtn" title="내 위치 찾기">🎯</button>
 
   <!-- ✅ 항목선택 모달창 -->
   <div class="layer-switcher">
@@ -209,23 +176,20 @@
     </div>
   </div>
 
-  <!-- ✅ 조회결과 팝업 영역 -->
+  <!-- ✅ 팝업 영역 -->
   <div id="infoPopup" style="display:none;">
-    <button class="close-btn" onclick="closeInfoPopup()">×</button>
-    <h3>📋 토지/건물 조회 결과</h3>
-    <div id="addressInfo"></div>
+    <div class="close-btn" onclick="closeInfoPopup()">×</div>
+    <h3>조회결과</h3>
     <div id="landBuildingInfo"></div>
     <div id="landUseInfo"></div>
     <div id="realEstateInfo"></div>
   </div>
 
-  <!-- ✅ API Key 설정 파일 호출 -->
+  <!-- ✅ API Key 설정 -->
   <script src="config.js"></script>
-
-  <!-- ✅ 핵심 맵 엔진 스크립트 -->
-  <script>
-// ✅ WMTS 공통 설정 (원본 유지)
-// ✅ WMTS 공통 설정 (기존 정상 코드 원본 복구)
+  
+<script>
+// ✅ WMTS 공통 설정
 const projection = ol.proj.get('EPSG:3857');
 const projectionExtent = projection.getExtent();
 const size = ol.extent.getWidth(projectionExtent) / 256;
@@ -236,12 +200,11 @@ for (let z = 0; z < 19; ++z) {
   matrixIds[z] = z;
 }
 
-// ✅ WMTS 레이어 생성 함수 (안정적인 확장자 파싱 적용)
+// ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
 function createLayer(layerName, format='image/png') {
-  const ext = format.split('/')[1] || 'png';
   return new ol.layer.Tile({
     source: new ol.source.WMTS({
-      url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${ext}`,
+      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
       layer: layerName,
       matrixSet: 'EPSG:3857',
       format: format,
@@ -258,12 +221,12 @@ function createLayer(layerName, format='image/png') {
   });
 }
 
-// ✅ 주요 레이어 정의 (대소문자 규격 엄격 정렬)
+// ✅ 주요 레이어 정의 (대소문자 수정 완료)
 const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-const satLayer = createLayer('Satellite','image/jpeg');
+const satLayer = createLayer('Satellite', 'image/jpeg');
 const cadLayer = new ol.layer.Image({
   source: new ol.source.ImageWMS({
-    url: 'https://vworld.kr',
+    url: 'https://api.vworld.kr/req/wms',
     params: {
       'LAYERS': 'LT_C_ADASRATODO',
       'STYLES': 'LT_C_ADASRATODO',
@@ -277,17 +240,17 @@ const cadLayer = new ol.layer.Image({
   visible: false
 });
 const grayLayer = createLayer('Gray');       
-const midnightLayer = createLayer('Midnight');
+const midnightLayer = createLayer('Midnight'); // ◀ 소문자 m에서 대문자 M으로 수정
 const hybridLayer = createLayer('Hybrid');
 const terrainLayer = createLayer('Terrain'); 
 
-// ✅ 지도 초기화 (서울 시청 중심)
+// ✅ 지도 초기화
 const map = new ol.Map({
   target: 'map',
   layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
   view: new ol.View({
-    center: ol.proj.fromLonLat([126.9780, 37.5665]),
-    zoom: 17
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), // 초기 중심지를 서울 시청 근처로 변경 (데이터 확인 용이)
+    zoom: 7 // 데이터 조회가 원활하도록 기본 줌 레벨을 확대
   })
 });
 
@@ -305,48 +268,30 @@ function closeInfoPopup() {
   document.getElementById("infoPopup").style.display = "none";
 }
 
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청 (안전한 정중앙 배치 적용)
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
 
+  // 최초 오픈 시 튕김 방지를 위해 transform 스타일 제거하고 정중앙 계산 배치
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
   infoPopup.style.transform = "none";
-  infoPopup.style.left = "calc(50% - 160px)"; 
+  infoPopup.style.left = "calc(50% - 160px)"; // 팝업 가로폭 320px의 절반을 빼서 중앙 배치
 
-  document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 조회 중...";
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
 
-  loadAddress(lon, lat);
   loadLandBuilding(lon, lat);
   loadLandUse(lon, lat);
   loadRealEstate(lon, lat);
 });
 
-// ✅ 1. 좌표 -> 주소 변환 기능 (R-Geocoding)
-function loadAddress(lon, lat) {
-  fetch(`https://vworld.kr{CONFIG.API_KEY}&point=${lon},${lat}&type=both&format=json`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.response?.status === "OK" && data.response.result?.length > 0) {
-        const resText = data.response.result[0].text;
-        document.getElementById("addressInfo").innerHTML = `<b>📍 주소:</b> ${resText}`;
-      } else {
-        document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 위치를 찾을 수 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("addressInfo").innerHTML = "<b>📍 주소 오류:</b> " + err.message;
-    });
-}
-
-// ✅ 2. 건물 정보 조회 (배열 인덱스 오류 완전 수정)
+// ✅ 1. 건물 정보 조회 (기본 건물 데이터)
 function loadLandBuilding(lon, lat) {
-  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -363,9 +308,9 @@ function loadLandBuilding(lon, lat) {
     });
 }
 
-// ✅ 3. 토지이용 정보 조회
+// ✅ 2. 토지이용 정보 조회 (연동 규격 코드 LT_C_UQ111 용도지역으로 수정)
 function loadLandUse(lon, lat) {
-  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -374,7 +319,7 @@ function loadLandUse(lon, lat) {
         document.getElementById("landUseInfo").innerHTML =
           `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
       } else {
-        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 심사 승인 대기 중";
+        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
       }
     })
     .catch(err => {
@@ -382,9 +327,9 @@ function loadLandUse(lon, lat) {
     });
 }
 
-// ✅ 4. 부동산 정보 조회
+// ✅ 3. 부동산 정보 조회 (연동 규격 코드 LT_C_PD01 개별공시지가로 수정)
 function loadRealEstate(lon, lat) {
-  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -392,9 +337,9 @@ function loadRealEstate(lon, lat) {
         const props = features[0].properties;
         const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
         document.getElementById("realEstateInfo").innerHTML =
-          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>지가(㎡당): ${formattedPrice}`;
+          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
       } else {
-        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 심사 승인 대기 중";
+        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
       }
     })
     .catch(err => {
@@ -417,7 +362,7 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 완전 보정)
+// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 튕김 현상 완전 보정)
 const infoPopup = document.getElementById("infoPopup");
 let isDraggingPopup = false, offsetXPopup, offsetYPopup;
 
@@ -436,7 +381,7 @@ function moveDrag(clientX, clientY) {
 
 // PC 이벤트 바인딩
 infoPopup.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; 
+  if(e.target.classList.contains('close-btn')) return; // 닫기버튼 클릭 시 드래그 방지
   startDrag(e.clientX, e.clientY);
 });
 document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
@@ -455,97 +400,7 @@ document.addEventListener('touchmove', (e) => {
 });
 document.addEventListener('touchend', () => isDraggingPopup = false);
 
-// ✅ 주소/키워드 검색 엔진 (Geocoding)
-function searchAddress() {
-  const keyword = document.getElementById('searchKeyword').value.trim();
-  if (!keyword) { 
-    alert("검색어를 입력해 주세요."); 
-    return; 
-  }
-
-  // 1단계: 도로명 주소(road) 기준으로 Vworld 통합 검색 API 호출
-  fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-        const firstResult = data.response.result.items[0];
-        const lon = parseFloat(firstResult.point.x);
-        const lat = parseFloat(firstResult.point.y);
-        
-        // 검색된 좌표 위치로 지도 뷰 부드럽게 이동 및 확대
-        map.getView().animate({
-          center: ol.proj.fromLonLat([lon, lat]),
-          zoom: 17,
-          duration: 600
-        });
-      } else {
-        // 2단계: 도로명 검색 결과가 없으면 지번 주소(parcel) 타입으로 2차 재검색 시도
-        return fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
-      }
-    })
-    .then(res => res ? res.json() : null)
-    .then(data => {
-      if (!data) return; // 위에서 이미 처리된 경우 안전하게 차단
-      
-      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-        const firstResult = data.response.result.items[0];
-        const lon = parseFloat(firstResult.point.x);
-        const lat = parseFloat(firstResult.point.y);
-        
-        map.getView().animate({ 
-          center: ol.proj.fromLonLat([lon, lat]), 
-          zoom: 17, 
-          duration: 600 
-        });
-      } else {
-        alert("검색 결과가 없습니다. 도로명이나 지번을 명확히 입력해 주세요.");
-      }
-    })
-    .catch(err => {
-      alert("검색 중 오류가 발생했습니다: " + err.message);
-    });
-}
-
-// ✅ 검색 버튼 및 엔터키 입력 이벤트 바인딩
-document.getElementById('searchBtn').addEventListener('click', searchAddress);
-document.getElementById('searchKeyword').addEventListener('keypress', (e) => { 
-  if (e.key === 'Enter') searchAddress(); 
-});
-
-// ✅ GPS 기반 내 위치 찾기 기능 등록 (모바일 최적화 고정밀 제어)
-document.getElementById('gpsBtn').addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    alert("이 브라우저나 기기는 GPS 위치 추적 기능을 지원하지 않습니다.");
-    return;
-  }
-  
-  navigator.geolocation.getCurrentPosition((position) => {
-    const lon = position.coords.longitude;
-    const lat = position.coords.latitude;
-    
-    // 사용자의 현재 실제 위경도 좌표로 지도를 서서히 이동시킴
-    map.getView().animate({
-      center: ol.proj.fromLonLat([lon, lat]),
-      zoom: 17,
-      duration: 800
-    });
-  }, (err) => {
-    alert("현재 위치를 가져오지 못했습니다: " + err.message);
-  }, {
-    enableHighAccuracy: true, // LTE/Wi-Fi 기반 삼각측량 활용 오차 최소화
-    timeout: 5000
-  });
-});
-
-// ✅ 모바일 드래그 시 뒷배경 화면이 통째로 꿀렁이며 스크롤되는 현상 완전 방지
-document.getElementById("infoPopup").addEventListener('touchmove', (e) => {
-  if (isDraggingPopup && e.cancelable) {
-    e.preventDefault(); // 조회 결과 모달창 내부 드래그 시 브라우저 기본 스크롤 차단
-  }
-}, { passive: false });
-
 </script>
 
 </body>
 </html>
-
