@@ -102,44 +102,53 @@
     }
 
 
-    /* ✅ 팝업 영역 */
-/* 조회결과 모달창 */
-#infoPopup {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);   /* ✅ 화면 정중앙 */
-  width: 320px;
-  background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 2000;
-  cursor: move;   /* ✅ 드래그 가능 표시 */
-}
-
-/* 닫기 버튼 */
-#infoPopup .close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;          /* ✅ 원형 버튼 */
-  background: #f44336;         /* 빨간색 배경 */
-  color: #fff;                 /* 흰색 X */
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  line-height: 28px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-#infoPopup .close-btn:hover {
-  background: #d32f2f;         /* hover 시 진한 빨강 */
-}
+    /* ✅ 조회결과 모달창 */
+    #infoPopup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);   /* ✅ 화면 중앙 */
+      width: 320px;
+      background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 2000;
+      cursor: move;   /* ✅ 드래그 가능 표시 */
+    }
+    
+    /* 헤더: 제목과 닫기 버튼을 같은 행에 */
+    .popup-header {
+      display: flex;
+      justify-content: space-between; /* 제목 왼쪽, 버튼 오른쪽 */
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .popup-title {
+      font-weight: bold;
+      font-size: 18px;
+      color: #1976d2;
+    }
+    
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f44336;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .close-btn:hover {
+      background: #d32f2f;
+    }
 
   </style>
 </head>
@@ -179,8 +188,10 @@
 
   <!-- ✅ 팝업 영역 -->
   <div id="infoPopup" style="display:none;">
-    <div class="close-btn" onclick="closeInfoPopup()">×</div>
-    <h3>조회결과</h3>
+    <div class="popup-header">
+      <span class="popup-title">조회결과</span>
+      <button class="close-btn" onclick="closeInfoPopup()">×</button>
+    </div>
     <div id="landBuildingInfo"></div>
     <div id="landUseInfo"></div>
     <div id="realEstateInfo"></div>
