@@ -54,17 +54,29 @@
 
     /* ✅ 레이어 선택 모달창 */
     .layer-switcher {
-      position:absolute; top:70px; left:10px;
+      position:absolute;
+      top:70px;
+      left:50%;                      /* 화면 가운데 기준 */
+      transform:translateX(-50%);    /* 가운데 정렬 */
       background:rgba(255,255,255,0.95);
-      padding:12px; border:1px solid #ccc; border-radius:8px;
-      font-size:15px; z-index:1000;
-      max-width:320px;   /* ✅ 기존 260px → 320px으로 넓힘 */
+      padding:12px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:15px;
+      z-index:1000;
+      width:360px;                   /* ✅ 기존보다 넓게 지정 */
+      max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
     }
+    
     .layer-header { position:relative; margin-bottom:8px; }
+    
     .layer-title {
-      text-align:center; font-weight:bold;
-      font-size:18px; color:#1976d2;
+      text-align:center;
+      font-weight:bold;
+      font-size:18px;
+      color:#1976d2;
     }
+    
     .close-btn {
       position:absolute;
       top:0;
@@ -77,12 +89,17 @@
       cursor:pointer;
       display:flex; align-items:center; justify-content:center;
     }
+    
     .layer-items label {
-      display:flex; align-items:center; margin:4px 0;
+      display:flex; align-items:center;
+      margin:4px 0;
     }
+    
     .layer-items input[type="checkbox"] {
-      transform:scale(1.2); margin-right:6px;
+      transform:scale(1.2);
+      margin-right:6px;
     }
+
 
     /* ✅ 팝업 영역 */
     #infoPopup {
