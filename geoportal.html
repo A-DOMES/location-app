@@ -50,28 +50,39 @@
     /* ---------------------- 레이어 선택 UI ---------------------- */
     .layer-switcher {
       position:absolute; top:70px; left:10px;
-      background:rgba(255,255,255,0.85);
+      background:rgba(255,255,255,0.9);
       padding:10px; border:1px solid #ccc; border-radius:8px;
       font-size:15px; z-index:1000;
       cursor:move; touch-action:none;
       max-width:220px;
     }
 
-    /* 닫기 버튼 (X표시) */
+    /* 상단 타이틀 + 닫기 버튼 */
+    .layer-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:8px;
+    }
+    .layer-title {
+      font-weight:bold; color:#1976d2;
+    }
     .close-btn {
-      background:none; border:none;
-      font-size:18px; font-weight:bold;
-      color:#1976d2; cursor:pointer;
-      float:right; margin-bottom:4px;
+      width:24px; height:24px;
+      border-radius:50%;
+      background:rgba(25,118,210,0.2); /* 반투명 동그라미 */
+      border:none;
+      color:#1976d2;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
     }
 
-    /* 레이어 항목 간격 최소화 */
-    .layer-switcher label {
+    /* 항목 리스트 */
+    .layer-items label {
       display:flex; align-items:center;
-      margin:0; /* 항목 간격 제거 */
-      line-height:1.2;
+      margin:4px 0; /* 항목 간격 */
     }
-    .layer-switcher input[type="checkbox"] {
+    .layer-items input[type="checkbox"] {
       transform:scale(1.2);
       margin-right:6px;
     }
@@ -105,14 +116,19 @@
 
   <!-- ✅ 레이어 선택 UI -->
   <div class="layer-switcher">
-    <button id="closeLayerBtn" class="close-btn">✕</button>
-    <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
-    <label><input type="checkbox" id="satLayer"> 항공사진</label>
-    <label><input type="checkbox" id="cadLayer"> 지적도</label>
-    <label><input type="checkbox" id="grayLayer"> Gray</label>
-    <label><input type="checkbox" id="midnightLayer"> Midnight</label>
-    <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
-    <label><input type="checkbox" id="terrainLayer"> Terrain</label>
+    <div class="layer-header">
+      <span class="layer-title">항목선택</span>
+      <button id="closeLayerBtn" class="close-btn">✕</button>
+    </div>
+    <div class="layer-items">
+      <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
+      <label><input type="checkbox" id="satLayer"> 항공사진</label>
+      <label><input type="checkbox" id="cadLayer"> 지적도</label>
+      <label><input type="checkbox" id="grayLayer"> Gray</label>
+      <label><input type="checkbox" id="midnightLayer"> Midnight</label>
+      <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
+      <label><input type="checkbox" id="terrainLayer"> Terrain</label>
+    </div>
   </div>
 
   <!-- ✅ 팝업 영역 -->
