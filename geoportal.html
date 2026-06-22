@@ -203,28 +203,33 @@
         });
       }
 
-      // ✅ 3. 주요 레이어 모듈 선언 (대소문자 정밀 교정)
-      const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-      const satLayer = createLayer('Satellite', 'image/jpg');
-      const cadLayer = new ol.layer.Image({
-        source: new ol.source.ImageWMS({
-          url: 'https://api.vworld.kr/req/wms',
-          params: {
-            'LAYERS': 'LT_C_ADASRATODO',
-            'STYLES': 'LT_C_ADASRATODO',
-            'KEY': CONFIG.API_KEY,
-            'FORMAT': 'image/png',
-            'TRANSPARENT': 'TRUE'
-          },
-          serverType: 'geoserver',
-          projection: projection
-        }),
-        visible: false
-      });
-      const grayLayer = createLayer('Gray');       
-      const midnightLayer = createLayer('Midnight'); 
-      const hybridLayer = createLayer('Hybrid');
-      const terrainLayer = createLayer('Terrain'); 
+// ✅ 3. 주요 레이어 모듈 선언 (대소문자 + 확장자 교정)
+const baseLayer = createLayer('Base', 'image/png'); 
+baseLayer.setVisible(true);
+
+const satLayer = createLayer('Satellite', 'image/jpg'); // 항공사진은 반드시 .jpg
+
+const cadLayer = new ol.layer.Image({
+  source: new ol.source.ImageWMS({
+    url: 'https://api.vworld.kr/req/wms',
+    params: {
+      'LAYERS': 'LT_C_ADASRATODO',   // 지적도 레이어 코드
+      'STYLES': 'LT_C_ADASRATODO',
+      'KEY': CONFIG.API_KEY,
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE'
+    },
+    serverType: 'geoserver',
+    projection: projection
+  }),
+  visible: false
+});
+
+const grayLayer = createLayer('Gray', 'image/png');       
+const midnightLayer = createLayer('Midnight', 'image/png'); 
+const hybridLayer = createLayer('Hybrid', 'image/png');
+const terrainLayer = createLayer('Terrain', 'image/png');
+
 
       // ✅ 4. 지도 인터페이스 최적화 빌드 (초기 줌 11로 로딩 분산 완화)
       const map = new ol.Map({
