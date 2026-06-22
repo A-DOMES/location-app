@@ -224,7 +224,7 @@
 
   <!-- ✅ 핵심 맵 엔진 스크립트 -->
   <script>
-    // ✅ WMTS 공통 설정
+    // ✅ WMTS 공통 설정 (원본 복구)
     const projection = ol.proj.get('EPSG:3857');
     const projectionExtent = projection.getExtent();
     const size = ol.extent.getWidth(projectionExtent) / 256;
@@ -235,23 +235,33 @@
       matrixIds[z] = z;
     }
 
-    // ✅ 브이월드 전용 레이어 생성 함수 (XYZ 타일 맵 방식으로 전면 개편)
-    function createLayer(layerName, format='png') {
+    // ✅ WMTS 레이어 생성 함수 (확장자 배열 오타 완전 교정)
+    function createLayer(layerName, format='image/png') {
+      // 💡 format.split('/')[1]로 지정해 png 또는 jpeg 텍스트만 안전하게 가져옵니다.
+      const ext = format.split('/')[1]; 
+      
       return new ol.layer.Tile({
-        source: new ol.source.XYZ({
-          // 💡 브이월드 서버가 가장 안정적으로 이미지를 뱉어내는 {z}/{y}/{x} 주소 체계로 전면 교정했습니다.
-          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{z}/{y}/{x}.${format}?domain=localhost`,
-          crossOrigin: 'anonymous'
+        source: new ol.source.WMTS({
+          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${ext}`,
+          layer: layerName,
+          matrixSet: 'EPSG:3857',
+          format: format,
+          projection: projection,
+          tileGrid: new ol.tilegrid.WMTS({
+            origin: ol.extent.getTopLeft(projectionExtent),
+            resolutions: resolutions,
+            matrixIds: matrixIds
+          }),
+          style: 'default',
+          requestEncoding: 'REST'
         }),
         visible: false
       });
     }
 
-    // ✅ 주요 레이어 정의 (타일 유형 명칭 최종 정렬)
-    const baseLayer = createLayer('Base', 'png'); baseLayer.setVisible(true);
-    const satLayer = createLayer('Satellite', 'jpeg');
-    
-    // 지적도는 WMS 방식이므로 기존 규격 유지 (단, 로컬 테스트용 도메인 파라미터 보완)
+    // ✅ 주요 레이어 정의 (대소문자 규격 엄격 준수)
+    const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+    const satLayer = createLayer('Satellite', 'image/jpeg');
     const cadLayer = new ol.layer.Image({
       source: new ol.source.ImageWMS({
         url: 'https://api.vworld.kr/req/wms',
@@ -260,19 +270,17 @@
           'STYLES': 'LT_C_ADASRATODO',
           'KEY': CONFIG.API_KEY,
           'FORMAT': 'image/png',
-          'TRANSPARENT': 'TRUE',
-          'DOMAIN': 'localhost' // 💡 로컬 개발 환경용 도메인 선언 추가
+          'TRANSPARENT': 'TRUE'
         },
         serverType: 'geoserver',
         projection: projection
       }),
       visible: false
     });
-    
-    const grayLayer = createLayer('Gray', 'png');       
-    const midnightLayer = createLayer('Midnight', 'png'); 
-    const hybridLayer = createLayer('Hybrid', 'png');
-    const terrainLayer = createLayer('Terrain', 'png'); 
+    const grayLayer = createLayer('Gray');       
+    const midnightLayer = createLayer('Midnight'); 
+    const hybridLayer = createLayer('Hybrid');
+    const terrainLayer = createLayer('Terrain'); 
 
 
     // ✅ 지도 초기화 (기본뷰: 서울시청 중심)
