@@ -11,12 +11,7 @@
 
   <style>
     /* ---------------------- 페이지 기본 ---------------------- */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
+    html, body { margin:0; padding:0; width:100%; height:100%; }
 
     /* ---------------------- 페이지 헤더 ---------------------- */
     .page-header {
@@ -32,15 +27,14 @@
     /* 지도 버튼 (헤더 좌측 상단) */
     #mapToggleBtn {
       display:flex; align-items:center; gap:6px;
-      background:#1976d2;   /* 파란색 배경 */
-      color:#fff;           /* 흰색 글씨 */
+      background:#1976d2; color:#fff;
       border:none;
       padding:8px 14px;
-      border-radius:12px;   /* 둥근 사각형 */
+      border-radius:12px; /* 둥근 사각형 */
       font-size:14px;
       cursor:pointer;
-      opacity:0;            /* 초기 숨김 */
-      transition: opacity 0.4s ease;
+      opacity:0;
+      transition:opacity 0.4s ease;
     }
     #mapToggleBtn.show { display:flex; opacity:1; }
     #mapToggleBtn svg { flex-shrink:0; }
@@ -49,28 +43,37 @@
     #map {
       width:100%;
       height:calc(100vh - 60px);
-      position: relative;
-      z-index: 1;
+      position:relative;
+      z-index:1;
     }
 
     /* ---------------------- 레이어 선택 UI ---------------------- */
     .layer-switcher {
       position:absolute; top:70px; left:10px;
-      background:rgba(255,255,255,0.85); /* 반투명 */
-      padding:12px; border:1px solid #ccc; border-radius:8px;
-      font-size:16px; z-index:1000;
-      cursor:move; touch-action:none; /* PC/모바일 드래그 지원 */
+      background:rgba(255,255,255,0.85);
+      padding:10px; border:1px solid #ccc; border-radius:8px;
+      font-size:15px; z-index:1000;
+      cursor:move; touch-action:none;
       max-width:220px;
     }
-    .layer-switcher label { display:block; margin:8px 0; }
-    .layer-switcher input[type="checkbox"] {
-      transform:scale(1.3); margin-right:8px;
+
+    /* 닫기 버튼 (X표시) */
+    .close-btn {
+      background:none; border:none;
+      font-size:18px; font-weight:bold;
+      color:#1976d2; cursor:pointer;
+      float:right; margin-bottom:4px;
     }
-    #closeLayerBtn {
-      display:block; margin-bottom:10px;
-      background:#1976d2; color:#fff;
-      border:none; padding:6px 10px;
-      border-radius:8px; cursor:pointer; font-size:14px;
+
+    /* 레이어 항목 간격 최소화 */
+    .layer-switcher label {
+      display:flex; align-items:center;
+      margin:0; /* 항목 간격 제거 */
+      line-height:1.2;
+    }
+    .layer-switcher input[type="checkbox"] {
+      transform:scale(1.2);
+      margin-right:6px;
     }
 
     /* ---------------------- 팝업 영역 ---------------------- */
@@ -102,13 +105,13 @@
 
   <!-- ✅ 레이어 선택 UI -->
   <div class="layer-switcher">
-    <button id="closeLayerBtn">닫기</button>
-    <label><input type="checkbox" id="baseLayer" checked> 기본지도</label><br>
-    <label><input type="checkbox" id="satLayer"> 항공사진</label><br>
-    <label><input type="checkbox" id="cadLayer"> 지적도</label><br>
-    <label><input type="checkbox" id="grayLayer"> Gray</label><br>
-    <label><input type="checkbox" id="midnightLayer"> Midnight</label><br>
-    <label><input type="checkbox" id="hybridLayer"> Hybrid</label><br>
+    <button id="closeLayerBtn" class="close-btn">✕</button>
+    <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
+    <label><input type="checkbox" id="satLayer"> 항공사진</label>
+    <label><input type="checkbox" id="cadLayer"> 지적도</label>
+    <label><input type="checkbox" id="grayLayer"> Gray</label>
+    <label><input type="checkbox" id="midnightLayer"> Midnight</label>
+    <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
     <label><input type="checkbox" id="terrainLayer"> Terrain</label>
   </div>
 
@@ -204,59 +207,6 @@
       document.getElementById("infoPopup").style.display = "none";
     }
 
-    // ✅ JSONP 콜백 함수들
-    function landBuildingCallback(data) {
-      if (data.response?.result?.featureCollection?.features?.length > 0) {
-        const props = data.response.result.featureCollection.features[0].properties;
-        document.getElementById("landBuildingInfo").innerHTML =
-          `<b>건물명:</b> ${props.BLD_NM || '정보 없음'}<br>
-           <b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}`;
-      } else {
-        document.getElementById("landBuildingInfo").innerHTML = "토지·건축물 데이터 없음";
-      }
-    }
-
-    function landUseCallback(data) {
-      if (data.response?.result?.featureCollection?.features?.length > 0) {
-        const props = data.response.result.featureCollection.features[0].properties;
-        document.getElementById("landUseInfo").innerHTML =
-          `<b>용도지역:</b> ${props.USE_ZONE || '정보 없음'}<br>
-           <b>세부지역:</b> ${props.DETAIL_ZONE || '정보 없음'}`;
-      } else {
-        document.getElementById("landUseInfo").innerHTML = "토지이용계획 데이터 없음";
-      }
-    }
-
-    function realEstateCallback(data) {
-      if (data.response?.result?.featureCollection?.features?.length > 0) {
-        const props = data.response.result.featureCollection.features[0].properties;
-        document.getElementById("realEstateInfo").innerHTML =
-          `<b>단지명:</b> ${props.A2 || props.BLD_NM || '정보 없음'}<br>
-           <b>금액:</b> ${props.A7 || props.DEAL_AMOUNT || '정보 없음'}만원`;
-      } else {
-        document.getElementById("realEstateInfo").innerHTML = "실거래가 데이터 없음";
-      }
-    }
-
-    // ✅ JSONP 호출 함수들
-    function loadLandBuilding(lon, lat) {
-      const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_P_BULD&output=jsonp&callback=landBuildingCallback`;
-      document.body.appendChild(script);
-    }
-
-    function loadLandUse(lon, lat) {
-      const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=LT_L_USEZONE&output=jsonp&callback=landUseCallback`;
-      document.body.appendChild(script);
-    }
-
-    function loadRealEstate(lon, lat) {
-      const script = document.createElement("script");
-      script.src = `https://api.vworld.kr/req/data?service=data&request=GetFeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&size=10&data=RTMS_OBJS&output=jsonp&callback=realEstateCallback`;
-      document.body.appendChild(script);
-    }
-
     // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
     map.on('click', function(evt) {
       const coord = ol.proj.toLonLat(evt.coordinate);
@@ -297,13 +247,17 @@
       offsetX = e.clientX - layerSwitcher.offsetLeft;
       offsetY = e.clientY - layerSwitcher.offsetTop;
     });
+
     document.addEventListener('mousemove', (e) => {
       if (isDragging) {
         layerSwitcher.style.left = (e.clientX - offsetX) + 'px';
         layerSwitcher.style.top = (e.clientY - offsetY) + 'px';
       }
     });
-    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
 
     // 모바일 터치 드래그
     layerSwitcher.addEventListener('touchstart', (e) => {
@@ -312,6 +266,7 @@
       offsetX = touch.clientX - layerSwitcher.offsetLeft;
       offsetY = touch.clientY - layerSwitcher.offsetTop;
     });
+
     document.addEventListener('touchmove', (e) => {
       if (isDragging) {
         const touch = e.touches[0];
@@ -319,7 +274,10 @@
         layerSwitcher.style.top = (touch.clientY - offsetY) + 'px';
       }
     });
-    document.addEventListener('touchend', () => { isDragging = false; });
+
+    document.addEventListener('touchend', () => {
+      isDragging = false;
+    });
 </script>
 </body>
 </html>
