@@ -197,7 +197,7 @@ const resolutions = new Array(19);
 const matrixIds = new Array(19);
 for (let z = 0; z < 19; ++z) {
   resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
+  matrixIds[z] = "EPSG:3857:" + z;
 }
 
 // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
@@ -223,7 +223,7 @@ function createLayer(layerName, format='image/png') {
 
 // ✅ 주요 레이어 정의 (대소문자 수정 완료)
 const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-const satLayer = createLayer('Satellite', 'image/jpeg');
+const satLayer = createLayer('Satellite', 'image/jpg');
 const cadLayer = new ol.layer.Image({
   source: new ol.source.ImageWMS({
     url: 'https://api.vworld.kr/req/wms',
@@ -263,9 +263,12 @@ document.getElementById('midnightLayer').addEventListener('change', e => midnigh
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
 document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
 
-// ✅ 팝업 닫기 함수
+// ✅ 팝업 닫기 함수 (안전 처리)
 function closeInfoPopup() {
-  document.getElementById("infoPopup").style.display = "none";
+  const infoPopup = document.getElementById("infoPopup");
+  if (infoPopup) {
+    infoPopup.style.display = "none";
+  }
 }
 
 // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
@@ -362,7 +365,7 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 튕김 현상 완전 보정)
+// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 보정)
 const infoPopup = document.getElementById("infoPopup");
 let isDraggingPopup = false, offsetXPopup, offsetYPopup;
 
@@ -379,15 +382,15 @@ function moveDrag(clientX, clientY) {
   infoPopup.style.top = (clientY - offsetYPopup) + 'px';
 }
 
-// PC 이벤트 바인딩
+// PC 이벤트
 infoPopup.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; // 닫기버튼 클릭 시 드래그 방지
+  if(e.target.classList.contains('close-btn')) return;
   startDrag(e.clientX, e.clientY);
 });
 document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingPopup = false);
 
-// 모바일 터치 이벤트 바인딩
+// 모바일 이벤트
 infoPopup.addEventListener('touchstart', (e) => {
   if(e.target.classList.contains('close-btn')) return;
   const touch = e.touches[0];
@@ -397,9 +400,8 @@ document.addEventListener('touchmove', (e) => {
   if (!isDraggingPopup) return;
   const touch = e.touches[0];
   moveDrag(touch.clientX, touch.clientY);
-});
+}, { passive: false });
 document.addEventListener('touchend', () => isDraggingPopup = false);
-
 </script>
 
 </body>
