@@ -52,20 +52,22 @@
       z-index:1;
     }
 
-    /* ✅ 레이어 선택 모달창 */
+    /* ✅ 레이어 선택 모달창 (드래그 기능 연동 보정 완료) */
     .layer-switcher {
       position:absolute;
       top:50px;
-      left:20%;                      /* 화면 가운데 기준 (50) */
-      transform:translateX(-50%);    /* 가운데 정렬 */
+      left:20%;                      /* 화면 왼쪽 기준 20% 위치에 배치 */
+      transform: none;               /* ⚠️ 드래그 튕김 방지를 위해 translateX 제거 */
+      margin-left: -55px;            /* 가로폭 110px의 정확히 절반을 빼서 초기 정렬 보정 */
       background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
       padding:12px;
       border:1px solid #ccc;
       border-radius:8px;
       font-size:15px;
       z-index:1000;
-      width:110px;                   /* ✅ 기존보다 넓게 지정 */
+      width:110px;                   /* ✅ 불필요한 레이어가 빠져 110px로 최적화 */
       max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
+      cursor: move;                  /* ✅ 상하좌우 마우스 드래그 포인터 추가 */
     }    
     .layer-header { 
       position:relative; 
