@@ -64,7 +64,7 @@
       border-radius:8px;
       font-size:15px;
       z-index:1000;
-      width:120px;                   /* ✅ 기존보다 넓게 지정 */
+      width:110px;                   /* ✅ 기존보다 넓게 지정 */
       max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
     }    
     .layer-header { 
@@ -254,10 +254,8 @@ const map = new ol.Map({
 document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
 document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
 document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-document.getElementById('grayLayer').addEventListener('change', e => grayLayer.setVisible(e.target.checked));
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
 
 // ✅ 팝업 닫기 함수
 function closeInfoPopup() {
