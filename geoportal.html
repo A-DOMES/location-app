@@ -10,91 +10,99 @@
   <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
 
   <style>
-    /* ---------------------- 페이지 기본 ---------------------- */
-    html, body { margin:0; padding:0; width:100%; height:100%; }
-
-    /* ---------------------- 페이지 헤더 ---------------------- */
-    .page-header {
-      width:100%; height:60px;
-      background:#1976d2; color:#fff;
-      display:flex; align-items:center; justify-content:space-between;
-      font-size:20px; font-weight:bold; margin:0;
-      padding:0 12px;
-    }
-    .header-left { display:flex; align-items:center; }
-    .header-title { flex:1; text-align:center; }
-
-    /* 지도 버튼 (헤더 좌측 상단) */
-    #mapToggleBtn {
-      display:flex; align-items:center; gap:6px;
-      background:#1976d2; color:#fff;
-      border:none;
-      padding:8px 14px;
-      border-radius:12px; /* 둥근 사각형 */
-      font-size:14px;
-      cursor:pointer;
-      opacity:0;
-      transition:opacity 0.4s ease;
-    }
-    #mapToggleBtn.show { display:flex; opacity:1; }
-    #mapToggleBtn svg { flex-shrink:0; }
-
-    /* ---------------------- 지도 영역 ---------------------- */
-    #map {
-      width:100%;
-      height:calc(100vh - 60px);
-      position:relative;
-      z-index:1;
-    }
-
-    /* ---------------------- 레이어 선택 UI ---------------------- */
-    .layer-switcher {
-      position:absolute; top:70px; left:10px;
-      background:rgba(255,255,255,0.9);
-      padding:10px; border:1px solid #ccc; border-radius:8px;
-      font-size:15px; z-index:1000;
-      cursor:move; touch-action:none;
-      max-width:220px;
-    }
-
-    /* 상단 타이틀 + 닫기 버튼 */
-    .layer-header {
-      display:flex; justify-content:space-between; align-items:center;
-      margin-bottom:8px;
-    }
-    .layer-title {
-      font-weight:bold; color:#1976d2;
-    }
-    .close-btn {
-      width:24px; height:24px;
-      border-radius:50%;
-      background:rgba(25,118,210,0.2); /* 반투명 동그라미 */
-      border:none;
-      color:#1976d2;
-      font-size:16px;
-      font-weight:bold;
-      cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-    }
-
-    /* 항목 리스트 */
-    .layer-items label {
-      display:flex; align-items:center;
-      margin:4px 0; /* 항목 간격 */
-    }
-    .layer-items input[type="checkbox"] {
-      transform:scale(1.2);
-      margin-right:6px;
-    }
-
-    /* ---------------------- 팝업 영역 ---------------------- */
-    #infoPopup {
-      display:none; position:absolute; top:80px; right:20px;
-      background:#fff; border:2px solid #1976d2; padding:10px; z-index:1000;
-      width:320px; max-width:90%; font-size:14px;
-    }
-    #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
-    #infoPopup button { margin-top:8px; }
+  /* ---------------------- 페이지 기본 ---------------------- */
+  html, body { margin:0; padding:0; width:100%; height:100%; }
+  
+  /* ---------------------- 페이지 헤더 ---------------------- */
+  .page-header {
+    width:100%; height:60px;
+    background:#1976d2; color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:20px; font-weight:bold; margin:0;
+    padding:0 12px;
+  }
+  .header-left { display:flex; align-items:center; }
+  .header-title { flex:1; text-align:center; }
+  
+  /* 지도 버튼 (헤더 좌측 상단) */
+  #mapToggleBtn {
+    display:flex; align-items:center; gap:6px;
+    background:#1976d2; color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:12px; /* 둥근 사각형 */
+    font-size:14px;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity 0.4s ease;
+  }
+  #mapToggleBtn.show { display:flex; opacity:1; }
+  #mapToggleBtn svg { flex-shrink:0; }
+  
+  /* ---------------------- 지도 영역 ---------------------- */
+  #map {
+    width:100%;
+    height:calc(100vh - 60px);
+    position:relative;
+    z-index:1;
+  }
+  
+  /* ---------------------- 레이어 선택 UI ---------------------- */
+  .layer-switcher {
+    position:absolute; top:70px; left:10px;
+    background:rgba(255,255,255,0.95);
+    padding:12px; border:1px solid #ccc; border-radius:8px;
+    font-size:15px; z-index:1000;
+    max-width:220px;
+    opacity:1;
+    transform:translateY(0) scale(1);
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .layer-switcher.hide {
+    opacity:0;
+    transform:translateY(-10px) scale(0.95);
+    pointer-events:none;
+  }
+  
+  /* 상단 타이틀 + 닫기 버튼 */
+  .layer-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:8px;
+  }
+  .layer-title {
+    font-weight:bold; color:#1976d2;
+  }
+  .close-btn {
+    width:24px; height:24px;
+    border-radius:50%;
+    background:rgba(25,118,210,0.2); /* 반투명 동그라미 */
+    border:none;
+    color:#1976d2;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  
+  /* 항목 리스트 */
+  .layer-items label {
+    display:flex; align-items:center;
+    margin:4px 0;
+  }
+  .layer-items input[type="checkbox"] {
+    transform:scale(1.2);
+    margin-right:6px;
+  }
+  
+  /* ---------------------- 팝업 영역 ---------------------- */
+  #infoPopup {
+    display:none; position:absolute; top:80px; right:20px;
+    background:#fff; border:2px solid #1976d2; padding:10px; z-index:1000;
+    width:320px; max-width:90%; font-size:14px;
+  }
+  #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
+  #infoPopup button { margin-top:8px; }
+      
   </style>
 </head>
 <body>
@@ -114,7 +122,7 @@
   <!-- ✅ 지도 영역 -->
   <div id="map"></div>
 
-  <!-- ✅ 레이어 선택 UI -->
+  <!-- ✅ 항목선택 모달창 -->
   <div class="layer-switcher">
     <div class="layer-header">
       <span class="layer-title">항목선택</span>
@@ -239,22 +247,28 @@
       loadRealEstate(lon, lat);
     });
 
-    // ✅ 레이어 닫기/열기 버튼 토글
+    // ✅ 레이어 닫기/열기 버튼 토글 (애니메이션 적용)
     const closeBtn = document.getElementById('closeLayerBtn');
     const mapToggleBtn = document.getElementById('mapToggleBtn');
+    const layerSwitcher = document.querySelector('.layer-switcher');
 
     closeBtn.addEventListener('click', () => {
-      document.querySelector('.layer-switcher').style.display = 'none';
-      mapToggleBtn.classList.add('show');
+      layerSwitcher.classList.add('hide'); // 애니메이션 시작
+      setTimeout(() => {
+        layerSwitcher.style.display = 'none';
+        mapToggleBtn.classList.add('show');
+      }, 400); // transition 시간과 동일
     });
 
     mapToggleBtn.addEventListener('click', () => {
-      document.querySelector('.layer-switcher').style.display = 'block';
+      layerSwitcher.style.display = 'block';
+      setTimeout(() => {
+        layerSwitcher.classList.remove('hide'); // 애니메이션 해제
+      }, 10);
       mapToggleBtn.classList.remove('show');
     });
 
     // ✅ 레이어 드래그 이동 (PC + 모바일)
-    const layerSwitcher = document.querySelector('.layer-switcher');
     let isDragging = false, offsetX, offsetY;
 
     // PC 마우스 드래그
