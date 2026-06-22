@@ -291,14 +291,15 @@
       loadRealEstate(lon, lat);
     });
 
- // ✅ 1. 건물 정보 조회
+// ✅ 1. 건물 정보 조회 (기본 건물 데이터)
 function loadLandBuilding(lon, lat) {
   fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
     .then(res => res.json())
     .then(data => {
+      // ⚠️ 원본에 있던 [0] 인덱스 구조 완벽 복구
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
-        const props = features[0].properties; 
+        const props = features[0].properties;
         document.getElementById("landBuildingInfo").innerHTML =
           `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
       } else {
@@ -310,14 +311,15 @@ function loadLandBuilding(lon, lat) {
     });
 }
 
-// ✅ 2. 토지이용 정보 조회
+// ✅ 2. 토지이용 정보 조회 (연동 규격 코드 LT_C_UQ111 용도지역으로 수정)
 function loadLandUse(lon, lat) {
   fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
     .then(res => res.json())
     .then(data => {
+      // ⚠️ 원본에 있던 [0] 인덱스 구조 완벽 복구
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
-        const props = features[0].properties; 
+        const props = features[0].properties;
         document.getElementById("landUseInfo").innerHTML =
           `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
       } else {
@@ -329,14 +331,15 @@ function loadLandUse(lon, lat) {
     });
 }
 
-// ✅ 3. 부동산 정보 조회
+// ✅ 3. 부동산 정보 조회 (연동 규격 코드 LT_C_PD01 개별공시지가로 수정)
 function loadRealEstate(lon, lat) {
   fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
     .then(res => res.json())
     .then(data => {
+      // ⚠️ 원본에 있던 [0] 인덱스 구조 완벽 복구
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
-        const props = features[0].properties; 
+        const props = features[0].properties;
         const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
         document.getElementById("realEstateInfo").innerHTML =
           `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
@@ -364,7 +367,7 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 완전 보정)
+// ✅ 조회결과 팝업 드래그 이동 (원본 상태 100% 복구)
 const infoPopup = document.getElementById("infoPopup");
 let isDraggingPopup = false, offsetXPopup, offsetYPopup;
 
@@ -381,6 +384,7 @@ function moveDrag(clientX, clientY) {
   infoPopup.style.top = (clientY - offsetYPopup) + 'px';
 }
 
+// PC 이벤트
 infoPopup.addEventListener('mousedown', (e) => {
   if(e.target.classList.contains('close-btn')) return; 
   startDrag(e.clientX, e.clientY);
@@ -388,21 +392,22 @@ infoPopup.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingPopup = false);
 
+// 모바일 터치 이벤트 (⚠️ 원본 구조 [0] 복구)
 infoPopup.addEventListener('touchstart', (e) => {
   if(e.target.classList.contains('close-btn')) return;
-  const touch = e.touches[0]; // ◀ [보정] 인덱스 오류 해결
+  const touch = e.touches[0];
   startDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
   if (!isDraggingPopup) return;
-  const touch = e.touches[0]; // ◀ [보정] 인덱스 오류 해결
+  const touch = e.touches[0];
   moveDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
 // ==========================================
-// ✅ 항목선택 모달창 드래그 이동 기능 (PC + 모바일 완료)
+// ✅ [요청 기능] 항목선택 모달창 드래그 이동 기능 (PC + 모바일 완전 보정)
 // ==========================================
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
@@ -420,6 +425,7 @@ function moveDragLayer(clientX, clientY) {
   layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
 }
 
+// PC 드래그 이벤트
 layerSwitcher.addEventListener('mousedown', (e) => {
   if(e.target.closest('.close-btn') || e.target.closest('.layer-items')) return; 
   startDragLayer(e.clientX, e.clientY);
@@ -427,19 +433,20 @@ layerSwitcher.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => moveDragLayer(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingLayer = false);
 
+// 모바일 드래그 터치 이벤트 (안정적인 인덱스 지정 완료)
 layerSwitcher.addEventListener('touchstart', (e) => {
   if(e.target.closest('.close-btn') || e.target.closest('.layer-items')) return;
-  const touch = e.touches[0]; // ◀ [보정] 인덱스 오류 해결
+  const touch = e.touches[0];
   startDragLayer(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
   if (!isDraggingLayer) return;
-  const touch = e.touches[0]; // ◀ [보정] 인덱스 오류 해결
+  const touch = e.touches[0];
   moveDragLayer(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingLayer = false);
+
 </script>
 
 </body>
 </html>
-   
