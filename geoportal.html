@@ -224,266 +224,336 @@
 
   <!-- ✅ 핵심 맵 엔진 스크립트 -->
   <script>
-    // ✅ WMTS 공통 설정
-    const projection = ol.proj.get('EPSG:3857');
-    const projectionExtent = projection.getExtent();
-    const size = ol.extent.getWidth(projectionExtent) / 256;
-    const resolutions = new Array(19);
-    const matrixIds = new Array(19);
-    for (let z = 0; z < 19; ++z) {
-      resolutions[z] = size / Math.pow(2, z);
-      matrixIds[z] = z;
-    }
+// ✅ WMTS 공통 설정 (원본 유지)
+const projection = ol.proj.get('EPSG:3857');
+const projectionExtent = projection.getExtent();
+const size = ol.extent.getWidth(projectionExtent) / 256;
+const resolutions = new Array(19);
+const matrixIds = new Array(19);
+for (let z = 0; z < 19; ++z) {
+  resolutions[z] = size / Math.pow(2, z);
+  matrixIds[z] = z;
+}
 
-    // ✅ 브이월드 전용 레이어 생성 함수 (XYZ 타일 맵 방식으로 전면 개편)
-    function createLayer(layerName, format='png') {
-      return new ol.layer.Tile({
-        source: new ol.source.XYZ({
-          // 💡 브이월드 서버가 가장 안정적으로 이미지를 뱉어내는 {z}/{y}/{x} 주소 체계로 전면 교정했습니다.
-          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{z}/{y}/{x}.${format}?domain=localhost`,
-          crossOrigin: 'anonymous'
-        }),
-        visible: false
-      });
-    }
-
-    // ✅ 주요 레이어 정의 (타일 유형 명칭 최종 정렬)
-    const baseLayer = createLayer('Base', 'png'); baseLayer.setVisible(true);
-    const satLayer = createLayer('Satellite', 'jpeg');
-    
-    // 지적도는 WMS 방식이므로 기존 규격 유지 (단, 로컬 테스트용 도메인 파라미터 보완)
-    const cadLayer = new ol.layer.Image({
-      source: new ol.source.ImageWMS({
-        url: 'https://api.vworld.kr/req/wms',
-        params: {
-          'LAYERS': 'LT_C_ADASRATODO',
-          'STYLES': 'LT_C_ADASRATODO',
-          'KEY': CONFIG.API_KEY,
-          'FORMAT': 'image/png',
-          'TRANSPARENT': 'TRUE',
-          'DOMAIN': 'localhost' // 💡 로컬 개발 환경용 도메인 선언 추가
-        },
-        serverType: 'geoserver',
-        projection: projection
+// ✅ WMTS 레이어 생성 함수 (원본 유지)
+function createLayer(layerName, format='image/png') {
+  return new ol.layer.Tile({
+    source: new ol.source.WMTS({
+      url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      layer: layerName,
+      matrixSet: 'EPSG:3857',
+      format: format,
+      projection: projection,
+      tileGrid: new ol.tilegrid.WMTS({
+        origin: ol.extent.getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds
       }),
-      visible: false
-    });
-    
-    const grayLayer = createLayer('Gray', 'png');       
-    const midnightLayer = createLayer('Midnight', 'png'); 
-    const hybridLayer = createLayer('Hybrid', 'png');
-    const terrainLayer = createLayer('Terrain', 'png'); 
+      style: 'default',
+      requestEncoding: 'REST'
+    }),
+    visible: false
+  });
+}
 
+// ✅ 주요 레이어 정의 (원본 유지)
+const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+const satLayer = createLayer('Satellite', 'image/jpeg');
+const cadLayer = new ol.layer.Image({
+  source: new ol.source.ImageWMS({
+    url: 'https://vworld.kr',
+    params: {
+      'LAYERS': 'LT_C_ADASRATODO',
+      'STYLES': 'LT_C_ADASRATODO',
+      'KEY': CONFIG.API_KEY,
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE'
+    },
+    serverType: 'geoserver',
+    projection: projection
+  }),
+  visible: false
+});
+const grayLayer = createLayer('Gray');       
+const midnightLayer = createLayer('Midnight'); 
+const hybridLayer = createLayer('Hybrid');
+const terrainLayer = createLayer('Terrain'); 
 
-    // ✅ 지도 초기화 (기본뷰: 서울시청 중심)
-    const map = new ol.Map({
-      target: 'map',
-      layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-        zoom: 17 
-      })
-    });
+// ✅ 지도 초기화 (원본 유지)
+const map = new ol.Map({
+  target: 'map',
+  layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+    zoom: 17 
+  })
+});
 
-    // ✅ 체크박스 이벤트 → 레이어 토글
-    document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-    document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-    document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-    document.getElementById('grayLayer').addEventListener('change', e => grayLayer.setVisible(e.target.checked));
-    document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-    document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-    document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
+// ✅ 체크박스 이벤트 → 레이어 on/off (원본 유지)
+document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+document.getElementById('grayLayer').addEventListener('change', e => grayLayer.setVisible(e.target.checked));
+document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
 
-    // ✅ 팝업 닫기 함수
-    function closeInfoPopup() {
-      document.getElementById("infoPopup").style.display = "none";
-    }
+// ✅ 팝업 닫기 함수 (원본 유지)
+function closeInfoPopup() {
+  document.getElementById("infoPopup").style.display = "none";
+}
 
-     // ✅ 지도 클릭 이벤트 → 팝업 정렬 보정 및 개별 API 호출
-    map.on('click', function(evt) {
-      const coord = ol.proj.toLonLat(evt.coordinate);
-      const lon = coord[0];
-      const lat = coord[1];
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청 (한글 주소 호출 기능 추가)
+map.on('click', function(evt) {
+  const coord = ol.proj.toLonLat(evt.coordinate);
+  const lon = coord[0];
+  const lat = coord[1];
 
-      const infoPopup = document.getElementById("infoPopup");
-      infoPopup.style.display = "block";
-      infoPopup.style.transform = "none";
-      infoPopup.style.left = "calc(50% - 160px)"; // 중앙 가로폭 보정 배치
+  const infoPopup = document.getElementById("infoPopup");
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)"; 
 
-      document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 조회 중...";
-      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-      document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  // 💡 HTML 영역에 <div id="addressInfo"></div>가 들어가 있다면 주소가 출력됩니다.
+  const addrDiv = document.getElementById("addressInfo");
+  if (addrDiv) addrDiv.innerHTML = "<b>📍 주소:</b> 조회 중...";
+  
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
 
-      loadAddress(lon, lat);
-      loadLandBuilding(lon, lat);
-      loadLandUse(lon, lat);
-      loadRealEstate(lon, lat);
-    });
+  // 💡 새롭게 추가된 한글 주소 변환 API 호출
+  loadAddress(lon, lat);
+  loadLandBuilding(lon, lat);
+  loadLandUse(lon, lat);
+  loadRealEstate(lon, lat);
+});
 
-    // ✅ 1. 좌표 -> 한글 주소 변환 기능 (R-Geocoding 인덱스 교정 완료)
-    function loadAddress(lon, lat) {
-      fetch(`https://vworld.kr{CONFIG.API_KEY}&point=${lon},${lat}&type=both&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          // 💡 result[0] 형태로 첫 번째 배열 데이터를 가져오도록 안전하게 교정
-          if (data.response?.status === "OK" && data.response.result?.length > 0) {
-            const resText = data.response.result[0].text; 
-            document.getElementById("addressInfo").innerHTML = `<b>📍 주소:</b> ${resText}`;
-          } else {
-            document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 위치를 찾을 수 없음";
-          }
-        })
-        .catch(err => document.getElementById("addressInfo").innerHTML = "<b>📍 주소 오류:</b> " + err.message);
-    }
+// ✅ [신규 기능 1] 좌표를 활용한 실시간 한글 주소 변환 (R-Geocoding)
+function loadAddress(lon, lat) {
+  const addrDiv = document.getElementById("addressInfo");
+  if (!addrDiv) return;
 
-    // ✅ 2. 건물 정보 조회 (features[0] 인덱스 누락 완벽 복구)
-    function loadLandBuilding(lon, lat) {
-      fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          // 💡 features[0] 배열 인덱스를 다시 정확히 선언하여 자바스크립트 폭발 버그를 해결했습니다.
-          if (features && features.length > 0) {
-            const props = features[0].properties; 
-            document.getElementById("landBuildingInfo").innerHTML =
-              `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
-          } else {
-            document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
-          }
-        })
-        .catch(err => document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message);
-    }
-
-    // ✅ 3. 토지이용 정보 조회 (features[0] 인덱스 교정 완료)
-    function loadLandUse(lon, lat) {
-      fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          if (features && features.length > 0) {
-            const props = features[0].properties; 
-            document.getElementById("landUseInfo").innerHTML = `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
-          } else {
-            document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 승인 대기 중";
-          }
-        })
-        .catch(err => document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message);
-    }
-
-    // ✅ 4. 부동산 공시지가 정보 조회 (features[0] 인덱스 교정 완료)
-    function loadRealEstate(lon, lat) {
-      fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const features = data.response?.result?.featureCollection?.features;
-          if (features && features.length > 0) {
-            const props = features[0].properties; 
-            const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
-            document.getElementById("realEstateInfo").innerHTML =
-              `<b>💰 개별공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>지가(㎡당): ${formattedPrice}`;
-          } else {
-            document.getElementById("realEstateInfo").innerHTML = "<b>💰 개별공시지가:</b> 데이터 승인 대기 중";
-          }
-        })
-        .catch(err => document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message);
-    }
-
-    // ✅ 5. GPS 내 위치 찾기 연동
-    document.getElementById('gpsBtn').addEventListener('click', () => {
-      if (!navigator.geolocation) {
-        alert("이 브라우저나 디바이스는 GPS 기능을 지원하지 않습니다.");
-        return;
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&point=${lon},${lat}&type=both&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.response?.status === "OK" && data.response.result?.length > 0) {
+        addrDiv.innerHTML = `<b>📍 주소:</b> ${data.response.result[0].text}`;
+      } else {
+        addrDiv.innerHTML = "<b>📍 주소:</b> 주소를 찾을 수 없는 위치입니다.";
       }
-      navigator.geolocation.getCurrentPosition((position) => {
-        const lon = position.coords.longitude;
-        const lat = position.coords.latitude;
-        map.getView().animate({ center: ol.proj.fromLonLat([lon, lat]), zoom: 17, duration: 800 });
-      }, (err) => {
-        alert("위치 추적 실패: " + err.message);
-      }, { enableHighAccuracy: true, timeout: 5000 });
+    })
+    .catch(err => addrDiv.innerHTML = "<b>📍 주소 조회 실패:</b> " + err.message);
+}
+
+// ✅ 건물 정보 조회 (보내주신 완벽한 코드 구조 유지)
+function loadLandBuilding(lon, lat) {
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        document.getElementById("landBuildingInfo").innerHTML =
+          `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
+      } else {
+        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
+      }
+    })
+    .catch(err => {
+      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message;
     });
+}
 
-    // ✅ 6. 주소/텍스트 키워드 검색 엔진 (Geocoding 문법 오류 수정)
-    function searchAddress() {
-      const keyword = document.getElementById('searchKeyword').value.trim();
-      if (!keyword) { alert("검색어를 입력해 주세요."); return; } // 💡 오작동 유발하던 e => 문법 제거
-
-      // 1단계: 도로명 검색 요청
-      fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-            const firstResult = data.response.result.items[0];
-            map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(firstResult.point.x), parseFloat(firstResult.point.y)]), zoom: 17, duration: 600 });
-          } else {
-            // 2단계: 도로명 실패 시 지번(parcel) 데이터 검색 연계
-            return fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
-          }
-        })
-        .then(res => res ? res.json() : null)
-        .then(data => {
-          if (!data) return;
-          if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-            const firstResult = data.response.result.items[0];
-            map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(firstResult.point.x), parseFloat(firstResult.point.y)]), zoom: 17, duration: 600 });
-          } else {
-            alert("검색 결과가 없습니다. 도로명이나 지번을 명확히 적어주세요.");
-          }
-        })
-        .catch(err => alert("검색 오류: " + err.message));
-    }
-
-    // 엔터키 및 클릭 이벤트 매핑
-    document.getElementById('searchBtn').addEventListener('click', searchAddress);
-    document.getElementById('searchKeyword').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchAddress(); });
-
-    // ✅ 레이어 제어 UI 토글 스위치 설정
-    const closeLayerBtn = document.getElementById('closeLayerBtn');
-    const mapToggleBtn = document.getElementById('mapToggleBtn');
-    const layerSwitcher = document.querySelector('.layer-switcher');
-
-    closeLayerBtn.addEventListener('click', () => { layerSwitcher.style.display = 'none'; mapToggleBtn.classList.add('show'); });
-    mapToggleBtn.addEventListener('click', () => { layerSwitcher.style.display = 'block'; mapToggleBtn.classList.remove('show'); });
-
-    // ✅ 조회결과 팝업 드래그 이동 (모바일 터치 좌표 스크립트 전면 보정)
-    const infoPopup = document.getElementById("infoPopup");
-    let isDraggingPopup = false, offsetXPopup, offsetYPopup;
-
-    function startDrag(clientX, clientY) {
-      isDraggingPopup = true;
-      const rect = infoPopup.getBoundingClientRect();
-      offsetXPopup = clientX - rect.left;
-      offsetYPopup = clientY - rect.top;
-    }
-
-    function moveDrag(clientX, clientY) {
-      if (!isDraggingPopup) return;
-      infoPopup.style.left = (clientX - offsetXPopup) + 'px';
-      infoPopup.style.top = (clientY - offsetYPopup) + 'px';
-    }
-
-    // PC 마우스 드래그 이벤트
-    infoPopup.addEventListener('mousedown', (e) => {
-      if(e.target.classList.contains('close-btn')) return; 
-      startDrag(e.clientX, e.clientY);
+// ✅ 토지이용 정보 조회 (보내주신 완벽한 코드 구조 유지)
+function loadLandUse(lon, lat) {
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        document.getElementById("landUseInfo").innerHTML =
+          `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
+      } else {
+        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
+      }
+    })
+    .catch(err => {
+      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message;
     });
-    document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
-    document.addEventListener('mouseup', () => isDraggingPopup = false);
+}
 
-    // 모바일 터치 드래그 이벤트 (touch 객체 구조 분리 교정 완료)
-    infoPopup.addEventListener('touchstart', (e) => {
-      if(e.target.classList.contains('close-btn')) return;
-      const touch = e.touches[0];
-      startDrag(touch.clientX, touch.clientY);
+// ✅ 부동산 정보 조회 (보내주신 완벽한 코드 구조 유지)
+function loadRealEstate(lon, lat) {
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
+        document.getElementById("realEstateInfo").innerHTML =
+          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
+      } else {
+        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
+      }
+    })
+    .catch(err => {
+      document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message;
     });
-    document.addEventListener('touchmove', (e) => {
-      if (!isDraggingPopup) return;
-      if (e.cancelable) e.preventDefault(); 
-      const touch = e.touches[0];
-      moveDrag(touch.clientX, touch.clientY);
-    }, { passive: false });
-    document.addEventListener('touchend', () => isDraggingPopup = false);
-  </script>
+}
+
+// ✅ 레이어 제어 UI 토글 기능 (보내주신 코드 유지)
+const closeBtn = document.getElementById('closeLayerBtn');
+const mapToggleBtn = document.getElementById('mapToggleBtn');
+const layerSwitcher = document.querySelector('.layer-switcher');
+
+closeBtn.addEventListener('click', () => {
+  layerSwitcher.style.display = 'none';
+  mapToggleBtn.classList.add('show');
+});
+
+mapToggleBtn.addEventListener('click', () => {
+  layerSwitcher.style.display = 'block';
+  mapToggleBtn.classList.remove('show');
+});
+
+// ✅ [신규 기능 2] GPS 기반 현재 내 위치 찾기 (애니메이션 이동)
+const gpsButton = document.getElementById('gpsBtn');
+if (gpsButton) {
+  gpsButton.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert("이 장치에서는 GPS 기능을 활용할 수 없습니다.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const center = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+      map.getView().animate({ center: center, zoom: 17, duration: 700 });
+    }, (err) => alert("위치 정보를 가져올 수 없습니다: " + err.message), { enableHighAccuracy: true, timeout: 5000 });
+  });
+}
+
+// ✅ [신규 기능 3] 주소 키워드 입력 검색 엔진 (Geocoding 통합)
+function searchAddress() {
+  const keyword = document.getElementById('searchKeyword')?.value.trim();
+  if (!keyword) { alert("검색어를 입력해 주세요."); return; }
+
+  // 1단계: 도로명 우선 통합 검색
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+        const pt = data.response.result.items[0].point;
+        map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(pt.x), parseFloat(pt.y)]), zoom: 17, duration: 600 });
+      } else {
+        // 2단계: 실패 시 지번(parcel) 검색으로 자동 전환 연계
+        return fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
+      }
+    })
+    .then(res => res ? res.json() : null)
+    .then(data => {
+      if (!data) return;
+      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+        const pt = data.response.result.items[0].point;
+        map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(pt.x), parseFloat(pt.y)]), zoom: 17, duration: 600 });
+      } else {
+        alert("일치하는 검색 결과가 없습니다.");
+      }
+    })
+    .catch(err => alert("검색 시스템 오류: " + err.message));
+}
+
+// ✅ 검색 버튼 클릭 및 엔터키 이벤트 바인딩 등록
+function searchAddress() {
+  const keyword = document.getElementById('searchKeyword').value.trim();
+  if (!keyword) { 
+    alert("검색어를 입력해 주세요."); 
+    return; 
+  }
+
+  // 1단계: 도로명 주소(road) 기준으로 Vworld 통합 검색 API 호출
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+        const firstResult = data.response.result.items[0];
+        const lon = parseFloat(firstResult.point.x);
+        const lat = parseFloat(firstResult.point.y);
+        
+        // 검색된 좌표 위치로 지도 뷰 부드럽게 이동 및 확대
+        map.getView().animate({
+          center: ol.proj.fromLonLat([lon, lat]),
+          zoom: 17,
+          duration: 600
+        });
+      } else {
+        // 2단계: 도로명 검색 결과가 없으면 지번 주소(parcel) 타입으로 2차 재검색 시도
+        return fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
+      }
+    })
+    .then(res => res ? res.json() : null)
+    .then(data => {
+      if (!data) return; // 위에서 이미 처리된 경우 안전하게 차단
+      
+      if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+        const firstResult = data.response.result.items[0];
+        const lon = parseFloat(firstResult.point.x);
+        const lat = parseFloat(firstResult.point.y);
+        
+        map.getView().animate({ 
+          center: ol.proj.fromLonLat([lon, lat]), 
+          zoom: 17, 
+          duration: 600 
+        });
+      } else {
+        alert("검색 결과가 없습니다. 도로명이나 지번을 명확히 입력해 주세요.");
+      }
+    })
+    .catch(err => {
+      alert("검색 중 오류가 발생했습니다: " + err.message);
+    });
+}
+
+// 💡 HTML의 검색 버튼 및 입력 창과 검색 기능 연동
+document.getElementById('searchBtn').addEventListener('click', searchAddress);
+document.getElementById('searchKeyword').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') searchAddress();
+});
+
+// ✅ GPS 기반 내 위치 찾기 기능 등록 (모바일 최적화 고정밀 제어)
+document.getElementById('gpsBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert("이 브라우저나 기기는 GPS 위치 추적 기능을 지원하지 않습니다.");
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition((position) => {
+    const lon = position.coords.longitude;
+    const lat = position.coords.latitude;
+    
+    // 사용자의 현재 실제 위경도 좌표로 지도를 서서히 이동시킴
+    map.getView().animate({
+      center: ol.proj.fromLonLat([lon, lat]),
+      zoom: 17,
+      duration: 800
+    });
+  }, (err) => {
+    alert("현재 위치를 가져오지 못했습니다: " + err.message);
+  }, {
+    enableHighAccuracy: true, // LTE/Wi-Fi 기반 삼각측량 활용 오차 최소화
+    timeout: 5000
+  });
+});
+
+// ✅ 모바일 드래그 시 뒷배경 화면이 통째로 꿀렁이며 스크롤되는 현상 완전 방지
+document.getElementById("infoPopup").addEventListener('touchmove', (e) => {
+  if (isDraggingPopup && e.cancelable) {
+    e.preventDefault(); // 조회 결과 모달창 내부 드래그 시 브라우저 기본 스크롤 차단
+  }
+}, { passive: false });
+
+</script>
+
 </body>
 </html>
