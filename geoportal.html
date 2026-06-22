@@ -58,7 +58,7 @@
       top:50px;
       left:20%;                      /* 화면 가운데 기준 (50) */
       transform:translateX(-50%);    /* 가운데 정렬 */
-      background:rgba(255,255,255,0.95);
+      background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
       padding:12px;
       border:1px solid #ccc;
       border-radius:8px;
@@ -102,14 +102,44 @@
     }
 
 
-    /* ✅ 팝업 영역 */
-    #infoPopup {
-      display:none; position:absolute; top:80px; right:20px;
-      background:#fff; border:2px solid #1976d2; padding:10px; z-index:1000;
-      width:320px; max-width:90%; font-size:14px;
-    }
-    #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
-    #infoPopup button { margin-top:8px; }
+/* ✅ 조회결과 모달창 */
+#infoPopup {
+  position: absolute;
+  top: 60px;          /* ✅ 화면 상단에서 조금 내려오게 */
+  left: 50%;
+  transform: translateX(-50%); /* ✅ 가로 중앙 정렬만 */
+  width: 320px;
+  background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 2000;
+  cursor: move;   /* ✅ 드래그 가능 표시 */
+}
+
+/* 닫기 버튼 */
+#infoPopup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;          /* ✅ 원형 버튼 */
+  background: #f44336;         /* 빨간색 배경 */
+  color: #fff;                 /* 흰색 X */
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#infoPopup .close-btn:hover {
+  background: #d32f2f;         /* hover 시 진한 빨강 */
+}
+
   </style>
 </head>
 <body>
@@ -147,12 +177,12 @@
   </div>
 
   <!-- ✅ 팝업 영역 -->
-  <div id="infoPopup">
-    <h3>조회 결과</h3>
+  <div id="infoPopup" style="display:none;">
+    <div class="close-btn" onclick="closeInfoPopup()">×</div>
+    <h3>조회결과</h3>
     <div id="landBuildingInfo"></div>
     <div id="landUseInfo"></div>
     <div id="realEstateInfo"></div>
-    <button onclick="closeInfoPopup()">닫기</button>
   </div>
 
   <!-- ✅ API Key 설정 -->
@@ -209,10 +239,10 @@
     }),
     visible: false
   });
-  const grayLayer = createLayer('gray');
+  const grayLayer = createLayer('Gray');       // 백지도
   const midnightLayer = createLayer('midnight');
   const hybridLayer = createLayer('Hybrid');
-  const terrainLayer = createLayer('white');
+  const terrainLayer = createLayer('Terrain'); // 지형도
 
   // ✅ 지도 초기화
   const map = new ol.Map({
@@ -254,6 +284,60 @@
     loadRealEstate(lon, lat);
   });
 
+  // ✅ 토지/건물 정보 조회
+  function loadLandBuilding(lon, lat) {
+    fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response?.result?.featureCollection?.features?.length) {
+          const props = data.response.result.featureCollection.features[0].properties;
+          document.getElementById("landBuildingInfo").innerHTML =
+            `건물명: ${props.bldg_nm || '-'}<br>주소: ${props.addr || '-'}`;
+        } else {
+          document.getElementById("landBuildingInfo").innerHTML = "조회 결과 없음";
+        }
+      })
+      .catch(err => {
+        document.getElementById("landBuildingInfo").innerHTML = "조회 실패: " + err.message;
+      });
+  }
+  
+  // ✅ 토지이용 정보 조회
+  function loadLandUse(lon, lat) {
+    fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_LANDUSE&format=json`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response?.result?.featureCollection?.features?.length) {
+          const props = data.response.result.featureCollection.features[0].properties;
+          document.getElementById("landUseInfo").innerHTML =
+            `용도지역: ${props.lu_nm || '-'}<br>세부용도: ${props.lu_detail || '-'}`;
+        } else {
+          document.getElementById("landUseInfo").innerHTML = "조회 결과 없음";
+        }
+      })
+      .catch(err => {
+        document.getElementById("landUseInfo").innerHTML = "조회 실패: " + err.message;
+      });
+  }
+  
+  // ✅ 부동산 정보 조회
+  function loadRealEstate(lon, lat) {
+    fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_P_REAL_ESTATE&format=json`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response?.result?.featureCollection?.features?.length) {
+          const props = data.response.result.featureCollection.features[0].properties;
+          document.getElementById("realEstateInfo").innerHTML =
+            `지번: ${props.jibun || '-'}<br>가격: ${props.price || '-'}`;
+        } else {
+          document.getElementById("realEstateInfo").innerHTML = "조회 결과 없음";
+        }
+      })
+      .catch(err => {
+        document.getElementById("realEstateInfo").innerHTML = "조회 실패: " + err.message;
+      });
+  }
+  
   // ✅ 레이어 닫기/열기 버튼 토글
   const closeBtn = document.getElementById('closeLayerBtn');
   const mapToggleBtn = document.getElementById('mapToggleBtn');
@@ -269,46 +353,50 @@
     mapToggleBtn.classList.remove('show');
   });
 
-  // ✅ 레이어 드래그 이동 (PC + 모바일)
-  let isDragging = false, offsetX, offsetY;
+// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
+const infoPopup = document.getElementById("infoPopup");
+let isDraggingPopup = false, offsetXPopup, offsetYPopup;
 
-  // PC 마우스 드래그
-  layerSwitcher.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - layerSwitcher.offsetLeft;
-    offsetY = e.clientY - layerSwitcher.offsetTop;
-  });
+// PC 마우스 드래그
+infoPopup.addEventListener('mousedown', (e) => {
+  isDraggingPopup = true;
+  offsetXPopup = e.clientX - infoPopup.offsetLeft;
+  offsetYPopup = e.clientY - infoPopup.offsetTop;
+  infoPopup.style.transform = ''; // 중앙정렬 해제
+});
 
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      layerSwitcher.style.left = (e.clientX - offsetX) + 'px';
-      layerSwitcher.style.top = (e.clientY - offsetY) + 'px';
-    }
-  });
+document.addEventListener('mousemove', (e) => {
+  if (isDraggingPopup) {
+    infoPopup.style.left = (e.clientX - offsetXPopup) + 'px';
+    infoPopup.style.top = (e.clientY - offsetYPopup) + 'px';
+  }
+});
 
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
+document.addEventListener('mouseup', () => {
+  isDraggingPopup = false;
+});
 
-  // 모바일 터치 드래그
-  layerSwitcher.addEventListener('touchstart', (e) => {
-    isDragging = true;
+// 모바일 터치 드래그
+infoPopup.addEventListener('touchstart', (e) => {
+  isDraggingPopup = true;
+  const touch = e.touches[0];
+  offsetXPopup = touch.clientX - infoPopup.offsetLeft;
+  offsetYPopup = touch.clientY - infoPopup.offsetTop;
+  infoPopup.style.transform = ''; // 중앙정렬 해제
+});
+
+document.addEventListener('touchmove', (e) => {
+  if (isDraggingPopup) {
     const touch = e.touches[0];
-    offsetX = touch.clientX - layerSwitcher.offsetLeft;
-    offsetY = touch.clientY - layerSwitcher.offsetTop;
-  });
+    infoPopup.style.left = (touch.clientX - offsetXPopup) + 'px';
+    infoPopup.style.top = (touch.clientY - offsetYPopup) + 'px';
+  }
+});
 
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-      const touch = e.touches[0];
-      layerSwitcher.style.left = (touch.clientX - offsetX) + 'px';
-      layerSwitcher.style.top = (touch.clientY - offsetY) + 'px';
-    }
-  });
+document.addEventListener('touchend', () => {
+  isDraggingPopup = false;
+});
 
-  document.addEventListener('touchend', () => {
-    isDragging = false;
-  });
 </script>
 
 </body>
