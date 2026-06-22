@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- ✅ OpenLayers CSS & JS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
-  <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
+  <link rel="stylesheet" href="https://jsdelivr.net">
+  <script src="https://jsdelivr.net"></script>
 
   <style>
     /* ✅ 페이지 기본 레이아웃 */
@@ -56,8 +56,10 @@
     .layer-switcher {
       position:absolute;
       top:50px;
-      left:20%;                      /* 화면 가운데 기준 (50) */
-      transform:translateX(-50%);    /* 가운데 정렬 */
+      left:20%;                      
+      /* ✅ 처음 배치 후 드래그 시 튕김 방지를 위해 transform 제거, 마진으로 위치 미세조정 */
+      transform: none;    
+      margin-left: -60px; /* 가로폭 120px의 절반을 빼서 초기 기준점 보정 */
       background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
       padding:12px;
       border:1px solid #ccc;
@@ -66,6 +68,7 @@
       z-index:1000;
       width:120px;                   /* ✅ 기존보다 넓게 지정 */
       max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
+      cursor: move;                  /* ✅ 드래그 가능 마우스 포인터 추가 */
     }    
     .layer-header { 
       position:relative; 
@@ -94,11 +97,13 @@
     .layer-items label {
       display:flex; align-items:center;
       margin:4px 0;
+      cursor: pointer;
     }
     
     .layer-items input[type="checkbox"] {
       transform:scale(1.2);
       margin-right:6px;
+      cursor: pointer;
     }
 
 
@@ -147,7 +152,7 @@
   <header class="page-header">
     <div class="header-left">
       <button id="mapToggleBtn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
+        <svg xmlns="http://w3.org" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
           <path d="M9 3l-7 2v16l7-2 6 2 7-2V3l-7 2-6-2zm0 2.18l4 1.33v12.31l-4-1.33V5.18zm-2 .66v12.31l-3 1V6.84l3-1zm10 0v12.31l-3 1V6.84l3-1z"/>
         </svg>
         <span>지도보기</span>
@@ -187,7 +192,7 @@
 
   <!-- ✅ API Key 설정 -->
   <script src="config.js"></script>
-  
+
 <script>
 // ✅ WMTS 공통 설정
 const projection = ol.proj.get('EPSG:3857');
@@ -204,7 +209,7 @@ for (let z = 0; z < 19; ++z) {
 function createLayer(layerName, format='image/png') {
   return new ol.layer.Tile({
     source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
       layer: layerName,
       matrixSet: 'EPSG:3857',
       format: format,
@@ -226,7 +231,7 @@ const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
 const satLayer = createLayer('Satellite', 'image/jpeg');
 const cadLayer = new ol.layer.Image({
   source: new ol.source.ImageWMS({
-    url: 'https://api.vworld.kr/req/wms',
+    url: 'https://vworld.kr',
     params: {
       'LAYERS': 'LT_C_ADASRATODO',
       'STYLES': 'LT_C_ADASRATODO',
@@ -291,7 +296,7 @@ map.on('click', function(evt) {
 
 // ✅ 1. 건물 정보 조회 (기본 건물 데이터)
 function loadLandBuilding(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -310,7 +315,7 @@ function loadLandBuilding(lon, lat) {
 
 // ✅ 2. 토지이용 정보 조회 (연동 규격 코드 LT_C_UQ111 용도지역으로 수정)
 function loadLandUse(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -329,7 +334,7 @@ function loadLandUse(lon, lat) {
 
 // ✅ 3. 부동산 정보 조회 (연동 규격 코드 LT_C_PD01 개별공시지가로 수정)
 function loadRealEstate(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
+  fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -399,6 +404,49 @@ document.addEventListener('touchmove', (e) => {
   moveDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingPopup = false);
+
+
+// ==========================================
+// ✅ 항목선택 모달창 드래그 이동 기능 (PC + 모바일)
+// ==========================================
+let isDraggingLayer = false, offsetXLayer, offsetYLayer;
+
+function startDragLayer(clientX, clientY) {
+  isDraggingLayer = true;
+  const rect = layerSwitcher.getBoundingClientRect();
+  offsetXLayer = clientX - rect.left;
+  offsetYLayer = clientY - rect.top;
+}
+
+function moveDragLayer(clientX, clientY) {
+  if (!isDraggingLayer) return;
+  // 퍼센트 단위 및 마진값 간섭 방지를 위해 고정 픽셀 수치로 초기화 변환
+  layerSwitcher.style.margin = "0"; 
+  layerSwitcher.style.left = (clientX - offsetXLayer) + 'px';
+  layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
+}
+
+// PC 이벤트 바인딩
+layerSwitcher.addEventListener('mousedown', (e) => {
+  // 닫기버튼, 내부 체크박스 리스트 클릭 시에는 기능 유지를 위해 드래그 차단
+  if(e.target.closest('.close-btn') || e.target.closest('.layer-items')) return; 
+  startDragLayer(e.clientX, e.clientY);
+});
+document.addEventListener('mousemove', (e) => moveDragLayer(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingLayer = false);
+
+// 모바일 터치 이벤트 바인딩
+layerSwitcher.addEventListener('touchstart', (e) => {
+  if(e.target.closest('.close-btn') || e.target.closest('.layer-items')) return;
+  const touch = e.touches[0];
+  startDragLayer(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingLayer) return;
+  const touch = e.touches[0];
+  moveDragLayer(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingLayer = false);
 
 </script>
 
