@@ -205,10 +205,10 @@
 
       // ✅ 3. 주요 레이어 모듈 선언 (대소문자 정밀 교정)
       const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-      const satLayer = createLayer('Satellite', 'image/jpeg');
+      const satLayer = createLayer('Satellite', 'image/jpg');
       const cadLayer = new ol.layer.Image({
         source: new ol.source.ImageWMS({
-          url: 'https://vworld.kr',
+          url: 'https://api.vworld.kr/req/wms',
           params: {
             'LAYERS': 'LT_C_ADASRATODO',
             'STYLES': 'LT_C_ADASRATODO',
@@ -232,7 +232,7 @@
         layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
         view: new ol.View({
           center: ol.proj.fromLonLat([126.9780, 37.5665]), // 대한민국 서울 중심
-          zoom: 11 
+          zoom: 7 
         })
       });
 
