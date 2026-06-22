@@ -114,14 +114,14 @@
     });
   }
 
-// ✅ 주요 레이어 정의
+// ✅ 주요 레이어 정의 (WMTS 그대로 유지)
 const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
 const satLayer = createLayer('Satellite','image/jpeg');
-const grayLayer = createLayer('white');
+const grayLayer = createLayer('gray');        // 색상 스타일은 WMTS로 유지
 const midnightLayer = createLayer('midnight');
-const terrainLayer = createLayer('white');
+const terrainLayer = createLayer('terrain');
 
-// ✅ 지적도는 WMTS가 아닌 WMS로 호출해야 함
+// ✅ 지적도는 WMS로 호출
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
     url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
@@ -129,7 +129,7 @@ const cadLayer = new ol.layer.Tile({
       SERVICE: 'WMS',
       VERSION: '1.3.0',
       REQUEST: 'GetMap',
-      LAYERS: 'Cadastral',   // 지적도 레이어 이름
+      LAYERS: 'Cadastral',
       STYLES: 'default',
       CRS: 'EPSG:3857',
       FORMAT: 'image/png'
@@ -140,7 +140,7 @@ const cadLayer = new ol.layer.Tile({
   visible: false
 });
 
-// ✅ Hybrid 레이어도 WMS로 호출 (지번 텍스트 표시용)
+// ✅ Hybrid도 WMS로 호출
 const hybridLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
     url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
@@ -148,7 +148,7 @@ const hybridLayer = new ol.layer.Tile({
       SERVICE: 'WMS',
       VERSION: '1.3.0',
       REQUEST: 'GetMap',
-      LAYERS: 'Hybrid',      // 지번 표시 레이어
+      LAYERS: 'Hybrid',
       STYLES: 'default',
       CRS: 'EPSG:3857',
       FORMAT: 'image/png'
