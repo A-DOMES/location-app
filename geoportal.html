@@ -252,10 +252,14 @@
     }),
     visible: false
   });
-  const grayLayer = createLayer('gray');       // 백지도
-  const midnightLayer = createLayer('midnight');
-  const hybridLayer = createLayer('Hybrid');
-  const terrainLayer = createLayer('terrain'); // 지형도
+    // ✅ 주요 레이어들 정의 (💡 안 나오던 세 가지 레이어 이름만 명세에 맞춰 수정)
+    const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+    const satLayer = createLayer('Satellite','image/jpeg');
+    const cadLayer = createLayer('Cadastral');
+    const grayLayer = createLayer('gray');          // 💡 대문자 Gray -> 소문자 gray로 변경
+    const midnightLayer = createLayer('midnight');  // 💡 대문자 Midnight -> 소문자 midnight로 변경
+    const hybridLayer = createLayer('Hybrid');
+    const terrainLayer = createLayer('white');       // 💡 Terrain 대신 투명 배경 2D 지형 매핑용 white 변경
 
   // ✅ 지도 초기화
   const map = new ol.Map({
@@ -270,12 +274,16 @@
   // ✅ 체크박스 이벤트 → 레이어 on/off
   document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
   document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  document.getElementById('cadLayer').addEventListener('change', e => {
+    cadLayer.setVisible(e.target.checked);
+    hybridLayer.setVisible(e.target.checked); // 지적도와 지번을 동시에 켜기
+    document.getElementById('hybridLayer').checked = e.target.checked; // UI 동기화
+  });
   document.getElementById('grayLayer').addEventListener('change', e => grayLayer.setVisible(e.target.checked));
   document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
   document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
   document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
-
+  
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
     document.getElementById("infoPopup").style.display = "none";
