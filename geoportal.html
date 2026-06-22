@@ -105,9 +105,9 @@
     /* ✅ 조회결과 모달창 */
     #infoPopup {
       position: absolute;
-      top: 50%;
+      top: 60px;          /* ✅ 화면 상단에서 조금 내려오게 */
       left: 50%;
-      transform: translate(-50%, -50%);   /* ✅ 화면 중앙 */
+      transform: translateX(-50%); /* ✅ 가로 중앙 정렬만 */
       width: 320px;
       background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
       border: 1px solid #ccc;
@@ -117,6 +117,7 @@
       z-index: 2000;
       cursor: move;   /* ✅ 드래그 가능 표시 */
     }
+
     
     /* 헤더: 제목과 닫기 버튼을 같은 행에 */
     .popup-header {
@@ -365,50 +366,48 @@
     mapToggleBtn.classList.remove('show');
   });
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
-const infoPopup = document.getElementById("infoPopup");
-let isDraggingPopup = false, offsetXPopup, offsetYPopup;
-
-// PC 마우스 드래그
-infoPopup.addEventListener('mousedown', (e) => {
-  isDraggingPopup = true;
-  offsetXPopup = e.clientX - infoPopup.offsetLeft;
-  offsetYPopup = e.clientY - infoPopup.offsetTop;
-  infoPopup.style.transform = ''; // 중앙정렬 해제
-});
-
-document.addEventListener('mousemove', (e) => {
-  if (isDraggingPopup) {
-    infoPopup.style.left = (e.clientX - offsetXPopup) + 'px';
-    infoPopup.style.top = (e.clientY - offsetYPopup) + 'px';
-  }
-});
-
-document.addEventListener('mouseup', () => {
-  isDraggingPopup = false;
-});
-
-// 모바일 터치 드래그
-infoPopup.addEventListener('touchstart', (e) => {
-  isDraggingPopup = true;
-  const touch = e.touches[0];
-  offsetXPopup = touch.clientX - infoPopup.offsetLeft;
-  offsetYPopup = touch.clientY - infoPopup.offsetTop;
-  infoPopup.style.transform = ''; // 중앙정렬 해제
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (isDraggingPopup) {
+  // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
+  const infoPopup = document.getElementById("infoPopup");
+  let isDraggingPopup = false, offsetXPopup, offsetYPopup;
+  
+  infoPopup.addEventListener('mousedown', (e) => {
+    isDraggingPopup = true;
+    offsetXPopup = e.clientX - infoPopup.offsetLeft;
+    offsetYPopup = e.clientY - infoPopup.offsetTop;
+    infoPopup.style.transform = ''; // 중앙정렬 해제
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (isDraggingPopup) {
+      infoPopup.style.left = (e.clientX - offsetXPopup) + 'px';
+      infoPopup.style.top = (e.clientY - offsetYPopup) + 'px';
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    isDraggingPopup = false;
+  });
+  
+  // 모바일 터치 드래그
+  infoPopup.addEventListener('touchstart', (e) => {
+    isDraggingPopup = true;
     const touch = e.touches[0];
-    infoPopup.style.left = (touch.clientX - offsetXPopup) + 'px';
-    infoPopup.style.top = (touch.clientY - offsetYPopup) + 'px';
-  }
-});
-
-document.addEventListener('touchend', () => {
-  isDraggingPopup = false;
-});
-
+    offsetXPopup = touch.clientX - infoPopup.offsetLeft;
+    offsetYPopup = touch.clientY - infoPopup.offsetTop;
+    infoPopup.style.transform = ''; // 중앙정렬 해제
+  });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (isDraggingPopup) {
+      const touch = e.touches[0];
+      infoPopup.style.left = (touch.clientX - offsetXPopup) + 'px';
+      infoPopup.style.top = (touch.clientY - offsetYPopup) + 'px';
+    }
+  });
+  
+  document.addEventListener('touchend', () => {
+    isDraggingPopup = false;
+  });
 </script>
 
 </body>
