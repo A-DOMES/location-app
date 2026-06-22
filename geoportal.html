@@ -58,7 +58,7 @@
       top:50px;
       left:20%;                      /* 화면 가운데 기준 (50) */
       transform:translateX(-50%);    /* 가운데 정렬 */
-      background:rgba(255,255,255,0.95);
+      background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
       padding:12px;
       border:1px solid #ccc;
       border-radius:8px;
@@ -103,13 +103,42 @@
 
 
     /* ✅ 팝업 영역 */
-    #infoPopup {
-      display:none; position:absolute; top:80px; right:20px;
-      background:#fff; border:2px solid #1976d2; padding:10px; z-index:1000;
-      width:320px; max-width:90%; font-size:14px;
-    }
-    #infoPopup h3 { margin:0 0 6px 0; font-size:16px; color:#1976d2; }
-    #infoPopup button { margin-top:8px; }
+/* 조회결과 모달창 */
+#infoPopup {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 배경 */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 2000;
+}
+
+/* 닫기 버튼 */
+#infoPopup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;          /* ✅ 원형 버튼 */
+  background: #f44336;         /* 빨간색 배경 */
+  color: #fff;                 /* 흰색 X */
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#infoPopup .close-btn:hover {
+  background: #d32f2f;         /* hover 시 진한 빨강 */
+}
+
   </style>
 </head>
 <body>
@@ -147,12 +176,12 @@
   </div>
 
   <!-- ✅ 팝업 영역 -->
-  <div id="infoPopup">
-    <h3>조회 결과</h3>
+  <div id="infoPopup" style="display:none;">
+    <div class="close-btn" onclick="closeInfoPopup()">×</div>
+    <h3>조회결과</h3>
     <div id="landBuildingInfo"></div>
     <div id="landUseInfo"></div>
     <div id="realEstateInfo"></div>
-    <button onclick="closeInfoPopup()">닫기</button>
   </div>
 
   <!-- ✅ API Key 설정 -->
