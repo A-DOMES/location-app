@@ -197,7 +197,7 @@ const resolutions = new Array(19);
 const matrixIds = new Array(19);
 for (let z = 0; z < 19; ++z) {
   resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = "EPSG:3857:" + z;
+  matrixIds[z] = z;
 }
 
 // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
