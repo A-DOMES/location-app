@@ -237,9 +237,13 @@
 
     // ✅ WMTS 레이어 생성 함수
     function createLayer(layerName, format='image/png') {
+      // 💡 format.split('/')[1]로 정확하게 인덱스를 주어 png, jpeg 확장자를 뽑아내도록 교정했습니다.
+      const ext = format.split('/')[1]; 
+      
       return new ol.layer.Tile({
         source: new ol.source.WMTS({
-          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+          // 💡 뒤에 &domain=localhost 를 강제로 붙여주면 로컬 컴퓨터에서 file://로 더블클릭해 실행해도 임시로 지도가 뜹니다.
+          url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${ext}?domain=localhost`,
           layer: layerName,
           matrixSet: 'EPSG:3857',
           format: format,
@@ -255,6 +259,7 @@
         visible: false
       });
     }
+
 
     // ✅ 주요 레이어 정의 (규격 및 대소문자 검증 완료)
     const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
