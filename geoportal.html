@@ -111,7 +111,7 @@
         source: new ol.source.WMTS({
           url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${urlLayerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
           layer: olLayerId,
-          matrixSet: 'EPSG:3857',
+          matrixSet: 'korean',
           format: format,
           projection: projection,
           tileGrid: new ol.tilegrid.WMTS({
