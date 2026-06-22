@@ -48,38 +48,37 @@
     z-index:1;
   }
   
-/* ---------------------- 레이어 선택 UI ---------------------- */
-.layer-switcher {
-  position:absolute; top:70px; left:10px;
-  background:rgba(255,255,255,0.95);
-  padding:12px; border:1px solid #ccc; border-radius:8px;
-  font-size:15px; z-index:1000;
-  max-width:260px;   /* ✅ 기존 220px → 260px으로 넓힘 */
-  opacity:1;
-  transform:translateY(0) scale(1);
-  transition:opacity 0.4s ease, transform 0.4s ease;
-}
-.layer-switcher.hide {
-  opacity:0;
-  transform:translateY(-10px) scale(0.95);
-  pointer-events:none;
-}
-
-/* 상단 타이틀 + 닫기 버튼 */
-.layer-header {
-  display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:8px;
-}
-
-/* 항목선택 타이틀 */
-.layer-title {
-  flex:1;                /* 남는 공간을 모두 차지 */
-  text-align:center;     /* 가운데 정렬 */
-  font-weight:bold; 
-  font-size:18px;        /* ✅ 글자 크기 조금 키움 */
-  color:#1976d2;
-}
-
+  /* ---------------------- 레이어 선택 UI ---------------------- */
+  .layer-switcher {
+    position:absolute; top:70px; left:10px;
+    background:rgba(255,255,255,0.95);
+    padding:12px; border:1px solid #ccc; border-radius:8px;
+    font-size:15px; z-index:1000;
+    max-width:220px;
+    opacity:1;
+    transform:translateY(0) scale(1);
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .layer-switcher.hide {
+    opacity:0;
+    transform:translateY(-10px) scale(0.95);
+    pointer-events:none;
+  }
+  
+  /* 상단 타이틀 + 닫기 버튼 */
+  .layer-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:8px;
+  }
+  
+  /* 항목선택 타이틀 */
+  .layer-title {
+    flex:1;                /* 남는 공간을 모두 차지 */
+    text-align:center;     /* 가운데 정렬 */
+    font-weight:bold; 
+    font-size:18px;        /* 글자 크기 조금 키움 */
+    color:#1976d2;
+  }
   .close-btn {
     width:24px; height:24px;
     border-radius:50%;
