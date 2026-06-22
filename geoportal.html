@@ -166,225 +166,149 @@
   <!-- ✅ API Key 인증 관리 파일 링크 -->
   <script src="config.js"></script>
 
-  <!-- ✅ 안전지대 맵 초기화 및 데이터 연동 통합 스크립트 -->
-  <script>
-    // 💡 초기 스크립트 충돌 원천 차단을 위해 모든 이벤트 리스너를 DOM 생성 완료 시점에 안전하게 결합합니다.
-    document.addEventListener("DOMContentLoaded", () => {
-      
-      // ✅ 1. WMTS 그리드 공통 인프라 구축
-      const projection = ol.proj.get('EPSG:3857');
-      const projectionExtent = projection.getExtent();
-      const size = ol.extent.getWidth(projectionExtent) / 256;
-      const resolutions = new Array(19);
-      const matrixIds = new Array(19);
-      for (let z = 0; z < 19; ++z) {
-        resolutions[z] = size / Math.pow(2, z);
-        matrixIds[z] = z;
-      }
+<!-- ✅ 안전지대 맵 초기화 및 데이터 연동 통합 스크립트 -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // ✅ 1. WMTS 그리드 공통 인프라 구축
+    const projection = ol.proj.get('EPSG:3857');
+    const projectionExtent = projection.getExtent();
+    const size = ol.extent.getWidth(projectionExtent) / 256;
+    const resolutions = new Array(19);
+    const matrixIds = new Array(19);
+    for (let z = 0; z < 19; ++z) {
+      resolutions[z] = size / Math.pow(2, z);
+      matrixIds[z] = "EPSG:3857:" + z;   // ◀ 브이월드 WMTS는 반드시 좌표계명 포함
+    }
 
-      // ✅ 2. WMTS 타일 레이어 파싱 함수
-      function createLayer(layerName, format='image/png') {
-        return new ol.layer.Tile({
-          source: new ol.source.WMTS({
-            url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-            layer: layerName,
-            matrixSet: 'EPSG:3857',
-            format: format,
-            projection: projection,
-            tileGrid: new ol.tilegrid.WMTS({
-              origin: ol.extent.getTopLeft(projectionExtent),
-              resolutions: resolutions,
-              matrixIds: matrixIds
-            }),
-            style: 'default',
-            requestEncoding: 'REST'
+    // ✅ 2. WMTS 타일 레이어 생성 함수
+    function createLayer(layerName, format='image/png') {
+      return new ol.layer.Tile({
+        source: new ol.source.WMTS({
+          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+          layer: layerName,
+          matrixSet: 'EPSG:3857',
+          format: format,
+          projection: projection,
+          tileGrid: new ol.tilegrid.WMTS({
+            origin: ol.extent.getTopLeft(projectionExtent),
+            resolutions: resolutions,
+            matrixIds: matrixIds
           }),
-          visible: false
-        });
-      }
+          style: 'default',
+          requestEncoding: 'REST'
+        }),
+        visible: false
+      });
+    }
 
-// ✅ 3. 주요 레이어 모듈 선언 (대소문자 + 확장자 교정)
-const baseLayer = createLayer('Base', 'image/png'); 
-baseLayer.setVisible(true);
+    // ✅ 3. 주요 레이어 모듈 선언
+    const baseLayer = createLayer('Base', 'image/png'); baseLayer.setVisible(true);
+    const satLayer = createLayer('Satellite', 'image/jpg'); // 항공사진은 반드시 .jpg
+    const grayLayer = createLayer('Gray', 'image/png');
+    const midnightLayer = createLayer('Midnight', 'image/png');
+    const hybridLayer = createLayer('Hybrid', 'image/png');
+    const terrainLayer = createLayer('Terrain', 'image/png');
 
-const satLayer = createLayer('Satellite', 'image/jpg'); // 항공사진은 반드시 .jpg
+    const cadLayer = new ol.layer.Image({
+      source: new ol.source.ImageWMS({
+        url: 'https://api.vworld.kr/req/wms',
+        params: {
+          'LAYERS': 'LT_C_ADASRATODO',
+          'STYLES': 'LT_C_ADASRATODO',
+          'KEY': CONFIG.API_KEY,
+          'FORMAT': 'image/png',
+          'TRANSPARENT': 'TRUE'
+        },
+        serverType: 'geoserver',
+        projection: projection
+      }),
+      visible: false
+    });
 
-const cadLayer = new ol.layer.Image({
-  source: new ol.source.ImageWMS({
-    url: 'https://api.vworld.kr/req/wms',
-    params: {
-      'LAYERS': 'LT_C_ADASRATODO',   // 지적도 레이어 코드
-      'STYLES': 'LT_C_ADASRATODO',
-      'KEY': CONFIG.API_KEY,
-      'FORMAT': 'image/png',
-      'TRANSPARENT': 'TRUE'
-    },
-    serverType: 'geoserver',
-    projection: projection
-  }),
-  visible: false
-});
+    // ✅ 4. 지도 초기화
+    const map = new ol.Map({
+      target: 'map',
+      layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([126.9780, 37.5665]),
+        zoom: 7
+      })
+    });
 
-const grayLayer = createLayer('Gray', 'image/png');       
-const midnightLayer = createLayer('Midnight', 'image/png'); 
-const hybridLayer = createLayer('Hybrid', 'image/png');
-const terrainLayer = createLayer('Terrain', 'image/png');
+    // ✅ 5. 검색 엔진 (도로명/지번/아파트명)
+    function searchAddress() {
+      const keywordEl = document.getElementById('searchKeyword');
+      if (!keywordEl) return; // ◀ 존재하지 않는 DOM 참조 방지
+      const keyword = keywordEl.value.trim();
+      if (!keyword) { alert("검색어를 입력해 주세요."); return; }
 
-
-      // ✅ 4. 지도 인터페이스 최적화 빌드 (초기 줌 11로 로딩 분산 완화)
-      const map = new ol.Map({
-        target: 'map',
-        layers: [baseLayer, satLayer, cadLayer, grayLayer, midnightLayer, hybridLayer, terrainLayer],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([126.9780, 37.5665]), // 대한민국 서울 중심
-          zoom: 7 
+      // 1차: 도로명 검색
+      fetch(`https://api.vworld.kr/req/search?service=search&version=2.0&request=search&key=${CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+            const item = data.response.result.items[0];
+            map.getView().animate({
+              center: ol.proj.fromLonLat([parseFloat(item.point.x), parseFloat(item.point.y)]),
+              zoom: 17,
+              duration: 700
+            });
+          } else {
+            // 2차: 지번 검색
+            return fetch(`https://api.vworld.kr/req/search?service=search&version=2.0&request=search&key=${CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
+          }
         })
-      });
+        .then(res => res ? res.json() : null)
+        .then(data => {
+          if (!data) return;
+          if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
+            const item = data.response.result.items[0];
+            map.getView().animate({
+              center: ol.proj.fromLonLat([parseFloat(item.point.x), parseFloat(item.point.y)]),
+              zoom: 17,
+              duration: 700
+            });
+          } else {
+            alert("검색 결과가 없습니다. 도로명, 아파트명 혹은 지번을 정확히 적어주세요.");
+          }
+        })
+        .catch(err => alert("검색 연동 실패: " + err.message));
+    }
 
-      // ✅ 5. 레이어 스위처 체크박스 상호작용 등록
-      document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-      document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-      document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-      document.getElementById('grayLayer').addEventListener('change', e => grayLayer.setVisible(e.target.checked));
-      document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-      document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-      document.getElementById('terrainLayer').addEventListener('change', e => terrainLayer.setVisible(e.target.checked));
+    // ✅ 6. 검색 버튼/엔터키 이벤트 연결
+    const searchBtn = document.getElementById('searchBtn');
+    const searchKeyword = document.getElementById('searchKeyword');
+    if (searchBtn) searchBtn.addEventListener('click', searchAddress);
+    if (searchKeyword) searchKeyword.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchAddress(); });
 
-      // ✅ 6. 지도 좌표 클릭 공간정보 질의 핸들러
-      map.on('click', function(evt) {
-        const coord = ol.proj.toLonLat(evt.coordinate);
-        const lon = coord[0];
-        const lat = coord[1];
-
-        const infoPopup = document.getElementById("infoPopup");
-        infoPopup.style.display = "block";
-        infoPopup.style.transform = "none";
-        infoPopup.style.left = "calc(50% - 160px)"; // 중앙 가로폭 보정 배치
-
-        document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 조회 중...";
-        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-
-        loadAddress(lon, lat);
-        loadLandBuilding(lon, lat);
-        loadLandUse(lon, lat);
-        loadRealEstate(lon, lat);
-      });
-
-      // 📍 역지오코딩 (위경도 -> 도로명/지번 매핑)
-      function loadAddress(lon, lat) {
-        fetch(`https://vworld.kr{CONFIG.API_KEY}&point=${lon},${lat}&type=both&format=json`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.response?.status === "OK" && data.response.result?.length > 0) {
-              document.getElementById("addressInfo").innerHTML = `<b>📍 주소:</b> ${data.response.result[0].text}`;
-            } else {
-              document.getElementById("addressInfo").innerHTML = "<b>📍 주소:</b> 데이터가 없는 행정구역";
-            }
-          })
-          .catch(err => document.getElementById("addressInfo").innerHTML = "<b>📍 주소 오류:</b> " + err.message);
-      }
-
-      // 🏢 표표형 건물정보 패치 (인덱스 에러 철저 방어)
-      function loadLandBuilding(lon, lat) {
-        fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
-          .then(res => res.json())
-          .then(data => {
-            const features = data.response?.result?.featureCollection?.features;
-            if (features && features.length > 0) {
-              const props = features[0].properties;
-              document.getElementById("landBuildingInfo").innerHTML = `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '명칭 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
-            } else {
-              document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
-            }
-          })
-          .catch(err => document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message);
-      }
-
-      // 📜 국토부 표준 데이터 용도지역 연계
-      function loadLandUse(lon, lat) {
-        fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
-          .then(res => res.json())
-          .then(data => {
-            const features = data.response?.result?.featureCollection?.features;
-            if (features && features.length > 0) {
-              document.getElementById("landUseInfo").innerHTML = `<b>📜 토지 이용</b><br>용도지역: ${features[0].properties.dgm_nm || '-'}`;
-            } else {
-              document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 심사 승인 대기 중";
-            }
-          })
-          .catch(err => document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message);
-      }
-
-      // 💰 개별공시지가 연계
-      function loadRealEstate(lon, lat) {
-        fetch(`https://vworld.kr{CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
-          .then(res => res.json())
-          .then(data => {
-            const features = data.response?.result?.featureCollection?.features;
-            if (features && features.length > 0) {
-              const props = features[0].properties;
-              const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
-              document.getElementById("realEstateInfo").innerHTML = `<b>💰 개별공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>지가(㎡당): ${formattedPrice}`;
-            } else {
-              document.getElementById("realEstateInfo").innerHTML = "<b>💰 개별공시지가:</b> 심사 승인 대기 중";
-            }
-          })
-          .catch(err => document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message);
-      }
-
-      // ✅ 7. 통합 키워드/아파트명 검색 처리 엔진
-      function searchAddress() {
-        const keyword = document.getElementById('searchKeyword').value.trim();
-        if (!keyword) { alert("검색어를 입력해 주세요."); return; }
-
-        fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=road&format=json`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-              const item = data.response.result.items[0];
-              map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(item.point.x), parseFloat(item.point.y)]), zoom: 17, duration: 700 });
-            } else {
-              return fetch(`https://vworld.kr{CONFIG.API_KEY}&query=${encodeURIComponent(keyword)}&type=address&category=parcel&format=json`);
-            }
-          })
-          .then(res => res ? res.json() : null)
-          .then(data => {
-            if (!data) return;
-            if (data.response?.status === "OK" && data.response.result?.items?.length > 0) {
-              const item = data.response.result.items[0];
-              map.getView().animate({ center: ol.proj.fromLonLat([parseFloat(item.point.x), parseFloat(item.point.y)]), zoom: 17, duration: 700 });
-            } else {
-              alert("검색 결과가 없습니다. 도로명, 아파트명 혹은 지번을 정확히 적어주세요.");
-            }
-          })
-          .catch(err => alert("검색 연동 실패: " + err.message));
-      }
-
-      document.getElementById('searchBtn').addEventListener('click', searchAddress);
-      document.getElementById('searchKeyword').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchAddress(); });
-
-      // ✅ 8. 고정밀 모바일 디바이스 GPS 내 위치 매핑
-      document.getElementById('gpsBtn').addEventListener('click', () => {
+    // ✅ 7. GPS 버튼 이벤트
+    const gpsBtn = document.getElementById('gpsBtn');
+    if (gpsBtn) {
+      gpsBtn.addEventListener('click', () => {
         if (!navigator.geolocation) { alert("GPS 미지원 브라우저입니다."); return; }
         navigator.geolocation.getCurrentPosition((pos) => {
-          map.getView().animate({ center: ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]), zoom: 17, duration: 800 });
+          map.getView().animate({
+            center: ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]),
+            zoom: 17,
+            duration: 800
+          });
         }, (err) => alert("위치 접근 실패: " + err.message), { enableHighAccuracy: true, timeout: 5000 });
       });
+    }
 
-      // ✅ 9. 사이드 제어창 패널 토글 연동
-      const closeLayerBtn = document.getElementById('closeLayerBtn');
-      const mapToggleBtn = document.getElementById('mapToggleBtn');
-      const layerSwitcher = document.querySelector('.layer-switcher');
-
+    // ✅ 8. 사이드 패널 토글
+    const closeLayerBtn = document.getElementById('closeLayerBtn');
+    const mapToggleBtn = document.getElementById('mapToggleBtn');
+    const layerSwitcher = document.querySelector('.layer-switcher');
+    if (closeLayerBtn && mapToggleBtn && layerSwitcher) {
       closeLayerBtn.addEventListener('click', () => { layerSwitcher.style.display = 'none'; mapToggleBtn.classList.add('show'); });
       mapToggleBtn.addEventListener('click', () => { layerSwitcher.style.display = 'block'; mapToggleBtn.classList.remove('show'); });
+    }
 
-      // ✅ 10. 결과 팝업창 마우스/터치 드래그 보정 제어 구조
-      const infoPopup = document.getElementById("infoPopup");
+    // ✅ 9. 결과 팝업 드래그 제어
+    const infoPopup = document.getElementById("infoPopup");
+    if (infoPopup) {
       let isDraggingPopup = false, offsetXPopup, offsetYPopup;
-
       function startDrag(clientX, clientY) {
         isDraggingPopup = true;
         const rect = infoPopup.getBoundingClientRect();
@@ -396,11 +320,9 @@ const terrainLayer = createLayer('Terrain', 'image/png');
         infoPopup.style.left = (clientX - offsetXPopup) + 'px';
         infoPopup.style.top = (clientY - offsetYPopup) + 'px';
       }
-
       infoPopup.addEventListener('mousedown', (e) => { if(!e.target.classList.contains('close-btn')) startDrag(e.clientX, e.clientY); });
       document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
       document.addEventListener('mouseup', () => isDraggingPopup = false);
-
       infoPopup.addEventListener('touchstart', (e) => { if(!e.target.classList.contains('close-btn')) startDrag(e.touches[0].clientX, e.touches[0].clientY); });
       document.addEventListener('touchmove', (e) => {
         if (isDraggingPopup) {
@@ -409,10 +331,16 @@ const terrainLayer = createLayer('Terrain', 'image/png');
         }
       }, { passive: false });
       document.addEventListener('touchend', () => isDraggingPopup = false);
-    });
+    }
+  });
 
-    // 글로벌 스코프 전용 팝업 강제 오프 핸들러
-    function closeInfoPopup() { document.getElementById("infoPopup").style.display = "none"; }
+    // ✅ 글로벌 팝업 닫기 핸들러
+    function closeInfoPopup() { 
+      const infoPopup = document.getElementById("infoPopup");
+      if (infoPopup) {
+        infoPopup.style.display = "none";
+      }
+    }
   </script>
 </body>
 </html>
