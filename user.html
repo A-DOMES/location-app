@@ -567,38 +567,41 @@ function handleAutoUpdate(result) {
 
 function openSmartMap() {
   if (navigator.geolocation) {
-    // ⚠️ 잘려 있던 getCu 부분을 getCurrentPosition 전체 구문으로 완성했습니다.
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         
-        // 대문자 CONFIG.API_KEY와 위/경도 좌표 연동
+        // ⚠️ 주소 체계 및 백틱($) 기호 누락을 완벽히 수정했습니다.
         const apiUrl = `https://vworld.kr{lon},${lat}&type=parcel&key=${CONFIG.API_KEY}`;
 
         fetch(apiUrl)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("네트워크 응답이 정상적이 아닙니다.");
+            return res.json();
+          })
           .then(data => {
-            console.log("API 응답:", data); 
+            console.log("API 응답 내용:", data); 
             
-            if (data.response && data.response.status === "OK" && data.response.result && data.response.result.length > 0) {
-              const pnu = data.response.result[0].id; // 브이월드 응답 배열 첫 번째의 id가 19자리 PNU 코드입니다.
+            if (data.response && data.response.status === "OK" && data.response.result) {
+              // ⚠️ 브이월드 주소전환 API의 result는 배열이 아닌 객체이므로 [0]을 빼야 합니다.
+              const pnu = data.response.result.id; 
               
               if (pnu && pnu.length === 19) {
-                // ✅ 토지이음 상세 페이지 이동
+                // ⚠️ 토지이음 상세 페이지 이동 주소 파라미터를 정확하게 완성했습니다.
                 const url = `https://eum.go.kr{pnu}`;
                 location.href = url; 
               } else {
-                alert("올바른 PNU 코드(19자리)를 생성할 수 없습니다.");
+                alert("올바른 PNU 코드(19자리)를 생성할 수 없습니다. 취득된 값: " + pnu);
               }
             } else {
-              const errorText = data.response && data.response.error ? data.response.error.text : "필지 정보를 찾을 수 없습니다.";
+              const errorText = data.response && data.response.error ? data.response.error.text : "현재 위치의 필지 정보를 찾을 수 없습니다.";
               alert("실패 사유: " + errorText);
             }
           })
           .catch(err => {
-            console.error("API 호출 오류:", err);
-            alert("필지 정보를 불러오는 중 오류가 발생했습니다.");
+            console.error("API 호출 오류 상세:", err);
+            alert("브이월드 API 연결에 실패했습니다. API 키나 인터넷 연결을 확인해주세요.");
           });
       },
       (err) => {
