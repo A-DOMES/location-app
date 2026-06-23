@@ -471,32 +471,25 @@ function handleAutoUpdate(result) {
 }
 
 
-    // ✅ 국토정보 앱/웹을 현재 위치 기반으로 열어주는 함수
-    function openSmartMap() {
-      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent); // 모바일 환경 감지
-      if (isMobile) {
-        // ✅ 모바일일 경우: 앱 딥링크 또는 스토어 연결
-        window.location.href = "market://details?id=kr.go.ngii.smartmap";
-        // iOS 예시: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
-      } else {
-        // ✅ PC 환경일 경우: 현재 위치 기반으로 웹 연결
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const lat = pos.coords.latitude;   // 위도
-              const lon = pos.coords.longitude;  // 경도
-              const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&x=${lon}&y=${lat}`;
-              window.open(url, "_blank");        // 새 탭에서 국토정보 열기
-            },
-            (err) => {
-              alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
-            }
-          );
-        } else {
-          alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
-        }
+// ✅ 국토정보 앱/웹을 현재 위치 기반으로 열어주는 함수
+function openSmartMap() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;   // 위도
+        const lon = pos.coords.longitude;  // 경도
+        // ✅ 모바일/PC 모두 동일하게 웹 URL로 연결
+        const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&x=${lon}&y=${lat}`;
+        window.open(url, "_blank");        // 새 탭에서 국토정보 열기
+      },
+      (err) => {
+        alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
       }
-    }
+    );
+  } else {
+    alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+  }
+}
 
   
 // ✅ 서비스워커 등록
