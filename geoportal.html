@@ -409,15 +409,14 @@ navigator.geolocation.watchPosition((pos) => {
   // 현재 위치 좌표 변환 (EPSG:4326 → EPSG:3857)
   myCoord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
 
-  // ✅ 내 위치 마커 (눈물방울 PNG 아이콘 사용)
-  // OpenLayers에서는 path 직접 지정 불가 → PNG/SVG 파일을 불러와야 함
+  // ✅ 내 위치 마커 (루트에 있는 btn-current.png 사용)
   const marker = new ol.Feature(new ol.geom.Point(myCoord));
   marker.setId("myMarker");
   marker.setStyle(new ol.style.Style({
     image: new ol.style.Icon({
-      src: 'http://map.vworld.kr/images/ol3/marker_red.png', // 브이월드 제공 눈물방울 모양 PNG
-      scale: 1.8,   // 크기 확대 → 레벨7에서도 잘 보임
-      anchor: [0.5, 1] // 아이콘 끝이 좌표에 맞도록 설정
+      src: './btn-current.png', // 루트에 있는 PNG 파일
+      scale: 2.0,               // 크기 확대 → 레벨7에서도 잘 보임
+      anchor: [0.5, 1]          // 아이콘 끝이 좌표에 맞도록 설정
     })
   }));
 
