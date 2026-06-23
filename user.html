@@ -556,28 +556,29 @@ function handleAutoUpdate(result) {
   }
 }
 
-function openSmartMap() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        // ✅ 국토부 K-Geo 지도 시스템에 위도, 경도를 직접 파라미터로 주입하여 한필지 화면 열기
-        // 별도의 PNU 변환 API가 필요 없으며, 현재 위치 지도가 바로 열립니다.
-        const url = `https://kgeop.go.kr{lat}&lon=${lon}`;
-        
-        location.href = url; // 현재 창 또는 window.open(url, "_blank");
-      },
-      (err) => {
-        alert("현재 위치를 가져올 수 없습니다.");
-      }
-    );
-  } else {
-    alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+function handleAutoUpdate(result) {
+  console.log("[DEBUG] autoUpdate 응답:", result);
+  const phone = document.getElementById("phone").value;
+  const dataObj = parseArrayResponse(result, phone);
+  if (dataObj) {
+    console.log("[DEBUG] 최신 데이터:", dataObj);
   }
 }
 
+function openSmartMap() {
+  // 모바일 환경 감지
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // ✅ 앱 딥링크 시도
+    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
+    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+  } else {
+    // ✅ PC에서는 웹 서비스로 연결
+    window.open("https://map.ngii.go.kr", "_blank");
+  }
+}
+  
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
 //  navigator.serviceWorker.register("service-worker.js");
