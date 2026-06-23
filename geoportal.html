@@ -470,22 +470,24 @@
   
     // ✅ 레이더(부채꼴)
     const angle = 90, radius = 200;
-    const points = [myCoord];
+    const points = [myCoord]; // 마커 좌표를 시작점으로 사용
+    
     for (let a = -angle/2; a <= angle/2; a += 5) {
       const rad = a * Math.PI / 180;
       const dx = radius * Math.cos(rad);
       const dy = radius * Math.sin(rad);
-      const dest = [
-        pos.coords.longitude + dx / 111000,
-        pos.coords.latitude + dy / 111000
-      ];
-      points.push(ol.proj.fromLonLat(dest));
+    
+      // EPSG:3857 좌표계에서 직접 오프셋 적용
+      const dest = [myCoord[0] + dx, myCoord[1] + dy];
+      points.push(dest);
     }
+    
     const radar = new ol.Feature(new ol.geom.Polygon([points]));
     radar.setStyle(new ol.style.Style({
       stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
       fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
     }));
+
   
     // ---------------------- 레이어 갱신 ----------------------
     positionLayer.getSource().clear();
