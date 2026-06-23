@@ -15,76 +15,168 @@
 
     /* ✅ 상단 헤더 */
     .page-header {
-      position:fixed; top:0; left:0;
+      position:fixed;   /* 화면 최상단에 고정 */
+      top:0; left:0;
       width:100%; height:48px;
       background:#1976d2; color:#fff;
       display:flex; align-items:center;
       font-size:18px; font-weight:bold;
-      padding:0 10px;
-      z-index:2000;
+      margin:0; padding:0 10px;
+      z-index:2000;     /* 모달창보다 위에 표시 */
     }
+    .header-left { display:flex; align-items:center; }
     .header-title {
-      position:absolute; left:50%; transform:translateX(-50%);
+      position:absolute;
+      left:50%; transform:translateX(-50%);
       font-size:16px; text-align:center;
     }
+
+    /* ✅ 지도보기 버튼 */
+    #mapToggleBtn {
+      display:flex; align-items:center; gap:6px;
+      background:#1976d2; color:#fff;
+      border:none; padding:6px 12px;
+      border-radius:12px; font-size:14px;
+      cursor:pointer; opacity:0;
+      transition:opacity 0.4s ease;
+    }
+    #mapToggleBtn.show { opacity:1; }
+    #mapToggleBtn svg { flex-shrink:0; }
 
     /* ✅ 지도 영역 */
     #map {
       width:100%;
-      height:calc(100vh - 48px);
-      margin-top:48px;
+      height:calc(100vh - 48px); /* 헤더 높이만큼 빼줌 */
+      margin-top:48px;           /* 헤더 밑에서 시작 */
       position:relative;
       z-index:1;
     }
 
-    /* ✅ 레이어 선택 모달창 */
+    /* ✅ 레이어 선택 모달창 (드래그 기능 연동 보정 완료) */
     .layer-switcher {
-      position:absolute; top:50px; left:20%;
-      background:rgba(255,255,255,0.85);
-      padding:12px; border:1px solid #ccc; border-radius:8px;
-      font-size:15px; z-index:1000; width:110px;
-      cursor: move;
+      position:absolute;
+      top:50px;
+      left:20%;                      /* 화면 왼쪽 기준 20% 위치에 배치 */
+      transform: none;               /* ⚠️ 드래그 튕김 방지를 위해 translateX 제거 */
+      margin-left: -55px;            /* 가로폭 110px의 정확히 절반을 빼서 초기 정렬 보정 */
+      background:rgba(255,255,255,0.85); /* ✅ 반투명 (기존보다 투명도 강화) */
+      padding:12px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:15px;
+      z-index:1000;
+      width:110px;                   /* ✅ 불필요한 레이어가 빠져 110px로 최적화 */
+      max-width:90%;                 /* ✅ 모바일에서는 자동 줄어듦 */
+      cursor: move;                  /* ✅ 상하좌우 마우스 드래그 포인터 추가 */
+    }    
+    .layer-header { 
+      position:relative; 
+      margin-bottom:8px; 
+    } 
+    .layer-title {
+      text-align:center;      /* ✅ 타이틀만 중앙 정렬 */
+      font-weight:bold;
+      font-size:18px;
+      color:#1976d2;
     }
-    .layer-title { text-align:center; font-weight:bold; font-size:18px; color:#1976d2; }
 
-    /* ✅ 조회결과 팝업 */
-    #infoPopup {
-      position: absolute; top: 60px; left: 50%;
-      transform: translateX(-50%);
-      width: 320px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #ccc; border-radius: 8px;
-      padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 2000; cursor: move;
+    .close-btn {
+      position:absolute;
+      top:0;
+      right:0;   /* ✅ 모달창 우측 상단 끝부분 고정 */
+      width:24px; height:24px;
+      border-radius:50%;
+      background:rgba(25,118,210,0.2);
+      border:none; color:#1976d2;
+      font-size:16px; font-weight:bold;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
     }
-    #infoPopup .close-btn {
-      position: absolute; top: 8px; right: 8px;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #f44336; color: #fff; font-weight: bold;
-      text-align: center; line-height: 28px; cursor: pointer;
+    
+    .layer-items label {
+      display:flex; align-items:center;
+      margin:4px 0;
     }
+    
+    .layer-items input[type="checkbox"] {
+      transform:scale(1.2);
+      margin-right:6px;
+    }
+
+
+/* ✅ 조회결과 모달창 */
+#infoPopup {
+  position: absolute;
+  top: 60px;          /* ✅ 화면 상단에서 조금 내려오게 */
+  left: 50%;
+  transform: translateX(-50%); /* ✅ 가로 중앙 정렬만 */
+  width: 320px;
+  background: rgba(255, 255, 255, 0.9); /* ✅ 반투명 */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 2000;
+  cursor: move;   /* ✅ 드래그 가능 표시 */
+}
+
+/* 닫기 버튼 */
+#infoPopup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;          /* ✅ 원형 버튼 */
+  background: #f44336;         /* 빨간색 배경 */
+  color: #fff;                 /* 흰색 X */
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#infoPopup .close-btn:hover {
+  background: #d32f2f;         /* hover 시 진한 빨강 */
+}
+
   </style>
 </head>
 <body>
   <!-- ✅ 상단 헤더 -->
   <header class="page-header">
+    <div class="header-left">
+      <button id="mapToggleBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
+          <path d="M9 3l-7 2v16l7-2 6 2 7-2V3l-7 2-6-2zm0 2.18l4 1.33v12.31l-4-1.33V5.18zm-2 .66v12.31l-3 1V6.84l3-1zm10 0v12.31l-3 1V6.84l3-1z"/>
+        </svg>
+        <span>지도항목</span>
+      </button>
+    </div>
     <div class="header-title">국토부 지도</div>
   </header>
 
   <!-- ✅ 지도 영역 -->
   <div id="map"></div>
 
-  <!-- ✅ 레이어 선택 모달창 -->
+  <!-- ✅ 항목선택 모달창 -->
   <div class="layer-switcher">
-    <div class="layer-title">항목선택</div>
-    <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
-    <label><input type="checkbox" id="satLayer"> 항공사진</label>
-    <label><input type="checkbox" id="cadLayer"> 지적도</label>
-    <label><input type="checkbox" id="midnightLayer"> Midnight</label>
-    <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
+    <div class="layer-header">
+      <span class="layer-title">항목선택</span>
+      <button id="closeLayerBtn" class="close-btn">✕</button>
+    </div>
+    <div class="layer-items">
+      <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
+      <label><input type="checkbox" id="satLayer"> 항공사진</label>
+      <label><input type="checkbox" id="cadLayer"> 지적도</label>
+      <label><input type="checkbox" id="midnightLayer"> Midnight</label>
+      <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
+      </div>
   </div>
 
-  <!-- ✅ 조회결과 팝업 -->
+  <!-- ✅ 팝업 영역 -->
   <div id="infoPopup" style="display:none;">
     <div class="close-btn" onclick="closeInfoPopup()">×</div>
     <h3>조회결과</h3>
@@ -95,65 +187,216 @@
 
   <!-- ✅ API Key 설정 -->
   <script src="config.js"></script>
+  
+<script>
+// ✅ WMTS 공통 설정
+const projection = ol.proj.get('EPSG:3857');
+const projectionExtent = projection.getExtent();
+const size = ol.extent.getWidth(projectionExtent) / 256;
+const resolutions = new Array(19);
+const matrixIds = new Array(19);
+for (let z = 0; z < 19; ++z) {
+  resolutions[z] = size / Math.pow(2, z);
+  matrixIds[z] = z;
+}
 
-  <!-- ✅ 국토부 지도 스크립트 -->
-  <script>
-    // ---------------------- WMTS 공통 설정 ----------------------
-    const projection = ol.proj.get('EPSG:3857');
-    const projectionExtent = projection.getExtent();
-    const size = ol.extent.getWidth(projectionExtent) / 256;
-    const resolutions = new Array(19);
-    const matrixIds = new Array(19);
-    for (let z = 0; z < 19; ++z) {
-      resolutions[z] = size / Math.pow(2, z);
-      matrixIds[z] = z;
-    }
-
-    // ✅ WMTS 레이어 생성 함수
-    function createLayer(layerName, format='image/png') {
-      return new ol.layer.Tile({
-        source: new ol.source.WMTS({
-          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-          layer: layerName,
-          matrixSet: 'EPSG:3857',
-          format: format,
-          projection: projection,
-          tileGrid: new ol.tilegrid.WMTS({
-            origin: ol.extent.getTopLeft(projectionExtent),
-            resolutions: resolutions,
-            matrixIds: matrixIds
-          }),
-          style: 'default',
-          requestEncoding: 'REST'
-        }),
-        visible: false
-      });
-    }
-
-  // ✅ 주요 레이어 정의
-  const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: { 'LAYERS': 'LT_C_ADASRATODO', 'STYLES': 'LT_C_ADASRATODO', 'KEY': CONFIG.API_KEY, 'FORMAT': 'image/png', 'TRANSPARENT': 'TRUE' },
-      serverType: 'geoserver', projection: projection
+// ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+function createLayer(layerName, format='image/png') {
+  return new ol.layer.Tile({
+    source: new ol.source.WMTS({
+      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      layer: layerName,
+      matrixSet: 'EPSG:3857',
+      format: format,
+      projection: projection,
+      tileGrid: new ol.tilegrid.WMTS({
+        origin: ol.extent.getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds
+      }),
+      style: 'default',
+      requestEncoding: 'REST'
     }),
     visible: false
   });
-  const midnightLayer = createLayer('midnight');
-  const hybridLayer = createLayer('Hybrid');
-  
-  // ✅ 지도 초기화
-  const map = new ol.Map({
-    target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-    view: new ol.View({
-      center: ol.proj.fromLonLat([126.9780, 37.5665]),
-      zoom: 7
+}
+
+// ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
+const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+const satLayer = createLayer('Satellite', 'image/jpeg');
+const cadLayer = new ol.layer.Image({
+  source: new ol.source.ImageWMS({
+    url: 'https://api.vworld.kr/req/wms',
+    params: {
+      'LAYERS': 'LT_C_ADASRATODO',
+      'STYLES': 'LT_C_ADASRATODO',
+      'KEY': CONFIG.API_KEY,
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE'
+    },
+    serverType: 'geoserver',
+    projection: projection
+  }),
+  visible: false
+});
+const midnightLayer = createLayer('midnight'); 
+const hybridLayer = createLayer('Hybrid');     
+
+// ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+const map = new ol.Map({
+  target: 'map',
+  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+    zoom: 7 
+  })
+});
+
+// ✅ 체크박스 이벤트 → 레이어 on/off
+document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+
+// ✅ 팝업 닫기 함수
+function closeInfoPopup() {
+  document.getElementById("infoPopup").style.display = "none";
+}
+
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
+map.on('click', function(evt) {
+  const coord = ol.proj.toLonLat(evt.coordinate);
+  const lon = coord[0];
+  const lat = coord[1];
+
+  // 최초 오픈 시 튕김 방지를 위해 transform 스타일 제거하고 정중앙 계산 배치
+  const infoPopup = document.getElementById("infoPopup");
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)"; // 팝업 가로폭 320px의 절반을 빼서 중앙 배치
+
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+
+  loadLandBuilding(lon, lat);
+  loadLandUse(lon, lat);
+  loadRealEstate(lon, lat);
+});
+
+// ✅ 1. 건물 정보 조회 (기본 건물 데이터)
+function loadLandBuilding(lon, lat) {
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_BLDG&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        document.getElementById("landBuildingInfo").innerHTML =
+          `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
+      } else {
+        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
+      }
     })
-  });
-  
+    .catch(err => {
+      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message;
+    });
+}
+
+// ✅ 2. 토지이용 정보 조회 (연동 규격 코드 LT_C_UQ111 용도지역으로 수정)
+function loadLandUse(lon, lat) {
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_UQ111&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        document.getElementById("landUseInfo").innerHTML =
+          `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
+      } else {
+        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
+      }
+    })
+    .catch(err => {
+      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message;
+    });
+}
+
+// ✅ 3. 부동산 정보 조회 (연동 규격 코드 LT_C_PD01 개별공시지가로 수정)
+function loadRealEstate(lon, lat) {
+  fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&geometry=POINT(${lon} ${lat})&data=LT_C_PD01&format=json`)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.response?.result?.featureCollection?.features;
+      if (features && features.length > 0) {
+        const props = features[0].properties;
+        const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
+        document.getElementById("realEstateInfo").innerHTML =
+          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
+      } else {
+        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
+      }
+    })
+    .catch(err => {
+      document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message;
+    });
+}
+
+// ✅ 레이어 제어 UI 토글 기능
+const closeBtn = document.getElementById('closeLayerBtn');
+const mapToggleBtn = document.getElementById('mapToggleBtn');
+const layerSwitcher = document.querySelector('.layer-switcher');
+
+closeBtn.addEventListener('click', () => {
+  layerSwitcher.style.display = 'none';
+  mapToggleBtn.classList.add('show');
+});
+
+mapToggleBtn.addEventListener('click', () => {
+  layerSwitcher.style.display = 'block';
+  mapToggleBtn.classList.remove('show');
+});
+
+// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일 튕김 현상 완전 보정)
+const infoPopup = document.getElementById("infoPopup");
+let isDraggingPopup = false, offsetXPopup, offsetYPopup;
+
+function startDrag(clientX, clientY) {
+  isDraggingPopup = true;
+  const rect = infoPopup.getBoundingClientRect();
+  offsetXPopup = clientX - rect.left;
+  offsetYPopup = clientY - rect.top;
+}
+
+function moveDrag(clientX, clientY) {
+  if (!isDraggingPopup) return;
+  infoPopup.style.left = (clientX - offsetXPopup) + 'px';
+  infoPopup.style.top = (clientY - offsetYPopup) + 'px';
+}
+
+// PC 이벤트 바인딩
+infoPopup.addEventListener('mousedown', (e) => {
+  if(e.target.classList.contains('close-btn')) return; // 닫기버튼 클릭 시 드래그 방지
+  startDrag(e.clientX, e.clientY);
+});
+document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingPopup = false);
+
+// 모바일 터치 이벤트 바인딩
+infoPopup.addEventListener('touchstart', (e) => {
+  if(e.target.classList.contains('close-btn')) return;
+  const touch = e.touches[0];
+  startDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingPopup) return;
+  const touch = e.touches[0];
+  moveDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingPopup = false);
+
+
 // ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
 map.addLayer(positionLayer);
@@ -163,29 +406,26 @@ let myCoord = null;
 
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition((pos) => {
-  // 현재 위치 좌표 변환 (EPSG:4326 → EPSG:3857)
+  // 현재 위치 좌표 변환
   myCoord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
 
-  // ✅ 눈물방울 모양 SVG 정의
+  // ✅ 눈물방울 모양 SVG 정의 및 인코딩
   const svgMarker = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <!-- 눈물방울 모양 외곽 -->
       <path fill="red" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-      <!-- 안쪽 흰색 원 -->
       <circle cx="12" cy="9" r="3" fill="white"/>
     </svg>
   `;
-  // SVG 문자열을 안전하게 인코딩
   const encodedSvg = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgMarker);
 
-  // ✅ 내 위치 마커 (구글 지도 스타일 눈물방울)
+  // ✅ 내 위치 마커 (눈물방울 모양)
   const marker = new ol.Feature(new ol.geom.Point(myCoord));
   marker.setId("myMarker");
   marker.setStyle(new ol.style.Style({
     image: new ol.style.Icon({
-      src: encodedSvg,       // 인코딩된 SVG 데이터 URI
-      scale: 2.0,            // 크기 확대 → 레벨7에서도 잘 보임
-      anchor: [0.5, 1]       // 눈물방울 끝이 좌표에 맞도록 설정
+      src: encodedSvg,
+      scale: 2.0,       // 크기 확대 → 레벨7에서도 잘 보임
+      anchor: [0.5, 1]  // 눈물방울 끝이 좌표에 맞도록 설정
     })
   }));
 
@@ -236,7 +476,6 @@ navigator.geolocation.watchPosition((pos) => {
 map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
     if (feature.getId() === "myMarker" && myCoord) {
-      // 마커 클릭 시 해당 위치로 이동 + 확대
       map.getView().setCenter(myCoord);
       map.getView().setZoom(15);
     }
@@ -245,14 +484,12 @@ map.on("singleclick", function(evt) {
 
 // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
 map.getViewport().addEventListener("contextmenu", function(evt) {
-  evt.preventDefault(); // 기본 우클릭 메뉴 방지
-  // 기본 좌표(서울)로 이동 + 줌 레벨7 복귀
+  evt.preventDefault();
   map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
   map.getView().setZoom(7);
 });
 
+</script>
 
-
-  </script>
 </body>
 </html>
