@@ -258,10 +258,10 @@
       
         <!-- 국토정보 버튼 -->
         <div style="display:flex; flex-direction:column; align-items:center;">
-          <a href="https://map.ngii.go.kr" target="_blank" id="guktoBtn">
+          <button id="guktoBtn" onclick="openSmartMap()">
             <img src="gukto-logo.png" alt="국토정보 버튼" class="map-btn">
-          </a>
-          <span style="margin-top:5px; font-size:18px; color:#1565c0; font-weight:bold; text-align:center; position:relative; left:8px;">
+          </button>
+          <span style="margin-top:5px; font-size:18px; color:#1565c0; font-weight:bold; position:relative; left:2px;">
             국토정보
           </span>
         </div>
@@ -557,17 +557,44 @@ function handleAutoUpdate(result) {
   }
 }
 
+// 국토정보 앱/웹을 현재 위치 기반으로 열어주는 함수
 function openSmartMap() {
-  // 모바일 환경 감지
+  // ✅ 모바일 환경 감지 (Android, iPhone, iPad 여부 확인)
   const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   if (isMobile) {
-    // ✅ 앱 딥링크 시도
-    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
-    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+    // ✅ 모바일일 경우: 앱 딥링크 또는 스토어 연결
+    // Android → 구글 플레이 스토어의 국토정보 앱 페이지로 이동
+    window.location.href = "market://details?id=kr.go.ngii.smartmap";
+
+    // iOS라면 아래 코드 사용 (App Store 연결)
+    // window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
   } else {
-    // ✅ PC에서는 웹 서비스로 연결
-    window.open("https://map.ngii.go.kr", "_blank");
+    // ✅ PC 환경일 경우: 웹 서비스로 연결
+    // 현재 위치를 가져와서 국토정보 웹에 좌표 전달
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;   // 위도
+          const lon = pos.coords.longitude;  // 경도
+
+          // 국토정보 플랫폼 URL 구성
+          // mode=parcel → 필지 정보 모드
+          // x=경도, y=위도 → 현재 위치 좌표 전달
+          const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&x=${lon}&y=${lat}`;
+
+          // 새 탭에서 국토정보 플랫폼 열기
+          window.open(url, "_blank");
+        },
+        (err) => {
+          // 위치 권한 거부 또는 오류 발생 시 안내
+          alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
+        }
+      );
+    } else {
+      // 브라우저가 위치 정보를 지원하지 않는 경우
+      alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+    }
   }
 }
   
