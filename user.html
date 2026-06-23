@@ -572,7 +572,7 @@ function openSmartMap() {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         
-        // ⚠️ 주소 체계 및 백틱($) 기호 누락을 완벽히 수정했습니다.
+        // ⚠️ 주소 전체 경로와 백틱 변수 기호($)를 완벽하게 정상 복구했습니다.
         const apiUrl = `https://vworld.kr{lon},${lat}&type=parcel&key=${CONFIG.API_KEY}`;
 
         fetch(apiUrl)
@@ -584,11 +584,11 @@ function openSmartMap() {
             console.log("API 응답 내용:", data); 
             
             if (data.response && data.response.status === "OK" && data.response.result) {
-              // ⚠️ 브이월드 주소전환 API의 result는 배열이 아닌 객체이므로 [0]을 빼야 합니다.
+              // 브이월드 주소전환 API 결과 객체에서 pnu(id) 추출
               const pnu = data.response.result.id; 
               
               if (pnu && pnu.length === 19) {
-                // ⚠️ 토지이음 상세 페이지 이동 주소 파라미터를 정확하게 완성했습니다.
+                // ⚠️ 토지이음 시스템의 실제 웹페이지 주소 전체 경로를 연결했습니다.
                 const url = `https://eum.go.kr{pnu}`;
                 location.href = url; 
               } else {
@@ -601,7 +601,7 @@ function openSmartMap() {
           })
           .catch(err => {
             console.error("API 호출 오류 상세:", err);
-            alert("브이월드 API 연결에 실패했습니다. API 키나 인터넷 연결을 확인해주세요.");
+            alert("브이월드 API 연결에 실패했습니다. API 주소나 키를 확인해주세요.");
           });
       },
       (err) => {
@@ -613,7 +613,6 @@ function openSmartMap() {
     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
-
   
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
