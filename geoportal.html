@@ -415,7 +415,7 @@ navigator.geolocation.watchPosition((pos) => {
   marker.setStyle(new ol.style.Style({
     image: new ol.style.Icon({
       src: './btn-current.png', // 루트에 있는 PNG 파일
-      scale: 0.02,              // 크기 확대 → 레벨7에서도 잘 보임
+      scale: 0.1,              // 크기 확대 → 레벨7에서도 잘 보임
       anchor: [0.5, 1]          // 아이콘 끝이 좌표에 맞도록 설정
     })
   }));
