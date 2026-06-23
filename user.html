@@ -282,23 +282,7 @@ input[type="text"] {
     국토정보
   </span>
 </div>
-
-<script>
-function openSmartMap() {
-  // 모바일 환경 감지
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // ✅ 앱 딥링크 시도
-    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
-    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
-  } else {
-    // ✅ PC에서는 웹 서비스로 연결
-    window.open("https://map.ngii.go.kr", "_blank");
-  }
-}
-</script>
-  
+ 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
 
