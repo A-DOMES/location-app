@@ -562,17 +562,15 @@ function openSmartMap() {
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        const apiKey = "YOUR_VWORLD_API_KEY"; // config.js에 저장된 브이월드 키 사용
-        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${apiKey}`;
+        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${config.API_KEY}`;
 
         fetch(apiUrl)
           .then(res => res.json())
           .then(data => {
-            if (data.response && data.response.status === "OK") {
-              // 응답에서 PNU 코드 추출
-              const pnu = data.response.result[0].structure.pnu;
+            console.log("API 응답:", data); // 응답 구조 확인
 
-              // ✅ 국토정보 플랫폼 '한 필지 정보' 페이지로 바로 이동
+            if (data.response && data.response.status === "OK" && data.response.result.length > 0) {
+              const pnu = data.response.result[0].structure.pnu; // 응답 구조에 맞게 수정 필요
               const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&pnu=${pnu}`;
               window.open(url, "_blank");
             } else {
@@ -580,7 +578,7 @@ function openSmartMap() {
             }
           })
           .catch(err => {
-            console.error(err);
+            console.error("API 호출 오류:", err);
             alert("필지 정보를 불러오는 중 오류가 발생했습니다.");
           });
       },
@@ -592,6 +590,7 @@ function openSmartMap() {
     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
+
 
 
 // ✅ 서비스워커 등록
