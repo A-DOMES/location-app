@@ -477,7 +477,7 @@
       const dx = radius * Math.cos(rad);
       const dy = radius * Math.sin(rad);
     
-      // EPSG:3857 좌표계에서 직접 오프셋 적용
+      // EPSG:3857 좌표에서 직접 오프셋 적용
       const dest = [myCoord[0] + dx, myCoord[1] + dy];
       points.push(dest);
     }
@@ -487,7 +487,6 @@
       stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
       fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
     }));
-
   
     // ---------------------- 레이어 갱신 ----------------------
     positionLayer.getSource().clear();
