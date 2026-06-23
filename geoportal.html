@@ -402,11 +402,11 @@
   map.addLayer(positionLayer);
   
   let myCoord = null;
-  let smoothCoords = []; // 최근 좌표들을 저장할 배열
+  let smoothCoords = []; // 최근 좌표 저장용 배열
   
   // ---------------------- 스무딩 함수 ----------------------
   function getSmoothedCoord(lat, lng) {
-    // 최근 좌표 배열에 추가
+    // 최근 좌표 추가
     smoothCoords.push([lat, lng]);
     if (smoothCoords.length > 5) smoothCoords.shift(); // 최근 5개만 유지
   
@@ -425,14 +425,14 @@
     // 스무딩된 좌표 계산
     myCoord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
   
-    // ✅ 내 위치 마커 (루트에 있는 btn-current.png 사용)
+    // ✅ 내 위치 마커
     const marker = new ol.Feature(new ol.geom.Point(myCoord));
     marker.setId("myMarker");
     marker.setStyle(new ol.style.Style({
       image: new ol.style.Icon({
         src: './btn-current.png', // 루트에 있는 PNG 파일
         scale: 0.1,               // 작게 표시 → SVG처럼 보임
-        anchor: [0.5, 1]          // 아이콘 끝이 좌표에 맞도록 설정
+        anchor: [0.5, 1]
       })
     }));
   
@@ -488,6 +488,7 @@
     map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
     map.getView().setZoom(7);
   });
+
 
 
 </script>
