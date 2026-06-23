@@ -249,7 +249,7 @@ input[type="text"] {
           <img src="Copilot-map.png" alt="국토부 버튼" class="map-btn">
         </a>
         <span style="margin-top:1px; margin-left:40px; font-size:18px; color:#1565c0; font-weight:bold;">
-          국토부
+          지적도
         </span>
       </div>
     </form>
@@ -273,12 +273,12 @@ input[type="text"] {
   <div id="map"></div>
 </div>
 
-<!-- 국토정보 버튼 -->
-<div class="input-group" style="margin-top:25px; flex-direction:column; align-items:flex-start;">
+<!-- 국토정보 버튼 + 라벨 -->
+<div class="input-group" style="margin-top:25px; flex-direction:row; align-items:center;">
   <button id="guktoBtn" onclick="openSmartMap()">
     <img src="Copilot-map.png" alt="국토정보 버튼" class="map-btn">
   </button>
-  <span style="margin-top:1px; margin-left:40px; font-size:18px; color:#1565c0; font-weight:bold;">
+  <span style="margin-left:15px; font-size:18px; color:#1565c0; font-weight:bold;">
     국토정보
   </span>
 </div>
@@ -579,7 +579,7 @@ function openSmartMap() {
     // ✅ PC에서는 웹 서비스로 연결
     window.open("https://map.ngii.go.kr", "_blank");
   }
- } 
+}
   
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
