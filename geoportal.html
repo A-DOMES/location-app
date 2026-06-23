@@ -154,90 +154,91 @@
     })
   });
   
-  // ---------------------- 내 위치 및 분석용 레이어 ----------------------
-  const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
-  map.addLayer(positionLayer);
-  
-  let pathCoords = [];
-  let myCoord = null; // 내 위치 저장
-  
-  // ---------------------- 내 위치 추적 ----------------------
-  navigator.geolocation.watchPosition((pos) => {
-    myCoord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
-  
-    // ✅ 내 위치 마커 (SVG 아이콘)
-    const marker = new ol.Feature(new ol.geom.Point(myCoord));
-    marker.setId("myMarker");
-    marker.setStyle(new ol.style.Style({
-      image: new ol.style.RegularShape({
-        fill: new ol.style.Fill({ color: "red" }),
-        stroke: new ol.style.Stroke({ color: "white", width: 2 }),
-        points: 4,       // 4면 → 마름모 형태
-        radius: 10,
-        angle: Math.PI / 4
-      })
-    }));
-  
-    // ✅ 원형 버퍼 (100m, 200m)
-    const circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
-    const circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
-    circle100.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
-    }));
-    circle200.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
-    }));
-  
-    // ✅ 이동 궤적(LineString)
-    pathCoords.push(myCoord);
-    const pathFeature = new ol.Feature(new ol.geom.LineString(pathCoords));
-    pathFeature.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'blue', width: 2 })
-    }));
-  
-    // ✅ 레이더(부채꼴)
-    const angle = 90;   // 탐지 각도
-    const radius = 200; // 탐지 반경
-    const points = [myCoord];
-    for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = a * Math.PI / 180;
-      const dx = radius * Math.cos(rad);
-      const dy = radius * Math.sin(rad);
-      const dest = [
-        pos.coords.longitude + dx / 111000,
-        pos.coords.latitude + dy / 111000
-      ];
-      points.push(ol.proj.fromLonLat(dest));
+// ---------------------- 내 위치 및 분석용 레이어 ----------------------
+const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+map.addLayer(positionLayer);
+
+let pathCoords = [];
+let myCoord = null;
+
+// ---------------------- 내 위치 추적 ----------------------
+navigator.geolocation.watchPosition((pos) => {
+  myCoord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+
+  // ✅ 내 위치 마커 (구글 지도 스타일 눈물방울 모양)
+  const marker = new ol.Feature(new ol.geom.Point(myCoord));
+  marker.setId("myMarker");
+  marker.setStyle(new ol.style.Style({
+    image: new ol.style.Icon({
+      src: 'data:image/svg+xml;utf8,' +
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+        '<path fill="red" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>' +
+        '<circle cx="12" cy="9" r="3" fill="white"/>' +
+        '</svg>',
+      scale: 2.0, // 크기 확대 → 레벨7에서도 잘 보임
+      anchor: [0.5, 1] // 눈물방울 끝이 좌표에 맞도록 설정
+    })
+  }));
+
+  // ✅ 원형 버퍼 (100m, 200m)
+  const circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
+  const circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
+  circle100.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+    fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
+  }));
+  circle200.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+    fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
+  }));
+
+  // ✅ 이동 궤적(LineString)
+  pathCoords.push(myCoord);
+  const pathFeature = new ol.Feature(new ol.geom.LineString(pathCoords));
+  pathFeature.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: 'blue', width: 2 })
+  }));
+
+  // ✅ 레이더(부채꼴)
+  const angle = 90, radius = 200;
+  const points = [myCoord];
+  for (let a = -angle/2; a <= angle/2; a += 5) {
+    const rad = a * Math.PI / 180;
+    const dx = radius * Math.cos(rad);
+    const dy = radius * Math.sin(rad);
+    const dest = [
+      pos.coords.longitude + dx / 111000,
+      pos.coords.latitude + dy / 111000
+    ];
+    points.push(ol.proj.fromLonLat(dest));
+  }
+  const radar = new ol.Feature(new ol.geom.Polygon([points]));
+  radar.setStyle(new ol.style.Style({
+    stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
+    fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
+  }));
+
+  // ---------------------- 레이어 갱신 ----------------------
+  positionLayer.getSource().clear();
+  positionLayer.getSource().addFeatures([marker, circle100, circle200, pathFeature, radar]);
+});
+
+// ---------------------- 마커 클릭 시 이동 ----------------------
+map.on("singleclick", function(evt) {
+  map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+    if (feature.getId() === "myMarker" && myCoord) {
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(15);
     }
-    const radar = new ol.Feature(new ol.geom.Polygon([points]));
-    radar.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
-    }));
-  
-    // ---------------------- 레이어 갱신 ----------------------
-    positionLayer.getSource().clear();
-    positionLayer.getSource().addFeatures([marker, circle100, circle200, pathFeature, radar]);
   });
-  
-  // ---------------------- 마커 클릭 시 이동 ----------------------
-  map.on("singleclick", function(evt) {
-    map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-      if (feature.getId() === "myMarker" && myCoord) {
-        map.getView().setCenter(myCoord);
-        map.getView().setZoom(15); // 원하는 확대 레벨
-      }
-    });
-  });
-  
-  // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
-  map.getViewport().addEventListener("contextmenu", function(evt) {
-    evt.preventDefault(); // 기본 우클릭 메뉴 방지
-    map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665])); // 기본 좌표 (서울)
-    map.getView().setZoom(7); // 레벨7로 복귀
-  });
+});
+
+// ---------------------- 우클릭 시 레벨7 복귀 ----------------------
+map.getViewport().addEventListener("contextmenu", function(evt) {
+  evt.preventDefault();
+  map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
+  map.getView().setZoom(7);
+});
 
   </script>
 </body>
