@@ -557,21 +557,18 @@ function handleAutoUpdate(result) {
   }
 }
 
-// 국토정보 앱/웹을 현재 위치 기반으로 열어주는 함수
 function openSmartMap() {
-  // ✅ 모바일 환경 감지 (Android, iPhone, iPad 여부 확인)
+  // ✅ 모바일 환경 감지
   const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   if (isMobile) {
     // ✅ 모바일일 경우: 앱 딥링크 또는 스토어 연결
-    // Android → 구글 플레이 스토어의 국토정보 앱 페이지로 이동
+    // 국토정보 앱이 설치되어 있다면 앱이 실행되고,
+    // 없다면 스토어 페이지로 이동합니다.
     window.location.href = "market://details?id=kr.go.ngii.smartmap";
-
-    // iOS라면 아래 코드 사용 (App Store 연결)
-    // window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+    // iOS 예시: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
   } else {
-    // ✅ PC 환경일 경우: 웹 서비스로 연결
-    // 현재 위치를 가져와서 국토정보 웹에 좌표 전달
+    // ✅ PC 환경일 경우: 현재 위치 기반으로 웹 연결
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -597,6 +594,7 @@ function openSmartMap() {
     }
   }
 }
+
   
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
