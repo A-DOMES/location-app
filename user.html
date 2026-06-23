@@ -562,7 +562,7 @@ function openSmartMap() {
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${config.API_KEY}`;
+        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${CONFIG.API_KEY}`;
 
         fetch(apiUrl)
           .then(res => res.json())
@@ -590,9 +590,6 @@ function openSmartMap() {
     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
-
-
-
 
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
