@@ -243,13 +243,22 @@ input[type="text"] {
         <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
       </div>
 
-      <!-- 국토부 버튼 + 라벨 -->
-      <div class="input-group" style="margin-top:25px; flex-direction:column; align-items:flex-start;">
-        <a href="geoportal.html" target="_blank" id="guktoBtn">
-          <img src="Copilot-map.png" alt="국토부 버튼" class="map-btn">
+      <!-- 지적도 + 국토정보 버튼 나란히 -->
+      <div class="input-group" style="margin-top:25px; flex-direction:row; align-items:center;">
+        <!-- 지적도 버튼 -->
+        <a href="geoportal.html" target="_blank" id="jijeokBtn">
+          <img src="Copilot-map.png" alt="지적도 버튼" class="map-btn">
         </a>
-        <span style="margin-top:1px; margin-left:40px; font-size:18px; color:#1565c0; font-weight:bold;">
+        <span style="margin-left:10px; font-size:18px; color:#1565c0; font-weight:bold;">
           지적도
+        </span>
+      
+        <!-- 국토정보 버튼 -->
+        <button id="guktoBtn" onclick="openSmartMap()" style="margin-left:30px;">
+          <img src="Copilot-map.png" alt="국토정보 버튼" class="map-btn">
+        </button>
+        <span style="margin-left:10px; font-size:18px; color:#1565c0; font-weight:bold;">
+          국토정보
         </span>
       </div>
     </form>
@@ -273,16 +282,6 @@ input[type="text"] {
   <div id="map"></div>
 </div>
 
-<!-- 국토정보 버튼 + 라벨 -->
-<div class="input-group" style="margin-top:25px; flex-direction:row; align-items:center;">
-  <button id="guktoBtn" onclick="openSmartMap()">
-    <img src="Copilot-map.png" alt="국토정보 버튼" class="map-btn">
-  </button>
-  <span style="margin-left:15px; font-size:18px; color:#1565c0; font-weight:bold;">
-    국토정보
-  </span>
-</div>
- 
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
 
