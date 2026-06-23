@@ -403,6 +403,7 @@
   
   let myCoord = null;
   let smoothCoords = []; // 최근 좌표 저장용 배열
+  let initialized = false; // 첫 마커 표시 여부
   
   // ---------------------- 스무딩 함수 ----------------------
   function getSmoothedCoord(lat, lng) {
@@ -422,8 +423,18 @@
     // 정확도 필터링 (50m 이상이면 무시)
     if (pos.coords.accuracy > 50) return;
   
-    // 스무딩된 좌표 계산
-    myCoord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+    let coord;
+  
+    if (!initialized) {
+      // ✅ 첫 위치는 바로 표시
+      coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+      initialized = true;
+    } else {
+      // ✅ 이후부터는 스무딩 적용
+      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+    }
+  
+    myCoord = coord;
   
     // ✅ 내 위치 마커
     const marker = new ol.Feature(new ol.geom.Point(myCoord));
@@ -488,8 +499,6 @@
     map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
     map.getView().setZoom(7);
   });
-
-
 
 </script>
 
