@@ -432,13 +432,6 @@ navigator.geolocation.watchPosition((pos) => {
     fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
   }));
 
-  // ✅ 이동 궤적(LineString)
-  pathCoords.push(myCoord);
-  const pathFeature = new ol.Feature(new ol.geom.LineString(pathCoords));
-  pathFeature.setStyle(new ol.style.Style({
-    stroke: new ol.style.Stroke({ color: 'blue', width: 2 })
-  }));
-
   // ✅ 레이더(부채꼴)
   const angle = 90, radius = 200;
   const points = [myCoord];
@@ -460,7 +453,7 @@ navigator.geolocation.watchPosition((pos) => {
 
   // ---------------------- 레이어 갱신 ----------------------
   positionLayer.getSource().clear();
-  positionLayer.getSource().addFeatures([marker, circle100, circle200, pathFeature, radar]);
+  positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 });
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
