@@ -273,6 +273,32 @@ input[type="text"] {
   <div id="map"></div>
 </div>
 
+<!-- 국토정보 버튼 -->
+<div class="input-group" style="margin-top:25px; flex-direction:column; align-items:flex-start;">
+  <button id="guktoBtn" onclick="openSmartMap()">
+    <img src="Copilot-map.png" alt="국토정보 버튼" class="map-btn">
+  </button>
+  <span style="margin-top:1px; margin-left:40px; font-size:18px; color:#1565c0; font-weight:bold;">
+    국토정보
+  </span>
+</div>
+
+<script>
+function openSmartMap() {
+  // 모바일 환경 감지
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // ✅ 앱 딥링크 시도
+    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
+    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+  } else {
+    // ✅ PC에서는 웹 서비스로 연결
+    window.open("https://map.ngii.go.kr", "_blank");
+  }
+}
+</script>
+  
 <!-- config.js 불러오기 -->
 <script src="config.js"></script>
 
@@ -541,6 +567,20 @@ function handleAutoUpdate(result) {
   }
 }
 
+function openSmartMap() {
+  // 모바일 환경 감지
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // ✅ 앱 딥링크 시도
+    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
+    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+  } else {
+    // ✅ PC에서는 웹 서비스로 연결
+    window.open("https://map.ngii.go.kr", "_blank");
+  }
+ } 
+  
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
 //  navigator.serviceWorker.register("service-worker.js");
