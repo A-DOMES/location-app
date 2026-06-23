@@ -562,23 +562,18 @@ function openSmartMap() {
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-
-        // 1. 공공 API 또는 브이월드 API를 통해 좌표를 PNU 코드로 변환해야 합니다.
-        // 여기서는 예시로 브이월드 역지오코딩(Reverse Geocoding) API 구조를 참고 빌드합니다.
-        const apiKey = 'YOUR_VWORLD_API_KEY'; // 발급받은 브이월드 API 키 입력
-        const apiUrl = `https://vworld.kr{lon},${lat}&type=parcel&key=${apiKey}`;
+        const apiKey = "YOUR_VWORLD_API_KEY"; // config.js에 저장된 브이월드 키 사용
+        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${apiKey}`;
 
         fetch(apiUrl)
-          .then(response => response.json())
+          .then(res => res.json())
           .then(data => {
-            // API 응답에서 PNU(토지고유코드) 추출 (실제 API 응답 구조에 맞게 매핑 필요)
-            if (data.response && data.response.status === 'OK') {
-              const pnu = data.response.result[0].structure.pnu; 
-              
-              // 2. 국토부 브이월드 지도 또는 토지이음 한필지 조회 페이지로 바로 이동
-              const url = `https://vworld.kr{pnu}`;
-              // 토지이음 링크를 원할 경우: const url = `https://eum.go.kr{pnu}`;
-              
+            if (data.response && data.response.status === "OK") {
+              // 응답에서 PNU 코드 추출
+              const pnu = data.response.result[0].structure.pnu;
+
+              // ✅ 국토정보 플랫폼 '한 필지 정보' 페이지로 바로 이동
+              const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&pnu=${pnu}`;
               window.open(url, "_blank");
             } else {
               alert("해당 위치의 필지 정보를 찾을 수 없습니다.");
@@ -586,10 +581,7 @@ function openSmartMap() {
           })
           .catch(err => {
             console.error(err);
-            // API 연동 전 테스트용 임시 포워딩 (작성하셨던 예시 PNU 코드 활용)
-            const samplePnu = "4623010100101230000";
-            const url = `https://vworld.kr{samplePnu}`;
-            window.open(url, "_blank");
+            alert("필지 정보를 불러오는 중 오류가 발생했습니다.");
           });
       },
       (err) => {
