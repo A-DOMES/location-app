@@ -448,8 +448,10 @@
     }));
   
     // ✅ 원형 버퍼 (100m, 200m)
-    const circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
-    const circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
+    // 최초 한 번만 생성
+    let circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
+    let circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
+    
     circle100.setStyle(new ol.style.Style({
       stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
       fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
@@ -458,6 +460,13 @@
       stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
       fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
     }));
+    
+    positionLayer.getSource().addFeatures([circle100, circle200]);
+    
+    // 이후 위치 갱신 시에는 새로 만들지 않고 중심만 바꿔줌
+    circle100.getGeometry().setCenter(myCoord);
+    circle200.getGeometry().setCenter(myCoord);
+
   
     // ✅ 레이더(부채꼴)
     const angle = 90, radius = 200;
