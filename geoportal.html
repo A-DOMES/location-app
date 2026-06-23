@@ -163,20 +163,29 @@ let myCoord = null;
 
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition((pos) => {
+  // 현재 위치 좌표 변환 (EPSG:4326 → EPSG:3857)
   myCoord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
 
-  // ✅ 내 위치 마커 (구글 지도 스타일 눈물방울 모양)
+  // ✅ 눈물방울 모양 SVG 정의
+  const svgMarker = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <!-- 눈물방울 모양 외곽 -->
+      <path fill="red" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+      <!-- 안쪽 흰색 원 -->
+      <circle cx="12" cy="9" r="3" fill="white"/>
+    </svg>
+  `;
+  // SVG 문자열을 안전하게 인코딩
+  const encodedSvg = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgMarker);
+
+  // ✅ 내 위치 마커 (구글 지도 스타일 눈물방울)
   const marker = new ol.Feature(new ol.geom.Point(myCoord));
   marker.setId("myMarker");
   marker.setStyle(new ol.style.Style({
     image: new ol.style.Icon({
-      src: 'data:image/svg+xml;utf8,' +
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-        '<path fill="red" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>' +
-        '<circle cx="12" cy="9" r="3" fill="white"/>' +
-        '</svg>',
-      scale: 2.0, // 크기 확대 → 레벨7에서도 잘 보임
-      anchor: [0.5, 1] // 눈물방울 끝이 좌표에 맞도록 설정
+      src: encodedSvg,       // 인코딩된 SVG 데이터 URI
+      scale: 2.0,            // 크기 확대 → 레벨7에서도 잘 보임
+      anchor: [0.5, 1]       // 눈물방울 끝이 좌표에 맞도록 설정
     })
   }));
 
@@ -227,6 +236,7 @@ navigator.geolocation.watchPosition((pos) => {
 map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
     if (feature.getId() === "myMarker" && myCoord) {
+      // 마커 클릭 시 해당 위치로 이동 + 확대
       map.getView().setCenter(myCoord);
       map.getView().setZoom(15);
     }
@@ -235,10 +245,12 @@ map.on("singleclick", function(evt) {
 
 // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
 map.getViewport().addEventListener("contextmenu", function(evt) {
-  evt.preventDefault();
+  evt.preventDefault(); // 기본 우클릭 메뉴 방지
+  // 기본 좌표(서울)로 이동 + 줌 레벨7 복귀
   map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
   map.getView().setZoom(7);
 });
+
 
   </script>
 </body>
