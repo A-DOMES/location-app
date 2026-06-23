@@ -566,18 +566,49 @@ function handleAutoUpdate(result) {
 }
 
 function openSmartMap() {
-  // 모바일 환경 감지
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // CRS: EPSG:4326 (WGS84 좌표계) 기준 경도(lon), 위도(lat) 순서 입력 확인
+        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=epsg:4326&point=${lon},${lat}&type=parcel&key=${config.API_KEY}`;
 
-  if (isMobile) {
-    // ✅ 앱 딥링크 시도
-    window.location.href = "market://details?id=kr.go.ngii.smartmap"; // Android
-    // iOS라면: window.location.href = "itms-apps://itunes.apple.com/app/id123456789";
+        fetch(apiUrl)
+          .then(res => res.json())
+          .then(data => {
+            console.log("API 응답:", data); // 디버깅용
+            
+            if (data.response && data.response.status === "OK" && data.response.result && data.response.result.length > 0) {
+              // ⚠️ 브이월드 API는 결과 객체의 id 필드에 PNU(19자리)를 반환합니다.
+              const pnu = data.response.result[0].id; 
+              
+              if (pnu && pnu.length === 19) {
+                // ✅ 토지이음 상세 페이지 이동
+                const url = `https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?pnu=${pnu}`;
+                location.href = url; 
+              } else {
+                alert("올바른 PNU 코드(19자리)를 생성할 수 없습니다.");
+              }
+            } else {
+              alert("해당 위치의 필지 정보를 찾을 수 없습니다.");
+            }
+          })
+          .catch(err => {
+            console.error("API 호출 오류:", err);
+            alert("필지 정보를 불러오는 중 오류가 발생했습니다.");
+          });
+      },
+      (err) => {
+        console.error("Geolocation 오류:", err);
+        alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
+      }
+    );
   } else {
-    // ✅ PC에서는 웹 서비스로 연결
-    window.open("https://map.ngii.go.kr", "_blank");
+    alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
+
   
 // ✅ 서비스워커 등록
 // if ("serviceWorker" in navigator) {
