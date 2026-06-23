@@ -476,11 +476,10 @@ function openSmartMap() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude;   // 위도
-        const lon = pos.coords.longitude;  // 경도
-        // ✅ 모바일/PC 모두 동일하게 웹 URL로 연결
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
         const url = `https://map.ngii.go.kr/map/main.do?mode=parcel&x=${lon}&y=${lat}`;
-        window.open(url, "_blank");        // 새 탭에서 국토정보 열기
+        window.open(url, "_blank"); // 모바일/PC 모두 웹으로 연결
       },
       (err) => {
         alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
@@ -490,6 +489,7 @@ function openSmartMap() {
     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
+
 
   
 // ✅ 서비스워커 등록
