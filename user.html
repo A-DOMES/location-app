@@ -224,45 +224,52 @@ input[type="text"] {
     <h2>A-DOMES | 위치 전송</h2>
   </header>
 
-  <!-- ✅ 입력창 및 버튼 -->
-  <section class="info-box">
-    <form id="locationForm" method="POST">
-      <div class="input-group">
-        <!-- ✅ 구글 지도 버튼 -->
-        <a href="client.html" target="_blank" id="mapBtn">
-          <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
-        </a>
-        <!-- ✅ 텍스트 입력창 -->
-        <input type="text" name="phone" id="phone" 
-               placeholder="회원가입 닉네임 또는 전화번호 입력">
-      </div>
+<!-- ✅ 입력창 및 버튼 -->
+<section class="info-box">
+  <form id="locationForm" method="POST">
+    <div class="input-group">
+      <!-- ✅ 구글 지도 버튼 -->
+      <a href="client.html" target="_blank" id="mapBtn">
+        <img src="btn-current.png" alt="구글 지도 버튼" class="map-btn">
+      </a>
+      <!-- ✅ 텍스트 입력창 -->
+      <input type="text" name="phone" id="phone" 
+             placeholder="회원가입 닉네임 또는 전화번호 입력">
+    </div>
 
-      <!-- ✅ 위치 전송/해제 버튼 -->
-      <div class="button-row">
-        <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
-        <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
-      </div>
+    <!-- ✅ 위치 전송/해제 버튼 -->
+    <div class="button-row">
+      <button type="button" id="sendBtn" onclick="sendLocation()">위치 전송</button>
+      <button type="button" id="stopBtn" onclick="stopLocation()">위치정보 해제</button>
+    </div>
 
-      <!-- 지적도 + 국토정보 버튼 나란히 -->
-      <div class="input-group" style="margin-top:25px; flex-direction:row; align-items:center;">
-        <!-- 지적도 버튼 -->
+    <!-- ✅ 지적도 + 국토정보 버튼 나란히 -->
+    <div class="input-group" style="margin-top:25px; flex-direction:row; align-items:flex-start; gap:40px;">
+      
+      <!-- 지적도 버튼 -->
+      <div style="display:flex; flex-direction:column; align-items:center;">
         <a href="geoportal.html" target="_blank" id="jijeokBtn">
           <img src="Copilot-map.png" alt="지적도 버튼" class="map-btn">
         </a>
-        <span style="margin-left:10px; font-size:18px; color:#1565c0; font-weight:bold;">
+        <span style="margin-top:5px; font-size:18px; color:#1565c0; font-weight:bold;">
           지적도
         </span>
-      
-        <!-- 국토정보 버튼 -->
-        <button id="guktoBtn" onclick="openSmartMap()" style="margin-left:30px;">
+      </div>
+
+      <!-- 국토정보 버튼 (지적도와 동일한 구조) -->
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <a href="https://map.ngii.go.kr" target="_blank" id="guktoBtn">
           <img src="Copilot-map.png" alt="국토정보 버튼" class="map-btn">
-        </button>
-        <span style="margin-left:10px; font-size:18px; color:#1565c0; font-weight:bold;">
+        </a>
+        <span style="margin-top:5px; font-size:18px; color:#1565c0; font-weight:bold;">
           국토정보
         </span>
       </div>
-    </form>
-  </section>
+
+    </div>
+  </form>
+</section>
+
 
   <!-- ✅ 주요 기능 (카드 안에서 꽉 차게) -->
   <section class="info-box features" style="width:100%; box-sizing:border-box;">
