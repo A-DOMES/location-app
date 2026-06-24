@@ -364,7 +364,7 @@
   const view = map.getView();
   const zoom = view.getZoom();
 
-  if (zoom < 20) return;
+  if (zoom < 19) return;
 
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
