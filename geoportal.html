@@ -788,8 +788,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   showAll = !showAll;
 
   if (showAll) {
-    // ✅ 사람 중심 모드: 마커/원형/레이더 보이기
-    markerLayer.setVisible(true);
+    // ✅ 사람 중심 모드: 원형/레이더 보이기
     circleLayer.setVisible(true);
     radarLayer.setVisible(true);
 
@@ -798,8 +797,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       map.getView().setZoom(15);
     }
   } else {
-    // ✅ 지도 중심 모드: 마커/원형/레이더 숨기기
-    markerLayer.setVisible(false);
+    // ✅ 지도 중심 모드: 원형/레이더 숨기기
     circleLayer.setVisible(false);
     radarLayer.setVisible(false);
 
