@@ -468,7 +468,7 @@ function loadRealEstate(lon, lat) {
 // ✅ 4. 실거래가 조회 (국토부 API)
 function loadRealTransaction(lon, lat) {
   // 1. VWorld 지번 API로 법정동 코드/지번 확보
-  fetch(`https://api.vworld.kr/req/address?...&point=${lon},${lat}&type=PARCEL&...`)
+  fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
     .then(addrData => {
       const parcel = addrData.response?.result?.items[0];
@@ -477,14 +477,20 @@ function loadRealTransaction(lon, lat) {
         return;
       }
 
-      const lawdCd = parcel.addrcode; // 법정동 코드
-      const jibun = parcel.jibun;     // 지번
+      const lawdCd = parcel.addrcode; // ✅ 법정동 코드
+      const jibun = parcel.jibun;     // ✅ 지번 (국토부 API에는 직접 쓰지 않음)
+      const dealYmd = "202605";       // ✅ 조회 년월 (예: 2026년 5월)
 
-      // 2. 국토부 실거래가 API 호출 (예: 아파트)
-      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?...&LAWD_CD=${lawdCd}&DEAL_YMD=202605`)
+      // 2. 국토부 실거래가 API 호출 (서비스키 반드시 인코딩)
+      const key = encodeURIComponent(CONFIG.MOLIT_KEY);
+
+      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
         .then(res => res.json())
         .then(tradeData => {
-          const items = tradeData.response?.body?.items;
+          console.log(tradeData); // ✅ 응답 구조 확인용 로그
+
+          // ✅ 실제 응답 구조에 맞게 items 접근 (보통 tradeData.response.body.items.item 형태)
+          const items = tradeData.response?.body?.items?.item;
           if (items && items.length > 0) {
             const trade = items[0];
             document.getElementById("realTransactionInfo").innerHTML =
@@ -505,6 +511,7 @@ function loadRealTransaction(lon, lat) {
       document.getElementById("realTransactionInfo").innerHTML = "<b>📊 지번 조회 실패:</b> " + err.message;
     });
 }
+
 
     
 // ✅ 레이어 제어 UI 토글 기능
