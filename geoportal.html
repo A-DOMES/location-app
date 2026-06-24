@@ -314,6 +314,24 @@
     <script src="config.js"></script>
     
   <script>
+  // ✅ 모달창 요소 가져오기
+  const layerSwitcher = document.querySelector(".layer-switcher");
+  const mapToggleBtn = document.getElementById("mapToggleBtn");
+  const closeLayerBtn = document.getElementById("closeLayerBtn");
+
+  // ✅ 토글 버튼 클릭 → 모달창 열기
+  mapToggleBtn.addEventListener("click", () => {
+    layerSwitcher.style.display = "block";
+  });
+
+  // ✅ 닫기 버튼 클릭 → 모달창 닫기
+  closeLayerBtn.addEventListener("click", () => {
+    layerSwitcher.style.display = "none";
+  });
+
+  // ✅ 초기 상태는 숨김
+  layerSwitcher.style.display = "none";
+    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
