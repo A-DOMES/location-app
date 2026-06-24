@@ -174,6 +174,19 @@
   color: #333;                   /* 진한 회색 */
 }
 
+/* ✅ 모바일 화면 전용 스타일 */
+@media (max-width: 768px) {
+  #infoPopup {
+    position: fixed;              /* 화면 기준 고정 */
+    top: 50%;                     /* 세로 중앙 */
+    left: 50%;                    /* 가로 중앙 */
+    transform: translate(-50%, -50%);
+    width: 90%;                   /* 화면의 90% 정도 */
+    max-width: 360px;             /* 너무 넓지 않게 제한 */
+    margin: 0 auto;               /* 좌우 여백 확보 */
+  }
+}
+      
   </style>
   </head>
   <body>
@@ -580,6 +593,8 @@ document.addEventListener('touchmove', (e) => {
   moveLayerDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingLayer = false);
+
+    
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const parentCard = btn.closest('.info-card');
