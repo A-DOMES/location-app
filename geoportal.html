@@ -44,8 +44,33 @@
     .info-card { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px; margin-bottom:10px;
       box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     .info-card h4 { margin:0 0 6px 0; font-size:16px; color:#333; }
-  </style>
+
+    /* ✅ 사람중심 지도중심 토글버튼 */
+    #toggleFeaturesBtn {
+    position:absolute;
+    top:170px; 
+    left:5px;
+    width:60px; 
+    height:60px;
+    background:rgba(255,255,255,0.25);
+    backdrop-filter:blur(10px);
+    border:2px solid #1976d2;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform 0.2s ease, background 0.3s ease;
+    padding:0;
+  }
+  #toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); }
+  #toggleFeaturesBtn:active { transform:scale(0.95); }
+  #toggleFeaturesBtn img { width:32px; height:32px; pointer-events:none; }
+</style>
 </head>
+  
 <body>
   <!-- ✅ 상단 헤더 -->
   <header class="page-header">
@@ -85,6 +110,11 @@
     <div class="info-card" id="realTransactionInfo"><h4>📊 실거래가</h4>조회 중...</div>
   </div>
 
+  <!-- ✅ 지도 위 토글 버튼 -->
+  <button id="toggleFeaturesBtn">
+    <img src="./btn-map.png" alt="지도 토글">
+  </button>
+  
   <!-- ✅ API Key 설정 -->
   <script src="config.js"></script>
 
@@ -241,7 +271,19 @@ navigator.geolocation.watchPosition((pos) => {
 // ---------------------- 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   showAll = !showAll;
-  if (!showAll) positionLayer.getSource().clear();
+
+  if (showAll) {
+    // 사람 중심 모드 → 내 위치 표시 + 지도 중심 이동
+    if (myCoord) {
+      positionLayer.getSource().clear();
+      // 마커/원형/레이더는 watchPosition에서 자동 생성됨
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(15);
+    }
+  } else {
+    // 지도 중심 모드 → 모든 표시 제거, 지도는 그대로 유지
+    positionLayer.getSource().clear();
+  }
 });
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
