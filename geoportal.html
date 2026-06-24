@@ -644,7 +644,22 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   
     return ol.proj.fromLonLat([avgLng, avgLat]);
   }
+
+  // ---------------------- heading 보정 함수 ----------------------
+  function getHeading(pos) {
+    let heading = pos.coords.heading;
   
+    // 값이 없거나 NaN이면 기본값(북쪽)으로 보정
+    if (heading === null || isNaN(heading)) {
+      heading = 0;
+    }
+  
+    // 각도를 0~360 범위로 정규화
+    heading = (heading + 360) % 360;
+  
+    return heading;
+  }
+
   // ---------------------- 내 위치 추적 ----------------------
   navigator.geolocation.watchPosition((pos) => {
     // 정확도 필터링 (50m 이상이면 무시)
@@ -699,10 +714,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   
     // ✅ 레이더(부채꼴)
     const angle = 90, radius = 200;
-    const points = [myCoord]; // 마커 좌표를 시작점으로 사용
+    const heading = getHeading(pos); // 보정된 heading 값
+    const points = [myCoord];
     
     for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = a * Math.PI / 180;
+      const rad = (heading + a) * Math.PI / 180;
       const dx = radius * Math.cos(rad);
       const dy = radius * Math.sin(rad);
     
@@ -716,6 +732,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
       fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
     }));
+
   
     // ---------------------- 레이어 갱신 ----------------------
     positionLayer.getSource().clear();
