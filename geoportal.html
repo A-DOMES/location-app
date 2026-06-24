@@ -778,32 +778,35 @@ closeLayerBtn.addEventListener("click", () => {
 layerSwitcher.style.display = "block";
 
 // ---------------------- 지도 기능 토글 이벤트 ----------------------
-let showAll = true;
+let radarOn = false; // 처음엔 레이더 꺼짐, 지도 중심(zoom 7)
+
+// 앱 시작 시 지도 중심으로 설정
+if (mapCenterCoord) {
+  map.getView().setCenter(mapCenterCoord);
+  map.getView().setZoom(7);
+}
 
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
-  showAll = !showAll;
+  radarOn = !radarOn;
 
-  if (showAll) {
-    // 사람 중심 모드
-    circleLayer.setVisible(true);
+  if (radarOn) {
+    // ✅ 사람 중심 모드: 레이더 켜기 + 줌 16
     radarLayer.setVisible(true);
 
     if (myCoord) {
       map.getView().setCenter(myCoord);
-      map.getView().setZoom(15);
+      map.getView().setZoom(16);
     }
   } else {
-    // 지도 중심 모드
-    circleLayer.setVisible(false);
+    // ✅ 지도 중심 모드: 레이더 끄기 + 줌 7
     radarLayer.setVisible(false);
 
     if (mapCenterCoord) {
       map.getView().setCenter(mapCenterCoord);
-      map.getView().setZoom(12);
+      map.getView().setZoom(7);
     }
   }
 });
-
 
     
   // ---------------------- 마커 클릭 시 이동 ----------------------
