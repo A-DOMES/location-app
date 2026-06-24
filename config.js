@@ -14,7 +14,7 @@ const CONFIG = {
   API_KEY: "48BF8F59-D37C-3BA1-916E-1E5B135EC360",
 
   // ✅ 국토부 실거래가 API 키 (data.go.kr에서 발급받은 서비스키)
-  MOLIT_KEY: "c2f4f12f4f248e4805222b988738c8e645bbcb2be5f80573a2a9b0815881ddd5"
+  MOLIT_KEY: "c2f4f12f4f248e4805222b988738c8e645bbcb2be5f80573a2a9b0815881ddd5",
     
   // ✅ 구글 지도 Map ID (환경별)
   mapIds: {
