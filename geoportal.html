@@ -1,743 +1,171 @@
 <!DOCTYPE html>
-  <html lang="ko">
-  <head>
-    <meta charset="UTF-8">
-    <title>GeoPortal 국토부 지도</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-    <!-- ✅ OpenLayers CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
-    <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
-  
-    <style>
-      /* ✅ 페이지 기본 레이아웃 */
-      html, body { margin:0; padding:0; width:100%; height:100%; }
-  
-      /* ✅ 상단 헤더 */
-      .page-header {
-        position:fixed;   /* 화면 최상단에 고정 */
-        top:0; left:0;
-        width:100%; height:48px;
-        background:#1976d2; color:#fff;
-        display:flex; align-items:center;
-        font-size:18px; font-weight:bold;
-        margin:0; padding:0 10px;
-        z-index:2000;     /* 모달창보다 위에 표시 */
-        cursor: move;                  /* 드래그 가능 표시 */
-      }
-      .header-left { display:flex; align-items:center; }
-      .header-title {
-        position:absolute;
-        left:50%; transform:translateX(-50%);
-        font-size:16px; text-align:center;
-      }
-  
-      /* ✅ 지도보기 버튼 */
-      #mapToggleBtn {
-        display:flex; align-items:center; gap:6px;
-        background:#1976d2; color:#fff;
-        border:none; padding:6px 12px;
-        border-radius:12px; font-size:14px;
-        cursor:pointer; opacity:0;
-        transition:opacity 0.4s ease;
-      }
-      #mapToggleBtn.show { opacity:1; }
-      #mapToggleBtn svg { flex-shrink:0; }
-  
-      /* ✅ 지도 영역 */
-      #map {
-        width:100%;
-        height:calc(100vh - 48px); /* 헤더 높이만큼 빼줌 */
-        margin-top:48px;           /* 헤더 밑에서 시작 */
-        position:relative;
-        z-index:1;
-      }
-  
-      /* ✅ 레이어 선택 모달창 (드래그 기능 연동 보정 완료) */
-      .layer-switcher {
-        position: absolute;                 /* 화면 위에 겹쳐서 표시 (지도 위에 뜨도록) */
-        top: 50px;                          /* 초기 위치: 화면 상단에서 50px 내려옴 */
-        left: 20%;                          /* 초기 위치: 화면 왼쪽 기준 20% 지점 */
-        transform: none;                    /* ⚠️ translateX 제거 → 드래그 시 튕김 방지 */
-        margin-left: -55px;                 /* 가로폭 110px의 절반을 빼서 중앙 정렬 보정 */
-        background: rgba(255,255,255,0.85); /* ✅ 반투명 배경 (기존보다 투명도 강화) */
-        padding: 12px;                      /* 내부 여백 */
-        border: 1px solid #ccc;             /* 테두리 */
-        border-radius: 8px;                 /* 모서리 둥글게 */
-        font-size: 15px;                    /* 글자 크기 */
-        z-index: 1000;                      /* 지도 위에 표시되도록 우선순위 높임 */
-        width: 110px;                       /* ✅ 불필요한 레이어 제거 후 최적화된 폭 */
-        max-width: 90%;                     /* ✅ 모바일 화면에서는 자동 줄어듦 */
-        cursor: move;                       /* ✅ 마우스 포인터를 '이동' 모양으로 표시 */
-      }
-      .layer-header { 
-        position:relative; 
-        margin-bottom:8px; 
-      } 
-      .layer-title {
-        text-align:center;      /* ✅ 타이틀만 중앙 정렬 */
-        font-weight:bold;
-        font-size:18px;
-        color:#1976d2;
-      }
-  
-      .close-btn {
-        position:absolute;
-        top:0;
-        right:0;   /* ✅ 모달창 우측 상단 끝부분 고정 */
-        width:24px; height:24px;
-        border-radius:50%;
-        background:rgba(25,118,210,0.2);
-        border:none; color:#1976d2;
-        font-size:16px; font-weight:bold;
-        cursor:pointer;
-        display:flex; align-items:center; justify-content:center;
-      }
-      
-      .layer-items label {
-        display:flex; align-items:center;
-        margin:4px 0;
-      }
-      
-      .layer-items input[type="checkbox"] {
-        transform:scale(1.2);
-        margin-right:6px;
-      }
-  
-  
-/* ✅ 조회결과 모달창 전체 스타일 */
-#infoPopup {
-  position: absolute;
-  top: 60px;                     /* 화면 상단에서 조금 내려오게 */
-  left: 50%;
-  transform: translateX(-50%);   /* 가로 중앙 정렬 */
-  width: 360px;                  /* ✅ 카드가 들어가므로 폭을 조금 넓게 */
-  background: rgba(255, 255, 255, 0.95); /* ✅ 조금 더 선명한 반투명 배경 */
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 2000;
-  cursor: move;                  /* 드래그 가능 표시 */
-}
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoPortal 국토부 지도</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-/* ✅ 팝업 헤더: 제목과 닫기 버튼을 같은 행에 배치 */
-#infoPopup .popup-header {
-  display: flex;                 /* 가로 배치 */
-  justify-content: space-between;/* 제목 왼쪽, 닫기 버튼 오른쪽 */
-  align-items: center;           /* 수직 중앙 정렬 */
-  margin-bottom: 12px;           /* 아래 카드들과 간격 */
-}
+  <!-- ✅ OpenLayers CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
 
-/* ✅ 조회결과 제목 스타일 */
-#infoPopup h3 {
-  margin: 0;                     /* 기본 여백 제거 */
-  font-size: 18px;
-  font-weight: bold;
-  color: #1976d2;                /* 파란색 강조 */
-}
+  <style>
+    /* ✅ 페이지 기본 레이아웃 */
+    html, body { margin:0; padding:0; width:100%; height:100%; }
 
-/* ✅ 닫기 버튼 스타일 */
-#infoPopup .close-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;            /* 원형 버튼 */
-  background: #f44336;           /* 빨간색 배경 */
-  color: #fff;                   /* 흰색 X */
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  line-height: 28px;
-  cursor: pointer;
-  transition: background 0.2s;   /* hover 시 색상 전환 */
-}
+    /* ✅ 상단 헤더 */
+    .page-header { position:fixed; top:0; left:0; width:100%; height:48px;
+      background:#1976d2; color:#fff; display:flex; align-items:center;
+      font-size:18px; font-weight:bold; padding:0 10px; z-index:2000; cursor:move; }
+    .header-left { display:flex; align-items:center; }
+    .header-title { position:absolute; left:50%; transform:translateX(-50%); font-size:16px; }
 
-/* ✅ 닫기 버튼 hover 효과 */
-#infoPopup .close-btn:hover {
-  background: #d32f2f;           /* hover 시 진한 빨강 */
-}
+    /* ✅ 지도 영역 */
+    #map { width:100%; height:calc(100vh - 48px); margin-top:48px; position:relative; z-index:1; }
 
-/* ✅ 카드 공통 스타일 (건물/토지/가격 조회 각각 적용) */
-.info-card {
-  background: #fff;              /* 카드 배경 흰색 */
-  border: 1px solid #ddd;        /* 옅은 테두리 */
-  border-radius: 6px;            /* 모서리 둥글게 */
-  padding: 10px;                 /* 내부 여백 */
-  margin-bottom: 10px;           /* 카드 간격 */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 은은한 그림자 */
-}
+    /* ✅ 레이어 선택 모달창 */
+    .layer-switcher { position:absolute; top:50px; left:20%; margin-left:-55px;
+      background:rgba(255,255,255,0.85); padding:12px; border:1px solid #ccc;
+      border-radius:8px; font-size:15px; z-index:1000; width:110px; cursor:move; }
+    .layer-title { text-align:center; font-weight:bold; font-size:18px; color:#1976d2; }
+    .close-btn { position:absolute; top:0; right:0; width:24px; height:24px;
+      border-radius:50%; background:rgba(25,118,210,0.2); border:none; color:#1976d2;
+      font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 
-/* ✅ 카드 제목 스타일 */
-.info-card h4 {
-  margin: 0 0 6px 0;             /* 아래 내용과 간격 */
-  font-size: 16px;
-  color: #333;                   /* 진한 회색 */
-}
-
-/* ✅ 모바일 화면 전용 스타일 */
-@media (max-width: 768px) {
-  #infoPopup {
-    position: fixed;              /* 화면 기준 고정 */
-    top: 50%;                     /* 세로 중앙 */
-    left: 50%;                    /* 가로 중앙 */
-    transform: translate(-50%, -50%);
-    width: 90%;                   /* 화면의 90% 정도 */
-    max-width: 360px;             /* 너무 넓지 않게 제한 */
-    margin: 0 auto;               /* 좌우 여백 확보 */
-  }
-}
-
-/* ✅ 사람/지도과련 토글 전용 스타일 */
-#toggleFeaturesBtn {
-  position:absolute;
-  top:170px; 
-  left:5px;
-  width:60px; 
-  height:60px;
-  background:rgba(255,255,255,0.25);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border:2px solid #1976d2;
-  border-radius:50%; /* 원형 버튼 */
-  cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
-  z-index:9999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:transform 0.2s ease, background 0.3s ease;
-  padding:0;
-}
-#toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); }
-#toggleFeaturesBtn:active { transform:scale(0.95); }
-#toggleFeaturesBtn img { width:32px; height:32px; pointer-events:none; }
-      
-      
+    /* ✅ 조회결과 팝업 */
+    #infoPopup { position:absolute; top:60px; left:50%; transform:translateX(-50%);
+      width:360px; background:rgba(255,255,255,0.95); border:1px solid #ccc;
+      border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+      z-index:2000; cursor:move; }
+    #infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    #infoPopup h3 { margin:0; font-size:18px; font-weight:bold; color:#1976d2; }
+    #infoPopup .close-btn { width:28px; height:28px; border-radius:50%; background:#f44336; color:#fff;
+      font-weight:bold; font-size:16px; text-align:center; line-height:28px; cursor:pointer; }
+    .info-card { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px; margin-bottom:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .info-card h4 { margin:0 0 6px 0; font-size:16px; color:#333; }
   </style>
-  </head>
-  <body>
-    <!-- ✅ 상단 헤더 -->
-    <header class="page-header">
-      <div class="header-left">
-        <button id="mapToggleBtn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 24 24">
-            <path d="M9 3l-7 2v16l7-2 6 2 7-2V3l-7 2-6-2zm0 2.18l4 1.33v12.31l-4-1.33V5.18zm-2 .66v12.31l-3 1V6.84l3-1zm10 0v12.31l-3 1V6.84l3-1z"/>
-          </svg>
-          <span>지도항목</span>
-        </button>
-      </div>
-      <div class="header-title">국토부 지도</div>
-    </header>
-  
-    <!-- ✅ 지도 영역 -->
-    <div id="map"></div>
-  
-    <!-- ✅ 항목선택 모달창 -->
-    <div class="layer-switcher">
-      <div class="layer-header">
-        <span class="layer-title">항목선택</span>
-        <button id="closeLayerBtn" class="close-btn">✕</button>
-      </div>
-      <div class="layer-items">
-        <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
-        <label><input type="checkbox" id="satLayer" checked> 항공사진</label>
-        <label><input type="checkbox" id="cadLayer"> 지적도</label>
-        <label><input type="checkbox" id="midnightLayer"> Midnight</label>
-        <label><input type="checkbox" id="hybridLayer" checked> Hybrid</label>
-        </div>
+</head>
+<body>
+  <!-- ✅ 상단 헤더 -->
+  <header class="page-header">
+    <div class="header-left">
+      <button id="mapToggleBtn">지도항목</button>
     </div>
-  
-    <!-- ✅ 팝업 영역 -->
-<div id="infoPopup" style="display:none;">
-  <div class="popup-header">
-    <h3>조회결과</h3>
-    <div class="close-btn" onclick="closeInfoPopup()">×</div>
+    <div class="header-title">국토부 지도</div>
+  </header>
+
+  <!-- ✅ 지도 영역 -->
+  <div id="map"></div>
+
+  <!-- ✅ 항목선택 모달창 -->
+  <div class="layer-switcher">
+    <div class="layer-header">
+      <span class="layer-title">항목선택</span>
+      <button id="closeLayerBtn" class="close-btn">✕</button>
+    </div>
+    <div class="layer-items">
+      <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
+      <label><input type="checkbox" id="satLayer" checked> 항공사진</label>
+      <label><input type="checkbox" id="cadLayer"> 지적도</label>
+      <label><input type="checkbox" id="midnightLayer"> Midnight</label>
+      <label><input type="checkbox" id="hybridLayer" checked> Hybrid</label>
+    </div>
   </div>
 
-  <!-- 건물 정보 -->
-  <div class="info-card" id="landBuildingInfo">
-    <h4>🏢 건물 정보</h4>
-    <div class="tab-menu">
-      <button class="tab-btn active" data-tab="bldg-basic">기본정보</button>
-      <button class="tab-btn" data-tab="bldg-usage">용도</button>
-      <button class="tab-btn" data-tab="bldg-area">면적</button>
-      <button class="tab-btn" data-tab="bldg-right">권리</button>
+  <!-- ✅ 팝업 영역 -->
+  <div id="infoPopup" style="display:none;">
+    <div class="popup-header">
+      <h3>조회결과</h3>
+      <div class="close-btn" onclick="closeInfoPopup()">×</div>
     </div>
-    <div class="tab-content" id="bldg-basic">조회 중...</div>
-    <div class="tab-content" id="bldg-usage" style="display:none;">조회 중...</div>
-    <div class="tab-content" id="bldg-area" style="display:none;">조회 중...</div>
-    <div class="tab-content" id="bldg-right" style="display:none;">조회 중...</div>
+    <div class="info-card" id="landBuildingInfo"><h4>🏢 건물 정보</h4>조회 중...</div>
+    <div class="info-card" id="landUseInfo"><h4>📜 토지 이용</h4>조회 중...</div>
+    <div class="info-card" id="realEstateInfo"><h4>💰 공시지가</h4>조회 중...</div>
+    <div class="info-card" id="realTransactionInfo"><h4>📊 실거래가</h4>조회 중...</div>
   </div>
 
-  <!-- 토지 이용 -->
-  <div class="info-card" id="landUseInfo">
-    <h4>📜 토지 이용</h4>
-    <div class="tab-menu">
-      <button class="tab-btn active" data-tab="land-zone">용도지역</button>
-      <button class="tab-btn" data-tab="land-district">지구지정</button>
-      <button class="tab-btn" data-tab="land-etc">기타</button>
-    </div>
-    <div class="tab-content" id="land-zone">조회 중...</div>
-    <div class="tab-content" id="land-district" style="display:none;">조회 중...</div>
-    <div class="tab-content" id="land-etc" style="display:none;">조회 중...</div>
-  </div>
+  <!-- ✅ API Key 설정 -->
+  <script src="config.js"></script>
 
-  <!-- 공시지가 -->
-  <div class="info-card" id="realEstateInfo">
-    <h4>💰 공시지가</h4>
-    <div class="tab-menu">
-      <button class="tab-btn active" data-tab="price-basic">개별지가</button>
-      <button class="tab-btn" data-tab="price-trend">추세분석</button>
-      <button class="tab-btn" data-tab="price-parcel">필지정보</button>
-    </div>
-    <div class="tab-content" id="price-basic">조회 중...</div>
-    <div class="tab-content" id="price-trend" style="display:none;">조회 중...</div>
-    <div class="tab-content" id="price-parcel" style="display:none;">조회 중...</div>
-  </div>
-
-  <!-- 실거래가 -->
-  <div class="info-card" id="realTransactionInfo">
-    <h4>📊 실거래가</h4>
-    <div class="tab-menu">
-      <button class="tab-btn active" data-tab="deal-sale">매매</button>
-      <button class="tab-btn" data-tab="deal-jeonse">전세</button>
-      <button class="tab-btn" data-tab="deal-wolse">월세</button>
-    </div>
-    <div class="tab-content" id="deal-sale">조회 중...</div>
-    <div class="tab-content" id="deal-jeonse" style="display:none;">조회 중...</div>
-    <div class="tab-content" id="deal-wolse" style="display:none;">조회 중...</div>
-  </div>
-</div>
-
- <!-- 사라중심/지도중심 토글(그림파일기준) -->  
-<button id="toggleFeaturesBtn">
-  <img src="./btn-map.png" alt="지도 토글">
-</button>
-  
-    <!-- ✅ API Key 설정 -->
-    <script src="config.js"></script>
-    
 <script>
-// ---------------------- 전역변수 모음 ----------------------
-let showAll = false;          // 🔄 위치 표시 토글 상태
-let myCoord = null;           // EPSG:3857 변환 좌표
-let coordArray = null;        // [lat, lon] 배열 (위도, 경도)
-let smoothCoords = [];        // 스무딩용 최근 좌표 배열
-let initialized = false;      // 첫 위치 표시 여부
-let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 팝업 드래그 상태
-let isDraggingLayer = false, offsetXLayer, offsetYLayer; // 레이어창 드래그 상태
+// ---------------------- 전역변수 ----------------------
+let coordArray = null;   // [lat, lon]
+let myCoord = null;
+let smoothCoords = [];
+let initialized = false;
+let showAll = false;
 
-// ---------------------- WMTS 공통 설정 ----------------------
+// ---------------------- WMTS 설정 ----------------------
 const projection = ol.proj.get('EPSG:3857');
 const projectionExtent = projection.getExtent();
 const size = ol.extent.getWidth(projectionExtent) / 256;
 const resolutions = new Array(19);
 const matrixIds = new Array(19);
-for (let z = 0; z < 19; ++z) {
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
-}
+for (let z=0; z<19; ++z){ resolutions[z]=size/Math.pow(2,z); matrixIds[z]=z; }
 
-// ---------------------- WMTS 레이어 생성 함수 ----------------------
-function createLayer(layerName, format='image/png') {
+function createLayer(layerName, format='image/png'){
   return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
-      }),
-      style: 'default',
-      requestEncoding: 'REST'
-    }),
-    visible: false
+    source:new ol.source.WMTS({
+      url:`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      layer:layerName, matrixSet:'EPSG:3857', format:format, projection:projection,
+      tileGrid:new ol.tilegrid.WMTS({origin:ol.extent.getTopLeft(projectionExtent),resolutions:resolutions,matrixIds:matrixIds}),
+      style:'default', requestEncoding:'REST'
+    }), visible:false
   });
 }
 
-// ---------------------- 주요 레이어 정의 ----------------------
-const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-const satLayer = createLayer('Satellite', 'image/jpeg'); satLayer.setVisible(true);
-const cadLayer = new ol.layer.Image({
-  source: new ol.source.ImageWMS({
-    url: 'https://api.vworld.kr/req/wms',
-    params: { 'LAYERS': 'LT_C_ADASRATODO','STYLES': 'LT_C_ADASRATODO','KEY': CONFIG.API_KEY,'FORMAT': 'image/png','TRANSPARENT': 'TRUE' },
-    serverType: 'geoserver',
-    projection: projection
-  }),
-  visible: false
-});
-const midnightLayer = createLayer('midnight'); midnightLayer.setVisible(false);
-const hybridLayer = createLayer('Hybrid'); hybridLayer.setVisible(true);
+// ---------------------- 레이어 ----------------------
+const baseLayer=createLayer('Base'); baseLayer.setVisible(true);
+const satLayer=createLayer('Satellite','image/jpeg'); satLayer.setVisible(true);
+const cadLayer=new ol.layer.Image({source:new ol.source.ImageWMS({url:'https://api.vworld.kr/req/wms',
+  params:{'LAYERS':'LT_C_ADASRATODO','STYLES':'LT_C_ADASRATODO','KEY':CONFIG.API_KEY,'FORMAT':'image/png','TRANSPARENT':'TRUE'},
+  serverType:'geoserver',projection:projection}),visible:false});
+const midnightLayer=createLayer('midnight'); const hybridLayer=createLayer('Hybrid'); hybridLayer.setVisible(true);
 
 // ---------------------- 지도 초기화 ----------------------
-const map = new ol.Map({
-  target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-  view: new ol.View({ center: ol.proj.fromLonLat([126.9780, 37.5665]), zoom: 7 })
-});
+const map=new ol.Map({target:'map',layers:[baseLayer,satLayer,cadLayer,midnightLayer,hybridLayer],
+  view:new ol.View({center:ol.proj.fromLonLat([126.9780,37.5665]),zoom:7})});
 
 // ---------------------- 체크박스 이벤트 ----------------------
-document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+document.getElementById('baseLayer').addEventListener('change',e=>baseLayer.setVisible(e.target.checked));
+document.getElementById('satLayer').addEventListener('change',e=>satLayer.setVisible(e.target.checked));
+document.getElementById('cadLayer').addEventListener('change',e=>cadLayer.setVisible(e.target.checked));
+document.getElementById('midnightLayer').addEventListener('change',e=>midnightLayer.setVisible(e.target.checked));
+document.getElementById('hybridLayer').addEventListener('change',e=>hybridLayer.setVisible(e.target.checked));
 
-// ---------------------- 팝업 닫기 함수 ----------------------
-function closeInfoPopup() { document.getElementById("infoPopup").style.display = "none"; }
+// ---------------------- 팝업 닫기 ----------------------
+function closeInfoPopup(){ document.getElementById("infoPopup").style.display="none"; }
 
-// ---------------------- 지도 클릭 이벤트 → 데이터 조회 ----------------------
+// ---------------------- 지도 클릭 이벤트 ----------------------
 map.on('click', function(evt) {
   const view = map.getView();
-  if (view.getZoom() < 19) return;
+  const zoom = view.getZoom();
+  if (zoom < 19) return; // 줌 레벨이 낮으면 조회하지 않음
 
+  // 위도·경도 배열에 저장
   coordArray = ol.proj.toLonLat(evt.coordinate); // [lon, lat]
-  const lon = coordArray[0], lat = coordArray[1];
+  const lon = coordArray[0];
+  const lat = coordArray[1];
 
+  // 팝업 표시 및 초기화
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
   infoPopup.style.left = "calc(50% - 160px)";
 
+  // 각 카드에 "조회 중..." 표시
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
   document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
+  // API 호출 (coordArray 기반)
   loadLandBuilding(lon, lat);
   loadLandUse(lon, lat);
   loadRealEstate(lon, lat);
   loadRealTransaction(lon, lat);
 });
-
-// ---------------------- 데이터 조회 함수 ----------------------
-// ✅ 1. 건물 정보 조회 (VWorld 건물 API)
-function loadLandBuilding(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        // 응답 데이터를 탭에 반영
-        document.getElementById("landBuildingInfo").innerHTML =
-          `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
-      } else {
-        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message;
-    });
-}
-
-
-// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
-function loadLandUse(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        document.getElementById("landUseInfo").innerHTML =
-          `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
-      } else {
-        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message;
-    });
-}
-
-
-// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
-function loadRealEstate(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
-        document.getElementById("realEstateInfo").innerHTML =
-          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
-      } else {
-        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message;
-    });
-}
-
-
-// ✅ 4. 실거래가 조회 (국토부 API)
-function loadRealTransaction(lon, lat) {
-  // 1. VWorld 지번 API로 법정동 코드/지번 확보
-  fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
-    .then(res => res.json())
-    .then(addrData => {
-      const parcel = addrData.response?.result?.items[0];
-      if (!parcel) {
-        document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 지번 정보 없음";
-        return;
-      }
-
-      const lawdCd = parcel.addrcode; // ✅ 법정동 코드
-      const jibun = parcel.jibun;     // ✅ 지번 (국토부 API에는 직접 쓰지 않음)
-      const dealYmd = "202605";       // ✅ 조회 년월 (예: 2026년 5월)
-
-      // 2. 국토부 실거래가 API 호출 (서비스키 반드시 인코딩)
-      const key = encodeURIComponent(CONFIG.MOLIT_KEY);
-
-      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
-        .then(res => res.json())
-        .then(tradeData => {
-          console.log(tradeData); // ✅ 응답 구조 확인용 로그
-
-          // ✅ 실제 응답 구조에 맞게 items 접근 (보통 tradeData.response.body.items.item 형태)
-          const items = tradeData.response?.body?.items?.item;
-          if (items && items.length > 0) {
-            const trade = items[0];
-            document.getElementById("realTransactionInfo").innerHTML =
-              `<b>📊 실거래가</b><br>
-               유형: 아파트<br>
-               거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}<br>
-               거래금액: ${trade.dealAmount} 만원<br>
-               전용면적: ${trade.area}㎡`;
-          } else {
-            document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 데이터 없음";
-          }
-        })
-        .catch(err => {
-          document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가 조회 실패:</b> " + err.message;
-        });
-    })
-    .catch(err => {
-      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 지번 조회 실패:</b> " + err.message;
-    });
-}
-
-
-    
-// ✅ 레이어 제어 UI 토글 기능
-const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
-const mapToggleBtn = document.getElementById('mapToggleBtn'); // 지도항목 버튼
-const layerSwitcher = document.querySelector('.layer-switcher'); // 항목선택 모달창
-
-// 닫기 버튼 클릭 시 → 항목선택창 숨기고 지도항목 버튼 표시
-closeBtn.addEventListener('click', () => {
-  layerSwitcher.style.display = 'none';
-  mapToggleBtn.classList.add('show');
-});
-
-// 지도항목 버튼 클릭 시 → 항목선택창 다시 표시하고 버튼 숨김
-mapToggleBtn.addEventListener('click', () => {
-  layerSwitcher.style.display = 'block';
-  mapToggleBtn.classList.remove('show');
-});
-
-
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
-const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창
-let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
-
-function startDrag(clientX, clientY) {
-  isDraggingPopup = true;
-  const rect = infoPopup.getBoundingClientRect();
-  offsetXPopup = clientX - rect.left;
-  offsetYPopup = clientY - rect.top;
-}
-
-function moveDrag(clientX, clientY) {
-  if (!isDraggingPopup) return;
-  infoPopup.style.left = (clientX - offsetXPopup) + 'px';
-  infoPopup.style.top = (clientY - offsetYPopup) + 'px';
-}
-
-// PC 이벤트
-infoPopup.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; // 닫기 버튼 클릭 시 드래그 방지
-  startDrag(e.clientX, e.clientY);
-});
-document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingPopup = false);
-
-// 모바일 이벤트
-infoPopup.addEventListener('touchstart', (e) => {
-  if(e.target.classList.contains('close-btn')) return;
-  const touch = e.touches[0];
-  startDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingPopup) return;
-  const touch = e.touches[0];
-  moveDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingPopup = false);
-
-
-// ✅ 항목선택 창 드래그 이동 (PC + 모바일)
-let isDraggingLayer = false, offsetXLayer, offsetYLayer;
-
-function startLayerDrag(clientX, clientY) {
-  isDraggingLayer = true;
-  const rect = layerSwitcher.getBoundingClientRect();
-  offsetXLayer = clientX - rect.left;
-  offsetYLayer = clientY - rect.top;
-}
-
-function moveLayerDrag(clientX, clientY) {
-  if (!isDraggingLayer) return;
-  layerSwitcher.style.left = (clientX - offsetXLayer) + 'px';
-  layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
-}
-
-// PC 이벤트
-layerSwitcher.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; // 닫기 버튼 클릭 시 드래그 방지
-  startLayerDrag(e.clientX, e.clientY);
-});
-document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingLayer = false);
-
-// 모바일 이벤트
-layerSwitcher.addEventListener('touchstart', (e) => {
-  if(e.target.classList.contains('close-btn')) return;
-  const touch = e.touches[0];
-  startLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingLayer) return;
-  const touch = e.touches[0];
-  moveLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingLayer = false);
-
-    
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const parentCard = btn.closest('.info-card');
-    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    const target = btn.getAttribute('data-tab');
-    parentCard.querySelector('#' + target).style.display = 'block';
-    btn.classList.add('active');
-  });
-});
-
-
-  
-  
-
-// ---------------------- 전역변수 모음 ----------------------
-let showAll = false;          // 🔄 위치 표시 토글 상태
-let myCoord = null;           // EPSG:3857 변환 좌표
-let coordArray = null;        // [lat, lon] 배열 (위도, 경도)
-let smoothCoords = [];        // 스무딩용 최근 좌표 배열
-let initialized = false;      // 첫 위치 표시 여부
-let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 팝업 드래그 상태
-let isDraggingLayer = false, offsetXLayer, offsetYLayer; // 레이어창 드래그 상태
-
-// ---------------------- WMTS 공통 설정 ----------------------
-const projection = ol.proj.get('EPSG:3857');
-const projectionExtent = projection.getExtent();
-const size = ol.extent.getWidth(projectionExtent) / 256;
-const resolutions = new Array(19);
-const matrixIds = new Array(19);
-for (let z = 0; z < 19; ++z) {
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
-}
-
-// ---------------------- WMTS 레이어 생성 함수 ----------------------
-function createLayer(layerName, format='image/png') {
-  return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
-      }),
-      style: 'default',
-      requestEncoding: 'REST'
-    }),
-    visible: false
-  });
-}
-
-// ---------------------- 주요 레이어 정의 ----------------------
-const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
-const satLayer = createLayer('Satellite', 'image/jpeg'); satLayer.setVisible(true);
-const cadLayer = new ol.layer.Image({
-  source: new ol.source.ImageWMS({
-    url: 'https://api.vworld.kr/req/wms',
-    params: { 'LAYERS': 'LT_C_ADASRATODO','STYLES': 'LT_C_ADASRATODO','KEY': CONFIG.API_KEY,'FORMAT': 'image/png','TRANSPARENT': 'TRUE' },
-    serverType: 'geoserver',
-    projection: projection
-  }),
-  visible: false
-});
-const midnightLayer = createLayer('midnight'); midnightLayer.setVisible(false);
-const hybridLayer = createLayer('Hybrid'); hybridLayer.setVisible(true);
-
-// ---------------------- 지도 초기화 ----------------------
-const map = new ol.Map({
-  target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-  view: new ol.View({ center: ol.proj.fromLonLat([126.9780, 37.5665]), zoom: 7 })
-});
-
-// ---------------------- 체크박스 이벤트 ----------------------
-document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-
-// ---------------------- 팝업 닫기 함수 ----------------------
-function closeInfoPopup() { document.getElementById("infoPopup").style.display = "none"; }
-
-// ---------------------- 지도 클릭 이벤트 → 데이터 조회 ----------------------
-map.on('click', function(evt) {
-  const view = map.getView();
-  if (view.getZoom() < 19) return;
-
-  coordArray = ol.proj.toLonLat(evt.coordinate); // [lon, lat]
-  const lon = coordArray[0], lat = coordArray[1];
-
-  const infoPopup = document.getElementById("infoPopup");
-  infoPopup.style.display = "block";
-  infoPopup.style.left = "calc(50% - 160px)";
-
-  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
-
-  loadLandBuilding(lon, lat);
-  loadLandUse(lon, lat);
-  loadRealEstate(lon, lat);
-  loadRealTransaction(lon, lat);
-});
-
-// ---------------------- 데이터 조회 함수 ----------------------
-function loadLandBuilding(lon, lat) { /* 기존 코드 유지 */ }
-function loadLandUse(lon, lat) { /* 기존 코드 유지 */ }
-function loadRealEstate(lon, lat) { /* 기존 코드 유지 */ }
-function loadRealTransaction(lon, lat) { /* 기존 코드 유지 */ }
 
 // ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
@@ -763,21 +191,35 @@ function getHeading(pos) {
 navigator.geolocation.watchPosition((pos) => {
   if (pos.coords.accuracy > 50) return;
 
-  coordArray = [pos.coords.latitude, pos.coords.longitude]; // 위도·경도 배열 저장
+  // 위도·경도 배열 저장
+  coordArray = [pos.coords.latitude, pos.coords.longitude];
+
+  // EPSG:3857 변환 좌표
   myCoord = !initialized
     ? ol.proj.fromLonLat([coordArray[1], coordArray[0]])
     : getSmoothedCoord(coordArray[0], coordArray[1]);
   initialized = true;
 
+  // 마커 생성
   const marker = new ol.Feature(new ol.geom.Point(myCoord));
   marker.setId("myMarker");
-  marker.setStyle(new ol.style.Style({ image: new ol.style.Icon({ src: './red-marker.png', scale: 0.05, anchor: [0.5, 0.8], anchorXUnits: 'fraction', anchorYUnits: 'fraction' }) }));
+  marker.setStyle(new ol.style.Style({
+    image: new ol.style.Icon({
+      src: './red-marker.png',
+      scale: 0.05,
+      anchor: [0.5, 0.8],
+      anchorXUnits: 'fraction',
+      anchorYUnits: 'fraction'
+    })
+  }));
 
+  // 원형 버퍼
   let circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
   let circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
   circle100.setStyle(new ol.style.Style({ stroke: new ol.style.Stroke({ color: 'red', width: 2 }), fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' }) }));
   circle200.setStyle(new ol.style.Style({ stroke: new ol.style.Stroke({ color: 'red', width: 2 }), fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' }) }));
 
+  // 레이더(부채꼴)
   const angle = 90, radius = 200;
   const heading = getHeading(pos);
   const points = [myCoord];
@@ -788,6 +230,7 @@ navigator.geolocation.watchPosition((pos) => {
   const radar = new ol.Feature(new ol.geom.Polygon([points]));
   radar.setStyle(new ol.style.Style({ stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }), fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' }) }));
 
+  // 레이어 갱신
   positionLayer.getSource().clear();
   if (showAll) {
     positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
@@ -795,7 +238,7 @@ navigator.geolocation.watchPosition((pos) => {
   }
 });
 
-// ---------------------- 버튼 이벤트 (btn-map.png 아이콘 버튼) ----------------------
+// ---------------------- 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   showAll = !showAll;
   if (!showAll) positionLayer.getSource().clear();
@@ -810,14 +253,13 @@ map.on("singleclick", function(evt) {
     }
   });
 });
-  
-  // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
-  map.getViewport().addEventListener("contextmenu", function(evt) {
-    evt.preventDefault();
-    map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
-    map.getView().setZoom(7);
-  });
 
+// ---------------------- 우클릭 시 레벨7 복귀 ----------------------
+map.getViewport().addEventListener("contextmenu", function(evt) {
+  evt.preventDefault();
+  map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
+  map.getView().setZoom(7);
+});
 </script>
 
 </body>
