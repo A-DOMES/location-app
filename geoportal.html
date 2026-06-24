@@ -288,6 +288,9 @@
     <script src="config.js"></script>
     
   <script>
+  // ✅ 좌표 배열 선언
+  let coordArray = null; // [lat, lon]
+
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
@@ -298,8 +301,8 @@
     resolutions[z] = size / Math.pow(2, z);
     matrixIds[z] = z;
   }
-  
-  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+
+  // ✅ WMTS 레이어 생성 함수
   function createLayer(layerName, format='image/png') {
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
@@ -319,89 +322,52 @@
       visible: false
     });
   }
-  
-  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
-  
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
-  
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: {
-        'LAYERS': 'LT_C_ADASRATODO',
-        'STYLES': 'LT_C_ADASRATODO',
-        'KEY': CONFIG.API_KEY,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE'
-      },
-      serverType: 'geoserver',
-      projection: projection
-    }),
-    visible: false               // 지적도는 기본 꺼짐
-  });
-  
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-  
-  const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-  
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  // ✅ 주요 레이어 정의
+  const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+  const satLayer = createLayer('Satellite','image/jpeg'); satLayer.setVisible(true);
+  const hybridLayer = createLayer('Hybrid'); hybridLayer.setVisible(true);
+
+  // ✅ 지도 초기화
   const map = new ol.Map({
     target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+    layers: [baseLayer, satLayer, hybridLayer],
     view: new ol.View({
-      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7 
+      center: ol.proj.fromLonLat([126.9780, 37.5665]),
+      zoom: 7
     })
   });
-  
-  // ✅ 체크박스 이벤트 → 레이어 on/off
-  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-  
+
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
     document.getElementById("infoPopup").style.display = "none";
   }
-  
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-map.on('click', function(evt) {
-  const view = map.getView();
-  const zoom = view.getZoom();
 
-  if (zoom < 19) return; // 줌 레벨이 낮으면 조회하지 않음
+  // ✅ 지도 클릭 이벤트
+  map.on('click', function(evt) {
+    const view = map.getView();
+    const zoom = view.getZoom();
+    if (zoom < 19) return;
 
-  const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0];
-  const lat = coord[1];
+    const coord = ol.proj.toLonLat(evt.coordinate);
+    coordArray = [coord[1], coord[0]]; // [lat, lon] 저장
 
-  // 팝업 표시 및 초기화
-  const infoPopup = document.getElementById("infoPopup");
-  infoPopup.style.display = "block";
-  infoPopup.style.transform = "none";
-  infoPopup.style.left = "calc(50% - 160px)";
+    // 팝업 표시
+    const infoPopup = document.getElementById("infoPopup");
+    infoPopup.style.display = "block";
 
-  // 각 카드에 "조회 중..." 표시
-  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+    // 각 카드 초기화
+    document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+    document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+    document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+    document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // API 호출
-  loadLandBuilding(lon, lat);
-  loadLandUse(lon, lat);
-  loadRealEstate(lon, lat);
-  loadRealTransaction(lon, lat); // ✅ 실거래가 호출 추가
-});
-
+    // ✅ API 호출 (배열 사용)
+    loadLandBuilding(coordArray[1], coordArray[0]);
+    loadLandUse(coordArray[1], coordArray[0]);
+    loadRealEstate(coordArray[1], coordArray[0]);
+    loadRealTransaction(coordArray[1], coordArray[0]);
+  });
 
 // ✅ 1. 건물 정보 조회 (VWorld 건물 API)
 function loadLandBuilding(lon, lat) {
@@ -652,12 +618,26 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     return (heading + 360) % 360;
   }
 
-  // ---------------------- 내 위치 추적 ----------------------
+  // ✅ 내 위치 추적
+  const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+  map.addLayer(positionLayer);
+
+  let myCoord = null;
+  let smoothCoords = [];
+  let initialized = false;
+
+  function getSmoothedCoord(lat, lng) {
+    smoothCoords.push([lat, lng]);
+    if (smoothCoords.length > 5) smoothCoords.shift();
+    const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
+    const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
+    return ol.proj.fromLonLat([avgLng, avgLat]);
+  }
+
   navigator.geolocation.watchPosition((pos) => {
     if (pos.coords.accuracy > 50) return;
 
-    // ✅ 좌표 배열 갱신
-    coordArray = [pos.coords.latitude, pos.coords.longitude];
+    coordArray = [pos.coords.latitude, pos.coords.longitude]; // ✅ 배열 갱신
 
     if (!initialized) {
       myCoord = ol.proj.fromLonLat([coordArray[1], coordArray[0]]);
@@ -666,7 +646,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       myCoord = getSmoothedCoord(coordArray[0], coordArray[1]);
     }
 
-    // ✅ 내 위치 마커
+    // 마커, 원형, 레이더 생성 (myCoord 기반)
     const marker = new ol.Feature(new ol.geom.Point(myCoord));
     marker.setId("myMarker");
     marker.setStyle(new ol.style.Style({
@@ -678,6 +658,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         anchorYUnits: 'fraction'
       })
     }));
+
+    positionLayer.getSource().clear();
+    positionLayer.getSource().addFeature(marker);
+  });
 
     // ✅ 원형 버퍼 (100m, 200m)
     let circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
