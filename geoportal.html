@@ -765,7 +765,24 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
   });
 
-  // ---------------------- 토글 버튼 이벤트 ----------------------
+  // ---------------------- 모달창 토글 이벤트 ----------------------
+  const layerSwitcher = document.querySelector(".layer-switcher");
+  const mapToggleBtn = document.getElementById("mapToggleBtn");
+  const closeLayerBtn = document.getElementById("closeLayerBtn");
+
+  mapToggleBtn.addEventListener("click", () => {
+    layerSwitcher.style.display = "block";
+  });
+
+  closeLayerBtn.addEventListener("click", () => {
+    layerSwitcher.style.display = "none";
+  });
+
+  // ✅ 초기 상태는 보임 (네가 원하는 방향)
+  layerSwitcher.style.display = "block";
+
+  // ---------------------- 지도 기능 토글 이벤트 ----------------------
+  let showAll = true;
   document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     showAll = !showAll;
     if (showAll) {
