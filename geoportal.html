@@ -192,7 +192,7 @@
       /* 토글 버튼 */
     #toggleFeaturesBtn {
       position:absolute;
-      top:60px; left:50px;
+      top:50px; left:50px;
       width:60px; height:60px;
       background:rgba(255,255,255,0.25);
       backdrop-filter:blur(10px);
@@ -765,49 +765,18 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
   });
 
-// ---------------------- 모달창 토글 이벤트 ----------------------
-mapToggleBtn.addEventListener("click", () => {
-  layerSwitcher.style.display = "block";
-});
-
-closeLayerBtn.addEventListener("click", () => {
-  layerSwitcher.style.display = "none";
-});
-
-// ✅ 초기 상태는 보임
-layerSwitcher.style.display = "block";
-
-// ---------------------- 지도 기능 토글 이벤트 ----------------------
-let radarOn = false; // 처음엔 레이더 꺼짐, 지도 중심(zoom 7)
-
-// 앱 시작 시 지도 중심으로 설정
-if (mapCenterCoord) {
-  map.getView().setCenter(mapCenterCoord);
-  map.getView().setZoom(7);
-}
-
-document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
-  radarOn = !radarOn;
-
-  if (radarOn) {
-    // ✅ 사람 중심 모드: 레이더 켜기 + 줌 16
-    radarLayer.setVisible(true);
-
-    if (myCoord) {
-      map.getView().setCenter(myCoord);
-      map.getView().setZoom(16);
+  // ---------------------- 토글 버튼 이벤트 ----------------------
+  document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
+    showAll = !showAll;
+    if (showAll) {
+      if (myCoord) {
+        map.getView().setCenter(myCoord);
+        map.getView().setZoom(15);
+      }
+    } else {
+      positionLayer.getSource().clear();
     }
-  } else {
-    // ✅ 지도 중심 모드: 레이더 끄기 + 줌 7
-    radarLayer.setVisible(false);
-
-    if (mapCenterCoord) {
-      map.getView().setCenter(mapCenterCoord);
-      map.getView().setZoom(7);
-    }
-  }
-});
-
+  });
     
   // ---------------------- 마커 클릭 시 이동 ----------------------
   map.on("singleclick", function(evt) {
