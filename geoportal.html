@@ -766,10 +766,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 
 // ---------------------- 모달창 토글 이벤트 ----------------------
-const layerSwitcher = document.querySelector(".layer-switcher"); // ✅ 한 번만 선언
-const mapToggleBtn = document.getElementById("mapToggleBtn");
-const closeLayerBtn = document.getElementById("closeLayerBtn");
-
 mapToggleBtn.addEventListener("click", () => {
   layerSwitcher.style.display = "block";
 });
@@ -788,6 +784,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   showAll = !showAll;
 
   if (showAll) {
+    // 사람 중심 모드
     circleLayer.setVisible(true);
     radarLayer.setVisible(true);
 
@@ -796,6 +793,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       map.getView().setZoom(15);
     }
   } else {
+    // 지도 중심 모드
     circleLayer.setVisible(false);
     radarLayer.setVisible(false);
 
