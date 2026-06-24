@@ -765,35 +765,51 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
   });
 
-  // ---------------------- 모달창 토글 이벤트 ----------------------
-  const layerSwitcher = document.querySelector(".layer-switcher");
-  const mapToggleBtn = document.getElementById("mapToggleBtn");
-  const closeLayerBtn = document.getElementById("closeLayerBtn");
+// ---------------------- 모달창 토글 이벤트 ----------------------
+const layerSwitcher = document.querySelector(".layer-switcher");
+const mapToggleBtn = document.getElementById("mapToggleBtn");
+const closeLayerBtn = document.getElementById("closeLayerBtn");
 
-  mapToggleBtn.addEventListener("click", () => {
-    layerSwitcher.style.display = "block";
-  });
-
-  closeLayerBtn.addEventListener("click", () => {
-    layerSwitcher.style.display = "none";
-  });
-
-  // ✅ 초기 상태는 보임 (네가 원하는 방향)
+mapToggleBtn.addEventListener("click", () => {
   layerSwitcher.style.display = "block";
+});
 
-  // ---------------------- 지도 기능 토글 이벤트 ----------------------
-  let showAll = true;
-  document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
-    showAll = !showAll;
-    if (showAll) {
-      if (myCoord) {
-        map.getView().setCenter(myCoord);
-        map.getView().setZoom(15);
-      }
-    } else {
-      positionLayer.getSource().clear();
+closeLayerBtn.addEventListener("click", () => {
+  layerSwitcher.style.display = "none";
+});
+
+// ✅ 초기 상태는 보임
+layerSwitcher.style.display = "block";
+
+// ---------------------- 지도 기능 토글 이벤트 ----------------------
+let showAll = true; // 처음엔 켜져 있음
+
+document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
+  showAll = !showAll;
+
+  if (showAll) {
+    // ✅ 사람 중심 모드: 마커/원형/레이더 보이기
+    markerLayer.setVisible(true);
+    circleLayer.setVisible(true);
+    radarLayer.setVisible(true);
+
+    if (myCoord) {
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(15);
     }
-  });
+  } else {
+    // ✅ 지도 중심 모드: 마커/원형/레이더 숨기기
+    markerLayer.setVisible(false);
+    circleLayer.setVisible(false);
+    radarLayer.setVisible(false);
+
+    if (mapCenterCoord) {
+      map.getView().setCenter(mapCenterCoord);
+      map.getView().setZoom(12);
+    }
+  }
+});
+
     
   // ---------------------- 마커 클릭 시 이동 ----------------------
   map.on("singleclick", function(evt) {
