@@ -650,132 +650,108 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
   
   
-  // ---------------------- 내 위치 및 분석용 레이어 ----------------------
-  const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
-  map.addLayer(positionLayer);
-  
-  let myCoord = null;
-  let smoothCoords = []; // 최근 좌표 저장용 배열
-  let initialized = false; // 첫 마커 표시 여부
-  
-  // ---------------------- 스무딩 함수 ----------------------
-  function getSmoothedCoord(lat, lng) {
-    // 최근 좌표 추가
-    smoothCoords.push([lat, lng]);
-    if (smoothCoords.length > 5) smoothCoords.shift(); // 최근 5개만 유지
-  
-    // 평균값 계산
-    const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
-    const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
-  
-    return ol.proj.fromLonLat([avgLng, avgLat]);
+
+// ---------------------- 내 위치 및 분석용 레이어 ----------------------
+const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+map.addLayer(positionLayer);
+
+let myCoord = null;
+let smoothCoords = []; // 최근 좌표 저장용 배열
+let initialized = false; // 첫 위치 표시 여부
+
+// ---------------------- 스무딩 함수 ----------------------
+function getSmoothedCoord(lat, lng) {
+  smoothCoords.push([lat, lng]);
+  if (smoothCoords.length > 5) smoothCoords.shift(); // 최근 5개만 유지
+
+  const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
+  const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
+
+  return ol.proj.fromLonLat([avgLng, avgLat]);
+}
+
+// ---------------------- heading 보정 함수 ----------------------
+function getHeading(pos) {
+  let heading = pos.coords.heading;
+  if (heading === null || isNaN(heading)) heading = 0;
+  heading = (heading + 360) % 360;
+  return heading;
+}
+
+// ---------------------- 마커·원형·레이더 Feature (한 번만 생성) ----------------------
+const marker = new ol.Feature(new ol.geom.Point([0,0]));
+marker.setId("myMarker"); // 클릭 이벤트에서 식별할 ID
+marker.setStyle(new ol.style.Style({
+  image: new ol.style.Icon({
+    src: './red-marker.png',
+    scale: 0.05,
+    anchor: [0.5, 0.8],
+    anchorXUnits: 'fraction',
+    anchorYUnits: 'fraction'
+  })
+}));
+
+const circle100 = new ol.Feature(new ol.geom.Circle([0,0], 100));
+circle100.setStyle(new ol.style.Style({
+  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+  fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
+}));
+
+const circle200 = new ol.Feature(new ol.geom.Circle([0,0], 200));
+circle200.setStyle(new ol.style.Style({
+  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+  fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
+}));
+
+const radar = new ol.Feature(new ol.geom.Polygon([]));
+radar.setStyle(new ol.style.Style({
+  stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
+  fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
+}));
+
+// ✅ 레이어에 한 번만 추가
+positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
+
+// ---------------------- 내 위치 추적 ----------------------
+navigator.geolocation.watchPosition((pos) => {
+  if (pos.coords.accuracy > 50) return;
+
+  let coord;
+  if (!initialized) {
+    coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+    initialized = true;
+  } else {
+    coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
   }
 
-  // ---------------------- heading 보정 함수 ----------------------
-  function getHeading(pos) {
-    let heading = pos.coords.heading;
-  
-    // 값이 없거나 NaN이면 기본값(북쪽)으로 보정
-    if (heading === null || isNaN(heading)) {
-      heading = 0;
-    }
-  
-    // 각도를 0~360 범위로 정규화
-    heading = (heading + 360) % 360;
-  
-    return heading;
+  myCoord = coord;
+
+  // ✅ 좌표만 갱신
+  marker.getGeometry().setCoordinates(myCoord);
+  circle100.getGeometry().setCenter(myCoord);
+  circle200.getGeometry().setCenter(myCoord);
+
+  // ✅ 레이더 좌표 갱신
+  const angle = 90, radius = 200;
+  const heading = getHeading(pos);
+  const points = [myCoord];
+  for (let a = -angle/2; a <= angle/2; a += 5) {
+    const rad = (heading + a) * Math.PI / 180;
+    const dx = radius * Math.cos(rad);
+    const dy = radius * Math.sin(rad);
+    points.push([myCoord[0] + dx, myCoord[1] + dy]);
   }
-
-  // ---------------------- 내 위치 추적 ----------------------
-  navigator.geolocation.watchPosition((pos) => {
-    // 정확도 필터링 (50m 이상이면 무시)
-    if (pos.coords.accuracy > 50) return;
-  
-    let coord;
-  
-    if (!initialized) {
-      // ✅ 첫 위치는 바로 표시
-      coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
-      initialized = true;
-    } else {
-      // ✅ 이후부터는 스무딩 적용
-      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
-    }
-  
-    myCoord = coord;
-  
-    // ✅ 내 위치 마커
-    const marker = new ol.Feature(new ol.geom.Point(myCoord));
-    marker.setId("myMarker");
-    marker.setStyle(new ol.style.Style({
-      image: new ol.style.Icon({
-        src: './red-marker.png',   // 루트에 있는 PNG 파일
-        scale: 0.05,               // 작게 표시 → SVG처럼 보임
-        anchor: [0.5, 0.8],        // 살짝 아래로 내림
-        anchorXUnits: 'fraction',
-        anchorYUnits: 'fraction'
-      })
-    }));
-  
-    // ✅ 원형 버퍼 (100m, 200m)
-    // 최초 한 번만 생성
-    let circle100 = new ol.Feature(new ol.geom.Circle(myCoord, 100));
-    let circle200 = new ol.Feature(new ol.geom.Circle(myCoord, 200));
-    
-    circle100.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
-    }));
-    circle200.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
-    }));
-    
-    positionLayer.getSource().addFeatures([circle100, circle200]);
-    
-    // 이후 위치 갱신 시에는 새로 만들지 않고 중심만 바꿔줌
-    circle100.getGeometry().setCenter(myCoord);
-    circle200.getGeometry().setCenter(myCoord);
-
-  
-    // ✅ 레이더(부채꼴)
-    const angle = 90, radius = 200;
-    const heading = getHeading(pos); // 보정된 heading 값
-    const points = [myCoord];
-    
-    for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = (heading + a) * Math.PI / 180;
-      const dx = radius * Math.cos(rad);
-      const dy = radius * Math.sin(rad);
-    
-      // EPSG:3857 좌표에서 직접 오프셋 적용
-      const dest = [myCoord[0] + dx, myCoord[1] + dy];
-      points.push(dest);
-    }
-    
-    const radar = new ol.Feature(new ol.geom.Polygon([points]));
-    radar.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
-      fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
-    }));
-
-  
-    // ---------------------- 레이어 갱신 ----------------------
-    positionLayer.getSource().clear();
-    positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
-  });
+  radar.getGeometry().setCoordinates([points]);
+});
 
 // ---------------------- 모달창 토글 이벤트 ----------------------
 mapToggleBtn.addEventListener("click", () => {
   layerSwitcher.style.display = "block";
 });
-
 closeLayerBtn.addEventListener("click", () => {
   layerSwitcher.style.display = "none";
 });
-
-// ✅ 초기 상태는 보임
-layerSwitcher.style.display = "block";
+layerSwitcher.style.display = "block"; // 초기 상태는 보임
 
 // ---------------------- 지도 기능 토글 이벤트 ----------------------
 let radarOn = false; // 처음엔 레이더 꺼짐, 지도 중심(zoom 7)
@@ -791,16 +767,17 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
 
   if (radarOn) {
     // ✅ 사람 중심 모드: 레이더 켜기 + 줌 16
-    radarLayer.setVisible(true);
-
+    radar.setStyle(new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
+      fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
+    }));
     if (myCoord) {
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
     }
   } else {
     // ✅ 지도 중심 모드: 레이더 끄기 + 줌 7
-    radarLayer.setVisible(false);
-
+    radar.setStyle(null); // 레이더 숨김
     if (mapCenterCoord) {
       map.getView().setCenter(mapCenterCoord);
       map.getView().setZoom(7);
@@ -808,25 +785,21 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   }
 });
 
-    
-  // ---------------------- 마커 클릭 시 이동 ----------------------
-  map.on("singleclick", function(evt) {
-    map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-      if (feature.getId() === "myMarker" && myCoord) {
-        map.getView().setCenter(myCoord);
-        map.getView().setZoom(15);
-      }
-    });
+// ---------------------- 마커 클릭 시 이동 ----------------------
+map.on("singleclick", function(evt) {
+  map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+    if (feature.getId() === "myMarker" && myCoord) {
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(15);
+    }
   });
-  
-  // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
-  map.getViewport().addEventListener("contextmenu", function(evt) {
-    evt.preventDefault();
-    map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
-    map.getView().setZoom(7);
-  });
+});
 
+// ---------------------- 우클릭 시 레벨7 복귀 ----------------------
+map.getViewport().addEventListener("contextmenu", function(evt) {
+  evt.preventDefault();
+  map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
+  map.getView().setZoom(7);
+});
 </script>
-
 </body>
-</html>
