@@ -186,6 +186,32 @@
     margin: 0 auto;               /* 좌우 여백 확보 */
   }
 }
+
+/* ✅ 사람/지도과련 토글 전용 스타일 */
+#toggleFeaturesBtn {
+  position:absolute;
+  top:170px; 
+  left:5px;
+  width:60px; 
+  height:60px;
+  background:rgba(255,255,255,0.25);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:2px solid #1976d2;
+  border-radius:50%; /* 원형 버튼 */
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform 0.2s ease, background 0.3s ease;
+  padding:0;
+}
+#toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); }
+#toggleFeaturesBtn:active { transform:scale(0.95); }
+#toggleFeaturesBtn img { width:32px; height:32px; pointer-events:none; }
+      
       
   </style>
   </head>
