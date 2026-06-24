@@ -209,36 +209,67 @@
     </div>
   
     <!-- ✅ 팝업 영역 -->
-    <div id="infoPopup" style="display:none;">
-      <div class="popup-header">
-        <h3>조회결과</h3>
-        <div class="close-btn" onclick="closeInfoPopup()">×</div>
-      </div>
-    
-      <!-- 건물 정보 -->
-      <div class="info-card" id="landBuildingInfo">
-        <h4>🏢 건물 정보</h4>
-        <p>조회 중...</p>
-      </div>
-    
-      <!-- 토지 이용 -->
-      <div class="info-card" id="landUseInfo">
-        <h4>📜 토지 이용</h4>
-        <p>조회 중...</p>
-      </div>
-    
-      <!-- 공시지가 -->
-      <div class="info-card" id="realEstateInfo">
-        <h4>💰 공시지가</h4>
-        <p>조회 중...</p>
-      </div>
-    
-      <!-- 실거래가 -->
-      <div class="info-card" id="realTransactionInfo">
-        <h4>📊 실거래가</h4>
-        <p>조회 중...</p>
-      </div>
+<div id="infoPopup" style="display:none;">
+  <div class="popup-header">
+    <h3>조회결과</h3>
+    <div class="close-btn" onclick="closeInfoPopup()">×</div>
+  </div>
+
+  <!-- 건물 정보 -->
+  <div class="info-card" id="landBuildingInfo">
+    <h4>🏢 건물 정보</h4>
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="bldg-basic">기본정보</button>
+      <button class="tab-btn" data-tab="bldg-usage">용도</button>
+      <button class="tab-btn" data-tab="bldg-area">면적</button>
+      <button class="tab-btn" data-tab="bldg-right">권리</button>
     </div>
+    <div class="tab-content" id="bldg-basic">조회 중...</div>
+    <div class="tab-content" id="bldg-usage" style="display:none;">조회 중...</div>
+    <div class="tab-content" id="bldg-area" style="display:none;">조회 중...</div>
+    <div class="tab-content" id="bldg-right" style="display:none;">조회 중...</div>
+  </div>
+
+  <!-- 토지 이용 -->
+  <div class="info-card" id="landUseInfo">
+    <h4>📜 토지 이용</h4>
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="land-zone">용도지역</button>
+      <button class="tab-btn" data-tab="land-district">지구지정</button>
+      <button class="tab-btn" data-tab="land-etc">기타</button>
+    </div>
+    <div class="tab-content" id="land-zone">조회 중...</div>
+    <div class="tab-content" id="land-district" style="display:none;">조회 중...</div>
+    <div class="tab-content" id="land-etc" style="display:none;">조회 중...</div>
+  </div>
+
+  <!-- 공시지가 -->
+  <div class="info-card" id="realEstateInfo">
+    <h4>💰 공시지가</h4>
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="price-basic">개별지가</button>
+      <button class="tab-btn" data-tab="price-trend">추세분석</button>
+      <button class="tab-btn" data-tab="price-parcel">필지정보</button>
+    </div>
+    <div class="tab-content" id="price-basic">조회 중...</div>
+    <div class="tab-content" id="price-trend" style="display:none;">조회 중...</div>
+    <div class="tab-content" id="price-parcel" style="display:none;">조회 중...</div>
+  </div>
+
+  <!-- 실거래가 -->
+  <div class="info-card" id="realTransactionInfo">
+    <h4>📊 실거래가</h4>
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="deal-sale">매매</button>
+      <button class="tab-btn" data-tab="deal-jeonse">전세</button>
+      <button class="tab-btn" data-tab="deal-wolse">월세</button>
+    </div>
+    <div class="tab-content" id="deal-sale">조회 중...</div>
+    <div class="tab-content" id="deal-jeonse" style="display:none;">조회 중...</div>
+    <div class="tab-content" id="deal-wolse" style="display:none;">조회 중...</div>
+  </div>
+</div>
+
   
     <!-- ✅ API Key 설정 -->
     <script src="config.js"></script>
@@ -329,7 +360,7 @@
   }
   
   // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-map.on('click', function(evt) {
+  map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
 
@@ -549,6 +580,17 @@ document.addEventListener('touchmove', (e) => {
   moveLayerDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingLayer = false);
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const parentCard = btn.closest('.info-card');
+    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const target = btn.getAttribute('data-tab');
+    parentCard.querySelector('#' + target).style.display = 'block';
+    btn.classList.add('active');
+  });
+});
 
 
   
