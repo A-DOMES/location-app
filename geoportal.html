@@ -169,10 +169,10 @@
       </div>
       <div class="layer-items">
         <label><input type="checkbox" id="baseLayer" checked> 기본지도</label>
-        <label><input type="checkbox" id="satLayer"> 항공사진</label>
+        <label><input type="checkbox" id="satLayer" checked> 항공사진</label>
         <label><input type="checkbox" id="cadLayer"> 지적도</label>
         <label><input type="checkbox" id="midnightLayer"> Midnight</label>
-        <label><input type="checkbox" id="hybridLayer"> Hybrid</label>
+        <label><input type="checkbox" id="hybridLayer" checked> Hybrid</label>
         </div>
     </div>
   
@@ -222,8 +222,12 @@
   }
   
   // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); baseLayer.setVisible(true);
+  const baseLayer = createLayer('Base'); 
+  baseLayer.setVisible(true);   // 기본지도 켜기
+  
   const satLayer = createLayer('Satellite', 'image/jpeg');
+  satLayer.setVisible(true);    // 항공사진 켜기
+  
   const cadLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
       url: 'https://api.vworld.kr/req/wms',
@@ -237,10 +241,15 @@
       serverType: 'geoserver',
       projection: projection
     }),
-    visible: false
+    visible: false               // 지적도는 기본 꺼짐
   });
+  
   const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
+  
   const hybridLayer = createLayer('Hybrid');     
+  hybridLayer.setVisible(true);   // Hybrid 켜기
+
   
   // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
   const map = new ol.Map({
