@@ -215,25 +215,30 @@
         <div class="close-btn" onclick="closeInfoPopup()">×</div>
       </div>
     
-      <!-- 건물 정보 카드 -->
+      <!-- 건물 정보 -->
       <div class="info-card" id="landBuildingInfo">
         <h4>🏢 건물 정보</h4>
         <p>조회 중...</p>
       </div>
     
-      <!-- 토지 이용 카드 -->
+      <!-- 토지 이용 -->
       <div class="info-card" id="landUseInfo">
         <h4>📜 토지 이용</h4>
         <p>조회 중...</p>
       </div>
     
-      <!-- 공시지가 카드 -->
+      <!-- 공시지가 -->
       <div class="info-card" id="realEstateInfo">
         <h4>💰 공시지가</h4>
         <p>조회 중...</p>
       </div>
+    
+      <!-- 실거래가 -->
+      <div class="info-card" id="realTransactionInfo">
+        <h4>📊 실거래가</h4>
+        <p>조회 중...</p>
+      </div>
     </div>
-
   
     <!-- ✅ API Key 설정 -->
     <script src="config.js"></script>
@@ -324,33 +329,32 @@
   }
   
   // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-  map.on('click', function(evt) {
-    const view = map.getView();
-    const zoom = view.getZoom();
-  
-    // ✅ 줌 레벨이 19 이상일 때만 조회 실행
-    if (zoom < 20) {
-      return; // 그냥 무시하고 팝업 안 뜨게 함
-    }
-  
-    const coord = ol.proj.toLonLat(evt.coordinate);
-    const lon = coord[0];
-    const lat = coord[1];
-  
-  // 최초 오픈 시 튕김 방지를 위해 transform 스타일 제거하고 정중앙 계산 배치
-    const infoPopup = document.getElementById("infoPopup");
-    infoPopup.style.display = "block";
-    infoPopup.style.transform = "none";
-    infoPopup.style.left = "calc(50% - 160px)";
-  
-    document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-    document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-    document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  
-    loadLandBuilding(lon, lat);
-    loadLandUse(lon, lat);
-    loadRealEstate(lon, lat);
-  });
+map.on('click', function(evt) {
+  const view = map.getView();
+  const zoom = view.getZoom();
+
+  if (zoom < 20) return;
+
+  const coord = ol.proj.toLonLat(evt.coordinate);
+  const lon = coord[0];
+  const lat = coord[1];
+
+  const infoPopup = document.getElementById("infoPopup");
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)";
+
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
+  loadLandBuilding(lon, lat);
+  loadLandUse(lon, lat);
+  loadRealEstate(lon, lat);
+  loadRealTransaction(lon, lat); // ✅ 실거래가 호출 추가
+});
+
   
   // ✅ 1. 건물 정보 조회 (기본 건물 데이터)
   function loadLandBuilding(lon, lat) {
@@ -410,6 +414,48 @@
       });
   }
 
+  // ✅ 4. 실거래가 조회
+  function loadRealTransaction(lon, lat) {
+  // 1. VWorld 지번 API로 법정동 코드/지번 확보
+  fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getAddress&key=${CONFIG.API_KEY}&point=${lon},${lat}&type=PARCEL&format=json`)
+    .then(res => res.json())
+    .then(addrData => {
+      const parcel = addrData.response?.result?.items[0];
+      if (!parcel) {
+        document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 지번 정보 없음";
+        return;
+      }
+
+      const lawdCd = parcel.addrcode; // 법정동 코드
+      const jibun = parcel.jibun;     // 지번
+
+      // 2. 국토부 실거래가 API 호출 (예: 아파트)
+      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${CONFIG.MOLIT_KEY}&LAWD_CD=${lawdCd}&DEAL_YMD=202605`)
+        .then(res => res.json())
+        .then(tradeData => {
+          const items = tradeData.response?.body?.items;
+          if (items && items.length > 0) {
+            const trade = items[0];
+            document.getElementById("realTransactionInfo").innerHTML =
+              `<b>📊 실거래가</b><br>
+               유형: 아파트<br>
+               거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}<br>
+               거래금액: ${trade.dealAmount} 만원<br>
+               전용면적: ${trade.area}㎡`;
+          } else {
+            document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 데이터 없음";
+          }
+        })
+        .catch(err => {
+          document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가 조회 실패:</b> " + err.message;
+        });
+    })
+    .catch(err => {
+      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 지번 조회 실패:</b> " + err.message;
+    });
+}
+
+    
 // ✅ 레이어 제어 UI 토글 기능
 const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
 const mapToggleBtn = document.getElementById('mapToggleBtn'); // 지도항목 버튼
