@@ -266,15 +266,23 @@
   
   // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
   map.on('click', function(evt) {
+    const view = map.getView();
+    const zoom = view.getZoom();
+  
+    // ✅ 줌 레벨이 19 이상일 때만 조회 실행
+    if (zoom < 19) {
+      return; // 그냥 무시하고 팝업 안 뜨게 함
+    }
+  
     const coord = ol.proj.toLonLat(evt.coordinate);
     const lon = coord[0];
     const lat = coord[1];
   
-    // 최초 오픈 시 튕김 방지를 위해 transform 스타일 제거하고 정중앙 계산 배치
+  // 최초 오픈 시 튕김 방지를 위해 transform 스타일 제거하고 정중앙 계산 배치
     const infoPopup = document.getElementById("infoPopup");
     infoPopup.style.display = "block";
     infoPopup.style.transform = "none";
-    infoPopup.style.left = "calc(50% - 160px)"; // 팝업 가로폭 320px의 절반을 빼서 중앙 배치
+    infoPopup.style.left = "calc(50% - 160px)";
   
     document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
     document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
