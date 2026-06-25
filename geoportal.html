@@ -241,12 +241,7 @@
       transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
     }
 
- #infoPopup, #layer, #toggleFeaturesBtn, #compass {
-  position: absolute; /* 또는 fixed */
-  left: 0px;
-  top: 0px;
-}
-         
+항목선태ㅐㄱ
   </style>  
 
   </head>
@@ -605,20 +600,54 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
+// ✅ 나침판 이동로직
+const compass = document.getElementById("compass");
+let isDraggingCompass = false, offsetXCompass, offsetYCompass;
 
-// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
-const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창 요소
-let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
-
-// 드래그 시작 (마우스/터치 눌렀을 때)
-function startDrag(clientX, clientY) {
-  isDraggingPopup = true;
-  const rect = infoPopup.getBoundingClientRect(); // 팝업 위치/크기 가져오기
-  offsetXPopup = clientX - rect.left; // 클릭 지점과 팝업 왼쪽 거리
-  offsetYPopup = clientY - rect.top;  // 클릭 지점과 팝업 위쪽 거리
+function startCompassDrag(clientX, clientY) {
+  isDraggingCompass = true;
+  const rect = compass.getBoundingClientRect();
+  offsetXCompass = clientX - rect.left;
+  offsetYCompass = clientY - rect.top;
 }
 
-// 드래그 이동 (마우스/터치 움직일 때)
+function moveCompassDrag(clientX, clientY) {
+  if (!isDraggingCompass) return;
+  compass.style.left = (clientX - offsetXCompass) + 'px';
+  compass.style.top = (clientY - offsetYCompass) + 'px';
+  compass.style.right = "auto";
+  compass.style.bottom = "auto";
+}
+
+// PC 이벤트
+compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingCompass = false);
+
+// 모바일 이벤트
+compass.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  startCompassDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingCompass) return;
+  const touch = e.touches[0];
+  moveCompassDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingCompass = false);
+
+    
+// ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
+const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창
+let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
+
+function startDrag(clientX, clientY) {
+  isDraggingPopup = true;
+  const rect = infoPopup.getBoundingClientRect();
+  offsetXPopup = clientX - rect.left;
+  offsetYPopup = clientY - rect.top;
+}
+
 function moveDrag(clientX, clientY) {
   if (!isDraggingPopup) return;
   infoPopup.style.left = (clientX - offsetXPopup) + 'px';
@@ -648,47 +677,12 @@ document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
 // ✅ 항목선택 창 드래그 이동 (PC + 모바일)
-const layer = document.getElementById("layer"); // 항목선택 창 요소
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
-// 드래그 시작
-function startLayerDrag(clientX, clientY) {
-  isDraggingLayer = true;
-  const rect = layer.getBoundingClientRect();
-  offsetXLayer = clientX - rect.left;
-  offsetYLayer = clientY - rect.top;
-}
-
-// 드래그 이동
-function moveLayerDrag(clientX, clientY) {
-  if (!isDraggingLayer) return;
-  layer.style.left = (clientX - offsetXLayer) + 'px';
-  layer.style.top = (clientY - offsetYLayer) + 'px';
-}
-
-// PC 이벤트
-layer.addEventListener('mousedown', (e) => startLayerDrag(e.clientX, e.clientY));
-document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingLayer = false);
-
-// 모바일 이벤트
-layer.addEventListener('touchstart', (e) => {
-  const touch = e.touches[0];
-  startLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingLayer) return;
-  const touch = e.touches[0];
-  moveLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingLayer = false);
-
-
 // ✅ 토글 버튼 드래그 이동 (PC + 모바일)
-const toggleBtn = document.getElementById("toggleFeaturesBtn"); // 토글 버튼 요소
+const toggleBtn = document.getElementById("toggleFeaturesBtn");
 let isDraggingToggle = false, offsetXToggle, offsetYToggle;
 
-// 드래그 시작
 function startToggleDrag(clientX, clientY) {
   isDraggingToggle = true;
   const rect = toggleBtn.getBoundingClientRect();
@@ -696,17 +690,16 @@ function startToggleDrag(clientX, clientY) {
   offsetYToggle = clientY - rect.top;
 }
 
-// 드래그 이동
 function moveToggleDrag(clientX, clientY) {
   if (!isDraggingToggle) return;
   toggleBtn.style.left = (clientX - offsetXToggle) + 'px';
   toggleBtn.style.top = (clientY - offsetYToggle) + 'px';
-  toggleBtn.style.right = "auto"; // 기본 right 고정 해제
-  toggleBtn.style.bottom = "auto"; // 기본 bottom 고정 해제
 }
 
 // PC 이벤트
-toggleBtn.addEventListener('mousedown', (e) => startToggleDrag(e.clientX, e.clientY));
+toggleBtn.addEventListener('mousedown', (e) => {
+  startToggleDrag(e.clientX, e.clientY);
+});
 document.addEventListener('mousemove', (e) => moveToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingToggle = false);
 
@@ -721,59 +714,20 @@ document.addEventListener('touchmove', (e) => {
   moveToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingToggle = false);
-
-
-// ✅ 나침판 드래그 이동 (PC + 모바일)
-const compass = document.getElementById("compass"); // 나침판 요소
-let isDraggingCompass = false, offsetXCompass, offsetYCompass;
-
-// 드래그 시작
-function startCompassDrag(clientX, clientY) {
-  isDraggingCompass = true;
-  const rect = compass.getBoundingClientRect();
-  offsetXCompass = clientX - rect.left;
-  offsetYCompass = clientY - rect.top;
-}
-
-// 드래그 이동
-function moveCompassDrag(clientX, clientY) {
-  if (!isDraggingCompass) return;
-  compass.style.left = (clientX - offsetXCompass) + 'px';
-  compass.style.top = (clientY - offsetYCompass) + 'px';
-  compass.style.right = "auto"; // 기본 right 고정 해제
-  compass.style.bottom = "auto"; // 기본 bottom 고정 해제
-}
-
-// PC 이벤트
-compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingCompass = false);
-
-// 모바일 이벤트
-compass.addEventListener('touchstart', (e) => {
-  const touch = e.touches[0];
-  startCompassDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingCompass) return;
-  const touch = e.touches[0];
-  moveCompassDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingCompass = false);
-
-
-// ✅ 탭 버튼 클릭 이벤트 (조회결과 팝업 내 탭 전환)
+    
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const parentCard = btn.closest('.info-card');
-    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none'); // 모든 탭 숨김
-    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); // 버튼 active 해제
+    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-    const target = btn.getAttribute('data-tab'); // 클릭한 버튼의 data-tab 속성값
-    parentCard.querySelector('#' + target).style.display = 'block'; // 해당 탭만 표시
-    btn.classList.add('active'); // 클릭한 버튼 활성화
+    const target = btn.getAttribute('data-tab');
+    parentCard.querySelector('#' + target).style.display = 'block';
+    btn.classList.add('active');
   });
 });
+
+
   
   
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
@@ -788,13 +742,13 @@ let lastHeading = 0;
 // ---------------------- 위도·경도 기록 배열 ----------------------
 let positions = [];
 
-// ---------------------- heading 스무딩 함수 ----------------------
-let headingHistory = [];
-
-function getSmoothedHeading(newHeading) {
-  headingHistory.push(newHeading);
-  if (headingHistory.length > 5) headingHistory.shift(); // 최근 5개만 유지
-  return headingHistory.reduce((sum, h) => sum + h, 0) / headingHistory.length;
+// ---------------------- 스무딩 함수 ----------------------
+function getSmoothedCoord(lat, lng) {
+  smoothCoords.push([lat, lng]);
+  if (smoothCoords.length > 5) smoothCoords.shift();
+  const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
+  const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
+  return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
 // ---------------------- 방위각 계산 함수 ----------------------
@@ -869,14 +823,10 @@ navigator.geolocation.watchPosition((pos) => {
 
   // ✅ heading 계산 (최근 두 점으로)
   if (positions.length === 2) {
-    let rawHeading = calculateBearing(
+    lastHeading = calculateBearing(
       positions[0][0], positions[0][1],
       positions[1][0], positions[1][1]
     );
-
-    // ✅ 스무딩된 heading 적용
-    lastHeading = getSmoothedHeading(rawHeading);
-
     // 나침반 회전
     document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
   }
@@ -945,4 +895,3 @@ map.getViewport().addEventListener("contextmenu", function(evt) {
 </script>
 </body>
 </html>
-
