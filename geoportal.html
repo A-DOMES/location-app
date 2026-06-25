@@ -224,21 +224,23 @@
       pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
     }
 
- /* ✅ 나침판 오버레이 */
-      #compass {
+    /* ✅ 나침판 오버레이 */
+    #compass {
       position: absolute;
-      top: 60px; right: 10px;
+      top: 60px; right: 10px;   /* 기본 위치 */
       width: 60px; height: 60px;
       background: rgba(255,255,255,0.5);
       border-radius: 50%;
       z-index: 1000;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      cursor: move; /* 드래그 가능 표시 */
     }
     #compass img {
       width: 90px; height: 90px;
       transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
     }
+
           
   </style>  
 
@@ -600,16 +602,18 @@ mapToggleBtn.addEventListener('click', () => {
 
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
-const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창
+const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창 요소
 let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
 
+// 드래그 시작 (마우스/터치 눌렀을 때)
 function startDrag(clientX, clientY) {
   isDraggingPopup = true;
-  const rect = infoPopup.getBoundingClientRect();
-  offsetXPopup = clientX - rect.left;
-  offsetYPopup = clientY - rect.top;
+  const rect = infoPopup.getBoundingClientRect(); // 팝업 위치/크기 가져오기
+  offsetXPopup = clientX - rect.left; // 클릭 지점과 팝업 왼쪽 거리
+  offsetYPopup = clientY - rect.top;  // 클릭 지점과 팝업 위쪽 거리
 }
 
+// 드래그 이동 (마우스/터치 움직일 때)
 function moveDrag(clientX, clientY) {
   if (!isDraggingPopup) return;
   infoPopup.style.left = (clientX - offsetXPopup) + 'px';
@@ -639,12 +643,47 @@ document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
 // ✅ 항목선택 창 드래그 이동 (PC + 모바일)
+const layer = document.getElementById("layer"); // 항목선택 창 요소
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
+// 드래그 시작
+function startLayerDrag(clientX, clientY) {
+  isDraggingLayer = true;
+  const rect = layer.getBoundingClientRect();
+  offsetXLayer = clientX - rect.left;
+  offsetYLayer = clientY - rect.top;
+}
+
+// 드래그 이동
+function moveLayerDrag(clientX, clientY) {
+  if (!isDraggingLayer) return;
+  layer.style.left = (clientX - offsetXLayer) + 'px';
+  layer.style.top = (clientY - offsetYLayer) + 'px';
+}
+
+// PC 이벤트
+layer.addEventListener('mousedown', (e) => startLayerDrag(e.clientX, e.clientY));
+document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingLayer = false);
+
+// 모바일 이벤트
+layer.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  startLayerDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingLayer) return;
+  const touch = e.touches[0];
+  moveLayerDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingLayer = false);
+
+
 // ✅ 토글 버튼 드래그 이동 (PC + 모바일)
-const toggleBtn = document.getElementById("toggleFeaturesBtn");
+const toggleBtn = document.getElementById("toggleFeaturesBtn"); // 토글 버튼 요소
 let isDraggingToggle = false, offsetXToggle, offsetYToggle;
 
+// 드래그 시작
 function startToggleDrag(clientX, clientY) {
   isDraggingToggle = true;
   const rect = toggleBtn.getBoundingClientRect();
@@ -652,16 +691,17 @@ function startToggleDrag(clientX, clientY) {
   offsetYToggle = clientY - rect.top;
 }
 
+// 드래그 이동
 function moveToggleDrag(clientX, clientY) {
   if (!isDraggingToggle) return;
   toggleBtn.style.left = (clientX - offsetXToggle) + 'px';
   toggleBtn.style.top = (clientY - offsetYToggle) + 'px';
+  toggleBtn.style.right = "auto"; // 기본 right 고정 해제
+  toggleBtn.style.bottom = "auto"; // 기본 bottom 고정 해제
 }
 
 // PC 이벤트
-toggleBtn.addEventListener('mousedown', (e) => {
-  startToggleDrag(e.clientX, e.clientY);
-});
+toggleBtn.addEventListener('mousedown', (e) => startToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mousemove', (e) => moveToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingToggle = false);
 
@@ -676,20 +716,59 @@ document.addEventListener('touchmove', (e) => {
   moveToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingToggle = false);
-    
+
+
+// ✅ 나침판 드래그 이동 (PC + 모바일)
+const compass = document.getElementById("compass"); // 나침판 요소
+let isDraggingCompass = false, offsetXCompass, offsetYCompass;
+
+// 드래그 시작
+function startCompassDrag(clientX, clientY) {
+  isDraggingCompass = true;
+  const rect = compass.getBoundingClientRect();
+  offsetXCompass = clientX - rect.left;
+  offsetYCompass = clientY - rect.top;
+}
+
+// 드래그 이동
+function moveCompassDrag(clientX, clientY) {
+  if (!isDraggingCompass) return;
+  compass.style.left = (clientX - offsetXCompass) + 'px';
+  compass.style.top = (clientY - offsetYCompass) + 'px';
+  compass.style.right = "auto"; // 기본 right 고정 해제
+  compass.style.bottom = "auto"; // 기본 bottom 고정 해제
+}
+
+// PC 이벤트
+compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingCompass = false);
+
+// 모바일 이벤트
+compass.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  startCompassDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingCompass) return;
+  const touch = e.touches[0];
+  moveCompassDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingCompass = false);
+
+
+// ✅ 탭 버튼 클릭 이벤트 (조회결과 팝업 내 탭 전환)
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const parentCard = btn.closest('.info-card');
-    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none'); // 모든 탭 숨김
+    parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); // 버튼 active 해제
 
-    const target = btn.getAttribute('data-tab');
-    parentCard.querySelector('#' + target).style.display = 'block';
-    btn.classList.add('active');
+    const target = btn.getAttribute('data-tab'); // 클릭한 버튼의 data-tab 속성값
+    parentCard.querySelector('#' + target).style.display = 'block'; // 해당 탭만 표시
+    btn.classList.add('active'); // 클릭한 버튼 활성화
   });
 });
-
-
   
   
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
