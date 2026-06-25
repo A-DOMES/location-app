@@ -224,6 +224,21 @@
       pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
     }
 
+    /* 나침판 오버레이 */
+      #compass {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 60px; height: 60px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    #compass img {
+      width: 50px; height: 50px;
+      transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
+    }
+          
   </style>  
 
   </head>
@@ -258,7 +273,13 @@
         <label><input type="checkbox" id="hybridLayer" checked> Hybrid</label>
         </div>
     </div>
-  
+
+    <!-- ✅ 나침반 오버레이 -->
+    <div id="compass">
+      <img src="compass.png" alt="Compass">
+    </div>
+
+    
     <!-- ✅ 팝업 영역 -->
 <div id="infoPopup" style="display:none;">
   <div class="popup-header">
