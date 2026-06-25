@@ -740,10 +740,13 @@ navigator.geolocation.watchPosition((pos) => {
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
+let radarOn = true;
+
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   radarOn = !radarOn;
 
   if (radarOn) {
+    // ✅ 사람 중심 모드: 레이더 다시 그리기 + 마커 중심 이동 + 줌 16
     if (myCoord) {
       const angle = 90, radius = 200;
       const points = [myCoord];
@@ -753,7 +756,8 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
         const dy = radius * Math.sin(rad);
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
-      radar.setGeometry(new ol.geom.Polygon([points])); // 다시 그리기
+      radar.getGeometry().setCoordinates([points]);
+
       radar.setStyle(new ol.style.Style({
         stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
         fill: new ol.style.Fill({ color: 'rgba(0,191,255,0.25)' })
@@ -762,8 +766,10 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
     }
+
   } else {
-    radar.setGeometry(null); // ✅ 레이더 숨김
+    // ✅ 지도 중심 모드: 레이더 숨기기 + 줌 7
+    radar.setStyle(null);
     if (mapCenterCoord) {
       map.getView().setCenter(mapCenterCoord);
       map.getView().setZoom(7);
