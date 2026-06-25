@@ -941,51 +941,68 @@ radar.setGeometry(null);
 let radarOn = false;
 
 // ---------------------- 내 위치 추적 ----------------------
-navigator.geolocation.watchPosition((pos) => {
-  if (pos.coords.accuracy > 50) return;
+navigator.geolocation.watchPosition(
+  (pos) => {
+    // ✅ 첫 위치는 무조건 찍고, 이후부터 정확도 조건 적용
+    if (initialized && pos.coords.accuracy > 100) return;
 
-  // 좌표 스무딩 후 마커 이동
-  let coord;
-  if (!initialized) {
-    coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
-    initialized = true;
-  } else {
-    coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
-  }
+    let coord;
+    if (!initialized) {
+      // ✅ 첫 좌표는 그대로 사용
+      coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+      initialized = true;
 
-  myCoord = coord;
-  marker.getGeometry().setCoordinates(myCoord);
-  circle100.getGeometry().setCenter(myCoord);
-  circle200.getGeometry().setCenter(myCoord);
-
-  // ✅ 배열에 위도·경도 저장
-  positions.push([pos.coords.latitude, pos.coords.longitude]);
-  if (positions.length > 2) positions.shift();
-
-  // ✅ heading 계산 (최근 두 점으로)
-  if (positions.length === 2) {
-    lastHeading = calculateBearing(
-      positions[0][0], positions[0][1],
-      positions[1][0], positions[1][1]
-    );
-    // 나침반 회전
-    document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
-  }
-
-  // ✅ 레이더는 토글 켜졌을 때만 붙임
-  if (radarOn) {
-    const angle = 90, radius = 200;
-    const points = [myCoord];
-    for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = (lastHeading + a) * Math.PI / 180;
-      const dx = radius * Math.cos(rad);
-      const dy = radius * Math.sin(rad);
-      points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      // ✅ 첫 위치에서 마커 찍기 + 지도 중심 이동
+      marker.getGeometry().setCoordinates(coord);
+      map.getView().setCenter(coord);
+    } else {
+      // ✅ 이후 좌표는 스무딩 처리
+      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+      marker.getGeometry().setCoordinates(coord);
     }
-    radar.setGeometry(new ol.geom.Polygon([points]));
-    map.getView().setCenter(myCoord);
+
+    // ✅ 공통 좌표 업데이트
+    myCoord = coord;
+    circle100.getGeometry().setCenter(myCoord);
+    circle200.getGeometry().setCenter(myCoord);
+
+    // ✅ 배열에 위도·경도 저장 (최근 2개만 유지)
+    positions.push([pos.coords.latitude, pos.coords.longitude]);
+    if (positions.length > 2) positions.shift();
+
+    // ✅ heading 계산 (최근 두 점으로)
+    if (positions.length === 2) {
+      lastHeading = calculateBearing(
+        positions[0][0], positions[0][1],
+        positions[1][0], positions[1][1]
+      );
+      // 나침반 회전
+      document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
+    }
+
+    // ✅ 레이더는 토글 켜졌을 때만 붙임
+    if (radarOn) {
+      const angle = 90, radius = 200;
+      const points = [myCoord];
+      for (let a = -angle/2; a <= angle/2; a += 5) {
+        const rad = (lastHeading + a) * Math.PI / 180;
+        const dx = radius * Math.cos(rad);
+        const dy = radius * Math.sin(rad);
+        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      }
+      radar.setGeometry(new ol.geom.Polygon([points]));
+      map.getView().setCenter(myCoord);
+    }
+  },
+  (err) => {
+    // ✅ 위치 권한 거부나 오류 발생 시 기본 좌표 fallback
+    console.error("위치 정보 오류:", err);
+    const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울 시청
+    marker.getGeometry().setCoordinates(defaultCoord);
+    map.getView().setCenter(defaultCoord);
   }
-});
+);
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
