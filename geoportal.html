@@ -785,7 +785,7 @@ map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
     if (feature.getId() === "myMarker" && myCoord) {
       map.getView().setCenter(myCoord);
-      map.getView().setZoom(15);
+      map.getView().setZoom(16);
     }
   });
 });
