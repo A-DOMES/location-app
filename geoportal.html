@@ -715,47 +715,6 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
-// ✅ 항목선택 모달창 드래그 이동 (PC + 모바일)
-const layerSwitcher = document.querySelector(".layer-switcher");
-let isDraggingLayer = false, offsetXLayer, offsetYLayer;
-
-function startLayerDrag(clientX, clientY) {
-  isDraggingLayer = true;
-  const rect = layerSwitcher.getBoundingClientRect();
-  offsetXLayer = clientX - rect.left;
-  offsetYLayer = clientY - rect.top;
-}
-
-function moveLayerDrag(clientX, clientY) {
-  if (!isDraggingLayer) return;
-  layerSwitcher.style.left = (clientX - offsetXLayer) + 'px';
-  layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
-  layerSwitcher.style.right = "auto";
-  layerSwitcher.style.bottom = "auto";
-}
-
-// PC 이벤트
-layerSwitcher.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return;
-  startLayerDrag(e.clientX, e.clientY);
-});
-document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingLayer = false);
-
-// 모바일 이벤트
-layerSwitcher.addEventListener('touchstart', (e) => {
-  if(e.target.classList.contains('close-btn')) return;
-  const touch = e.touches[0];
-  startLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingLayer) return;
-  const touch = e.touches[0];
-  moveLayerDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingLayer = false);
-
-
 // ✅ 토글 버튼 드래그 이동 (PC + 모바일)
 const toggleBtn = document.getElementById("toggleFeaturesBtn");
 let isDraggingToggle = false, offsetXToggle, offsetYToggle;
