@@ -740,6 +740,8 @@ navigator.geolocation.watchPosition((pos) => {
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
+let radarOn = true;
+
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   radarOn = !radarOn;
 
@@ -754,7 +756,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
         const dy = radius * Math.sin(rad);
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
-      radar.setGeometry(new ol.geom.Polygon([points])); // 레이더 다시 그리기
+      radar.getGeometry().setCoordinates([points]);
 
       radar.setStyle(new ol.style.Style({
         stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
@@ -767,15 +769,13 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
 
   } else {
     // ✅ 지도 중심 모드: 레이더 숨기기 + 줌 7
-    radar.setGeometry(null); // 레이더 완전히 제거
-
+    radar.setStyle(null);
     if (mapCenterCoord) {
       map.getView().setCenter(mapCenterCoord);
       map.getView().setZoom(7);
     }
   }
 });
-
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
