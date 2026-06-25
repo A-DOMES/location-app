@@ -748,7 +748,7 @@ navigator.geolocation.watchPosition((pos) => {
   circle200.getGeometry().setCenter(myCoord);
 
   // 레이더 좌표 갱신
-  const angle = 90, radius = 100;
+  const angle = 90, radius = 200;
   const points = [myCoord];
   for (let a = -angle/2; a <= angle/2; a += 5) {
     const rad = (lastHeading + a) * Math.PI / 180;
