@@ -599,7 +599,7 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
-// ✅ 항목선택 모달창 드래그
+// ✅ 항목선택 모달창 드래그 이동 (PC + 모바일)
 const layerSwitcher = document.querySelector(".layer-switcher");
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
@@ -620,7 +620,7 @@ function moveLayerDrag(clientX, clientY) {
 
 // PC 이벤트
 layerSwitcher.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; // 닫기 버튼 클릭 시 드래그 방지
+  if(e.target.classList.contains('close-btn')) return;
   startLayerDrag(e.clientX, e.clientY);
 });
 document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
