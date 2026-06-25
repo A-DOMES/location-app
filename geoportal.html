@@ -224,24 +224,22 @@
       pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
     }
 
-    /* ✅ 나침판 오버레이 */
-    #compass {
+ /* ✅ 나침판 오버레이 */
+      #compass {
       position: absolute;
-      top: 60px; right: 10px;   /* 기본 위치 */
+      top: 60px; right: 10px;
       width: 60px; height: 60px;
       background: rgba(255,255,255,0.5);
       border-radius: 50%;
       z-index: 1000;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-      cursor: move; /* 드래그 가능 표시 */
     }
     #compass img {
       width: 90px; height: 90px;
       transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
     }
-
-항목선태ㅐㄱ
+          
   </style>  
 
   </head>
@@ -600,43 +598,7 @@ mapToggleBtn.addEventListener('click', () => {
   mapToggleBtn.classList.remove('show');
 });
 
-// ✅ 나침판 이동로직
-const compass = document.getElementById("compass");
-let isDraggingCompass = false, offsetXCompass, offsetYCompass;
 
-function startCompassDrag(clientX, clientY) {
-  isDraggingCompass = true;
-  const rect = compass.getBoundingClientRect();
-  offsetXCompass = clientX - rect.left;
-  offsetYCompass = clientY - rect.top;
-}
-
-function moveCompassDrag(clientX, clientY) {
-  if (!isDraggingCompass) return;
-  compass.style.left = (clientX - offsetXCompass) + 'px';
-  compass.style.top = (clientY - offsetYCompass) + 'px';
-  compass.style.right = "auto";
-  compass.style.bottom = "auto";
-}
-
-// PC 이벤트
-compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingCompass = false);
-
-// 모바일 이벤트
-compass.addEventListener('touchstart', (e) => {
-  const touch = e.touches[0];
-  startCompassDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchmove', (e) => {
-  if (!isDraggingCompass) return;
-  const touch = e.touches[0];
-  moveCompassDrag(touch.clientX, touch.clientY);
-});
-document.addEventListener('touchend', () => isDraggingCompass = false);
-
-    
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창
 let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
