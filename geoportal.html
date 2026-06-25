@@ -188,26 +188,42 @@
     }
       
 
-  /* ✅ 사람중심 지도중심 버튼 스타일 */  
-      /* 토글 버튼 */
+    /* ✅ 사람중심 지도중심 버튼 스타일 */  
+    /* 토글 버튼 */
     #toggleFeaturesBtn {
-      position:absolute;
-      top:60px; left:50px;
-      width:60px; height:60px;
-      background:rgba(255,255,255,0.25);
-      backdrop-filter:blur(10px);
-      border:2px solid #1976d2;
-      border-radius:50%;
-      cursor:pointer;
-      box-shadow:0 4px 12px rgba(0,0,0,0.25);
-      z-index:999;
-      display:flex; align-items:center; justify-content:center;
-      transition:transform 0.2s ease, background 0.3s ease;
-      padding:0;
+      position: absolute;
+      top: 60px; left: 50px;
+      width: 60px; height: 60px;              /* 버튼 전체 크기 */
+      background: rgba(255,255,255,0.25);     /* 반투명 배경 */
+      backdrop-filter: blur(10px);            /* 배경 블러 효과 */
+      border: 2px solid #1976d2;              /* 파란색 테두리 */
+      border-radius: 50%;                     /* 원형 버튼 */
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);/* 그림자 효과 */
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s ease, background 0.3s ease;
+      padding: 0;
     }
-    #toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); }
-    #toggleFeaturesBtn:active { transform:scale(0.95); }
-    #toggleFeaturesBtn img { width:32px; height:32px; pointer-events:none; }
+    
+    /* 버튼 hover 시 효과 */
+    #toggleFeaturesBtn:hover { 
+      background: #e3f2fd; 
+      transform: scale(1.1); 
+    }
+    
+    /* 버튼 클릭(active) 시 효과 */
+    #toggleFeaturesBtn:active { 
+      transform: scale(0.95); 
+    }
+    
+    /* 버튼 안의 아이콘 이미지 */
+    #toggleFeaturesBtn img { 
+      width: 59px;   /* 버튼 크기(60px)의 98% → 원 안에 거의 꽉 차도록 */
+      height: 59px;
+      pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
+    }
+
   </style>  
 
   </head>
