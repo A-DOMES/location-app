@@ -740,19 +740,12 @@ navigator.geolocation.watchPosition((pos) => {
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-let radarOn = false; // 시작 상태를 사람 중심 모드로 두고 싶으면 false로 설정
+let radarOn = true; // 시작 상태
 
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   radarOn = !radarOn;
 
   if (radarOn) {
-    // 지도 중심 모드
-    radar.setGeometry(null); // 레이더 숨김
-    if (mapCenterCoord) {
-      map.getView().setCenter(mapCenterCoord);
-      map.getView().setZoom(7);
-    }
-  } else {
     // 사람 중심 모드
     if (myCoord) {
       const angle = 90, radius = 200;
@@ -772,8 +765,17 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
     }
+
+  } else {
+    // 지도 중심 모드
+    radar.setGeometry(null); // 레이더 숨김
+    if (mapCenterCoord) {
+      map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
+      map.getView().setZoom(7);
+    }
   }
 });
+
 
 
 
