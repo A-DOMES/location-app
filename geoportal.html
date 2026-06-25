@@ -585,7 +585,7 @@ function loadRealTransaction(lon, lat) {
 // ✅ 레이어 제어 UI 토글 기능
 const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
 const mapToggleBtn = document.getElementById('mapToggleBtn'); // 지도항목 버튼
-const layerSwitcher = document.querySelector('.layer-switcher'); // 항목선택 모달창
+// const layerSwitcher = document.querySelector('.layer-switcher'); // 항목선택 모달창
 
 // 닫기 버튼 클릭 시 → 항목선택창 숨기고 지도항목 버튼 표시
 closeBtn.addEventListener('click', () => {
@@ -675,6 +675,7 @@ document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
 // ✅ 항목선택 모달창 드래그 이동 (PC + 모바일)
+const layerSwitcher = document.querySelector(".layer-switcher");
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
 function startLayerDrag(clientX, clientY) {
