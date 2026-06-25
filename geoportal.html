@@ -385,6 +385,9 @@
       zoom: 7 
     })
   });
+
+  // 앱 시작 시 초기 중심 좌표 저장
+  const mapCenterCoord = map.getView().getCenter();
   
   // ✅ 체크박스 이벤트 → 레이어 on/off
   document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
@@ -740,7 +743,7 @@ navigator.geolocation.watchPosition((pos) => {
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-let radarOn = true; // 시작 상태
+let radarOn = false; // 시작 상태: false → 첫 클릭에서 내 위치 이동
 
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   radarOn = !radarOn;
@@ -769,10 +772,8 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   } else {
     // 지도 중심 모드
     radar.setGeometry(null); // 레이더 숨김
-    if (mapCenterCoord) {
-      map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
-      map.getView().setZoom(7);
-    }
+    map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
+    map.getView().setZoom(7);
   }
 });
 
