@@ -603,40 +603,41 @@ document.addEventListener('touchend', () => isDraggingPopup = false);
 // ✅ 항목선택 창 드래그 이동 (PC + 모바일)
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
 
-function startLayerDrag(clientX, clientY) {
-  isDraggingLayer = true;
-  const rect = layerSwitcher.getBoundingClientRect();
-  offsetXLayer = clientX - rect.left;
-  offsetYLayer = clientY - rect.top;
+// ✅ 토글 버튼 드래그 이동 (PC + 모바일)
+const toggleBtn = document.getElementById("toggleFeaturesBtn");
+let isDraggingToggle = false, offsetXToggle, offsetYToggle;
+
+function startToggleDrag(clientX, clientY) {
+  isDraggingToggle = true;
+  const rect = toggleBtn.getBoundingClientRect();
+  offsetXToggle = clientX - rect.left;
+  offsetYToggle = clientY - rect.top;
 }
 
-function moveLayerDrag(clientX, clientY) {
-  if (!isDraggingLayer) return;
-  layerSwitcher.style.left = (clientX - offsetXLayer) + 'px';
-  layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
+function moveToggleDrag(clientX, clientY) {
+  if (!isDraggingToggle) return;
+  toggleBtn.style.left = (clientX - offsetXToggle) + 'px';
+  toggleBtn.style.top = (clientY - offsetYToggle) + 'px';
 }
 
 // PC 이벤트
-layerSwitcher.addEventListener('mousedown', (e) => {
-  if(e.target.classList.contains('close-btn')) return; // 닫기 버튼 클릭 시 드래그 방지
-  startLayerDrag(e.clientX, e.clientY);
+toggleBtn.addEventListener('mousedown', (e) => {
+  startToggleDrag(e.clientX, e.clientY);
 });
-document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => isDraggingLayer = false);
+document.addEventListener('mousemove', (e) => moveToggleDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingToggle = false);
 
 // 모바일 이벤트
-layerSwitcher.addEventListener('touchstart', (e) => {
-  if(e.target.classList.contains('close-btn')) return;
+toggleBtn.addEventListener('touchstart', (e) => {
   const touch = e.touches[0];
-  startLayerDrag(touch.clientX, touch.clientY);
+  startToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
-  if (!isDraggingLayer) return;
+  if (!isDraggingToggle) return;
   const touch = e.touches[0];
-  moveLayerDrag(touch.clientX, touch.clientY);
+  moveToggleDrag(touch.clientX, touch.clientY);
 });
-document.addEventListener('touchend', () => isDraggingLayer = false);
-
+document.addEventListener('touchend', () => isDraggingToggle = false);
     
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -740,6 +741,11 @@ navigator.geolocation.watchPosition((pos) => {
     points.push([myCoord[0] + dx, myCoord[1] + dy]);
   }
   radar.getGeometry().setCoordinates([points]);
+
+  // ✅ 사람 중심 모드일 때만 지도 따라다니기
+  if (radarOn) {
+    map.getView().setCenter(myCoord);
+   }
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
