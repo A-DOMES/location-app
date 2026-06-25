@@ -748,20 +748,6 @@ let radarOn = false;
 navigator.geolocation.watchPosition((pos) => {
   if (pos.coords.accuracy > 50) return;
 
-  // 배열에 좌표 저장
-  positions.push([pos.coords.latitude, pos.coords.longitude]);
-  if (positions.length > 2) positions.shift();
-
-  // heading 계산
-  if (positions.length === 2) {
-    lastHeading = calculateBearing(
-      positions[0][0], positions[0][1],
-      positions[1][0], positions[1][1]
-    );
-    // 나침반 회전
-    document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
-  }
-
   // 좌표 스무딩 후 마커 이동
   let coord;
   if (!initialized) {
@@ -776,7 +762,20 @@ navigator.geolocation.watchPosition((pos) => {
   circle100.getGeometry().setCenter(myCoord);
   circle200.getGeometry().setCenter(myCoord);
 
-  // 레이더는 토글 켜졌을 때만 붙임
+  // ✅ 여기서 배열에 좌표 저장
+  positions.push([pos.coords.latitude, pos.coords.longitude]);
+  if (positions.length > 2) positions.shift();
+
+  // ✅ heading 계산은 좌표가 2개 모였을 때만
+  if (positions.length === 2) {
+    lastHeading = calculateBearing(
+      positions[0][0], positions[0][1],
+      positions[1][0], positions[1][1]
+    );
+    document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
+  }
+
+  // ✅ 레이더는 토글 켜졌을 때만 붙임
   if (radarOn) {
     const angle = 90, radius = 200;
     const points = [myCoord];
@@ -790,6 +789,7 @@ navigator.geolocation.watchPosition((pos) => {
     map.getView().setCenter(myCoord);
   }
 });
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 let radarOn = false; // 시작 상태: false → 첫 클릭에서 내 위치 이동
