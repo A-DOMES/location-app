@@ -57,9 +57,9 @@
       .layer-switcher {
         position: absolute;                 /* 화면 위에 겹쳐서 표시 (지도 위에 뜨도록) */
         top: 50px;                          /* 초기 위치: 화면 상단에서 50px 내려옴 */
-        left: 20%;                          /* 초기 위치: 화면 왼쪽 기준 20% 지점 */
+        left: 100px;                        /* 초기 위치: 화면 왼쪽 기준 20% 지점 */
         transform: none;                    /* ⚠️ translateX 제거 → 드래그 시 튕김 방지 */
-        margin-left: -55px;                 /* 가로폭 110px의 절반을 빼서 중앙 정렬 보정 */
+        margin-left: 0;                 /* 가로폭 110px의 절반을 빼서 중앙 정렬 보정 */
         background: rgba(255,255,255,0.85); /* ✅ 반투명 배경 (기존보다 투명도 강화) */
         padding: 12px;                      /* 내부 여백 */
         border: 1px solid #ccc;             /* 테두리 */
