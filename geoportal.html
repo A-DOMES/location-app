@@ -701,6 +701,20 @@ let smoothCoords = [];
 let initialized = false;
 let lastHeading = 0;
 
+// ---------------------- 위도·경도 기록 배열 ----------------------
+let positions = [];
+
+// ---------------------- 방위각 계산 함수 ----------------------
+function calculateBearing(lat1, lon1, lat2, lon2) {
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
+  const φ1 = toRad(lat1), φ2 = toRad(lat2);
+  const Δλ = toRad(lon2 - lon1);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
 // ---------------------- 스무딩 함수 ----------------------
 function getSmoothedCoord(lat, lng) {
   smoothCoords.push([lat, lng]);
@@ -710,37 +724,13 @@ function getSmoothedCoord(lat, lng) {
   return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
-// ---------------------- heading 보정 함수 ----------------------
-function getHeading(pos) {
-  let heading = pos.coords.heading;
-  if (heading === null || isNaN(heading)) heading = 0;
-  return (heading + 360) % 360;
-}
-
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
 marker.setId("myMarker");
-marker.setStyle(new ol.style.Style({
-  image: new ol.style.Icon({
-    src: './red-marker.png',
-    scale: 0.05,
-    anchor: [0.5, 0.8],
-    anchorXUnits: 'fraction',
-    anchorYUnits: 'fraction'
-  })
-}));
+// … 마커 스타일 생략 …
 
 const circle100 = new ol.Feature(new ol.geom.Circle([0,0], 100));
-circle100.setStyle(new ol.style.Style({
-  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-  fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
-}));
-
 const circle200 = new ol.Feature(new ol.geom.Circle([0,0], 200));
-circle200.setStyle(new ol.style.Style({
-  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
-  fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
-}));
 
 const radar = new ol.Feature(new ol.geom.Polygon([]));
 radar.setStyle(new ol.style.Style({
@@ -750,10 +740,29 @@ radar.setStyle(new ol.style.Style({
 
 positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 
+// ✅ 시작 시 레이더 숨김
+radar.setGeometry(null);
+let radarOn = false;
+
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition((pos) => {
   if (pos.coords.accuracy > 50) return;
 
+  // 배열에 좌표 저장
+  positions.push([pos.coords.latitude, pos.coords.longitude]);
+  if (positions.length > 2) positions.shift();
+
+  // heading 계산
+  if (positions.length === 2) {
+    lastHeading = calculateBearing(
+      positions[0][0], positions[0][1],
+      positions[1][0], positions[1][1]
+    );
+    // 나침반 회전
+    document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
+  }
+
+  // 좌표 스무딩 후 마커 이동
   let coord;
   if (!initialized) {
     coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
@@ -763,27 +772,23 @@ navigator.geolocation.watchPosition((pos) => {
   }
 
   myCoord = coord;
-  lastHeading = getHeading(pos);
-
   marker.getGeometry().setCoordinates(myCoord);
   circle100.getGeometry().setCenter(myCoord);
   circle200.getGeometry().setCenter(myCoord);
 
-  // 레이더 좌표 갱신
-  const angle = 90, radius = 200;
-  const points = [myCoord];
-  for (let a = -angle/2; a <= angle/2; a += 5) {
-    const rad = (lastHeading + a) * Math.PI / 180;
-    const dx = radius * Math.cos(rad);
-    const dy = radius * Math.sin(rad);
-    points.push([myCoord[0] + dx, myCoord[1] + dy]);
-  }
-  radar.getGeometry().setCoordinates([points]);
-
-  // ✅ 사람 중심 모드일 때만 지도 따라다니기
+  // 레이더는 토글 켜졌을 때만 붙임
   if (radarOn) {
+    const angle = 90, radius = 200;
+    const points = [myCoord];
+    for (let a = -angle/2; a <= angle/2; a += 5) {
+      const rad = (lastHeading + a) * Math.PI / 180;
+      const dx = radius * Math.cos(rad);
+      const dy = radius * Math.sin(rad);
+      points.push([myCoord[0] + dx, myCoord[1] + dy]);
+    }
+    radar.setGeometry(new ol.geom.Polygon([points]));
     map.getView().setCenter(myCoord);
-   }
+  }
 });
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
