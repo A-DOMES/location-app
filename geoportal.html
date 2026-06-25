@@ -704,13 +704,13 @@ let lastHeading = 0;
 // ---------------------- 위도·경도 기록 배열 ----------------------
 let positions = [];
 
-// ---------------------- 스무딩 함수 ----------------------
-function getSmoothedCoord(lat, lng) {
-  smoothCoords.push([lat, lng]);
-  if (smoothCoords.length > 5) smoothCoords.shift();
-  const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
-  const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
-  return ol.proj.fromLonLat([avgLng, avgLat]);
+// ---------------------- heading 스무딩 함수 ----------------------
+let headingHistory = [];
+
+function getSmoothedHeading(newHeading) {
+  headingHistory.push(newHeading);
+  if (headingHistory.length > 5) headingHistory.shift(); // 최근 5개만 유지
+  return headingHistory.reduce((sum, h) => sum + h, 0) / headingHistory.length;
 }
 
 // ---------------------- 방위각 계산 함수 ----------------------
@@ -785,10 +785,14 @@ navigator.geolocation.watchPosition((pos) => {
 
   // ✅ heading 계산 (최근 두 점으로)
   if (positions.length === 2) {
-    lastHeading = calculateBearing(
+    let rawHeading = calculateBearing(
       positions[0][0], positions[0][1],
       positions[1][0], positions[1][1]
     );
+
+    // ✅ 스무딩된 heading 적용
+    lastHeading = getSmoothedHeading(rawHeading);
+
     // 나침반 회전
     document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
   }
