@@ -680,14 +680,14 @@ document.addEventListener('touchend', () => isDraggingCompass = false);
 const infoPopup = document.getElementById("infoPopup"); // 조회결과 팝업창
 let isDraggingPopup = false, offsetXPopup, offsetYPopup; // 드래그 상태 및 좌표 오프셋
 
-function startDrag(clientX, clientY) {
+function startPopupDrag(clientX, clientY) {
   isDraggingPopup = true;
   const rect = infoPopup.getBoundingClientRect();
   offsetXPopup = clientX - rect.left;
   offsetYPopup = clientY - rect.top;
 }
 
-function moveDrag(clientX, clientY) {
+function movePopupDrag(clientX, clientY) {
   if (!isDraggingPopup) return;
   infoPopup.style.left = (clientX - offsetXPopup) + 'px';
   infoPopup.style.top = (clientY - offsetYPopup) + 'px';
@@ -696,27 +696,65 @@ function moveDrag(clientX, clientY) {
 // PC 이벤트
 infoPopup.addEventListener('mousedown', (e) => {
   if(e.target.classList.contains('close-btn')) return; // 닫기 버튼 클릭 시 드래그 방지
-  startDrag(e.clientX, e.clientY);
+  startPopupDrag(e.clientX, e.clientY);
 });
-document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+document.addEventListener('mousemove', (e) => movePopupDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingPopup = false);
 
 // 모바일 이벤트
 infoPopup.addEventListener('touchstart', (e) => {
   if(e.target.classList.contains('close-btn')) return;
   const touch = e.touches[0];
-  startDrag(touch.clientX, touch.clientY);
+  startPopupDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
   if (!isDraggingPopup) return;
   const touch = e.touches[0];
-  moveDrag(touch.clientX, touch.clientY);
+  movePopupDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingPopup = false);
 
 
-// ✅ 항목선택 창 드래그 이동 (PC + 모바일)
+// ✅ 항목선택 모달창 드래그 이동 (PC + 모바일)
+const layerSwitcher = document.querySelector(".layer-switcher");
 let isDraggingLayer = false, offsetXLayer, offsetYLayer;
+
+function startLayerDrag(clientX, clientY) {
+  isDraggingLayer = true;
+  const rect = layerSwitcher.getBoundingClientRect();
+  offsetXLayer = clientX - rect.left;
+  offsetYLayer = clientY - rect.top;
+}
+
+function moveLayerDrag(clientX, clientY) {
+  if (!isDraggingLayer) return;
+  layerSwitcher.style.left = (clientX - offsetXLayer) + 'px';
+  layerSwitcher.style.top = (clientY - offsetYLayer) + 'px';
+  layerSwitcher.style.right = "auto";
+  layerSwitcher.style.bottom = "auto";
+}
+
+// PC 이벤트
+layerSwitcher.addEventListener('mousedown', (e) => {
+  if(e.target.classList.contains('close-btn')) return;
+  startLayerDrag(e.clientX, e.clientY);
+});
+document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => isDraggingLayer = false);
+
+// 모바일 이벤트
+layerSwitcher.addEventListener('touchstart', (e) => {
+  if(e.target.classList.contains('close-btn')) return;
+  const touch = e.touches[0];
+  startLayerDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchmove', (e) => {
+  if (!isDraggingLayer) return;
+  const touch = e.touches[0];
+  moveLayerDrag(touch.clientX, touch.clientY);
+});
+document.addEventListener('touchend', () => isDraggingLayer = false);
+
 
 // ✅ 토글 버튼 드래그 이동 (PC + 모바일)
 const toggleBtn = document.getElementById("toggleFeaturesBtn");
@@ -733,12 +771,12 @@ function moveToggleDrag(clientX, clientY) {
   if (!isDraggingToggle) return;
   toggleBtn.style.left = (clientX - offsetXToggle) + 'px';
   toggleBtn.style.top = (clientY - offsetYToggle) + 'px';
+  toggleBtn.style.right = "auto";
+  toggleBtn.style.bottom = "auto";
 }
 
 // PC 이벤트
-toggleBtn.addEventListener('mousedown', (e) => {
-  startToggleDrag(e.clientX, e.clientY);
-});
+toggleBtn.addEventListener('mousedown', (e) => startToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mousemove', (e) => moveToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => isDraggingToggle = false);
 
@@ -753,7 +791,9 @@ document.addEventListener('touchmove', (e) => {
   moveToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => isDraggingToggle = false);
-    
+
+
+// ✅ 탭 버튼 클릭 이벤트 (조회결과 팝업 내 탭 전환)
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const parentCard = btn.closest('.info-card');
