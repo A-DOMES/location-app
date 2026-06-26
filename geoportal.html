@@ -997,10 +997,9 @@ navigator.geolocation.watchPosition(
         positions[0][0], positions[0][1],
         positions[1][0], positions[1][1]
       );
-      // ⚠️ rotate()는 숫자만 인식하므로 'deg'를 붙이지 않는다
+      // ✅ 숫자만 전달해야 바늘이 회전함
       document.documentElement.style.setProperty('--heading', lastHeading);
     }
-
 
     // ✅ 레이더는 토글 켜졌을 때만 붙임
     if (radarOn) {
