@@ -666,7 +666,6 @@ document.addEventListener('touchend', () => {
   }));
 });
 
-
 // ✅ 토글 버튼 드래그 이동 (PC + 모바일)
 const toggleBtn = document.getElementById("toggleFeaturesBtn");
 let isDraggingToggle = false, offsetXToggle, offsetYToggle;
@@ -787,8 +786,8 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
-// ---------------------- 마커·원형·레이더 Feature [🛠️오류 수정완료] ----------------------
-const marker = new ol.Feature(new ol.geom.Point([0, 0])); // 빈 괄호에 초기 좌표 세팅
+// ---------------------- 마커·원형·레이더 Feature [🛠️오류 완벽 수정] ----------------------
+const marker = new ol.Feature(new ol.geom.Point([0, 0])); 
 marker.setId("myMarker");
 marker.setStyle(new ol.style.Style({
   image: new ol.style.Icon({
@@ -800,13 +799,13 @@ marker.setStyle(new ol.style.Style({
   })
 }));
 
-const circle100 = new ol.Feature(new ol.geom.Circle([0, 0], 100)); // 빈 괄호에 중심점 배열 수정
+const circle100 = new ol.Feature(new ol.geom.Circle([0, 0], 100)); 
 circle100.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
 }));
 
-const circle200 = new ol.Feature(new ol.geom.Circle([0, 0], 200)); // 빈 괄호에 중심점 배열 수정
+const circle200 = new ol.Feature(new ol.geom.Circle([0, 0], 200)); 
 circle200.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
@@ -853,7 +852,7 @@ navigator.geolocation.watchPosition(
         const rad = (adjustedHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // 🛠️ 축 계산 오류 수정
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); 
       }
       radar.setGeometry(new ol.geom.Polygon([points]));
       map.getView().setCenter(myCoord);
