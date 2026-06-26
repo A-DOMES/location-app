@@ -228,33 +228,29 @@
       pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
     }
 
+/* ✅ 나침판 오버레이 */
 #compass {
-  position: absolute;
-  top: 60px; right: 10px;
-  width: 80px; height: 80px;   /* ✅ 배경 이미지 크기와 맞춤 */
+  position: fixed;
+  top: 20px; right: 20px;
+  width: 70px; height: 70px;
   border-radius: 50%;
   z-index: 2000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  cursor: move;
-  /* position:relative; 제거 */
 }
 
 .compass-bg {
   width: 100%; height: 100%;
   display: block;
-  z-index: 1;
 }
 
 #needle {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  z-index: 2;
   pointer-events: none;
 }
 
-
-          
+         
   </style>  
 
   </head>
@@ -292,22 +288,16 @@
 
 <!-- ✅ 나침판 오버레이 -->
 <div id="compass">
-  <!-- 바늘 없는 나침판 배경 -->
   <img src="compass-white.png" alt="Compass" class="compass-bg">
 
-  <!-- 바늘 SVG (배경 위에 겹침) -->
+  <!-- 바늘 SVG -->
   <svg id="needle" viewBox="0 0 70 70">
-    <!-- 중심 좌표는 (35,35) -->
-    <g id="needle-group" transform="rotate(var(--heading, 90) 35 35)">
-      <!-- 빨간 바늘 (위쪽) -->
+    <g id="needle-group" transform="rotate(var(--heading, 0) 35 35)">
       <polygon points="35,5 32,35 38,35" fill="red"/>
-      <!-- 파란 바늘 (아래쪽) -->
       <polygon points="35,65 32,35 38,35" fill="blue"/>
     </g>
   </svg>
 </div>
-
-
 
     
     <!-- ✅ 팝업 영역 -->
@@ -967,16 +957,16 @@ let radarOn = false;
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
-    // ✅ 첫 위치는 무조건 찍고, 이후부터 정확도 조건 적용
+    // ✅ 정확도가 너무 낮으면 무시 (처음 초기화할 때는 무조건 실행)
     if (initialized && pos.coords.accuracy > 100) return;
 
     let coord;
     if (!initialized) {
-      // ✅ 초기 바늘을 동쪽(90°)으로 설정
-      lastHeading = 90;
+      // ✅ 초기 로딩 시 바늘을 북쪽(0°)으로 설정
+      lastHeading = 0;
       document.documentElement.style.setProperty('--heading', lastHeading);
 
-      // ✅ 첫 좌표를 그대로 사용
+      // ✅ 첫 좌표를 그대로 사용 (위도, 경도를 지도 좌표계로 변환)
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
 
@@ -984,40 +974,46 @@ navigator.geolocation.watchPosition(
       marker.getGeometry().setCoordinates(coord);
       map.getView().setCenter(coord);
     } else {
-      // ✅ 이후 좌표는 스무딩 처리
+      // ✅ 이후 좌표는 스무딩 처리 (갑작스러운 튐 방지)
       coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
       marker.getGeometry().setCoordinates(coord);
     }
 
-    // ✅ 공통 좌표 업데이트
+    // ✅ 내 위치 원형 표시 업데이트
     myCoord = coord;
     circle100.getGeometry().setCenter(myCoord);
     circle200.getGeometry().setCenter(myCoord);
 
-    // ✅ 배열에 위도·경도 저장 (최근 2개만 유지)
+    // ✅ 최근 좌표 2개만 유지 (방향 계산용)
     positions.push([pos.coords.latitude, pos.coords.longitude]);
     if (positions.length > 2) positions.shift();
 
-    // ✅ heading 계산 (최근 두 점으로)
+    // ✅ 이동 방향 계산 (최근 두 점으로 bearing 구하기)
     if (positions.length === 2) {
       lastHeading = calculateBearing(
-        positions[0][0], positions[0][1],
-        positions[1][0], positions[1][1]
+        positions[0][0], positions[0][1], // 이전 좌표
+        positions[1][0], positions[1][1]  // 현재 좌표
       );
+
       // ✅ 나침반 바늘 회전 갱신
       document.documentElement.style.setProperty('--heading', lastHeading);
     }
 
-    // ✅ 레이더는 토글 켜졌을 때만 붙임
+    // ✅ 레이더 표시 (radarOn이 true일 때만)
     if (radarOn) {
-      const angle = 90, radius = 200;
+      const angle = 90;   // 레이더 부채꼴 각도
+      const radius = 200; // 레이더 반경
       const points = [myCoord];
+
+      // ✅ 레이더 부채꼴 영역 계산
       for (let a = -angle/2; a <= angle/2; a += 5) {
         const rad = (lastHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
+
+      // ✅ 레이더 영역을 지도에 반영
       radar.setGeometry(new ol.geom.Polygon([points]));
       map.getView().setCenter(myCoord);
     }
@@ -1030,6 +1026,7 @@ navigator.geolocation.watchPosition(
     map.getView().setCenter(defaultCoord);
   }
 );
+
 
 
 
