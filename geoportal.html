@@ -228,31 +228,31 @@
       pointer-events: none; /* 클릭 이벤트가 이미지에 전달되지 않도록 */
     }
 
-/* ✅ 나침판 오버레이 */
 #compass {
   position: absolute;
   top: 60px; right: 10px;
-  width: 70px; height: 70px;
+  width: 80px; height: 80px;   /* ✅ 배경 이미지 크기와 맞춤 */
   border-radius: 50%;
   z-index: 1000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   cursor: move;
-  position: relative; /* ✅ 내부 요소 기준 */
+  /* position:relative; 제거 */
 }
 
 .compass-bg {
   width: 100%; height: 100%;
   display: block;
-  z-index: 1; /* ✅ 배경은 아래 */
+  z-index: 1;
 }
 
 #needle {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  z-index: 2; /* ✅ 바늘은 위 */
-  pointer-events: none; /* ✅ 드래그 시 바늘이 방해되지 않도록 */
+  z-index: 2;
+  pointer-events: none;
 }
+
 
           
   </style>  
@@ -305,6 +305,7 @@
     </g>
   </svg>
 </div>
+
 
     
     <!-- ✅ 팝업 영역 -->
