@@ -288,9 +288,10 @@
 
 <!-- ✅ 나침판 오버레이 -->
 <div id="compass">
+  <!-- 배경은 고정 -->
   <img src="compass-white.png" alt="Compass" class="compass-bg">
 
-  <!-- 바늘 SVG -->
+  <!-- 바늘만 회전 -->
   <svg id="needle" viewBox="0 0 70 70">
     <g id="needle-group" transform="rotate(var(--heading, 0) 35 35)">
       <polygon points="35,5 32,35 38,35" fill="red"/>
@@ -298,6 +299,7 @@
     </g>
   </svg>
 </div>
+
 
     
     <!-- ✅ 팝업 영역 -->
@@ -963,6 +965,7 @@ navigator.geolocation.watchPosition((pos) => {
   if (!initialized) {
     // ✅ 초기 로딩 시 바늘을 북쪽(0°)으로 설정
     lastHeading = 0;
+    // ⚠️ rotate()는 숫자만 인식하므로 'deg'를 붙이지 않는다
     document.documentElement.style.setProperty('--heading', lastHeading);
 
     // ✅ 첫 좌표를 그대로 사용 (위도, 경도를 지도 좌표계로 변환)
@@ -989,7 +992,7 @@ navigator.geolocation.watchPosition((pos) => {
       positions[0][0], positions[0][1], // 이전 좌표
       positions[1][0], positions[1][1]  // 현재 좌표
     );
-    // ✅ 나침반 바늘 회전 갱신
+    // ✅ 나침반 바늘 회전 갱신 (숫자만 전달)
     document.documentElement.style.setProperty('--heading', lastHeading);
   }
 
@@ -1034,6 +1037,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     map.getView().setZoom(7);
   }
 });
+
 
 
 
