@@ -232,22 +232,27 @@
 #compass {
   position: absolute;
   top: 60px; right: 10px;
-  width: 150px; height: 150px;   /* 모바일에서 크게 보이도록 확대 */
-  display: flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px;   /* ✅ 오버레이 크기 */
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
   z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: move;
 }
 
 .compass-bg {
   position: absolute;
-  width: 150px; height: 150px;
+  width: 60px; height: 60px;   /* ✅ 배경 PNG 크기 줄임 */
 }
 
 .compass-needle {
   position: absolute;
-  width: 150px; height: 150px;
+  width: 60px; height: 60px;   /* ✅ 바늘 크기 줄임 */
   transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
-  transition: transform 0.3s ease; /* 회전 애니메이션 */
+  transition: transform 0.3s ease;
 }
+
 
           
   </style>  
@@ -293,11 +298,11 @@
   <!-- 바늘 SVG (동적으로 회전 가능) -->
   <svg class="compass-needle" viewBox="0 0 200 200">
     <!-- 붉은 바늘 (동쪽) -->
-    <polygon points="100,100 175,95 175,105" fill="red"/>
-    <!-- 파란 바늘 (반대쪽) -->
-    <polygon points="100,100 25,95 25,105" fill="blue"/>
+    <polygon points="100,60 105,100 100,100" fill="red"/>
+    <!-- 파란 바늘 (서쪽) -->
+    <polygon points="100,140 95,100 100,100" fill="blue"/>
     <!-- 중심점 -->
-    <circle cx="100" cy="100" r="6" fill="black"/>
+    <circle cx="100" cy="100" r="4" fill="black"/>
   </svg>
 </div>
 
