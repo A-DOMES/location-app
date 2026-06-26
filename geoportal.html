@@ -376,6 +376,20 @@
     <!-- ✅ API Key 설정 -->
     <script src="config.js"></script>
 
+   <script>
+    const map = new ol.Map({
+      target: 'map', // HTML div id="map"
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM() // 기본 배경지도
+        })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([126.9780, 37.5665]), // 서울 좌표 예시
+        zoom: 7
+      })
+    });   
+
 <script>     
 // =========================================================================
 // 🧭 [추가] 스마트폰 실제 방위각(나침반 센서) 제어 로직 (iOS + Android 호환)
