@@ -233,22 +233,25 @@
   position: absolute;
   top: 60px; right: 10px;
   width: 70px; height: 70px;
-  background: rgba(255,255,255,0.5);
   border-radius: 50%;
   z-index: 1000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   cursor: move;
-  position: relative; /* ✅ 기준점 */
+  position: relative; /* ✅ 내부 요소 기준 */
 }
-#compass img {
+
+.compass-bg {
   width: 100%; height: 100%;
+  display: block;
   z-index: 1; /* ✅ 배경은 아래 */
 }
+
 #needle {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   z-index: 2; /* ✅ 바늘은 위 */
+  pointer-events: none; /* ✅ 드래그 시 바늘이 방해되지 않도록 */
 }
 
           
@@ -290,14 +293,14 @@
 <!-- ✅ 나침판 오버레이 -->
 <div id="compass">
   <!-- 바늘 없는 나침판 배경 -->
-  <img src="compass-white.png" alt="Compass">
+  <img src="compass-white.png" alt="Compass" class="compass-bg">
 
   <!-- 바늘 SVG (배경 위에 겹침) -->
-  <svg id="needle" width="60" height="60" viewBox="0 0 200 200">
+  <svg id="needle" viewBox="0 0 200 200">
     <g id="needle-group" transform="rotate(var(--heading, 90) 100 100)">
-      <!-- 빨간 바늘 -->
+      <!-- 빨간 바늘 (위쪽) -->
       <polygon points="100,20 95,100 105,100" fill="red"/>
-      <!-- 파란 바늘 -->
+      <!-- 파란 바늘 (아래쪽) -->
       <polygon points="100,180 95,100 105,100" fill="blue"/>
     </g>
   </svg>
