@@ -630,6 +630,7 @@ mapToggleBtn.addEventListener('click', () => {
 const compass = document.getElementById("compass");
 let isDraggingCompass = false, offsetXCompass, offsetYCompass;
 let compassExpanded = false; // 확대 여부 상태
+let originalCompassPos = null; // 확대 전 위치 기억
 
 function startCompassDrag(clientX, clientY) {
   if (compassExpanded) return; // 확대 상태에서는 드래그 금지
@@ -640,7 +641,7 @@ function startCompassDrag(clientX, clientY) {
 }
 
 function moveCompassDrag(clientX, clientY) {
-  if (!isDraggingCompass || compassExpanded) return; // 확대 상태에서는 이동 금지
+  if (!isDraggingCompass || compassExpanded) return;
   compass.style.left = (clientX - offsetXCompass) + 'px';
   compass.style.top = (clientY - offsetYCompass) + 'px';
   compass.style.right = "auto";
@@ -662,7 +663,7 @@ document.addEventListener('mouseup', () => {
 
 // 모바일 이벤트
 compass.addEventListener('touchstart', (e) => {
-  if (compassExpanded) return; // 확대 상태에서는 드래그 금지
+  if (compassExpanded) return;
   const touch = e.touches[0];
   startCompassDrag(touch.clientX, touch.clientY);
 });
@@ -683,14 +684,13 @@ document.addEventListener('touchend', () => {
 
 // ---------------------- 나침판 더블탭 확대/복귀 ----------------------
 let lastTapTime = 0;
-let originalCompassPos = null;
 
 compass.addEventListener("touchend", (e) => {
   const currentTime = new Date().getTime();
 
   if (currentTime - lastTapTime < 300) { // 더블탭 인식
     if (!compassExpanded) {
-      // 확대하기 전에 원래 위치 기억
+      // ✅ 확대하기 전에 원래 위치 기억
       originalCompassPos = {
         left: compass.style.left,
         top: compass.style.top,
@@ -700,11 +700,11 @@ compass.addEventListener("touchend", (e) => {
       compass.style.position = "fixed";
       compass.style.top = "50%";
       compass.style.left = "50%";
-      compass.style.transform = "translate(-50%, -50%) scale(2)";
+      compass.style.transform = "translate(-50%, -50%) scale(3)";
       compass.style.zIndex = "9999";
       compassExpanded = true;
     } else {
-      // 원래 위치 복귀
+      // ✅ 원래 위치 복귀
       compass.style.position = originalCompassPos?.position || "absolute";
       compass.style.left = originalCompassPos?.left || "10px";
       compass.style.top = originalCompassPos?.top || "10px";
@@ -716,6 +716,7 @@ compass.addEventListener("touchend", (e) => {
 
   lastTapTime = currentTime;
 });
+
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup");
