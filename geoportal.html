@@ -629,8 +629,10 @@ mapToggleBtn.addEventListener('click', () => {
 // ✅ 나침판 상하좌우 이동
 const compass = document.getElementById("compass");
 let isDraggingCompass = false, offsetXCompass, offsetYCompass;
+let compassExpanded = false; // 확대 여부 상태
 
 function startCompassDrag(clientX, clientY) {
+  if (compassExpanded) return; // 확대 상태에서는 드래그 금지
   isDraggingCompass = true;
   const rect = compass.getBoundingClientRect();
   offsetXCompass = clientX - rect.left;
@@ -638,7 +640,7 @@ function startCompassDrag(clientX, clientY) {
 }
 
 function moveCompassDrag(clientX, clientY) {
-  if (!isDraggingCompass) return;
+  if (!isDraggingCompass || compassExpanded) return; // 확대 상태에서는 이동 금지
   compass.style.left = (clientX - offsetXCompass) + 'px';
   compass.style.top = (clientY - offsetYCompass) + 'px';
   compass.style.right = "auto";
@@ -649,45 +651,52 @@ function moveCompassDrag(clientX, clientY) {
 compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
 document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => {
-  isDraggingCompass = false;
-  // 위치 저장
-  localStorage.setItem("compassPos", JSON.stringify({
-    left: compass.style.left,
-    top: compass.style.top
-  }));
+  if (!compassExpanded) { // 확대 상태가 아닐 때만 저장
+    isDraggingCompass = false;
+    localStorage.setItem("compassPos", JSON.stringify({
+      left: compass.style.left,
+      top: compass.style.top
+    }));
+  }
 });
 
 // 모바일 이벤트
 compass.addEventListener('touchstart', (e) => {
+  if (compassExpanded) return; // 확대 상태에서는 드래그 금지
   const touch = e.touches[0];
   startCompassDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
-  if (!isDraggingCompass) return;
+  if (!isDraggingCompass || compassExpanded) return;
   const touch = e.touches[0];
   moveCompassDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => {
-  isDraggingCompass = false;
-  // 위치 저장
-  localStorage.setItem("compassPos", JSON.stringify({
-    left: compass.style.left,
-    top: compass.style.top
-  }));
+  if (!compassExpanded) { // 확대 상태가 아닐 때만 저장
+    isDraggingCompass = false;
+    localStorage.setItem("compassPos", JSON.stringify({
+      left: compass.style.left,
+      top: compass.style.top
+    }));
+  }
 });
 
-
 // ---------------------- 나침판 더블탭 확대/복귀 ----------------------
-let compassExpanded = false;   // 현재 확대 상태 여부
-let lastTapTime = 0;           // 마지막 터치 시간 기록
+let lastTapTime = 0;
+let originalCompassPos = null;
 
 compass.addEventListener("touchend", (e) => {
   const currentTime = new Date().getTime();
 
-  // 300ms 이내 두 번 터치 → 더블탭 인식
-  if (currentTime - lastTapTime < 300) {
+  if (currentTime - lastTapTime < 300) { // 더블탭 인식
     if (!compassExpanded) {
-      // ✅ 확대 모드: 중앙으로 이동 + 확대
+      // 확대하기 전에 원래 위치 기억
+      originalCompassPos = {
+        left: compass.style.left,
+        top: compass.style.top,
+        position: compass.style.position
+      };
+
       compass.style.position = "fixed";
       compass.style.top = "50%";
       compass.style.left = "50%";
@@ -695,24 +704,18 @@ compass.addEventListener("touchend", (e) => {
       compass.style.zIndex = "9999";
       compassExpanded = true;
     } else {
-      // ✅ 원래 위치 복귀
-      compass.style.position = "absolute";
+      // 원래 위치 복귀
+      compass.style.position = originalCompassPos?.position || "absolute";
+      compass.style.left = originalCompassPos?.left || "10px";
+      compass.style.top = originalCompassPos?.top || "10px";
       compass.style.transform = "none";
       compass.style.zIndex = "auto";
-
-      // 저장된 위치 복원 (localStorage 활용)
-      const compassPos = JSON.parse(localStorage.getItem("compassPos"));
-      if (compassPos) {
-        compass.style.left = compassPos.left;
-        compass.style.top = compassPos.top;
-      }
       compassExpanded = false;
     }
   }
 
   lastTapTime = currentTime;
 });
-
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup");
