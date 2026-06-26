@@ -289,14 +289,13 @@
         </div>
     </div>
 
-<!-- ✅ 나침반 오버레이 -->
-<div id="compass">
+<!-- ✅ 나침반 오버레이 (클릭 시 센서 구동 함수 호출) -->
+<div id="compass" onclick="initCompass()">
   <!-- 나침반 배경 (고정) -->
   <img src="compass-white.png" alt="Compass" class="compass-bg">
 
   <!-- 바늘 (회전) -->
   <svg id="needle" viewBox="0 0 60 60">
-    <!-- 0도 기본 상태로 시작, 스크립트가 이 그룹을 직접 회전시킵니다 -->
     <g id="needle-group" transform="rotate(0 30 30)">
       <!-- 빨간 바늘 (위쪽) -->
       <polygon points="30,5 27,30 33,30" fill="red"/>
@@ -305,7 +304,6 @@
     </g>
   </svg>
 </div>
-
 
     
     <!-- ✅ 팝업 영역 -->
@@ -377,192 +375,77 @@
     
     <!-- ✅ API Key 설정 -->
     <script src="config.js"></script>
-    
-  <script>   
-  // ✅ WMTS 공통 설정
-  const projection = ol.proj.get('EPSG:3857');
-  const projectionExtent = projection.getExtent();
-  const size = ol.extent.getWidth(projectionExtent) / 256;
-  const resolutions = new Array(19);
-  const matrixIds = new Array(19);
-  for (let z = 0; z < 19; ++z) {
-    resolutions[z] = size / Math.pow(2, z);
-    matrixIds[z] = z;
+
+<script>     
+// =========================================================================
+// 🧭 [추가] 스마트폰 실제 방위각(나침반 센서) 제어 로직 (iOS + Android 호환)
+// =========================================================================
+let lastHeading = 0; 
+let isCompassInitialized = false;
+
+function initCompass() {
+  if (isCompassInitialized) return; // 이미 켜져 있다면 중복 실행 방지
+
+  // 🍏 Case 1: iOS (iPhone) 환경 대응 (사용자 터치 승인 필요)
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          isCompassInitialized = true;
+        } else {
+          alert('나침반 권한이 거부되었습니다. 설정에서 허용해 주세요.');
+        }
+      })
+      .catch(console.error);
+  } 
+  // 🤖 Case 2: 안드로이드 최신 웹 표준 환경 (절대 방위각 우선 순위)
+  else if ('ondeviceorientationabsolute' in window) {
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    isCompassInitialized = true;
+  } 
+  // 🌐 Case 3: 안드로이드 구형 및 기타 하이브리드 웹뷰 환경
+  else if ('ondeviceorientation' in window) {
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    isCompassInitialized = true;
+  } else {
+    alert('이 기기 혹은 브라우저는 방향 센서를 지원하지 않습니다.');
   }
-  
-  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
-  function createLayer(layerName, format='image/png') {
-    return new ol.layer.Tile({
-      source: new ol.source.WMTS({
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-        layer: layerName,
-        matrixSet: 'EPSG:3857',
-        format: format,
-        projection: projection,
-        tileGrid: new ol.tilegrid.WMTS({
-          origin: ol.extent.getTopLeft(projectionExtent),
-          resolutions: resolutions,
-          matrixIds: matrixIds
-        }),
-        style: 'default',
-        requestEncoding: 'REST'
-      }),
-      visible: false
-    });
-  }
-  
-  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
-  
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
-  
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: {
-        'LAYERS': 'LT_C_ADASRATODO',
-        'STYLES': 'LT_C_ADASRATODO',
-        'KEY': CONFIG.API_KEY,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE'
-      },
-      serverType: 'geoserver',
-      projection: projection
-    }),
-    visible: false               // 지적도는 기본 꺼짐
-  });
-  
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-  
-  const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
-
-  
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
-  const map = new ol.Map({
-    target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-    view: new ol.View({
-      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7 
-    })
-  });
-
-  // 앱 시작 시 초기 중심 좌표 저장
-  const mapCenterCoord = map.getView().getCenter();
-  
-  // ✅ 체크박스 이벤트 → 레이어 on/off
-  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-  
-  // ✅ 팝업 닫기 함수
-  function closeInfoPopup() {
-    document.getElementById("infoPopup").style.display = "none";
-  }
-  
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-map.on('click', function(evt) {
-  const view = map.getView();
-  const zoom = view.getZoom();
-
-  if (zoom < 19) return; // 줌 레벨이 낮으면 조회하지 않음
-
-  const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0];
-  const lat = coord[1];
-
-  // 팝업 표시 및 초기화
-  const infoPopup = document.getElementById("infoPopup");
-  infoPopup.style.display = "block";
-  infoPopup.style.transform = "none";
-  infoPopup.style.left = "calc(50% - 160px)";
-
-  // 각 카드에 "조회 중..." 표시
-  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
-
-  // API 호출
-  loadLandBuilding(lon, lat);
-  loadLandUse(lon, lat);
-  loadRealEstate(lon, lat);
-  loadRealTransaction(lon, lat); // ✅ 실거래가 호출 추가
-});
-
-
-// ✅ 1. 건물 정보 조회 (VWorld 건물 API)
-function loadLandBuilding(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        // 응답 데이터를 탭에 반영
-        document.getElementById("landBuildingInfo").innerHTML =
-          `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
-      } else {
-        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message;
-    });
 }
 
+function handleOrientation(event) {
+  let heading = 0;
 
-// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
-function loadLandUse(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        document.getElementById("landUseInfo").innerHTML =
-          `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
-      } else {
-        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message;
-    });
-}
+  // iOS 값 우선 적용 (정북 0도 기준 시계방향)
+  if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+    heading = event.webkitCompassHeading;
+  } 
+  // 안드로이드 절대각 보정 적용 (정북 0도 기준 반시계방향 보정)
+  else if (event.absolute === true && event.alpha !== null) {
+    heading = 360 - event.alpha; 
+  } 
+  // 안드로이드 일반 자이로스코프 대응
+  else if (event.alpha !== null) {
+    heading = 360 - event.alpha; 
+  } else {
+    return;
+  }
 
+  // 0~360도 범위 마감 및 전역 공유
+  lastHeading = (heading + 360) % 360;
 
-// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
-function loadRealEstate(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties;
-        const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
-        document.getElementById("realEstateInfo").innerHTML =
-          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
-      } else {
-        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
-      }
-    })
-    .catch(err => {
-      document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message;
-    });
+  // SVG 바늘 회전 효과 반영
+  const needleGroup = document.getElementById('needle-group');
+  if (needleGroup) {
+    needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+  }
 }
 
 
 // ✅ 4. 실거래가 조회 (국토부 API)
 function loadRealTransaction(lon, lat) {
   // 1. VWorld 지번 API로 법정동 코드/지번 확보
-  fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
+  fetch(`https://vworld.kr{lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
     .then(addrData => {
       const parcel = addrData.response?.result?.items[0];
@@ -578,12 +461,12 @@ function loadRealTransaction(lon, lat) {
       // 2. 국토부 실거래가 API 호출 (서비스키 반드시 인코딩)
       const key = encodeURIComponent(CONFIG.MOLIT_KEY);
 
-      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
+      fetch(`https://odcloud.kr{key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
         .then(res => res.json())
         .then(tradeData => {
           console.log(tradeData); // ✅ 응답 구조 확인용 로그
 
-          // ✅ 실제 응답 구조에 맞게 items 접근 (보통 tradeData.response.body.items.item 형태)
+          // ✅ 실제 응답 구조에 맞게 items 접근
           const items = tradeData.response?.body?.items?.item;
           if (items && items.length > 0) {
             const trade = items[0];
@@ -607,7 +490,6 @@ function loadRealTransaction(lon, lat) {
 }
 
 
-    
 // ✅ 레이어 제어 UI 토글 기능
 const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
 const mapToggleBtn = document.getElementById('mapToggleBtn'); // 지도항목 버튼
@@ -626,12 +508,14 @@ mapToggleBtn.addEventListener('click', () => {
 });
 
 
-// ✅ 나침판 상하좌우 이동
+// ✅ 나침판 상하좌우 이동 및 센서 클릭 트리거 통합
 const compass = document.getElementById("compass");
 let isDraggingCompass = false, offsetXCompass, offsetYCompass;
+let compassMoved = false; // 💡 드래그 이동과 순수 터치를 구분하는 플래그 변수
 
 function startCompassDrag(clientX, clientY) {
   isDraggingCompass = true;
+  compassMoved = false; 
   const rect = compass.getBoundingClientRect();
   offsetXCompass = clientX - rect.left;
   offsetYCompass = clientY - rect.top;
@@ -639,23 +523,33 @@ function startCompassDrag(clientX, clientY) {
 
 function moveCompassDrag(clientX, clientY) {
   if (!isDraggingCompass) return;
+  compassMoved = true; 
   compass.style.left = (clientX - offsetXCompass) + 'px';
   compass.style.top = (clientY - offsetYCompass) + 'px';
   compass.style.right = "auto";
   compass.style.bottom = "auto";
 }
 
-// PC 이벤트
-compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
-document.addEventListener('mouseup', () => {
+function endCompassDrag() {
+  if (!isDraggingCompass) return;
   isDraggingCompass = false;
+
+  // 💡 드래그하지 않고 나침반을 제자리에서 탭(클릭)한 경우에만 모바일 센서 구동!
+  if (!compassMoved) {
+    initCompass();
+  }
+
   // 위치 저장
   localStorage.setItem("compassPos", JSON.stringify({
     left: compass.style.left,
     top: compass.style.top
   }));
-});
+}
+
+// PC 이벤트
+compass.addEventListener('mousedown', (e) => startCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mousemove', (e) => moveCompassDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', endCompassDrag);
 
 // 모바일 이벤트
 compass.addEventListener('touchstart', (e) => {
@@ -667,14 +561,7 @@ document.addEventListener('touchmove', (e) => {
   const touch = e.touches[0];
   moveCompassDrag(touch.clientX, touch.clientY);
 });
-document.addEventListener('touchend', () => {
-  isDraggingCompass = false;
-  // 위치 저장
-  localStorage.setItem("compassPos", JSON.stringify({
-    left: compass.style.left,
-    top: compass.style.top
-  }));
-});
+document.addEventListener('touchend', endCompassDrag);
 
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
@@ -702,7 +589,6 @@ infoPopup.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => movePopupDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => {
   isDraggingPopup = false;
-  // 위치 저장
   localStorage.setItem("popupPos", JSON.stringify({
     left: infoPopup.style.left,
     top: infoPopup.style.top
@@ -722,7 +608,6 @@ document.addEventListener('touchmove', (e) => {
 });
 document.addEventListener('touchend', () => {
   isDraggingPopup = false;
-  // 위치 저장
   localStorage.setItem("popupPos", JSON.stringify({
     left: infoPopup.style.left,
     top: infoPopup.style.top
@@ -756,7 +641,6 @@ layerSwitcher.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => moveLayerDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => {
   isDraggingLayer = false;
-  // 위치 저장
   localStorage.setItem("layerSwitcherPos", JSON.stringify({
     left: layerSwitcher.style.left,
     top: layerSwitcher.style.top
@@ -776,7 +660,6 @@ document.addEventListener('touchmove', (e) => {
 });
 document.addEventListener('touchend', () => {
   isDraggingLayer = false;
-  // 위치 저장
   localStorage.setItem("layerSwitcherPos", JSON.stringify({
     left: layerSwitcher.style.left,
     top: layerSwitcher.style.top
@@ -890,9 +773,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-
-  
-  
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
 map.addLayer(positionLayer);
@@ -900,7 +780,8 @@ map.addLayer(positionLayer);
 let myCoord = null;
 let smoothCoords = [];
 let initialized = false;
-let lastHeading = 0;
+
+// 💡 [중요] 중복 선언(에러)을 막기 위해 스크립트 상단에 선언한 전역 변수를 그대로 공유합니다. (let 선언문 삭제)
 
 // ---------------------- 위도·경도 기록 배열 ----------------------
 let positions = [];
@@ -982,34 +863,17 @@ navigator.geolocation.watchPosition(
     circle100.getGeometry().setCenter(myCoord);
     circle200.getGeometry().setCenter(myCoord);
 
-    // ✅ 최근 2개의 실제 좌표만 명확하게 저장
-    positions.push([pos.coords.latitude, pos.coords.longitude]);
-    if (positions.length > 2) positions.shift();
-
-    // ✅ [수정] 이전 좌표와 현재 좌표가 확실히 2개 쌓였을 때만 각도 계산
-    if (positions.length === 2) {
-      let prevLat = positions[0][0];
-      let prevLon = positions[0][1];
-      let currLat = positions[1][0];
-      let currLon = positions[1][1];
-    
-      // 미세한 gps 튀기 현상으로 멈춰있을 때 바늘이 발광하는 것을 방지 (조건부 업데이트)
-      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-        
-        // ✅ [수정] CSS 변수 대신 DOM에 직접 회전각 주입 (안전하고 확실함)
-        const needleGroup = document.getElementById('needle-group');
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
-        }
-      }
-    }
+    // 💡 스마트폰 센서값(lastHeading)을 실시간으로 가져와 나침반을 회전시키므로,
+    // 기존에 존재하던 GPS 이동 좌표간 각도(Bearing) 계산 구문은 완전히 제거했습니다.
 
     if (radarOn) {
       const angle = 90, radius = 200;
       const points = [myCoord];
+      // 💡 OpenLayers 내부 삼각함수 좌표축과 실제 방위각 연동 보정 (-90도)
+      const adjustedHeading = lastHeading - 90; 
+      
       for (let a = -angle/2; a <= angle/2; a += 5) {
-        const rad = (lastHeading + a) * Math.PI / 180;
+        const rad = (adjustedHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
@@ -1031,12 +895,14 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   radarOn = !radarOn;
 
   if (radarOn) {
-    // 사람 중심 모드
+    // 사람 중심 모드 (레이더 On)
     if (myCoord) {
       const angle = 90, radius = 200;
       const points = [myCoord];
+      const adjustedHeading = lastHeading - 90; // 레이더 드로잉 축 동기화 보정
+      
       for (let a = -angle/2; a <= angle/2; a += 5) {
-        const rad = (lastHeading + a) * Math.PI / 180;
+        const rad = (adjustedHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
@@ -1046,15 +912,14 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       map.getView().setZoom(16);
     }
   } else {
-    // 지도 중심 모드
+    // 지도 중심 모드 (레이더 Off)
     radar.setGeometry(null); // 레이더 숨김
-    map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
+    if (typeof mapCenterCoord !== 'undefined') {
+      map.getView().setCenter(mapCenterCoord); // 앱 최초 실행 시점 좌표로 복귀
+    }
     map.getView().setZoom(7);
   }
 });
-
-
-
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
