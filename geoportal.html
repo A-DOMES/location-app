@@ -992,12 +992,19 @@ navigator.geolocation.watchPosition(
     if (positions.length > 2) positions.shift();
 
     // ✅ heading 계산 후 바늘 회전 갱신
-    if (positions.length === 2) {
+    if (positions.length >= 2) {
+      // ✅ 배열에 저장된 위도·경도 평균 구하기
+      let avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+      let avgLon = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+    
+      // ✅ bearing 계산 (평균 좌표 vs 마지막 좌표)
       lastHeading = calculateBearing(
-        positions[0][0], positions[0][1],
-        positions[1][0], positions[1][1]
+        avgLat, avgLon,                  // 평균 좌표
+        positions[positions.length-1][0], // 마지막 위도
+        positions[positions.length-1][1]  // 마지막 경도
       );
-      // ✅ 숫자만 전달해야 바늘이 회전함
+    
+      // ✅ 바늘 회전 갱신 (숫자만 전달)
       document.documentElement.style.setProperty('--heading', lastHeading);
     }
 
