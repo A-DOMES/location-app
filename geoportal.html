@@ -246,8 +246,8 @@
   position: absolute;
   width: 150px; height: 150px;
   transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
+  transition: transform 0.3s ease; /* 회전 애니메이션 */
 }
-
 
           
   </style>  
@@ -288,7 +288,7 @@
     <!-- ✅ 나침반 오버레이 -->
 <div id="compass">
   <!-- 배경 PNG -->
-  <img src="compass.png" alt="Compass Background" class="compass-bg">
+  <img src="compass-whie.png" alt="Compass Background" class="compass-bg">
 
   <!-- 바늘 SVG (동적으로 회전 가능) -->
   <svg class="compass-needle" viewBox="0 0 200 200">
