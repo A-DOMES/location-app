@@ -380,7 +380,7 @@
 // =========================================================================
 // 🧭 [추가] 스마트폰 실제 방위각(나침반 센서) 제어 로직 (iOS + Android 호환)
 // =========================================================================
-// let lastHeading = 0; 
+let lastHeading = 0; 
 let isCompassInitialized = false;
 
 function initCompass() {
@@ -691,6 +691,7 @@ toggleBtn.addEventListener('mousedown', (e) => startToggleDrag(e.clientX, e.clie
 document.addEventListener('mousemove', (e) => moveToggleDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', () => {
   isDraggingToggle = false;
+  // 위치 저장
   localStorage.setItem("toggleBtnPos", JSON.stringify({
     left: toggleBtn.style.left,
     top: toggleBtn.style.top
@@ -699,16 +700,17 @@ document.addEventListener('mouseup', () => {
 
 // 모바일 이벤트
 toggleBtn.addEventListener('touchstart', (e) => {
-  const touch = e.touches;
+  const touch = e.touches[0];
   startToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchmove', (e) => {
   if (!isDraggingToggle) return;
-  const touch = e.touches;
+  const touch = e.touches[0];
   moveToggleDrag(touch.clientX, touch.clientY);
 });
 document.addEventListener('touchend', () => {
   isDraggingToggle = false;
+  // 위치 저장
   localStorage.setItem("toggleBtnPos", JSON.stringify({
     left: toggleBtn.style.left,
     top: toggleBtn.style.top
@@ -719,12 +721,21 @@ document.addEventListener('touchend', () => {
 // ✅ 탭 버튼 클릭 이벤트 (조회결과 팝업 내 탭 전환)
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const parentCard = btn.closest('.info-card');
+    const parentCard = btn.closest('.info-card'); // 현재 버튼이 속한 카드 찾기
+
+    // 모든 탭 콘텐츠 숨기기
     parentCard.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+
+    // 모든 탭 버튼에서 active 클래스 제거
     parentCard.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
+    // 클릭한 버튼의 data-tab 속성값 가져오기
     const target = btn.getAttribute('data-tab');
+
+    // 해당하는 콘텐츠만 표시
     parentCard.querySelector('#' + target).style.display = 'block';
+
+    // 현재 버튼에 active 클래스 추가
     btn.classList.add('active');
   });
 });
@@ -732,24 +743,28 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ✅ 페이지 로드 시 저장된 위치 복원 (localStorage 활용)
 document.addEventListener("DOMContentLoaded", () => {
+  // 나침판 위치 복원
   const compassPos = JSON.parse(localStorage.getItem("compassPos"));
   if (compassPos) {
     compass.style.left = compassPos.left;
     compass.style.top = compassPos.top;
   }
 
+  // 조회결과 팝업 위치 복원
   const popupPos = JSON.parse(localStorage.getItem("popupPos"));
   if (popupPos) {
     infoPopup.style.left = popupPos.left;
     infoPopup.style.top = popupPos.top;
   }
 
+  // 항목선택 모달창 위치 복원
   const layerPos = JSON.parse(localStorage.getItem("layerSwitcherPos"));
   if (layerPos) {
     layerSwitcher.style.left = layerPos.left;
     layerSwitcher.style.top = layerPos.top;
   }
 
+  // 토글 버튼 위치 복원
   const togglePos = JSON.parse(localStorage.getItem("toggleBtnPos"));
   if (togglePos) {
     toggleBtn.style.left = togglePos.left;
@@ -760,12 +775,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
-console.log("현재 map 변수의 상태:", map); // 👈 이 줄을 추가해보세요!
 map.addLayer(positionLayer);
 
 let myCoord = null;
 let smoothCoords = [];
 let initialized = false;
+
+// 💡 [중요] 중복 선언(에러)을 막기 위해 스크립트 상단에 선언한 전역 변수를 그대로 공유합니다. (let 선언문 삭제)
+
+// ---------------------- 위도·경도 기록 배열 ----------------------
 let positions = [];
 
 // ---------------------- 스무딩 함수 ----------------------
@@ -788,8 +806,8 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
-// ---------------------- 마커·원형·레이더 Feature [🛠️오류 수정완료] ----------------------
-const marker = new ol.Feature(new ol.geom.Point([0, 0])); // 빈 괄호에 초기 좌표 세팅
+// ---------------------- 마커·원형·레이더 Feature ----------------------
+const marker = new ol.Feature(new ol.geom.Point([0,0]));
 marker.setId("myMarker");
 marker.setStyle(new ol.style.Style({
   image: new ol.style.Icon({
@@ -801,13 +819,13 @@ marker.setStyle(new ol.style.Style({
   })
 }));
 
-const circle100 = new ol.Feature(new ol.geom.Circle([0, 0], 100)); // 빈 괄호에 중심점 배열 수정
+const circle100 = new ol.Feature(new ol.geom.Circle([0,0], 100));
 circle100.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
 }));
 
-const circle200 = new ol.Feature(new ol.geom.Circle([0, 0], 200)); // 빈 괄호에 중심점 배열 수정
+const circle200 = new ol.Feature(new ol.geom.Circle([0,0], 200));
 circle200.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
@@ -825,26 +843,6 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 radar.setGeometry(null);
 let radarOn = false;
 
-// ---------------------- [추가] 초기 실행 시 기본 지도 강제 렌더링 ----------------------
-// GPS가 응답하기 전에도 지도가 즉시 백화 없이 뜨도록 안전장치를 만듭니다.
-if (!initialized) {
-  const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울시청 기본값
-  marker.getGeometry().setCoordinates(defaultCoord);
-  circle100.getGeometry().setCenter(defaultCoord);
-  circle200.getGeometry().setCenter(defaultCoord);
-  map.getView().setCenter(defaultCoord);
-  map.getView().setZoom(7); // 보기 좋은 초기 줌 레벨
-}// ---------------------- [추가] 초기 실행 시 기본 지도 강제 렌더링 ----------------------
-// GPS가 응답하기 전에도 지도가 즉시 백화 없이 뜨도록 안전장치를 만듭니다.
-if (!initialized) {
-  const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울시청 기본값
-  marker.getGeometry().setCoordinates(defaultCoord);
-  circle100.getGeometry().setCenter(defaultCoord);
-  circle200.getGeometry().setCenter(defaultCoord);
-  map.getView().setCenter(defaultCoord);
-  map.getView().setZoom(7); // 보기 좋은 초기 줌 레벨
-}
-  
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
@@ -865,16 +863,20 @@ navigator.geolocation.watchPosition(
     circle100.getGeometry().setCenter(myCoord);
     circle200.getGeometry().setCenter(myCoord);
 
+    // 💡 스마트폰 센서값(lastHeading)을 실시간으로 가져와 나침반을 회전시키므로,
+    // 기존에 존재하던 GPS 이동 좌표간 각도(Bearing) 계산 구문은 완전히 제거했습니다.
+
     if (radarOn) {
       const angle = 90, radius = 200;
       const points = [myCoord];
+      // 💡 OpenLayers 내부 삼각함수 좌표축과 실제 방위각 연동 보정 (-90도)
       const adjustedHeading = lastHeading - 90; 
       
       for (let a = -angle/2; a <= angle/2; a += 5) {
         const rad = (adjustedHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // 🛠️ 축 계산 오류 수정
+        points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
       radar.setGeometry(new ol.geom.Polygon([points]));
       map.getView().setCenter(myCoord);
@@ -897,7 +899,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     if (myCoord) {
       const angle = 90, radius = 200;
       const points = [myCoord];
-      const adjustedHeading = lastHeading - 90; 
+      const adjustedHeading = lastHeading - 90; // 레이더 드로잉 축 동기화 보정
       
       for (let a = -angle/2; a <= angle/2; a += 5) {
         const rad = (adjustedHeading + a) * Math.PI / 180;
@@ -911,9 +913,9 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     }
   } else {
     // 지도 중심 모드 (레이더 Off)
-    radar.setGeometry(null); 
+    radar.setGeometry(null); // 레이더 숨김
     if (typeof mapCenterCoord !== 'undefined') {
-      map.getView().setCenter(mapCenterCoord); 
+      map.getView().setCenter(mapCenterCoord); // 앱 최초 실행 시점 좌표로 복귀
     }
     map.getView().setZoom(7);
   }
