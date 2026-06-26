@@ -232,24 +232,25 @@
 #compass {
   position: absolute;
   top: 60px; right: 10px;
-  width: 60px; height: 60px;
+  width: 70px; height: 70px;
   background: rgba(255,255,255,0.5);
   border-radius: 50%;
   z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   cursor: move;
-  position: relative; /* ✅ 기준점 설정 */
+  position: relative; /* ✅ 기준점 */
 }
 #compass img {
-  width: 70px; height: 70px;
+  width: 100%; height: 100%;
   z-index: 1; /* ✅ 배경은 아래 */
 }
 #needle {
   position: absolute;
   top: 0; left: 0;
+  width: 100%; height: 100%;
   z-index: 2; /* ✅ 바늘은 위 */
 }
+
           
   </style>  
 
@@ -996,7 +997,7 @@ navigator.geolocation.watchPosition(
         positions[0][0], positions[0][1],
         positions[1][0], positions[1][1]
       );
-      // 나침반 회전
+      // 나침반 바늘 회전
       document.documentElement.style.setProperty('--heading', lastHeading + 'deg');
     }
 
@@ -1022,6 +1023,7 @@ navigator.geolocation.watchPosition(
     map.getView().setCenter(defaultCoord);
   }
 );
+
 
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
