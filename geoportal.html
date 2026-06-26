@@ -690,11 +690,12 @@ compass.addEventListener("touchend", (e) => {
 
   if (currentTime - lastTapTime < 300) { // 더블탭 인식
     if (!compassExpanded) {
-      // ✅ 확대하기 전에 원래 위치 기억
+      // ✅ 확대하기 전에 원래 위치 + zIndex 기억
       originalCompassPos = {
         left: compass.style.left,
         top: compass.style.top,
-        position: compass.style.position
+        position: compass.style.position,
+        zIndex: compass.style.zIndex
       };
 
       compass.style.position = "fixed";
@@ -704,12 +705,12 @@ compass.addEventListener("touchend", (e) => {
       compass.style.zIndex = "9999";
       compassExpanded = true;
     } else {
-      // ✅ 원래 위치 복귀
+      // ✅ 원래 위치 복귀 (zIndex 포함)
       compass.style.position = originalCompassPos?.position || "absolute";
       compass.style.left = originalCompassPos?.left || "10px";
       compass.style.top = originalCompassPos?.top || "10px";
       compass.style.transform = "none";
-      compass.style.zIndex = "auto";
+      compass.style.zIndex = originalCompassPos?.zIndex || "auto";
       compassExpanded = false;
     }
   }
@@ -742,7 +743,6 @@ window.addEventListener("load", () => {
     compass.style.top = "10px";
   }
 });
-
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup");
