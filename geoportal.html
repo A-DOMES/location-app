@@ -240,10 +240,10 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
       cursor: move;       /* 드래그 가능 표시 */
     }
-    #compass svg {
-      width: 90px; height: 90px;
-      transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
-    }
+#compass svg {
+  width: 150px; height: 150px;   /* ✅ 모바일에서 크게 보이도록 확대 */
+  transform: rotate(var(--heading, 0deg)); /* heading 값으로 회전 */
+}
 
           
   </style>  
@@ -283,20 +283,27 @@
 
     <!-- ✅ 나침반 오버레이 -->
 <div id="compass">
-  <svg id="compass-svg" width="90" height="90" viewBox="0 0 200 200">
+  <!-- ✅ 나침판 SVG -->
+  <svg id="compass-svg" width="150" height="150" viewBox="0 0 200 200">
     <!-- 외곽 원 -->
     <circle cx="100" cy="100" r="95" stroke="black" stroke-width="4" fill="none"/>
-    <!-- 방향 표시 -->
+    
+    <!-- 눈금 (예시: 0,90,180,270도만 표시) -->
     <text x="100" y="20" text-anchor="middle" font-size="18" fill="red">N</text>
     <text x="180" y="105" text-anchor="middle" font-size="18" fill="blue">E</text>
     <text x="100" y="190" text-anchor="middle" font-size="18" fill="red">S</text>
     <text x="20" y="105" text-anchor="middle" font-size="18" fill="blue">W</text>
-    <!-- 붉은 바늘 (동쪽) -->
+    
+    <!-- 붉은 바늘 (동쪽을 가리킴) -->
     <polygon points="100,100 175,95 175,105" fill="red"/>
+    <!-- 파란 바늘 (반대쪽) -->
+    <polygon points="100,100 25,95 25,105" fill="blue"/>
+    
     <!-- 중심점 -->
-    <circle cx="100" cy="100" r="6" fill="red"/>
+    <circle cx="100" cy="100" r="6" fill="black"/>
   </svg>
 </div>
+
 
 
     
