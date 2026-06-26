@@ -760,6 +760,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+console.log("현재 map 변수의 상태:", map); // 👈 이 줄을 추가해보세요!
 map.addLayer(positionLayer);
 
 let myCoord = null;
