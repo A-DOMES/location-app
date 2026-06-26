@@ -380,61 +380,42 @@
 // =========================================================================
 // 🧭 [추가] 스마트폰 실제 방위각(나침반 센서) 제어 로직 (iOS + Android 호환)
 // =========================================================================
-let lastHeading = 0; 
+// ✅ 센서 기반 heading만 사용
+let lastHeading = 0;
 let isCompassInitialized = false;
+// ✅ GPS 기반 heading만 사용
+let lastHeading = 0;
+let positions = [];
 
+  
 function initCompass() {
-  if (isCompassInitialized) return; // 이미 켜져 있다면 중복 실행 방지
+  if (isCompassInitialized) return;
 
-  // 🍏 Case 1: iOS (iPhone) 환경 대응 (사용자 터치 승인 필요)
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
-      .then(permissionState => {
-        if (permissionState === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-          isCompassInitialized = true;
-        } else {
-          alert('나침반 권한이 거부되었습니다. 설정에서 허용해 주세요.');
-        }
-      })
-      .catch(console.error);
-  } 
-  // 🤖 Case 2: 안드로이드 최신 웹 표준 환경 (절대 방위각 우선 순위)
-  else if ('ondeviceorientationabsolute' in window) {
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        isCompassInitialized = true;
+      }
+    });
+  } else if ('ondeviceorientationabsolute' in window) {
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
     isCompassInitialized = true;
-  } 
-  // 🌐 Case 3: 안드로이드 구형 및 기타 하이브리드 웹뷰 환경
-  else if ('ondeviceorientation' in window) {
+  } else if ('ondeviceorientation' in window) {
     window.addEventListener('deviceorientation', handleOrientation, true);
     isCompassInitialized = true;
-  } else {
-    alert('이 기기 혹은 브라우저는 방향 센서를 지원하지 않습니다.');
   }
 }
 
 function handleOrientation(event) {
   let heading = 0;
-
-  // iOS 값 우선 적용 (정북 0도 기준 시계방향)
-  if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+  if (event.webkitCompassHeading !== undefined) {
     heading = event.webkitCompassHeading;
-  } 
-  // 안드로이드 절대각 보정 적용 (정북 0도 기준 반시계방향 보정)
-  else if (event.absolute === true && event.alpha !== null) {
-    heading = 360 - event.alpha; 
-  } 
-  // 안드로이드 일반 자이로스코프 대응
-  else if (event.alpha !== null) {
-    heading = 360 - event.alpha; 
-  } else {
-    return;
+  } else if (event.alpha !== null) {
+    heading = 360 - event.alpha;
   }
-
-  // 0~360도 범위 마감 및 전역 공유
   lastHeading = (heading + 360) % 360;
 
-  // SVG 바늘 회전 효과 반영
   const needleGroup = document.getElementById('needle-group');
   if (needleGroup) {
     needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
@@ -775,7 +756,6 @@ function getSmoothedCoord(lat, lng) {
   return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
-// ---------------------- 방위각 계산 함수 ----------------------
 function calculateBearing(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI / 180;
   const toDeg = r => r * 180 / Math.PI;
@@ -785,6 +765,24 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
+
+navigator.geolocation.watchPosition((pos) => {
+  positions.push([pos.coords.latitude, pos.coords.longitude]);
+  if (positions.length > 2) positions.shift();
+
+  if (positions.length === 2) {
+    lastHeading = calculateBearing(
+      positions[0][0], positions[0][1],
+      positions[1][0], positions[1][1]
+    );
+
+    const needleGroup = document.getElementById('needle-group');
+    if (needleGroup) {
+      needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+    }
+  }
+});
+
 
 // ---------------------- 마커·원형·레이더 Feature [🛠️ 기본 좌표 강제 주입으로 지도 차단 에러 완벽 해결] ----------------------
 // OpenLayers EPSG:3857 서울 기준 기본 좌표 기본값 세팅 ([0,0]이나 빈 배열 방지)
