@@ -786,8 +786,11 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
-// ---------------------- 마커·원형·레이더 Feature [🛠️ 안전한 기본값으로 수정완료] ----------------------
-const marker = new ol.Feature(new ol.geom.Point([0, 0])); 
+// ---------------------- 마커·원형·레이더 Feature [🛠️ 기본 좌표 강제 주입으로 지도 차단 에러 완벽 해결] ----------------------
+// OpenLayers EPSG:3857 서울 기준 기본 좌표 기본값 세팅 ([0,0]이나 빈 배열 방지)
+const defaultBaseCoord = [14135154.55, 4518349.52];
+
+const marker = new ol.Feature(new ol.geom.Point(defaultBaseCoord)); 
 marker.setId("myMarker");
 marker.setStyle(new ol.style.Style({
   image: new ol.style.Icon({
@@ -799,13 +802,13 @@ marker.setStyle(new ol.style.Style({
   })
 }));
 
-const circle100 = new ol.Feature(new ol.geom.Circle([0, 0], 100)); 
+const circle100 = new ol.Feature(new ol.geom.Circle(defaultBaseCoord, 100)); 
 circle100.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
 }));
 
-const circle200 = new ol.Feature(new ol.geom.Circle([0, 0], 200)); 
+const circle200 = new ol.Feature(new ol.geom.Circle(defaultBaseCoord, 200)); 
 circle200.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
   fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
@@ -852,7 +855,7 @@ navigator.geolocation.watchPosition(
         const rad = (adjustedHeading + a) * Math.PI / 180;
         const dx = radius * Math.cos(rad);
         const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // 🛠️ 배열 인덱스 에러 수정 완료
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); 
       }
       radar.setGeometry(new ol.geom.Polygon([points]));
       map.getView().setCenter(myCoord);
