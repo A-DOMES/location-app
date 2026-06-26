@@ -825,6 +825,26 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 radar.setGeometry(null);
 let radarOn = false;
 
+// ---------------------- [추가] 초기 실행 시 기본 지도 강제 렌더링 ----------------------
+// GPS가 응답하기 전에도 지도가 즉시 백화 없이 뜨도록 안전장치를 만듭니다.
+if (!initialized) {
+  const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울시청 기본값
+  marker.getGeometry().setCoordinates(defaultCoord);
+  circle100.getGeometry().setCenter(defaultCoord);
+  circle200.getGeometry().setCenter(defaultCoord);
+  map.getView().setCenter(defaultCoord);
+  map.getView().setZoom(7); // 보기 좋은 초기 줌 레벨
+}// ---------------------- [추가] 초기 실행 시 기본 지도 강제 렌더링 ----------------------
+// GPS가 응답하기 전에도 지도가 즉시 백화 없이 뜨도록 안전장치를 만듭니다.
+if (!initialized) {
+  const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울시청 기본값
+  marker.getGeometry().setCoordinates(defaultCoord);
+  circle100.getGeometry().setCenter(defaultCoord);
+  circle200.getGeometry().setCenter(defaultCoord);
+  map.getView().setCenter(defaultCoord);
+  map.getView().setZoom(7); // 보기 좋은 초기 줌 레벨
+}
+  
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
