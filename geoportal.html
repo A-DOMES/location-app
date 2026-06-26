@@ -677,6 +677,43 @@ document.addEventListener('touchend', () => {
 });
 
 
+// ---------------------- 나침판 더블탭 확대/복귀 ----------------------
+let compassExpanded = false;   // 현재 확대 상태 여부
+let lastTapTime = 0;           // 마지막 터치 시간 기록
+
+compass.addEventListener("touchend", (e) => {
+  const currentTime = new Date().getTime();
+
+  // 300ms 이내 두 번 터치 → 더블탭 인식
+  if (currentTime - lastTapTime < 300) {
+    if (!compassExpanded) {
+      // ✅ 확대 모드: 중앙으로 이동 + 확대
+      compass.style.position = "fixed";
+      compass.style.top = "50%";
+      compass.style.left = "50%";
+      compass.style.transform = "translate(-50%, -50%) scale(2)";
+      compass.style.zIndex = "9999";
+      compassExpanded = true;
+    } else {
+      // ✅ 원래 위치 복귀
+      compass.style.position = "absolute";
+      compass.style.transform = "none";
+      compass.style.zIndex = "auto";
+
+      // 저장된 위치 복원 (localStorage 활용)
+      const compassPos = JSON.parse(localStorage.getItem("compassPos"));
+      if (compassPos) {
+        compass.style.left = compassPos.left;
+        compass.style.top = compassPos.top;
+      }
+      compassExpanded = false;
+    }
+  }
+
+  lastTapTime = currentTime;
+});
+
+
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup");
 let isDraggingPopup = false, offsetXPopup, offsetYPopup;
