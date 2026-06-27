@@ -227,141 +227,140 @@ map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
 
-  if (zoom < 19) return; // 줌 레벨이 낮으면 조회하지 않음
+  if (zoom < 19) return; 
+  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
 
-  // 팝업 표시 및 초기화
+  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
   infoPopup.style.transform = "none";
   infoPopup.style.left = "calc(50% - 160px)";
 
-  // 각 카드에 "조회 중..." 표시
+  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
   document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // API 호출
-  loadLandBuilding(lon, lat);
-  loadLandUse(lon, lat);
-  loadRealEstate(lon, lat);
-  loadRealTransaction(lon, lat); // ✅ 실거래가 호출 추가
+  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
+  Promise.all([
+    loadLandBuilding(lon, lat),   // 건물 정보
+    loadLandUse(lon, lat),        // 토지 이용
+    loadRealEstate(lon, lat),     // 공시지가
+    loadRealTransaction(lon, lat) // 실거래가
+  ]).then(([building, landUse, estate, transaction]) => {
+    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
+    const parcelData = {
+      ...building,
+      ...landUse,
+      ...estate,
+      ...transaction
+    };
+
+    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    renderPopup(parcelData);
+  });
 });
 
 
 // ✅ 1. 건물 정보 조회 (VWorld 건물 API)
+// - 반환: { buildingInfo: "건물명: ..., 구조: ..." }
+// - 실패 시: { buildingInfo: "조회 실패 ..." }
 function loadLandBuilding(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
-        // 응답 데이터를 탭에 반영
-        document.getElementById("landBuildingInfo").innerHTML =
-          `<b>🏢 건물 정보</b><br>건물명: ${props.bldg_nm || '이름 없음'}<br>구조: ${props.bldg_st_nm || '-'}`;
+        return {
+          buildingInfo: `건물명: ${props.bldg_nm || '이름 없음'}, 구조: ${props.bldg_st_nm || '-'}`
+        };
       } else {
-        document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 해당 위치에 건물 없음";
+        return { buildingInfo: "해당 위치에 건물 없음" };
       }
     })
-    .catch(err => {
-      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 조회 실패:</b> " + err.message;
-    });
+    .catch(err => ({ buildingInfo: "건물 조회 실패: " + err.message }));
 }
 
 
 // ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
+// - 반환: { landUseInfo: "용도지역명" }
+// - 실패 시: { landUseInfo: "조회 실패 ..." }
 function loadLandUse(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
-        document.getElementById("landUseInfo").innerHTML =
-          `<b>📜 토지 이용</b><br>용도지역: ${props.dgm_nm || '-'}`;
+        return { landUseInfo: props.dgm_nm || '-' };
       } else {
-        document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 데이터 없음";
+        return { landUseInfo: "데이터 없음" };
       }
     })
-    .catch(err => {
-      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 조회 실패:</b> " + err.message;
-    });
+    .catch(err => ({ landUseInfo: "토지 조회 실패: " + err.message }));
 }
 
 
 // ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
+// - 반환: { areaSqm, pricePerSqm, estateInfo }
+// - 실패 시: { estateInfo: "조회 실패 ..." }
 function loadRealEstate(lon, lat) {
-  fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
-        const formattedPrice = props.pblntf_pcl ? Number(props.pblntf_pcl).toLocaleString() + " 원" : "-";
-        document.getElementById("realEstateInfo").innerHTML =
-          `<b>💰 공시지가</b><br>기준년도: ${props.stdr_year || '-'}년<br>공시지가(㎡): ${formattedPrice}`;
+        return {
+          areaSqm: props.pblntf_area || 0,
+          pricePerSqm: props.pblntf_pcl || 0,
+          estateInfo: `기준년도: ${props.stdr_year || '-'}년, 공시지가: ${props.pblntf_pcl || '-'}`
+        };
       } else {
-        document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 데이터 없음";
+        return { estateInfo: "데이터 없음" };
       }
     })
-    .catch(err => {
-      document.getElementById("realEstateInfo").innerHTML = "<b>💰 가격 조회 실패:</b> " + err.message;
-    });
+    .catch(err => ({ estateInfo: "가격 조회 실패: " + err.message }));
 }
 
 
 // ✅ 4. 실거래가 조회 (국토부 API)
+// - 반환: { tradePrice, transactionInfo }
+// - 실패 시: { transactionInfo: "조회 실패 ..." }
 function loadRealTransaction(lon, lat) {
-  // 1. VWorld 지번 API로 법정동 코드/지번 확보
-  fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
+  return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
     .then(addrData => {
       const parcel = addrData.response?.result?.items[0];
-      if (!parcel) {
-        document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 지번 정보 없음";
-        return;
-      }
+      if (!parcel) return { transactionInfo: "지번 정보 없음" };
 
       const lawdCd = parcel.addrcode; // ✅ 법정동 코드
-      const jibun = parcel.jibun;     // ✅ 지번 (국토부 API에는 직접 쓰지 않음)
       const dealYmd = "202605";       // ✅ 조회 년월 (예: 2026년 5월)
-
-      // 2. 국토부 실거래가 API 호출 (서비스키 반드시 인코딩)
       const key = encodeURIComponent(CONFIG.MOLIT_KEY);
 
-      fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
+      return fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
         .then(res => res.json())
         .then(tradeData => {
-          console.log(tradeData); // ✅ 응답 구조 확인용 로그
-
-          // ✅ 실제 응답 구조에 맞게 items 접근 (보통 tradeData.response.body.items.item 형태)
           const items = tradeData.response?.body?.items?.item;
           if (items && items.length > 0) {
             const trade = items[0];
-            document.getElementById("realTransactionInfo").innerHTML =
-              `<b>📊 실거래가</b><br>
-               유형: 아파트<br>
-               거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}<br>
-               거래금액: ${trade.dealAmount} 만원<br>
-               전용면적: ${trade.area}㎡`;
+            return {
+              tradePrice: trade.dealAmount || 0,
+              transactionInfo: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount} 만원`
+            };
           } else {
-            document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 데이터 없음";
+            return { transactionInfo: "실거래가 데이터 없음" };
           }
-        })
-        .catch(err => {
-          document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가 조회 실패:</b> " + err.message;
         });
     })
-    .catch(err => {
-      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 지번 조회 실패:</b> " + err.message;
-    });
+    .catch(err => ({ transactionInfo: "실거래가 조회 실패: " + err.message }));
 }
-
 
     
 // ✅ 레이어 제어 UI 토글 기능
