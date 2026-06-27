@@ -17,24 +17,39 @@ function renderPopup(parcelData) {
   const estateTotal = (pricePerSqm * areaSqm).toLocaleString(); // 공시지가 기준 총액(원)
   const tradeTotal = (tradePrice * 10000).toLocaleString();     // 실거래가 기준 총액(원)
 
-  // ✅ 기본 정보 표시
-  document.getElementById("landBuildingInfo").innerHTML = 
-    `<h4>🏢 건물 정보</h4><p>${parcelData.buildingInfo || '조회 실패'}</p>`;
-  
-  document.getElementById("landUseInfo").innerHTML = 
-    `<h4>📜 토지 이용</h4><p>${parcelData.landUseInfo || '조회 실패'}</p>`;
-  
-  document.getElementById("realEstateInfo").innerHTML = 
-    `<h4>💰 공시지가</h4>
-     <p>단가: ${pricePerSqm ? pricePerSqm.toLocaleString() + " 원/㎡" : "조회 실패"}</p>
-     <p>면적: ${areaSqm}㎡ (${areaPy}평)</p>
-     <p>총액: ${pricePerSqm ? estateTotal + " 원" : "데이터 없음"}</p>`;
-  
-  document.getElementById("realTransactionInfo").innerHTML = 
-    `<h4>📊 실거래가</h4>
-     <p>거래금액: ${tradePrice ? tradePrice.toLocaleString() + " 만원" : "조회 실패"}</p>
-     <p>총액: ${tradePrice ? tradeTotal + " 원" : "데이터 없음"}</p>
-     <p>면적: ${areaSqm}㎡ (${areaPy}평)</p>`;
+  // ✅ 건물 정보 탭 업데이트
+  document.getElementById("bldg-basic").innerHTML =
+    parcelData.buildingInfo?.basic || "조회 실패";
+  document.getElementById("bldg-usage").innerHTML =
+    parcelData.buildingInfo?.usage || "조회 실패";
+  document.getElementById("bldg-area").innerHTML =
+    parcelData.buildingInfo?.area || "조회 실패";
+  document.getElementById("bldg-right").innerHTML =
+    parcelData.buildingInfo?.right || "조회 실패";
+
+  // ✅ 토지 이용 탭 업데이트
+  document.getElementById("land-zone").innerHTML =
+    parcelData.landUseInfo?.zone || "조회 실패";
+  document.getElementById("land-district").innerHTML =
+    parcelData.landUseInfo?.district || "조회 실패";
+  document.getElementById("land-etc").innerHTML =
+    parcelData.landUseInfo?.etc || "조회 실패";
+
+  // ✅ 공시지가 탭 업데이트
+  document.getElementById("price-basic").innerHTML =
+    pricePerSqm ? pricePerSqm.toLocaleString() + " 원/㎡" : "조회 실패";
+  document.getElementById("price-trend").innerHTML =
+    "추세분석 데이터 준비 중...";
+  document.getElementById("price-parcel").innerHTML =
+    `${areaSqm}㎡ (${areaPy}평), 총액: ${pricePerSqm ? estateTotal + " 원" : "데이터 없음"}`;
+
+  // ✅ 실거래가 탭 업데이트
+  document.getElementById("deal-sale").innerHTML =
+    tradePrice ? tradePrice.toLocaleString() + " 만원" : "조회 실패";
+  document.getElementById("deal-jeonse").innerHTML =
+    "전세 데이터 준비 중...";
+  document.getElementById("deal-wolse").innerHTML =
+    "월세 데이터 준비 중...";
 
   // ✅ 투자 시뮬레이션 입력창 추가
   renderInputs(parcelData);
@@ -47,11 +62,11 @@ function renderInputs(parcelData) {
   const popup = document.getElementById("infoPopup");
 
   // ⚠️ 중복 방지: 기존 입력창 제거
-  const oldSimCard = document.querySelector(".info-card");
+  const oldSimCard = document.querySelector(".info-card.simulation");
   if (oldSimCard) oldSimCard.remove();
 
   const simCard = document.createElement("div");
-  simCard.className = "info-card";
+  simCard.className = "info-card simulation";
   simCard.innerHTML = `
     <h4>📈 투자 시뮬레이션</h4>
     <label>대출금: <input id="loanAmount" type="number"></label><br>
