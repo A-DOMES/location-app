@@ -56,8 +56,6 @@ function renderPopup(parcelData) {
 }
 
 // ✅ 입력창 생성 함수
-// - 사용자 입력: 대출금, 이자율, 상환기간, 월 임대료
-// - "계산하기" 버튼 클릭 시 simulateInvestment 실행
 function renderInputs(parcelData) {
   const popup = document.getElementById("infoPopup");
 
@@ -87,7 +85,6 @@ function renderInputs(parcelData) {
       rentIncome: Number(document.getElementById("rentIncome").value)
     };
 
-    // ⚠️ 입력값 검증
     if (userInput.loanAmount <= 0 || userInput.interestRate <= 0 || userInput.loanYears <= 0) {
       alert("대출금, 이자율, 상환기간은 0보다 커야 합니다.");
       return;
@@ -99,9 +96,6 @@ function renderInputs(parcelData) {
 }
 
 // ✅ 투자 계산 함수
-// - 월 상환액 (원리금균등 공식)
-// - 월 순수익 (임대료 - 상환액)
-// - 연 수익률 (공시지가 기준 vs 실거래가 기준)
 function simulateInvestment(userInput, parcelData) {
   const months = userInput.loanYears * 12;
   const monthlyRate = userInput.interestRate / 100 / 12;
@@ -110,9 +104,8 @@ function simulateInvestment(userInput, parcelData) {
 
   const netIncome = userInput.rentIncome - monthlyPayment;
 
-  // ✅ 연 수익률 계산
-  const estateTotal = parcelData.pricePerSqm * parcelData.areaSqm; // 공시지가 기준 총액(원)
-  const tradeTotal = parcelData.tradePrice * 10000;                // 실거래가 기준 총액(원)
+  const estateTotal = parcelData.pricePerSqm * parcelData.areaSqm;
+  const tradeTotal = parcelData.tradePrice * 10000;
   const annualRent = userInput.rentIncome * 12;
 
   const estateYield = estateTotal ? ((annualRent / estateTotal) * 100).toFixed(2) : '-';
@@ -127,7 +120,6 @@ function simulateInvestment(userInput, parcelData) {
 }
 
 // ✅ 결과 표시 함수
-// - 월 상환액, 월 순수익, 연 수익률(공시지가 기준/실거래가 기준) 출력
 function renderResults(result) {
   document.getElementById("simulationResult").innerHTML = `
     <p>월 상환액: ${result.monthlyPayment} 원</p>
