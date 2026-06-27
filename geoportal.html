@@ -331,17 +331,21 @@ function loadRealEstate(lon, lat) {
 
 
 // ✅ 4. 실거래가 조회 (국토부 API)
-// - 반환: { tradePrice, transactionInfo }
-// - 실패 시: { transactionInfo: "조회 실패 ..." }
 function loadRealTransaction(lon, lat) {
+  // 조회 시작 시 상태 메시지 출력
+  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
   return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
     .then(addrData => {
       const parcel = addrData.response?.result?.items[0];
-      if (!parcel) return { transactionInfo: "지번 정보 없음" };
+      if (!parcel) {
+        document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 지번 정보 없음";
+        return;
+      }
 
       const lawdCd = parcel.addrcode; // ✅ 법정동 코드
-      const dealYmd = "202605";       // ✅ 조회 년월 (예: 2026년 5월)
+      const dealYmd = "202605";       // ✅ 조회 년월
       const key = encodeURIComponent(CONFIG.MOLIT_KEY);
 
       return fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
@@ -350,18 +354,23 @@ function loadRealTransaction(lon, lat) {
           const items = tradeData.response?.body?.items?.item;
           if (items && items.length > 0) {
             const trade = items[0];
-            return {
-              tradePrice: trade.dealAmount || 0,
-              transactionInfo: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount} 만원`
-            };
+            document.getElementById("realTransactionInfo").innerHTML =
+              `<b>📊 실거래가</b><br>
+               거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}<br>
+               금액: ${trade.dealAmount} 만원<br>
+               전용면적: ${trade.area}㎡`;
           } else {
-            return { transactionInfo: "실거래가 데이터 없음" };
+            document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 데이터 없음";
           }
+        })
+        .catch(err => {
+          document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가 조회 실패:</b> " + err.message;
         });
     })
-    .catch(err => ({ transactionInfo: "실거래가 조회 실패: " + err.message }));
+    .catch(err => {
+      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 지번 조회 실패:</b> " + err.message;
+    });
 }
-
     
 // ✅ 레이어 제어 UI 토글 기능
 const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
