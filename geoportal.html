@@ -388,7 +388,8 @@ function loadRealTransaction(lon, lat) {
     .catch(err => ({ realTransaction: { sale: "지번 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
 }
 
-// ✅ 모든 데이터 병렬 조회 후 팝업 표시
+// ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
+// ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 function loadAllData(lon, lat) {
   Promise.all([
     loadLandBuilding(lon, lat),
@@ -398,18 +399,23 @@ function loadAllData(lon, lat) {
   ])
   .then(([building, landUse, estate, transaction]) => {
     const parcelData = { ...building, ...landUse, ...estate, ...transaction };
-    renderPopup(parcelData); // 시뮬레이션 코드 호출
+    renderPopup(parcelData); // ✅ 시뮬레이션 코드 호출
   })
   .catch(err => {
     console.error("데이터 조회 실패:", err);
+    // ✅ 실패 시에도 안내 메시지 표시
     renderPopup({
       buildingInfo: { basic: "조회 실패", usage: "-", area: "-", right: "-" },
       landUseInfo: { zone: "조회 실패", district: "-", etc: "-" },
       estateInfo: { year: "-", price: "조회 실패" },
-      realTransaction: { sale: "조회 실패", jeonse: "-", wolse: "-" }
+      realTransaction: { sale: "조회 실패", jeonse: "-", wolse: "-" },
+      areaSqm: 0,
+      pricePerSqm: 0,
+      tradePrice: 0
     });
   });
-}    
+}
+
     
 // ✅ 레이어 제어 UI 토글 기능
 const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
