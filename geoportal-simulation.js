@@ -20,17 +20,20 @@ function renderPopup(parcelData) {
   // ✅ 기본 정보 표시
   document.getElementById("landBuildingInfo").innerHTML = 
     `<h4>🏢 건물 정보</h4><p>${parcelData.buildingInfo || '조회 실패'}</p>`;
+  
   document.getElementById("landUseInfo").innerHTML = 
     `<h4>📜 토지 이용</h4><p>${parcelData.landUseInfo || '조회 실패'}</p>`;
+  
   document.getElementById("realEstateInfo").innerHTML = 
     `<h4>💰 공시지가</h4>
-     <p>단가: ${pricePerSqm.toLocaleString()} 원/㎡</p>
+     <p>단가: ${pricePerSqm ? pricePerSqm.toLocaleString() + " 원/㎡" : "조회 실패"}</p>
      <p>면적: ${areaSqm}㎡ (${areaPy}평)</p>
-     <p>총액: ${estateTotal} 원</p>`;
+     <p>총액: ${pricePerSqm ? estateTotal + " 원" : "데이터 없음"}</p>`;
+  
   document.getElementById("realTransactionInfo").innerHTML = 
     `<h4>📊 실거래가</h4>
-     <p>거래금액: ${tradePrice.toLocaleString()} 만원</p>
-     <p>총액: ${tradeTotal} 원</p>
+     <p>거래금액: ${tradePrice ? tradePrice.toLocaleString() + " 만원" : "조회 실패"}</p>
+     <p>총액: ${tradePrice ? tradeTotal + " 원" : "데이터 없음"}</p>
      <p>면적: ${areaSqm}㎡ (${areaPy}평)</p>`;
 
   // ✅ 투자 시뮬레이션 입력창 추가
