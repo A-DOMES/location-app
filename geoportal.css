@@ -48,37 +48,22 @@
 
 /* ✅ 정보 카드 팝업 전체 */
 #infoPopup {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;              /* 넓이 줄임 */
-  max-height: 500px;         /* 최대 높이 제한 */
-  overflow-y: auto;          /* 내용 길면 스크롤 */
-  background: rgba(255,255,255,0.97);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-family: "Segoe UI", Arial, sans-serif;
-  z-index: 1000;
+  position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+  width: 320px; max-height: 500px; overflow-y: scroll;
+  background: rgba(255,255,255,0.97); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: "Segoe UI", Arial, sans-serif; z-index: 1000;
 }
 
 /* ✅ 팝업 헤더 (조회결과 + 닫기 버튼 같은 줄) */
 #infoPopup .popup-header {
-  display: flex;
-  justify-content: space-between; /* 좌측 제목, 우측 닫기 */
-  align-items: center;
-  padding: 10px 14px;             /* 좌우 여백 확보 */
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: #f5f5f5; border-bottom: 1px solid #ddd;
 }
 
-/* ✅ 닫기 버튼 */
+/* ✅ 닫기 버튼 (원래 버튼 스타일 유지, 위치만 조정) */
 #infoPopup .popup-header .close-btn {
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin-right: 6px;              /* ✅ 우측 끝에서 살짝 띄움 */
+  cursor: pointer; font-size: 16px; font-weight: normal; color: #333;
+  margin-right: 8px; /* 끝에 딱 붙지 않도록 살짝 띄움 */
 }
 
 /* ✅ 정보 카드 시각 개선 */ 
