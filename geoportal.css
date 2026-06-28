@@ -1,106 +1,92 @@
-/* ✅ 페이지 기본 레이아웃 */
+/* ================================
+   ✅ 페이지 기본 레이아웃
+================================ */
 html, body { margin:0; padding:0; width:100%; height:100%; }
 
-/* ✅ 상단 헤더 */
+/* ================================
+   ✅ 상단 헤더
+================================ */
 .page-header { position:fixed; top:0; left:0; width:100%; height:48px; background:#1976d2; color:#fff; display:flex; align-items:center; font-size:18px; font-weight:bold; margin:0; padding:0 10px; z-index:2000; cursor:move; }
 .header-left { display:flex; align-items:center; }
 .header-title { position:absolute; left:50%; transform:translateX(-50%); font-size:16px; text-align:center; }
 
-/* ✅ 지도보기 버튼 */
+/* ================================
+   ✅ 지도보기 버튼
+================================ */
 #mapToggleBtn { display:flex; align-items:center; gap:6px; background:#1976d2; color:#fff; border:none; padding:6px 12px; border-radius:12px; font-size:14px; cursor:pointer; opacity:0; transition:opacity 0.4s ease; }
 #mapToggleBtn.show { opacity:1; }
 #mapToggleBtn svg { flex-shrink:0; }
 
-/* ✅ 지도 영역 */
+/* ================================
+   ✅ 지도 영역
+================================ */
 #map { width:100%; height:calc(100vh - 48px); margin-top:48px; position:relative; z-index:1; }
 
-/* ✅ 항목선택 레이어 선택 모달창 */
-.layer-switcher { position:absolute; top:50px; left:120px; transform:none; margin-left:0; background:rgba(255,255,255,0.85); padding:12px; border:1px solid #ccc; border-radius:8px; font-size:15px; z-index:1001; width:110px; max-width:90%; cursor:move; }
+/* ================================
+   ✅ 항목선택 모달창
+================================ */
+.layer-switcher { position:absolute; top:50px; left:120px; background:rgba(255,255,255,0.85); padding:12px; border:1px solid #ccc; border-radius:8px; font-size:15px; z-index:1001; width:110px; max-width:90%; cursor:move; }
 .layer-header { position:relative; margin-bottom:8px; }
 .layer-title { text-align:center; font-weight:bold; font-size:18px; color:#1976d2; }
 .close-btn { position:absolute; top:0; right:0; width:24px; height:24px; border-radius:50%; background:rgba(25,118,210,0.2); border:none; color:#1976d2; font-size:16px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .layer-items label { display:flex; align-items:center; margin:4px 0; }
 .layer-items input[type="checkbox"] { transform:scale(1.2); margin-right:6px; }
 
-/* ✅ 조회결과 모달창 전체 영역 (공통) */
-#infoPopup {
-  position:absolute;
-  top:48px; left:50%;               /* 국토부지도 헤더(48px) 바로 아래 시작 */
-  transform:translateX(-50%);       /* 가로 중앙 정렬 */
-  width:360px; max-height:500px;
-  overflow-y:auto;
-  background:rgba(255,255,255,0.95);
-  border:1px solid #ccc; border-radius:8px;
-  padding:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.2);
-  z-index:2000;
-  cursor:move;
-  font-family:"Segoe UI", Arial, sans-serif;
-}
+/* ================================
+   ✅ 조회결과 팝업 전체
+================================ */
+#infoPopup { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:360px; max-height:500px; overflow-y:auto; background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:2000; font-family:"Segoe UI", Arial, sans-serif; }
 
-/* ✅ 조회결과 팝업 헤더 영역 */
-#infoPopup .popup-header {
-  display:flex;                     /* 제목과 닫기 버튼 같은 행 */
-  justify-content:space-between;    /* 좌측 제목, 우측 닫기 버튼 */
-  align-items:center;               /* 수직 가운데 정렬 */
-  padding:4px 10px;                 /* 높이 줄임 → 타이틀 영역 얇게 */
-  background:#f5f5f5;
-  border-bottom:1px solid #ddd;
-  margin-bottom:8px;
-}
+/* ✅ 조회결과 헤더 (타이틀 + 닫기 버튼 같은 행) */
+#infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f5f5f5; border-bottom:1px solid #ddd; margin-bottom:10px; }
+#infoPopup .popup-title { font-size:16px; font-weight:bold; color:#1976d2; margin:0; }
+#infoPopup .popup-header .close-btn { width:24px; height:24px; border-radius:50%; background:rgba(25,118,210,0.2); border:none; color:#1976d2; font-size:16px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+#infoPopup .popup-header .close-btn:hover { background:#0056b3; color:#fff; }
 
-/* ✅ 조회결과 제목 스타일 */
-#infoPopup .popup-title {
-  font-size:16px; font-weight:bold; color:#1976d2;
-  margin:0; line-height:1.2;
-}
+/* ✅ 조회결과 카드 */
+#infoPopup .info-card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+#infoPopup .info-card h4 { margin-bottom:6px; font-size:15px; font-weight:bold; color:#1976d2; }
+#infoPopup .info-card .tab-menu { margin-bottom:8px; }
+#infoPopup .info-card .tab-btn { margin-right:6px; padding:4px 8px; border:1px solid #1976d2; border-radius:4px; background:#e3f2fd; cursor:pointer; }
+#infoPopup .info-card .tab-btn.active { background:#1976d2; color:#fff; }
+#infoPopup .info-card .tab-content { font-size:14px; color:#333; }
 
-/* ✅ 조회결과 닫기 버튼 (항목선택과 동일 크기) */
-#infoPopup .popup-header .close-btn {
-  width:24px; height:24px;          /* 항목선택과 동일 크기 */
-  border-radius:50%;
-  background:rgba(25,118,210,0.2);
-  border:none; color:#1976d2;
-  font-size:16px; font-weight:bold;
-  cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition:background 0.2s;
-}
-#infoPopup .popup-header .close-btn:hover {
-  background:#0056b3; color:#fff;
-}
-
-/* ✅ 모바일 대응: 화면 중앙 정렬만 덮어쓰기 */
+/* ================================
+   ✅ 모바일 대응
+================================ */
 @media (max-width:768px) {
-  #infoPopup {
-    position:fixed;
-    top:50%; left:50%;
-    transform:translate(-50%,-50%); /* 정확히 중앙 정렬 */
-    width:90%; max-width:360px;
-    height:90%; max-height:90%;
-    margin:0;
-  }
+  #infoPopup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:360px; height:90%; max-height:90%; margin:0; }
 }
 
-/* ✅ 입력창 */
+/* ================================
+   ✅ 입력창
+================================ */
 label { display:block; margin:6px 0; font-size:14px; color:#444; }
 input[type="number"] { width:120px; padding:4px; margin-left:6px; border:1px solid #ccc; border-radius:4px; }
 
-/* ✅ 버튼 색상 대비 */
+/* ================================
+   ✅ 버튼
+================================ */
 #simulateBtn { background-color:#1976d2; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-weight:bold; cursor:pointer; transition:background 0.3s ease; }
 #simulateBtn:hover { background-color:#1565c0; }
 
-/* ✅ 결과 영역 강조 */
+/* ================================
+   ✅ 결과 영역
+================================ */
 #simulationResult { background:#f9f9f9; border:1px solid #ddd; border-radius:8px; padding:10px 12px; margin-top:14px; font-size:14px; color:#222; }
 #simulationResult p { margin:6px 0; font-weight:bold; color:#000; }
 
-/* ✅ 사람중심 지도중심 버튼 */
+/* ================================
+   ✅ 사람중심 버튼
+================================ */
 #toggleFeaturesBtn { position:absolute; top:60px; left:50px; width:60px; height:60px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:50%; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:999; display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease, background 0.3s ease; padding:0; }
 #toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); }
 #toggleFeaturesBtn:active { transform:scale(0.95); }
 #toggleFeaturesBtn img { width:70px; height:70px; pointer-events:none; }
 
-/* ✅ 나침판 오버레이 */
+/* ================================
+   ✅ 나침반
+================================ */
 #compass { position:absolute; top:70px; right:10px; width:70px; height:70px; background:rgba(255,255,255,0.5); border-radius:50%; z-index:1000; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:move; }
 .compass-bg { width:70px; height:70px; border-radius:50%; }
 #needle { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
