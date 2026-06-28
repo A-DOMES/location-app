@@ -925,25 +925,33 @@ navigator.geolocation.watchPosition(
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
+  // ✅ 레이더 표시 여부 토글 (켜기/끄기)
   radarOn = !radarOn;
 
   if (radarOn) {
-    // 사람 중심 모드
+    // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 레이더 표시)
     if (myCoord) {
-      const angle = 90, radius = 200;
-      const points = [myCoord];
-      for (let a = -angle/2; a <= angle/2; a += 5) {
-        const rad = (lastHeading + a) * Math.PI / 180;
-        const dx = radius * Math.cos(rad);
-        const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      const angle = 90;    // 레이더 부채꼴 각도 (90도)
+      const radius = 200;  // 레이더 반경 (200m)
+      const points = [myCoord]; // 시작점: 내 현재 좌표
+
+      // ✅ lastHeading을 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+      for (let a = -angle/2; a <= angle/2; a += 5) { // 5도 단위로 점 찍기
+        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
+        const dx = radius * Math.cos(rad);             // X축 방향 거리
+        const dy = radius * Math.sin(rad);             // Y축 방향 거리
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); // 점 추가
       }
+
+      // ✅ 레이더 부채꼴을 Polygon으로 설정
       radar.setGeometry(new ol.geom.Polygon([points]));
+
+      // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
     }
   } else {
-    // 지도 중심 모드
+    // ✅ 지도 중심 모드 (레이더 숨기고 초기 중심 좌표로 복귀)
     radar.setGeometry(null); // 레이더 숨김
     map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
     map.getView().setZoom(7);
