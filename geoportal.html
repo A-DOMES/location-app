@@ -896,7 +896,8 @@ navigator.geolocation.watchPosition(
           radar.setGeometry(new ol.geom.Polygon([points]));
           map.getView().setCenter(myCoord);
         }
-      },   // ✅ 여기서 콤마로 닫음
+       }
+      },      // ✅ 여기서 콤마로 닫음
       (err) => {
         console.error("위치 정보 오류:", err);
         const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
