@@ -21,41 +21,27 @@
 .layer-items label { display:flex; align-items:center; margin:4px 0; } 
 .layer-items input[type="checkbox"] { transform:scale(1.2); margin-right:6px; }
 
-/* ✅ 조회결과 모달창 */ 
-#infoPopup { position:absolute; top:60px; left:50%; transform:translateX(-50%); width:360px; background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:2000; cursor:move; } 
-#infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; padding:0 8px; margin-bottom:12px; } 
-#infoPopup h3 { margin:0; font-size:18px; font-weight:bold; color:#1976d2; } 
-#infoPopup .close-btn { width:28px; height:28px; border-radius:50%; background:#f44336; color:#fff; font-weight:bold; font-size:16px; text-align:center; line-height:28px; cursor:pointer; transition:background 0.2s; margin-right:4px; margin-top:2px; } 
-#infoPopup .close-btn:hover { background:#d32f2f; } 
-.info-card { background:#fff; border:1px solid #ddd; border-radius:6px; padding:10px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); } 
-.info-card h4 { margin:0 0 6px 0; font-size:16px; color:#333; }
-
-/* ✅ 모바일 화면 */ 
-@media (max-width:768px) { #infoPopup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:360px; margin:0 auto; } }
-
-/* ✅ 사람중심 지도중심 버튼 */ 
-#toggleFeaturesBtn { position:absolute; top:60px; left:50px; width:60px; height:60px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:50%; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:999; display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease, background 0.3s ease; padding:0; } 
-#toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); } 
-#toggleFeaturesBtn:active { transform:scale(0.95); } 
-#toggleFeaturesBtn img { width:70px; height:70px; pointer-events:none; }
-
-/* ✅ 나침판 오버레이 */ 
-#compass { position:absolute; top:70px; right:10px; width:70px; height:70px; background:rgba(255,255,255,0.5); border-radius:50%; z-index:1000; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:move; } 
-.compass-bg { width:70px; height:70px; border-radius:50%; } 
-#needle { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-
-
-/* ✅ 조회결과 팝업 전체 */
-#infoPopup { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 320px; max-height: 500px; overflow-y: scroll; background: rgba(255,255,255,0.97); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: "Segoe UI", Arial, sans-serif; z-index: 1000; }
+/* ✅ 조회결과 모달창 */
+#infoPopup { position:absolute; top:60px; left:50%; transform:translateX(-50%); width:360px; max-height:500px; overflow-y:auto; background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:2000; cursor:move; font-family:"Segoe UI", Arial, sans-serif; }
 
 /* ✅ 조회결과 팝업 헤더 */
-#infoPopup .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f5f5f5; border-bottom: 1px solid #ddd; }
+#infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f5f5f5; border-bottom:1px solid #ddd; margin-bottom:12px; }
 
-/* ✅ 조회결과 닫기 버튼 (우측 끝에서 살짝 띄움, 파란색 배경 + 흰색 X) */
-#infoPopup .popup-header .close-btn { cursor: pointer; font-size: 18px; font-weight: bold; color: #fff; background-color: #007BFF; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 8px; }
+/* ✅ 조회결과 제목 */
+#infoPopup h3 { margin:0; font-size:18px; font-weight:bold; color:#1976d2; }
+
+/* ✅ 조회결과 닫기 버튼 (파란색 배경 + 흰색 X) */
+#infoPopup .popup-header .close-btn { width:28px; height:28px; border-radius:50%; background:#007BFF; color:#fff; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s; margin-right:4px; }
+#infoPopup .popup-header .close-btn:hover { background:#0056b3; }
+
+/* ✅ 조회결과 카드 */
+.info-card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); transition:transform 0.2s ease; }
+.info-card:hover { transform:translateY(-2px); background:#fdfdfd; }
+.info-card h4 { margin-bottom:6px; font-size:15px; font-weight:bold; color:#1976d2; }
+.info-card p { margin:3px 0; font-size:14px; color:#333; line-height:1.4; }
 
 /* ✅ 조회결과 모바일 대응: 팝업 중앙 정렬 */
-@media (max-width: 480px) { #infoPopup { position: fixed; width: 90%; max-width: 320px; left: 50%; transform: translateX(-50%); } }
+@media (max-width:768px) { #infoPopup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:360px; margin:0 auto; } }
 
 
 /* ✅ 정보 카드 시각 개선 */ 
@@ -76,3 +62,13 @@ input[type="number"] { width:120px; padding:4px; margin-left:6px; border:1px sol
 #simulationResult { background:#f9f9f9; border:1px solid #ddd; border-radius:8px; padding:10px 12px; margin-top:14px; font-size:14px; color:#222; } 
 #simulationResult p { margin:6px 0; font-weight:bold; color:#000; }
 
+/* ✅ 사람중심 지도중심 버튼 */ 
+#toggleFeaturesBtn { position:absolute; top:60px; left:50px; width:60px; height:60px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); border:2px solid #1976d2; border-radius:50%; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:999; display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease, background 0.3s ease; padding:0; } 
+#toggleFeaturesBtn:hover { background:#e3f2fd; transform:scale(1.1); } 
+#toggleFeaturesBtn:active { transform:scale(0.95); } 
+#toggleFeaturesBtn img { width:70px; height:70px; pointer-events:none; }
+
+/* ✅ 나침판 오버레이 */ 
+#compass { position:absolute; top:70px; right:10px; width:70px; height:70px; background:rgba(255,255,255,0.5); border-radius:50%; z-index:1000; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); cursor:move; } 
+.compass-bg { width:70px; height:70px; border-radius:50%; } 
+#needle { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
