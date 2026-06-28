@@ -22,17 +22,37 @@
 .layer-items input[type="checkbox"] { transform:scale(1.2); margin-right:6px; }
 
 /* ✅ 조회결과 모달창 */
-#infoPopup { position:absolute; top:60px; left:50%; transform:translateX(-50%); width:360px; max-height:500px; overflow-y:auto; background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:2000; cursor:move; font-family:"Segoe UI", Arial, sans-serif; }
+#infoPopup {
+  position:absolute; top:60px; left:50%; transform:translateX(-50%);
+  width:360px; max-height:500px; overflow-y:auto;
+  background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+  padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  z-index:2000; cursor:move; font-family:"Segoe UI", Arial, sans-serif;
+}
 
 /* ✅ 조회결과 팝업 헤더 */
-#infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f5f5f5; border-bottom:1px solid #ddd; margin-bottom:12px; }
+#infoPopup .popup-header {
+  position:relative; display:flex; justify-content:center; align-items:center;
+  padding:10px 14px; background:#f5f5f5; border-bottom:1px solid #ddd;
+  margin-bottom:12px;
+}
 
 /* ✅ 조회결과 제목 */
-#infoPopup h3 { margin:0; font-size:18px; font-weight:bold; color:#1976d2; }
+#infoPopup .popup-title {
+  font-size:18px; font-weight:bold; color:#1976d2; margin:0;
+}
 
-/* ✅ 조회결과 닫기 버튼 (파란색 배경 + 흰색 X) */
-#infoPopup .popup-header .close-btn { width:28px; height:28px; border-radius:50%; background:#007BFF; color:#fff; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s; margin-right:4px; }
-#infoPopup .popup-header .close-btn:hover { background:#0056b3; }
+/* ✅ 조회결과 닫기 버튼 */
+#infoPopup .popup-header .close-btn {
+  position:absolute; top:0; right:0;
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(25,118,210,0.2); border:none;
+  color:#1976d2; font-size:16px; font-weight:bold;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:background 0.2s;
+}
+#infoPopup .popup-header .close-btn:hover { background:#0056b3; color:#fff; }
+
 
 /* ✅ 조회결과 카드 */
 .info-card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); transition:transform 0.2s ease; }
@@ -40,9 +60,15 @@
 .info-card h4 { margin-bottom:6px; font-size:15px; font-weight:bold; color:#1976d2; }
 .info-card p { margin:3px 0; font-size:14px; color:#333; line-height:1.4; }
 
-/* ✅ 조회결과 모바일 대응: 팝업 중앙 정렬 */
-@media (max-width:768px) { #infoPopup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:360px; margin:0 auto; } }
-
+/* ✅ 조회결과 모바일 대응: 팝업 전체 높이 */
+@media (max-width:768px) {
+  #infoPopup {
+    position:fixed; top:0; left:0; transform:none;
+    width:100%; height:100%; max-width:none; max-height:none;
+    margin:0; border-radius:0;
+    overflow-y:auto; /* 화면 전체 높이에 맞게 내부 스크롤 */
+  }
+}
 
 /* ✅ 정보 카드 시각 개선 */ 
 .info-card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); transition:transform 0.2s ease; } 
