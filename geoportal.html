@@ -796,8 +796,11 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   const Δλ = toRad(lon2 - lon1);
   const y = Math.sin(Δλ) * Math.cos(φ2);
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  let bearing = toDeg(Math.atan2(y, x));
+  bearing = (bearing + 360) % 360;
+  return 360 - bearing; // ✅ 여기서 반대 방향 보정
 }
+
 
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
@@ -893,8 +896,8 @@ navigator.geolocation.watchPosition(
       // ✅ lastHeading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
       for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
         const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
-        const dx = radius * Math.cos(rad);             // X축 방향 거리
-        const dy = radius * Math.sin(rad);             // Y축 방향 거리
+        const dx = radius * Math.sin(rad);             // X축 방향 거리
+        const dy = radius * Math.cos(rad);             // Y축 방향 거리
         points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 점 추가
       }
 
