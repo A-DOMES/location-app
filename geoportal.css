@@ -35,12 +35,13 @@ html, body { margin:0; padding:0; width:100%; height:100%; }
 /* ================================
    ✅ 조회결과 팝업 전체
 ================================ */
+#infoPopup { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:360px; max-height:500px; overflow-y:auto; background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:2000; font-family:"Segoe UI", Arial, sans-serif; }
+
 /* ✅ 조회결과 헤더 (타이틀 + 닫기 버튼 같은 행) */
 #infoPopup .popup-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f5f5f5; border-bottom:1px solid #ddd; margin-bottom:10px; }
 #infoPopup .popup-title { font-size:16px; font-weight:bold; color:#1976d2; margin:0; }
 #infoPopup .popup-header .close-btn { width:24px; height:24px; border-radius:50%; background:rgba(25,118,210,0.2); border:none; color:#1976d2; font-size:16px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 #infoPopup .popup-header .close-btn:hover { background:#0056b3; color:#fff; }
-
 
 /* ✅ 조회결과 카드 */
 #infoPopup .info-card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
