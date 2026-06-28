@@ -867,13 +867,9 @@ navigator.geolocation.watchPosition(
       let currLat = positions[1][0];
       let currLon = positions[1][1];
     
-      // ✅ 좌표 변화량 조건 완화 + 방향 보정
+      // ✅ 좌표 변화량 조건 완화
       if (Math.abs(prevLat - currLat) > 0.000001 || Math.abs(prevLon - currLon) > 0.000001) {
-        const newHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-      
-        // 이전 값과 새 값 사이를 조금씩 따라가기 (보정 비율 0.1)
-        const diff = (newHeading - lastHeading + 540) % 360 - 180;
-        lastHeading = (lastHeading + diff * 0.1 + 360) % 360;
+        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
       
         const needleGroup = document.getElementById('needle-group');
         if (needleGroup) {
@@ -881,7 +877,7 @@ navigator.geolocation.watchPosition(
         }
       }
       
-      // ✅ 레이더 부채꼴 생성 (더 부드럽게)
+      // ✅ 레이더 부채꼴 생성 더 세밀하게
       if (radarOn) {
         const angle = 90, radius = 200;
         const points = [myCoord];
