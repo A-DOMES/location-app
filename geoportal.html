@@ -839,39 +839,44 @@ let radarOn = false;
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
+    // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
     if (initialized && pos.coords.accuracy > 100) return;
 
     let coord;
     if (!initialized) {
+      // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
       marker.getGeometry().setCoordinates(coord);
       map.getView().setCenter(coord);
     } else {
+      // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
       coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
       marker.getGeometry().setCoordinates(coord);
     }
 
+    // ✅ 내 현재 좌표 저장
     myCoord = coord;
-    circle100.getGeometry().setCenter(myCoord);
-    circle200.getGeometry().setCenter(myCoord);
+    circle100.getGeometry().setCenter(myCoord); // 반경 100m 원 중심 갱신
+    circle200.getGeometry().setCenter(myCoord); // 반경 200m 원 중심 갱신
 
-    // ✅ 최근 2개의 실제 좌표만 명확하게 저장
+    // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
     positions.push([pos.coords.latitude, pos.coords.longitude]);
     if (positions.length > 2) positions.shift();
 
-    // ✅ [수정] 이전 좌표와 현재 좌표가 확실히 2개 쌓였을 때만 각도 계산
+    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
     if (positions.length === 2) {
       let prevLat = positions[0][0];
       let prevLon = positions[0][1];
       let currLat = positions[1][0];
       let currLon = positions[1][1];
-    
-      // 미세한 gps 튀기 현상으로 멈춰있을 때 바늘이 발광하는 것을 방지 (조건부 업데이트)
+
+      // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
       if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+        // ✅ 이동 방향(방위각) 계산
         lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-        
-        // ✅ [수정] CSS 변수 대신 DOM에 직접 회전각 주입 (안전하고 확실함)
+
+        // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
         const needleGroup = document.getElementById('needle-group');
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
@@ -879,26 +884,38 @@ navigator.geolocation.watchPosition(
       }
     }
 
+    // ---------------------- 레이더 각도 처리 ----------------------
     if (radarOn) {
-      const angle = 90, radius = 200;
-      const points = [myCoord];
-      for (let a = -angle/2; a <= angle/2; a += 5) {
-        const rad = (lastHeading + a) * Math.PI / 180;
-        const dx = radius * Math.cos(rad);
-        const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
+      const radius = 200; // ✅ 레이더 반경 (200m)
+      const points = [myCoord]; // ✅ 시작점: 내 현재 좌표
+
+      // ✅ lastHeading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+      for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
+        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
+        const dx = radius * Math.cos(rad);             // X축 방향 거리
+        const dy = radius * Math.sin(rad);             // Y축 방향 거리
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 점 추가
       }
+
+      // ✅ 레이더 부채꼴을 Polygon으로 설정
       radar.setGeometry(new ol.geom.Polygon([points]));
+
+      // ✅ 지도 중심을 내 현재 좌표로 이동
       map.getView().setCenter(myCoord);
     }
   },
   (err) => {
+    // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
+
+    // ✅ 기본 좌표 (서울 시청)로 복귀
     const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
     marker.getGeometry().setCoordinates(defaultCoord);
     map.getView().setCenter(defaultCoord);
   }
 );
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
