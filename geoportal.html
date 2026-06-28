@@ -867,30 +867,33 @@ navigator.geolocation.watchPosition(
       let currLat = positions[1][0];
       let currLon = positions[1][1];
     
-      // 미세한 gps 튀기 현상으로 멈춰있을 때 바늘이 발광하는 것을 방지 (조건부 업데이트)
-      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-        
-        // ✅ [수정] CSS 변수 대신 DOM에 직접 회전각 주입 (안전하고 확실함)
+      // ✅ 좌표 변화량 조건 완화 + 방향 보정
+      if (Math.abs(prevLat - currLat) > 0.000001 || Math.abs(prevLon - currLon) > 0.000001) {
+        const newHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
+      
+        // 이전 값과 새 값 사이를 조금씩 따라가기 (보정 비율 0.1)
+        const diff = (newHeading - lastHeading + 540) % 360 - 180;
+        lastHeading = (lastHeading + diff * 0.1 + 360) % 360;
+      
         const needleGroup = document.getElementById('needle-group');
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
       }
-    }
-
-    if (radarOn) {
-      const angle = 90, radius = 200;
-      const points = [myCoord];
-      for (let a = -angle/2; a <= angle/2; a += 5) {
-        const rad = (lastHeading + a) * Math.PI / 180;
-        const dx = radius * Math.cos(rad);
-        const dy = radius * Math.sin(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      
+      // ✅ 레이더 부채꼴 생성 (더 부드럽게)
+      if (radarOn) {
+        const angle = 90, radius = 200;
+        const points = [myCoord];
+        for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 변경
+          const rad = (lastHeading + a) * Math.PI / 180;
+          const dx = radius * Math.cos(rad);
+          const dy = radius * Math.sin(rad);
+          points.push([myCoord[0] + dx, myCoord[1] + dy]);
+        }
+        radar.setGeometry(new ol.geom.Polygon([points]));
+        map.getView().setCenter(myCoord);
       }
-      radar.setGeometry(new ol.geom.Polygon([points]));
-      map.getView().setCenter(myCoord);
-    }
   },
   (err) => {
     console.error("위치 정보 오류:", err);
@@ -926,8 +929,6 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     map.getView().setZoom(7);
   }
 });
-
-
 
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
