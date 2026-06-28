@@ -867,41 +867,44 @@ navigator.geolocation.watchPosition(
       let currLat = positions[1][0];
       let currLon = positions[1][1];
     
-      // ✅ 좌표 변화량 조건 완화 + 방향 보정
-      if (Math.abs(prevLat - currLat) > 0.000001 || Math.abs(prevLon - currLon) > 0.000001) {
-        const newHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-      
-        // 이전 값과 새 값 사이를 조금씩 따라가기 (보정 비율 0.05 ~ 0.3 사이에서 값을 조정)
-        const diff = (newHeading - lastHeading + 540) % 360 - 180;
-        lastHeading = (lastHeading + diff * 0.1 + 360) % 360;
-      
-        const needleGroup = document.getElementById('needle-group');
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        // ✅ 좌표 변화량 조건 완화 + 방향 보정
+        if (Math.abs(prevLat - currLat) > 0.000001 || Math.abs(prevLon - currLon) > 0.000001) {
+          const newHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
+    
+          // 보정 비율 적용
+          const diff = (newHeading - lastHeading + 540) % 360 - 180;
+          lastHeading = (lastHeading + diff * 0.1 + 360) % 360;
+    
+          const needleGroup = document.getElementById('needle-group');
+          if (needleGroup) {
+            needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+          }
         }
-      }
-      
-      // ✅ 레이더 부채꼴 생성 (더 부드럽게)
-      if (radarOn) {
-        const angle = 90, radius = 200;
-        const points = [myCoord];
-        for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 변경
-          const rad = (lastHeading + a) * Math.PI / 180;
-          const dx = radius * Math.cos(rad);
-          const dy = radius * Math.sin(rad);
-          points.push([myCoord[0] + dx, myCoord[1] + dy]);
+    
+        // ✅ 레이더 부채꼴 생성
+        if (radarOn) {
+          const angle = 90, radius = 200;
+          const points = [myCoord];
+          for (let a = -angle/2; a <= angle/2; a += 1) {
+            const rad = (lastHeading + a) * Math.PI / 180;
+            const dx = radius * Math.cos(rad);
+            const dy = radius * Math.sin(rad);
+            points.push([myCoord[0] + dx, myCoord[1] + dy]);
+          }
+          radar.setGeometry(new ol.geom.Polygon([points]));
+          map.getView().setCenter(myCoord);
         }
-        radar.setGeometry(new ol.geom.Polygon([points]));
-        map.getView().setCenter(myCoord);
+      },   // ✅ 여기서 콤마로 닫음
+      (err) => {
+        console.error("위치 정보 오류:", err);
+        const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
+        marker.getGeometry().setCoordinates(defaultCoord);
+        map.getView().setCenter(defaultCoord);
       }
-  },
-  (err) => {
-    console.error("위치 정보 오류:", err);
-    const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
-    marker.getGeometry().setCoordinates(defaultCoord);
-    map.getView().setCenter(defaultCoord);
-  }
-);
+    );     // ✅ watchPosition 닫음
+
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
