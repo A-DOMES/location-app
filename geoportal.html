@@ -530,6 +530,35 @@ compass.addEventListener("touchend", (e) => {
   lastTapTime = currentTime;
 });
 
+// ---------------------- PC 더블클릭 확대/복귀 ----------------------
+compass.addEventListener("dblclick", (e) => {
+  if (!compassExpanded) {
+    // ✅ 확대하기 전에 원래 위치 + zIndex 기억
+    originalCompassPos = {
+      left: compass.style.left,
+      top: compass.style.top,
+      position: compass.style.position,
+      zIndex: compass.style.zIndex
+    };
+
+    compass.style.position = "fixed";
+    compass.style.top = "50%";
+    compass.style.left = "50%";
+    compass.style.transform = "translate(-50%, -50%) scale(3)"; // 3배 확대
+    compass.style.zIndex = "9999"; // 확대 시 최상단
+    compassExpanded = true;
+  } else {
+    // ✅ 원래 위치 복귀 (zIndex 포함)
+    compass.style.position = originalCompassPos?.position || "absolute";
+    compass.style.left = originalCompassPos?.left || "10px";
+    compass.style.top = originalCompassPos?.top || "70px"; // CSS 기본값 반영
+    compass.style.transform = "none";
+    compass.style.zIndex = "1000"; // ✅ 항상 지도 위에 있도록 고정
+    compassExpanded = false;
+  }
+});
+
+
 // ---------------------- 나침반 바늘 회전 + 레이더 방향 갱신 (센서 이벤트) ----------------------
 window.addEventListener('deviceorientationabsolute', (event) => {
   if (event.alpha !== null) {
