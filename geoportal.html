@@ -131,7 +131,28 @@
   </div>
 </div>
 
-  
+   <!-- 상단 헤더 -->
+  <div class="page-header">
+    <div class="header-left">메뉴</div>
+    <div class="header-title">네비게이션 데모</div>
+  </div>
+
+  <!-- 네비게이션 버튼 -->
+  <button id="simulateBtn">네비게이션</button>
+  <div id="map"></div>
+
+  <!-- 팝업창 -->
+  <div id="infoPopup" style="display:none;">
+    <div class="popup-header">
+      <h3 class="popup-title">경로 검색</h3>
+      <button class="close-btn" onclick="closePopup()">×</button>
+    </div>
+    <div class="popup-content">
+      <label for="destinationInput">목적지 입력</label>
+      <input type="text" id="destinationInput" placeholder="예: 서울역">
+      <button id="searchBtn">검색</button>
+    </div>
+    
  <!-- ✅ 토글버튼 설정 -->
   <button id="toggleFeaturesBtn">
     <img src="./humanfocus-red.png" alt="HumanFocus">
@@ -964,6 +985,49 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   }
 });
 
+// ✅ 네비게이션 버튼 클릭 → 팝업 열기
+document.getElementById("simulateBtn").addEventListener("click", () => {
+  document.getElementById("infoPopup").style.display = "block";
+});
+
+// ✅ 팝업 닫기
+function closePopup() {
+  document.getElementById("infoPopup").style.display = "none";
+}
+
+// ✅ 검색 버튼 클릭 → 경로 표시
+document.getElementById("searchBtn").addEventListener("click", () => {
+  const destination = document.getElementById("destinationInput").value;
+  if (destination) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const start = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      calculateRoute(start, destination);
+      closePopup();
+    });
+  }
+});
+
+// ✅ 경로 계산 (Google Maps Directions API 활용)
+function calculateRoute(start, destination) {
+  const directionsService = new google.maps.DirectionsService();
+  const directionsRenderer = new google.maps.DirectionsRenderer();
+  directionsRenderer.setMap(map); // ⚠️ map은 OpenLayers가 아니라 Google Maps 객체여야 함
+
+  directionsService.route(
+    {
+      origin: start,
+      destination: destination,
+      travelMode: google.maps.TravelMode.DRIVING
+    },
+    (result, status) => {
+      if (status === "OK") {
+        directionsRenderer.setDirections(result);
+      } else {
+        alert("경로를 찾을 수 없습니다: " + status);
+      }
+    }
+  );
+}
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
