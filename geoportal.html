@@ -11,9 +11,6 @@
 
      <!-- ✅geoportal CSS 모임 -->
     <link rel="stylesheet" href="geoportal.css">
-
-    <!-- ✅ JS 파일 연결 -->
-    <script src="geoportal-simulation.js"></script>
     
   </head>
   <body>
@@ -158,8 +155,19 @@
     <img src="./humanfocus-red.png" alt="HumanFocus">
   </button>
     
-    <!-- ✅ API Key 설정 -->
-    <script src="config.js"></script>
+<!-- ✅ API Key 설정 -->
+<script src="config.js"></script>
+
+<script>
+  // config.js에서 키를 읽어와서 동적으로 구글 API 로드
+  const script = document.createElement("script");
+  script.src = "https://maps.googleapis.com/maps/api/js?key=" + CONFIG.GOOGLE_API_KEY + "&libraries=places";
+  document.head.appendChild(script);
+</script>
+
+<!-- ✅ 시뮬레이션 JS -->
+<script src="geoportal-simulation.js"></script>
+
     
   <script>   
   // ✅ WMTS 공통 설정
@@ -985,6 +993,8 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   }
 });
 
+
+    
 // ✅ 네비게이션 버튼 클릭 → 팝업 열기
 document.getElementById("simulateBtn").addEventListener("click", () => {
   document.getElementById("infoPopup").style.display = "block";
@@ -1010,8 +1020,6 @@ document.getElementById("searchBtn").addEventListener("click", () => {
 // ✅ 경로 계산 (Google Maps Directions API 활용)
 function calculateRoute(start, destination) {
   const directionsService = new google.maps.DirectionsService();
-  const directionsRenderer = new google.maps.DirectionsRenderer();
-  directionsRenderer.setMap(map); // ⚠️ map은 OpenLayers가 아니라 Google Maps 객체여야 함
 
   directionsService.route(
     {
@@ -1021,13 +1029,28 @@ function calculateRoute(start, destination) {
     },
     (result, status) => {
       if (status === "OK") {
-        directionsRenderer.setDirections(result);
+        // ✅ 구글 경로 결과를 OpenLayers 좌표로 변환
+        const coords = result.routes[0].overview_path.map(p => [p.lng(), p.lat()]);
+        const line = new ol.geom.LineString(coords).transform("EPSG:4326","EPSG:3857");
+        const feature = new ol.Feature({ geometry: line });
+
+        // ✅ 경로 표시 레이어 (항상 지도 위에 올라감)
+        const vectorLayer = new ol.layer.Vector({
+          source: new ol.source.Vector({ features: [feature] }),
+          style: new ol.style.Style({
+            stroke: new ol.style.Stroke({ color: "#ff0000", width: 4 })
+          })
+        });
+
+        map.addLayer(vectorLayer); // ✅ 어떤 모드든 경로 표시됨
       } else {
         alert("경로를 찾을 수 없습니다: " + status);
       }
     }
   );
 }
+
+
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
