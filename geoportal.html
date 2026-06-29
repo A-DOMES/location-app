@@ -943,10 +943,10 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
 
       // ✅ lastHeading을 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
       for (let a = -angle/2; a <= angle/2; a += 5) { // 5도 단위로 점 찍기
-        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
-        const dx = radius * Math.cos(rad);             // X축 방향 거리
-        const dy = radius * Math.sin(rad);             // Y축 방향 거리
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // 점 추가
+        const rad = (lastHeading + a) * Math.PI / 180; // 현재 진행 방향(lastHeading)에 a만큼 더한 각도를 라디안으로 변환
+        const dx = radius * Math.cos(rad);             // X축 방향 거리 계산 (cos 사용 → 진행 방향 기준으로 좌우 확장)
+        const dy = radius * Math.sin(rad);             // Y축 방향 거리 계산 (sin 사용 → 진행 방향 기준으로 앞뒤 확장)
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 내 현재 좌표(myCoord)를 기준으로 점 추가
       }
 
       // ✅ 레이더 부채꼴을 Polygon으로 설정
