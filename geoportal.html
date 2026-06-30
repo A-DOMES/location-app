@@ -578,7 +578,7 @@ window.addEventListener('deviceorientationabsolute', (event) => {
 
     // ✅ 지도도 내가 바라보는 방향으로 회전 (라디안 단위로 변환)
     // heading 값이 도(degree)이므로 Math.PI/180을 곱해 라디안으로 변환
-    map.getView().setRotation(heading * Math.PI / 180);
+    map.getView().setRotation((heading + 90) * Math.PI / 180);
     
     // ✅ 현재 방향값 저장
     lastHeading = heading;
