@@ -141,6 +141,12 @@
     <script src="config.js"></script>
     
   <script>   
+// ---------------------- 전역 변수 선언 ----------------------
+let radarOn = false;        // 시작 상태: 레이더 꺼짐 (원하면 true로 바꿔도 됨)
+let rotateEnabled = false;  // 지도 회전 여부 (처음엔 false)
+let lastHeading = 0;        // 마지막 방향값 저장
+
+    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
@@ -572,14 +578,15 @@ window.addEventListener('deviceorientationabsolute', (event) => {
 
     // ✅ 레이더 방향도 센서 값으로 갱신 (국토부는 동쪽을 기본으로 하므로 +90° 보정)
     const radarElement = document.getElementById('radar');
-    if (radarElement) {
+    if (radarElement && radarOn) {
       radarElement.style.transform = `rotate(${heading + 90}deg)`;
     }
 
-    // ✅ 지도도 내가 바라보는 방향으로 회전 (라디안 단위로 변환)
-    // heading 값이 도(degree)이므로 Math.PI/180을 곱해 라디안으로 변환
-    map.getView().setRotation((heading + 90) * Math.PI / 180);
-    
+    // ✅ 지도도 내가 바라보는 방향으로 회전 (토글 켜졌을 때만 실행)
+    if (rotateEnabled) {
+      map.getView().setRotation((heading + 100) * Math.PI / 180);
+    }
+
     // ✅ 현재 방향값 저장
     lastHeading = heading;
   }
@@ -822,7 +829,6 @@ map.addLayer(positionLayer);
 let myCoord = null;
 let smoothCoords = [];
 let initialized = false;
-let lastHeading = 0;
 
 // ---------------------- 위도·경도 기록 배열 ----------------------
 let positions = [];
@@ -885,7 +891,6 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 
 // ✅ 시작 시 레이더 숨김
 radar.setGeometry(null);
-let radarOn = false;
 
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
@@ -972,6 +977,8 @@ navigator.geolocation.watchPosition(
 document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   // ✅ 레이더 표시 여부 토글 (켜기/끄기)
   radarOn = !radarOn;
+  // ✅ 레이더가 켜지면 지도 회전도 켜지고, 레이더가 꺼지면 지도 회전도 꺼짐
+  rotateEnabled = radarOn;
 
   if (radarOn) {
     // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 레이더 표시)
@@ -981,11 +988,11 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
       const points = [myCoord]; // 시작점: 내 현재 좌표
 
       // ✅ lastHeading을 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
-      for (let a = -angle/2; a <= angle/2; a += 5) { // 5도 단위로 점 찍기
-        const rad = (lastHeading + a) * Math.PI / 180; // 현재 진행 방향(lastHeading)에 a만큼 더한 각도를 라디안으로 변환
-        const dx = radius * Math.cos(rad);             // X축 방향 거리 계산 (cos 사용 → 진행 방향 기준으로 좌우 확장)
-        const dy = radius * Math.sin(rad);             // Y축 방향 거리 계산 (sin 사용 → 진행 방향 기준으로 앞뒤 확장)
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 내 현재 좌표(myCoord)를 기준으로 점 추가
+      for (let a = -angle/2; a <= angle/2; a += 5) { 
+        const rad = (lastHeading + a) * Math.PI / 180; 
+        const dx = radius * Math.cos(rad);             
+        const dy = radius * Math.sin(rad);             
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); 
       }
 
       // ✅ 레이더 부채꼴을 Polygon으로 설정
@@ -997,12 +1004,12 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     }
   } else {
     // ✅ 지도 중심 모드 (레이더 숨기고 초기 중심 좌표로 복귀)
-    radar.setGeometry(null); // 레이더 숨김
-    map.getView().setCenter(mapCenterCoord); // 앱 실행 시점 좌표로 복귀
+    radar.setGeometry(null); 
+    map.getView().setCenter(mapCenterCoord); 
     map.getView().setZoom(7);
+    map.getView().setRotation(0); // ✅ 회전 끄면 북쪽 위로 복귀
   }
 });
-
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
