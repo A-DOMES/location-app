@@ -562,7 +562,7 @@ compass.addEventListener("dblclick", (e) => {
 // ---------------------- 나침반 바늘 회전 + 레이더 방향 갱신 (센서 이벤트) ----------------------
 window.addEventListener('deviceorientationabsolute', (event) => {
   if (event.alpha !== null) {
-    const heading = 360 - event.alpha; // 북쪽 기준 보정
+    const heading = 360 - event.alpha; // ✅ 북쪽 기준 보정 (나침반은 북쪽이 0°)
 
     // ✅ 나침반 바늘 회전
     const needleGroup = document.getElementById('needle-group');
@@ -570,7 +570,17 @@ window.addEventListener('deviceorientationabsolute', (event) => {
       needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
     }
 
-    // ✅ 레이더 방향도 센서 값으로 갱신
+    // ✅ 레이더 방향도 센서 값으로 갱신 (국토부는 동쪽을 기본으로 하므로 +90° 보정)
+    const radarElement = document.getElementById('radar');
+    if (radarElement) {
+      radarElement.style.transform = `rotate(${heading + 90}deg)`;
+    }
+
+    // ✅ 지도도 내가 바라보는 방향으로 회전 (라디안 단위로 변환)
+    // heading 값이 도(degree)이므로 Math.PI/180을 곱해 라디안으로 변환
+    map.getView().setRotation(heading * Math.PI / 180);
+    
+    // ✅ 현재 방향값 저장
     lastHeading = heading;
   }
 });
