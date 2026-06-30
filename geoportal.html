@@ -142,7 +142,7 @@
     
   <script>   
 // ---------------------- 전역 변수 선언 ----------------------
-let radarOn = false;        // 시작 상태: 레이더 꺼짐 (원하면 true로 바꿔도 됨)
+let radarOn = false;        // 시작 상태: 레이더 꺼짐
 let rotateEnabled = false;  // 지도 회전 여부 (처음엔 false)
 let lastHeading = 0;        // 마지막 방향값 저장
 
@@ -565,7 +565,7 @@ compass.addEventListener("dblclick", (e) => {
 });
 
 
-// ---------------------- 나침반 바늘 회전 + 레이더 방향 갱신 (센서 이벤트) ----------------------
+// ---------------------- 나침반 바늘 회전 + 지도 회전 (센서 이벤트) ----------------------
 window.addEventListener('deviceorientationabsolute', (event) => {
   if (event.alpha !== null) {
     const heading = 360 - event.alpha; // ✅ 북쪽 기준 보정 (나침반은 북쪽이 0°)
@@ -576,21 +576,16 @@ window.addEventListener('deviceorientationabsolute', (event) => {
       needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
     }
 
-    // ✅ 레이더 방향도 센서 값으로 갱신 (국토부는 동쪽을 기본으로 하므로 +90° 보정)
-    const radarElement = document.getElementById('radar');
-    if (radarElement && radarOn) {
-      radarElement.style.transform = `rotate(${heading + 90}deg)`;
-    }
-
-    // ✅ 지도도 내가 바라보는 방향으로 회전 (토글 켜졌을 때만 실행)
+    // ✅ 지도 회전 (토글 켜졌을 때만 실행)
     if (rotateEnabled) {
-      map.getView().setRotation((heading + 100) * Math.PI / 180);
+      map.getView().setRotation(heading * Math.PI / 180);
     }
 
-    // ✅ 현재 방향값 저장
+    // ✅ 현재 방향값 저장 (나중에 레이더 확장 시 활용 가능)
     lastHeading = heading;
   }
 });
+
 
 
 // ---------------------- 페이지 로드시 저장된 위치 복원 ----------------------
@@ -981,15 +976,15 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   rotateEnabled = radarOn;
 
   if (radarOn) {
-    // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 레이더 표시)
+    // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 지도 회전, 레이더는 북쪽 고정)
     if (myCoord) {
       const angle = 90;    // 레이더 부채꼴 각도 (90도)
       const radius = 200;  // 레이더 반경 (200m)
       const points = [myCoord]; // 시작점: 내 현재 좌표
 
-      // ✅ lastHeading을 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+      // ✅ 레이더는 북쪽 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
       for (let a = -angle/2; a <= angle/2; a += 5) { 
-        const rad = (lastHeading + a) * Math.PI / 180; 
+        const rad = a * Math.PI / 180; // heading 대신 북쪽 기준
         const dx = radius * Math.cos(rad);             
         const dy = radius * Math.sin(rad);             
         points.push([myCoord[0] + dx, myCoord[1] + dy]); 
