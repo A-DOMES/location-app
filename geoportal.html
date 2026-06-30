@@ -923,7 +923,7 @@ navigator.geolocation.watchPosition(
       let currLon = positions[1][1];
 
       // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
-      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+      if (Math.abs(prevLat - currLat) > 0.00005 || Math.abs(prevLon - currLon) > 0.00001) {
         // ✅ 이동 방향(방위각) 계산
         lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
 
