@@ -931,6 +931,9 @@ navigator.geolocation.watchPosition(
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
+
+        // ✅ 지도 회전 추가 (내가 가는 방향이 항상 위쪽에 오도록)
+        map.getView().setRotation(lastHeading * Math.PI / 180
       }
     }
 
