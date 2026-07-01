@@ -933,7 +933,7 @@ navigator.geolocation.watchPosition(
         }
 
         // ✅ 지도 회전 추가 (내가 가는 방향이 항상 위쪽에 오도록)
-        map.getView().setRotation(lastHeading * Math.PI / 180);
+        map.getView().setRotation((lastHeading - 90) * Math.PI / 180);
       }
     }
 
