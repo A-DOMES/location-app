@@ -1013,21 +1013,21 @@ navigator.geolocation.watchPosition(
   }
 );
 
-  // ---------------------- PC 테스트용 좌표 입력 ----------------------
-  // 💻 PC에서 테스트할 때 사용할 고정 좌표 (또는 입력값)
-  let testLat = 37.5665;  // 서울 시청 위도
-  let testLon = 126.9780; // 서울 시청 경도
-  let testTargetLat = 37.5539; // 목표 지점 위도 (서울역)
-  let testTargetLon = 126.9724; // 목표 지점 경도 (서울역) 
-    
- // ---------------------- 모바일/PC 판별 ----------------------
+// ---------------------- PC 테스트용 좌표 입력 ----------------------
+// 💻 PC에서 테스트할 때 사용할 고정 좌표
+let testLat = 37.5665;  // 현재 위도 (마커 위치)
+let testLon = 126.9780; // 현재 경도 (마커 위치)
+let testTargetLat = 37.5539; // 목표 지점 위도
+let testTargetLon = 126.9724; // 목표 지점 경도
+
+// ---------------------- 모바일/PC 판별 ----------------------
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-   
+
 // ---------------------- PC 시뮬레이션: 정기적으로 좌표 기반 나침반 업데이트 ----------------------
 function startPCSimulation() {
   console.log('💻 PC 모드 - 좌표 기반 시뮬레이션 시작');
   
-  // ✅ 초기 좌표 설정
+  // ✅ 초기 좌표 설정 (마커 위치 = testLat, testLon)
   let coord = ol.proj.fromLonLat([testLon, testLat]);
   myCoord = coord;
   
@@ -1175,7 +1175,6 @@ function attachOrientationListener() {
     }
   });
 }
-
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
