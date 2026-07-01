@@ -931,9 +931,6 @@ navigator.geolocation.watchPosition(
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
-
-        // ✅ 지도 회전 추가 (내가 가는 방향이 항상 위쪽에 오도록)
-        map.getView().setRotation((lastHeading - 90) * Math.PI / 180);
       }
     }
 
@@ -990,6 +987,9 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
         const dx = radius * Math.cos(rad);             
         const dy = radius * Math.sin(rad);             
         points.push([myCoord[0] + dx, myCoord[1] + dy]); 
+        
+        // ✅ 지도 회전 추가 (내가 가는 방향이 항상 위쪽에 오도록)
+        map.getView().setRotation((lastHeading - 90) * Math.PI / 180);
       }
 
       // ✅ 레이더 부채꼴을 Polygon으로 설정
