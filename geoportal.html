@@ -142,17 +142,54 @@
     
   <script>   
 // ---------------------- 전역 변수 선언 ----------------------
-let radarOn = false;        // 시작 상태: 레이더 꺼짐
-let rotateEnabled = false;  // 지도 회전 여부 (처음엔 false)
-let lastHeading = 0;        // 마지막 방향값 저장
-let lastMapRotation = 0;    // 마지막 지도 회전값 저장
-let needleGroup = null;     // 나침반 바늘 그룹 (DOM)
+let radarOn = false;            // 시작 상태: 레이더 꺼짐
+let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
+let lastHeading = 0;            // 마지막 방향값 저장
+let lastMapRotation = 0;        // 마지막 지도 회전값 저장
+let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
+let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
 // ---------------------- 초기화 ----------------------
 document.addEventListener('DOMContentLoaded', () => {
+  // ✅ 나침반 바늘 DOM 요소 참조
   needleGroup = document.getElementById('needle-group');
+  
+  // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
+  if (!isIOS()) {
+    attachOrientationListener();
+  }
 });
 
+// ✅ iOS 13+ 판별 함수
+function isIOS() {
+  return typeof DeviceOrientationEvent !== 'undefined' && 
+         typeof DeviceOrientationEvent.requestPermission === 'function';
+}
+
+// ✅ 센서 리스닝 시작 함수
+function attachOrientationListener() {
+  window.addEventListener('deviceorientationabsolute', (event) => {
+    if (event.alpha !== null && event.alpha !== undefined) {
+      const heading = (360 - event.alpha) % 360;
+
+      if (Math.abs(heading - lastHeading) > 2) {
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+        }
+
+        if (rotateEnabled) {
+          const newRotation = heading * Math.PI / 180;
+          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+            map.getView().setRotation(newRotation);
+            lastMapRotation = newRotation;
+          }
+        }
+
+        lastHeading = heading;
+      }
+    }
+  });
+}
 
     
   // ✅ WMTS 공통 설정
@@ -574,27 +611,50 @@ compass.addEventListener("dblclick", (e) => {
 
 
 // ---------------------- 나침반 바늘 회전 + 지도 회전 (센서 이벤트) ----------------------
-// 센서 이벤트 (개선됨)
+// iOS 13+ 권한 요청 후 또는 Android에서 자동으로 실행되는 센서 이벤트 리스너
 window.addEventListener('deviceorientationabsolute', (event) => {
+  // ✅ 센서에서 받은 alpha 값이 유효한지 확인 (null 또는 undefined 제외)
   if (event.alpha !== null && event.alpha !== undefined) {
+    
+    // ✅ 센서값을 0~360 범위의 방향각도로 변환
+    // event.alpha는 시계방향, heading은 반시계방향(수학적 각도) + 북쪽 기준으로 변환
+    // % 360으로 정규화하여 -10도 같은 값도 350도로 변환
     const heading = (360 - event.alpha) % 360;
 
-    // ✅ 큰 변화만 업데이트 (성능 개선)
+    // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 DOM 업데이트
+    // 센서는 매초 수십 번 이벤트를 발생시키므로 큰 변화만 처리
     if (Math.abs(heading - lastHeading) > 2) {
-      // 나침반 바늘 (항상 업데이트)
+      
+      // ✅ 나침반 바늘 회전 (항상 업데이트 - 레이더 토글과 무관)
+      // SVG의 needle-group을 현재 방향각도(heading)만큼 회전
+      // (30, 30)은 SVG 중심점 좌표
       if (needleGroup) {
         needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
       }
 
-      // 지도 회전 (토글 ON일 때만)
+      // ✅ 지도 회전 (레이더 토글 ON일 때만 실행)
+      // rotateEnabled가 true이면 지도도 함께 회전하여 사용자가 보는 방향이 항상 위쪽
       if (rotateEnabled) {
+        
+        // ✅ 라디안으로 변환 (OpenLayers는 라디안 단위 사용)
+        // 각도 * Math.PI / 180 = 라디안
         const newRotation = heading * Math.PI / 180;
-        if (Math.abs(newRotation - lastMapRotation) > 0.02) {  // ~1도
+        
+        // ✅ 추가 성능 최적화: 지도 회전도 약 1도(0.02 라디안) 이상 변했을 때만 업데이트
+        // 이중으로 필터링하여 지도 렌더링 부하 감소
+        if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+          
+          // ✅ OpenLayers 지도 회전 적용
           map.getView().setRotation(newRotation);
+          
+          // ✅ 마지막 지도 회전값 저장 (다음 이벤트에서 변화량 비교용)
           lastMapRotation = newRotation;
         }
       }
 
+      // ✅ 현재 방향값 전역 변수에 저장
+      // 다음 이벤트에서 heading 변화량 계산할 때 사용
+      // 또한 레이더 토글 시에도 사용됨
       lastHeading = heading;
     }
   }
@@ -981,7 +1041,23 @@ navigator.geolocation.watchPosition(
 
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
-document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
+document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
+  // ✅ iOS 13+이고 권한이 없으면 권한 요청
+  if (isIOS() && typeof sensorInitialized === 'undefined') {
+    try {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      if (permission !== 'granted') {
+        alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
+        return;
+      }
+      sensorInitialized = true; // ✅ 권한 획득 표시
+    } catch (error) {
+      console.error('❌ 권한 요청 실패:', error);
+      return;
+    }
+  }
+
+  // ✅ 레이더 ON/OFF 토글
   radarOn = !radarOn;
   rotateEnabled = radarOn;
   
@@ -1026,9 +1102,15 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     map.getView().setZoom(7);
     
     // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
-    map.getView().setRotation(0); // 북쪽 위로 복귀
+    map.getView().setRotation(0);
   }
 });
+
+// ✅ iOS 13+ 판별 함수
+function isIOS() {
+  return typeof DeviceOrientationEvent !== 'undefined' && 
+         typeof DeviceOrientationEvent.requestPermission === 'function';
+}
 
 
 
