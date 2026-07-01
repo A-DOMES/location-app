@@ -149,15 +149,15 @@ let lastMapRotation = 0;
 let needleGroup = null;
 let sensorInitialized = false;
 let positions = []; // 최근 좌표 저장용
+let myCoord = null; // 현재 좌표 저장
 
 // ---------------------- 초기화 ----------------------
 document.addEventListener('DOMContentLoaded', () => {
   needleGroup = document.getElementById('needle-group');
   if (!isIOS()) {
-    attachOrientationListener();
+    attachOrientationListener(); // 모바일 센서 이벤트
   }
-  // PC/노트북 환경에서는 GPS 기반 방향 계산
-  initGeolocation();
+  initGeolocation(); // ✅ PC/노트북 환경에서는 GPS 기반 방향 계산
 });
 
 // ---------------------- iOS 판별 ----------------------
@@ -173,7 +173,7 @@ function attachOrientationListener() {
     window.addEventListener('deviceorientationabsolute', (event) => {
       if (event.alpha !== null && event.alpha !== undefined) {
         const heading = (360 - event.alpha) % 360;
-        updateCompass(heading);
+        updateCompass(heading); // ✅ 모바일 나침반 갱신
       }
     });
   } else {
@@ -196,12 +196,15 @@ function initGeolocation() {
         const [prevLat, prevLon] = positions[0];
         const [newLat, newLon] = positions[1];
 
-        // 작은 변화에도 반응하도록 조건 완화
+        // 좌표 변화가 있을 때만 계산
         if (Math.abs(prevLat - newLat) > 0.000001 || Math.abs(prevLon - newLon) > 0.000001) {
-          lastHeading = calculateBearing(prevLat, prevLon, newLat, newLon);
-          updateCompass(lastHeading);
+          const heading = calculateBearing(prevLat, prevLon, newLat, newLon);
+          updateCompass(heading); // ✅ 노트북에서도 나침반/지도 회전
         }
       }
+
+      // 현재 좌표 저장
+      myCoord = ol.proj.fromLonLat([currLon, currLat]);
     }, (err) => {
       console.error("GPS 오류:", err);
     });
@@ -210,7 +213,21 @@ function initGeolocation() {
   }
 }
 
-   
+// ---------------------- 나침반 업데이트 ----------------------
+function updateCompass(heading) {
+  if (needleGroup) {
+    needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+  }
+  if (rotateEnabled) {
+    const newRotation = heading * Math.PI / 180;
+    if (Math.abs(newRotation - lastMapRotation) > 0.02) { // 1도 이상 변화 시만 갱신
+      map.getView().setRotation(newRotation);
+      lastMapRotation = newRotation;
+    }
+  }
+  lastHeading = heading;
+}   
+    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
