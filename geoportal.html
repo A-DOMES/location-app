@@ -148,7 +148,7 @@
   let lastMapRotation = 0;        // 마지막 지도 회전값 저장
   let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
   let sensorInitialized = false;  // iOS 센서 권한 획득 여부
-
+   
   // ---------------------- 초기화 ----------------------
   document.addEventListener('DOMContentLoaded', () => {
     // ✅ 나침반 바늘 DOM 요소 참조
@@ -1013,18 +1013,74 @@ navigator.geolocation.watchPosition(
   }
 );
 
+  // ---------------------- PC 테스트용 좌표 입력 ----------------------
+  // 💻 PC에서 테스트할 때 사용할 고정 좌표 (또는 입력값)
+  let testLat = 37.5665;  // 서울 시청 위도
+  let testLon = 126.9780; // 서울 시청 경도
+  let testTargetLat = 37.5539; // 목표 지점 위도 (서울역)
+  let testTargetLon = 126.9724; // 목표 지점 경도 (서울역) 
+    
+ // ---------------------- 모바일/PC 판별 ----------------------
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+   
+// ---------------------- PC 시뮬레이션: 정기적으로 좌표 기반 나침반 업데이트 ----------------------
+function startPCSimulation() {
+  console.log('💻 PC 모드 - 좌표 기반 시뮬레이션 시작');
+  
+  // ✅ 초기 좌표 설정
+  let coord = ol.proj.fromLonLat([testLon, testLat]);
+  myCoord = coord;
+  
+  // ✅ 마커 초기화
+  marker.getGeometry().setCoordinates(coord);
+  map.getView().setCenter(coord);
+  
+  // ✅ 원 중심 업데이트
+  circle100.getGeometry().setCenter(myCoord);
+  circle200.getGeometry().setCenter(myCoord);
+  
+  initialized = true;
+  
+  // ✅ 현재 위치에서 목표 지점으로의 방향 계산 및 나침반 업데이트
+  setInterval(() => {
+    if (myCoord) {
+      // ✅ 목표 지점으로의 방위각 계산
+      const heading = calculateBearing(testLat, testLon, testTargetLat, testTargetLon);
+      
+      if (Math.abs(heading - lastHeading) > 2) {
+        // ✅ 나침반 바늘 회전
+        const needleGroup = document.getElementById('needle-group');
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+        }
+        
+        // ✅ 지도 회전 (토글 ON일 때만)
+        if (rotateEnabled) {
+          const newRotation = heading * Math.PI / 180;
+          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+            map.getView().setRotation(newRotation);
+            lastMapRotation = newRotation;
+          }
+        }
+        
+        lastHeading = heading;
+        console.log(`🧭 PC 방향: ${heading.toFixed(1)}°`);
+      }
+    }
+  }, 500); // ✅ 0.5초마다 업데이트
+}
 
-// ---------------------- 토글 버튼 이벤트 ----------------------
+// ---------------------- 토글 버튼 이벤트 (수정됨) ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
-  // ✅ iOS 13+이고 권한이 없으면 권한 요청
-  if (isIOS() && typeof sensorInitialized === 'undefined') {
+  // ✅ 모바일인 경우 iOS 권한 요청
+  if (isMobileDevice && isIOS() && !sensorInitialized) {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
         alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
         return;
       }
-      sensorInitialized = true; // ✅ 권한 획득 표시
+      sensorInitialized = true;
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
       return;
@@ -1037,46 +1093,55 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   
   if (radarOn && myCoord) {
     // ✅ 레이더 부채꼴 각도 및 반경 설정
-    const angle = 90;    // 레이더 각도
-    const radius = 200;  // 레이더 반경
+    const angle = 90;
+    const radius = 200;
     const points = [myCoord];
 
-    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
+    // ✅ 레이더 부채꼴 좌표 계산 (현재 heading 기준으로 -45° ~ +45°)
     for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = a * Math.PI / 180;
-      const dx = radius * Math.cos(rad);
-      const dy = radius * Math.sin(rad);
+      const rad = (lastHeading + a) * Math.PI / 180; // ✅ lastHeading 기준
+      const dx = radius * Math.sin(rad);
+      const dy = radius * Math.cos(rad);
       points.push([myCoord[0] + dx, myCoord[1] + dy]);
     }
 
     // ✅ 레이더 부채꼴을 Polygon으로 설정
     radar.setGeometry(new ol.geom.Polygon([points]));
 
-    // ✅ 나침반 바늘은 항상 북쪽 고정
+    // ✅ 나침반 바늘은 현재 heading 방향 표시
     if (needleGroup) {
-      needleGroup.setAttribute('transform', `rotate(0 30 30)`);
+      needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
     }
 
     // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
     map.getView().setCenter(myCoord);
     map.getView().setZoom(16);
 
-    // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
+    // ✅ 지도 회전 (현재 heading 값 반영)
     map.getView().setRotation(lastHeading * Math.PI / 180);
   } else {
     // ✅ 레이더 OFF: 초기 상태 복귀
-    
-    // ✅ 레이더 숨기기
     radar.setGeometry(null);
-    
-    // ✅ 지도 중심을 초기 좌표로 복귀
     map.getView().setCenter(mapCenterCoord);
-    
-    // ✅ 줌 레벨 초기화
     map.getView().setZoom(7);
-    
-    // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
+  }
+});
+
+// ✅ 초기화 (수정됨)
+document.addEventListener('DOMContentLoaded', () => {
+  needleGroup = document.getElementById('needle-group');
+  
+  if (isMobileDevice) {
+    console.log('📱 모바일 모드');
+    // ✅ 모바일: 센서 또는 GPS 위치 추적 사용
+    if (!isIOS()) {
+      attachOrientationListener();
+    }
+  } else {
+    console.log('💻 PC 모드');
+    // ✅ PC: 좌표 기반 시뮬레이션 시작
+    startPCSimulation();
   }
 });
 
@@ -1086,8 +1151,32 @@ function isIOS() {
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
 
+// ✅ 센서 리스닝 (모바일용)
+function attachOrientationListener() {
+  window.addEventListener('deviceorientationabsolute', (event) => {
+    if (event.alpha !== null && event.alpha !== undefined) {
+      const heading = (360 - event.alpha) % 360;
 
+      if (Math.abs(heading - lastHeading) > 2) {
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+        }
 
+        if (rotateEnabled) {
+          const newRotation = heading * Math.PI / 180;
+          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+            map.getView().setRotation(newRotation);
+            lastMapRotation = newRotation;
+          }
+        }
+
+        lastHeading = heading;
+      }
+    }
+  });
+}
+
+    
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
