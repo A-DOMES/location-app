@@ -141,92 +141,30 @@
     <script src="config.js"></script>
     
   <script>   
-// ---------------------- 전역 변수 ----------------------
-let radarOn = false;
-let rotateEnabled = false;
-let lastHeading = 0;
-let lastMapRotation = 0;
-let needleGroup = null;
-let sensorInitialized = false;
-let positions = []; // 최근 좌표 저장용
-let myCoord = null; // 현재 좌표 저장
+  // ---------------------- 전역 변수 선언 ----------------------
+  let radarOn = false;            // 시작 상태: 레이더 꺼짐
+  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
+  let lastHeading = 0;            // 마지막 방향값 저장
+  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
+  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
+  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
-// ---------------------- 초기화 ----------------------
-document.addEventListener('DOMContentLoaded', () => {
-  needleGroup = document.getElementById('needle-group');
-  if (!isIOS()) {
-    attachOrientationListener(); // 모바일 센서 이벤트
-  }
-  initGeolocation(); // ✅ PC/노트북 환경에서는 GPS 기반 방향 계산
-});
-
-// ---------------------- iOS 판별 ----------------------
-function isIOS() {
-  return typeof DeviceOrientationEvent !== 'undefined' &&
-         typeof DeviceOrientationEvent.requestPermission === 'function';
-}
-
-// ---------------------- 센서 리스닝 (모바일) ----------------------
-function attachOrientationListener() {
-  if (typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission !== 'function') {
-    window.addEventListener('deviceorientationabsolute', (event) => {
-      if (event.alpha !== null && event.alpha !== undefined) {
-        const heading = (360 - event.alpha) % 360;
-        updateCompass(heading); // ✅ 모바일 나침반 갱신
-      }
-    });
-  } else {
-    console.warn("⚠️ 센서 없음: GPS 이동 방향으로 처리");
-    updateCompass(0); // 초기값 북쪽 고정
-  }
-}
-
-// ---------------------- GPS 기반 방향 계산 (노트북/PC) ----------------------
-function initGeolocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition((pos) => {
-      const currLat = pos.coords.latitude;
-      const currLon = pos.coords.longitude;
-      positions.push([currLat, currLon]);
-
-      if (positions.length > 2) positions.shift(); // 최근 두 좌표만 유지
-
-      if (positions.length === 2) {
-        const [prevLat, prevLon] = positions[0];
-        const [newLat, newLon] = positions[1];
-
-        // 좌표 변화가 있을 때만 계산
-        if (Math.abs(prevLat - newLat) > 0.000001 || Math.abs(prevLon - newLon) > 0.000001) {
-          const heading = calculateBearing(prevLat, prevLon, newLat, newLon);
-          updateCompass(heading); // ✅ 노트북에서도 나침반/지도 회전
-        }
-      }
-
-      // 현재 좌표 저장
-      myCoord = ol.proj.fromLonLat([currLon, currLat]);
-    }, (err) => {
-      console.error("GPS 오류:", err);
-    });
-  } else {
-    console.warn("⚠️ Geolocation 지원 안 됨");
-  }
-}
-
-// ---------------------- 나침반 업데이트 ----------------------
-function updateCompass(heading) {
-  if (needleGroup) {
-    needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-  }
-  if (rotateEnabled) {
-    const newRotation = heading * Math.PI / 180;
-    if (Math.abs(newRotation - lastMapRotation) > 0.02) { // 1도 이상 변화 시만 갱신
-      map.getView().setRotation(newRotation);
-      lastMapRotation = newRotation;
+  // ---------------------- 초기화 ----------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ 나침반 바늘 DOM 요소 참조
+    needleGroup = document.getElementById('needle-group');
+    
+    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
+    if (!isIOS()) {
+      attachOrientationListener();
     }
+  });
+  
+  // ✅ iOS 13+ 판별 함수
+  function isIOS() {
+    return typeof DeviceOrientationEvent !== 'undefined' && 
+           typeof DeviceOrientationEvent.requestPermission === 'function';
   }
-  lastHeading = heading;
-}   
     
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
