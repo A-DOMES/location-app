@@ -1,3 +1,8 @@
+서버코드 수정4-1, 현재 서버에있는코드 백업됨, 1차 죄종코드 + ios 3+, 사파리추가
+토글관련된 부분이 구현되어있음, 지도회전됨.
+토글을 눌렀을때 지도가 회전이 됨, 확인해야 할 건, 레이더가 내가 가는 방향을 가르키는 문제를 확인할 것
+이 버전은 북쪽으로 레이더를 고정한 코드임., 이전버전은 내가 움직임에 따라 레이더가 변동하도록 한 코드임.
+
 <!DOCTYPE html>
   <html lang="ko">
   <head>
@@ -141,39 +146,31 @@
     <script src="config.js"></script>
     
   <script>   
-// ---------------------- 전역 변수 선언 ----------------------
-let radarOn = false;            // 시작 상태: 레이더 꺼짐
-let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
-let lastHeading = 0;            // 마지막 방향값 저장
-let lastMapRotation = 0;        // 마지막 지도 회전값 저장
-let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
-let sensorInitialized = false;  // iOS 센서 권한 획득 여부
-let testLat = 37.5665;          // PC 시뮬레이션용 현재 위도
-let testLon = 126.9780;         // PC 시뮬레이션용 현재 경도
-let testTargetLat = 37.5539;    // PC 시뮬레이션용 목표 위도
-let testTargetLon = 126.9724;   // PC 시뮬레이션용 목표 경도
-const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); // 모바일/PC 판별
+  // ---------------------- 전역 변수 선언 ----------------------
+  let radarOn = false;            // 시작 상태: 레이더 꺼짐
+  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
+  let lastHeading = 0;            // 마지막 방향값 저장
+  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
+  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
+  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
-// ---------------------- 초기화 ----------------------
-document.addEventListener('DOMContentLoaded', () => {
-  // ✅ 나침반 바늘 DOM 요소 참조
-  needleGroup = document.getElementById('needle-group');
-  
-  // ✅ GPS 위치 추적 시작
-  startLocationTracking();
-  
-  // ✅ 모바일이고 iOS가 아니면 센서 리스닝 시작
-  if (isMobileDevice && !isIOS()) {
-    attachOrientationListener();
-  }
-});
-
-// ✅ iOS 13+ 판별 함수
-function isIOS() {
-  return typeof DeviceOrientationEvent !== 'undefined' && 
-         typeof DeviceOrientationEvent.requestPermission === 'function';
-}
+  // ---------------------- 초기화 ----------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ 나침반 바늘 DOM 요소 참조
+    needleGroup = document.getElementById('needle-group');
     
+    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
+    if (!isIOS()) {
+      attachOrientationListener();
+    }
+  });
+  
+  // ✅ iOS 13+ 판별 함수
+  function isIOS() {
+    return typeof DeviceOrientationEvent !== 'undefined' && 
+           typeof DeviceOrientationEvent.requestPermission === 'function';
+  }
+   
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
@@ -941,6 +938,53 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 // ✅ 시작 시 레이더 숨김
 radar.setGeometry(null);
 
+// ---------------------- 내 위치 추적 ----------------------
+navigator.geolocation.watchPosition(
+  (pos) => {
+    // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
+    if (initialized && pos.coords.accuracy > 100) return;
+
+    let coord;
+    if (!initialized) {
+      // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
+      coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+      initialized = true;
+      marker.getGeometry().setCoordinates(coord);
+      map.getView().setCenter(coord);
+    } else {
+      // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
+      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+      marker.getGeometry().setCoordinates(coord);
+    }
+
+    // ✅ 내 현재 좌표 저장
+    myCoord = coord;
+    circle100.getGeometry().setCenter(myCoord); // 반경 100m 원 중심 갱신
+    circle200.getGeometry().setCenter(myCoord); // 반경 200m 원 중심 갱신
+
+    // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
+    positions.push([pos.coords.latitude, pos.coords.longitude]);
+    if (positions.length > 2) positions.shift();
+
+    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
+    if (positions.length === 2) {
+      let prevLat = positions[0][0];
+      let prevLon = positions[0][1];
+      let currLat = positions[1][0];
+      let currLon = positions[1][1];
+
+      // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
+      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+        // ✅ 이동 방향(방위각) 계산
+        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
+
+        // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
+        const needleGroup = document.getElementById('needle-group');
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+        }
+      }
+    }
 
     // ---------------------- 레이더 각도 처리 ----------------------
     if (radarOn) {
@@ -975,146 +1019,17 @@ radar.setGeometry(null);
 );
 
 
-// ---------------------- GPS 위치 추적 (모바일 + PC 공통) ----------------------
-function startLocationTracking() {
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-      (pos) => {
-        // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
-        if (initialized && pos.coords.accuracy > 100) return;
-
-        let coord;
-        if (!initialized) {
-          // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
-          coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
-          initialized = true;
-          marker.getGeometry().setCoordinates(coord);
-          map.getView().setCenter(coord);
-          console.log(`📍 초기 위치: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-        } else {
-          // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
-          coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
-          marker.getGeometry().setCoordinates(coord);
-        }
-
-        // ✅ 내 현재 좌표 저장
-        myCoord = coord;
-        circle100.getGeometry().setCenter(myCoord);
-        circle200.getGeometry().setCenter(myCoord);
-
-        // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
-        positions.push([pos.coords.latitude, pos.coords.longitude]);
-        if (positions.length > 2) positions.shift();
-
-        // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
-        if (positions.length === 2) {
-          let prevLat = positions[0][0];
-          let prevLon = positions[0][1];
-          let currLat = positions[1][0];
-          let currLon = positions[1][1];
-
-          // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
-          if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-            // ✅ 이동 방향(방위각) 계산
-            lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-
-            // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
-            if (needleGroup) {
-              needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
-            }
-
-            // ✅ 지도 회전 (토글 ON일 때만)
-            if (rotateEnabled) {
-              const newRotation = lastHeading * Math.PI / 180;
-              if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-                map.getView().setRotation(newRotation);
-                lastMapRotation = newRotation;
-              }
-            }
-          }
-        }
-
-        // ✅ 레이더 표시 (토글 ON일 때만)
-        if (radarOn) {
-          const angle = 90;
-          const radius = 200;
-          const points = [myCoord];
-
-          for (let a = -angle/2; a <= angle/2; a += 1) {
-            const rad = (lastHeading + a) * Math.PI / 180;
-            const dx = radius * Math.sin(rad);
-            const dy = radius * Math.cos(rad);
-            points.push([myCoord[0] + dx, myCoord[1] + dy]);
-          }
-
-          radar.setGeometry(new ol.geom.Polygon([points]));
-          map.getView().setCenter(myCoord);
-        }
-      },
-      (err) => {
-        // ---------------------- GPS 오류 처리 ----------------------
-        console.error("GPS 오류:", err);
-        console.log('💻 GPS 없음 - 시뮬레이션 모드 시작');
-        startPCSimulation();
-      }
-    );
-  } else {
-    console.log('❌ GPS를 지원하지 않습니다 - 시뮬레이션 시작');
-    startPCSimulation();
-  }
-}
-
-// ---------------------- PC 시뮬레이션 (GPS 오류 시에만 사용) ----------------------
-function startPCSimulation() {
-  console.log('💻 PC 모드 - 좌표 기반 시뮬레이션 시작');
-  
-  // ✅ 초기 좌표 설정
-  let coord = ol.proj.fromLonLat([testLon, testLat]);
-  myCoord = coord;
-  
-  marker.getGeometry().setCoordinates(coord);
-  map.getView().setCenter(coord);
-  circle100.getGeometry().setCenter(myCoord);
-  circle200.getGeometry().setCenter(myCoord);
-  
-  initialized = true;
-  
-  // ✅ 0.5초마다 업데이트
-  setInterval(() => {
-    if (myCoord) {
-      const heading = calculateBearing(testLat, testLon, testTargetLat, testTargetLon);
-      
-      if (Math.abs(heading - lastHeading) > 2) {
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-        }
-        
-        if (rotateEnabled) {
-          const newRotation = heading * Math.PI / 180;
-          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-            map.getView().setRotation(newRotation);
-            lastMapRotation = newRotation;
-          }
-        }
-        
-        lastHeading = heading;
-        console.log(`🧭 PC 방향: ${heading.toFixed(1)}°`);
-      }
-    }
-  }, 500);
-}
-
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
-  // ✅ 모바일인 경우 iOS 권한 요청
-  if (isMobileDevice && isIOS() && !sensorInitialized) {
+  // ✅ iOS 13+이고 권한이 없으면 권한 요청
+  if (isIOS() && typeof sensorInitialized === 'undefined') {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
         alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
         return;
       }
-      sensorInitialized = true;
+      sensorInitialized = true; // ✅ 권한 획득 표시
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
       return;
@@ -1126,30 +1041,46 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   rotateEnabled = radarOn;
   
   if (radarOn && myCoord) {
-    const angle = 90;
-    const radius = 200;
+    // ✅ 레이더 부채꼴 각도 및 반경 설정
+    const angle = 90;    // 레이더 각도
+    const radius = 200;  // 레이더 반경
     const points = [myCoord];
 
+    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
     for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = (lastHeading + a) * Math.PI / 180;
-      const dx = radius * Math.sin(rad);
-      const dy = radius * Math.cos(rad);
+      const rad = a * Math.PI / 180;
+      const dx = radius * Math.cos(rad);
+      const dy = radius * Math.sin(rad);
       points.push([myCoord[0] + dx, myCoord[1] + dy]);
     }
 
+    // ✅ 레이더 부채꼴을 Polygon으로 설정
     radar.setGeometry(new ol.geom.Polygon([points]));
 
+    // ✅ 나침반 바늘은 항상 북쪽 고정
     if (needleGroup) {
-      needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+      needleGroup.setAttribute('transform', `rotate(0 30 30)`);
     }
 
+    // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
     map.getView().setCenter(myCoord);
     map.getView().setZoom(16);
+
+    // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
     map.getView().setRotation(lastHeading * Math.PI / 180);
   } else {
+    // ✅ 레이더 OFF: 초기 상태 복귀
+    
+    // ✅ 레이더 숨기기
     radar.setGeometry(null);
+    
+    // ✅ 지도 중심을 초기 좌표로 복귀
     map.getView().setCenter(mapCenterCoord);
+    
+    // ✅ 줌 레벨 초기화
     map.getView().setZoom(7);
+    
+    // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
   }
 });
@@ -1160,32 +1091,8 @@ function isIOS() {
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
 
-// ✅ 센서 리스닝 (모바일용)
-function attachOrientationListener() {
-  window.addEventListener('deviceorientationabsolute', (event) => {
-    if (event.alpha !== null && event.alpha !== undefined) {
-      const heading = (360 - event.alpha) % 360;
 
-      if (Math.abs(heading - lastHeading) > 2) {
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-        }
 
-        if (rotateEnabled) {
-          const newRotation = heading * Math.PI / 180;
-          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-            map.getView().setRotation(newRotation);
-            lastMapRotation = newRotation;
-          }
-        }
-
-        lastHeading = heading;
-      }
-    }
-  });
-}
-
-    
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
