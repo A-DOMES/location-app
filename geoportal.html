@@ -141,36 +141,35 @@
     <script src="config.js"></script>
     
   <script>   
-  // ---------------------- 전역 변수 선언 ----------------------
-  let radarOn = false;            // 시작 상태: 레이더 꺼짐
-  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
-  let lastHeading = 0;            // 마지막 방향값 저장
-  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
-  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
-  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
+// ---------------------- 전역 변수 ----------------------
+let radarOn = false;
+let rotateEnabled = false;
+let lastHeading = 0;
+let lastMapRotation = 0;
+let needleGroup = null;
+let sensorInitialized = false;
+let positions = []; // 최근 좌표 저장용
 
 // ---------------------- 초기화 ----------------------
 document.addEventListener('DOMContentLoaded', () => {
-  // ✅ 나침반 바늘 DOM 요소 참조
   needleGroup = document.getElementById('needle-group');
-  
-  // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
   if (!isIOS()) {
     attachOrientationListener();
   }
+  // PC/노트북 환경에서는 GPS 기반 방향 계산
+  initGeolocation();
 });
 
-// ✅ iOS 13+ 판별 함수
+// ---------------------- iOS 판별 ----------------------
 function isIOS() {
-  return typeof DeviceOrientationEvent !== 'undefined' && 
+  return typeof DeviceOrientationEvent !== 'undefined' &&
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
 
-// ---------------------- 센서 리스닝 함수 ----------------------
+// ---------------------- 센서 리스닝 (모바일) ----------------------
 function attachOrientationListener() {
-  if (typeof DeviceOrientationEvent !== 'undefined' && 
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission !== 'function') {
-    // ✅ 모바일/센서 지원 환경 (iOS 권한 요청 제외)
     window.addEventListener('deviceorientationabsolute', (event) => {
       if (event.alpha !== null && event.alpha !== undefined) {
         const heading = (360 - event.alpha) % 360;
@@ -178,25 +177,37 @@ function attachOrientationListener() {
       }
     });
   } else {
-    // ✅ 일반 PC 환경 (센서 없음 → 위도·경도 기반으로 처리)
-    console.warn("⚠️ 센서 없음: GPS 이동 방향으로 나침반 처리");
-    // PC에서는 watchPosition + calculateBearing()으로 heading을 갱신하므로
-    // 별도 이벤트는 필요 없음. 초기값만 북쪽으로 고정.
-    updateCompass(0);
+    console.warn("⚠️ 센서 없음: GPS 이동 방향으로 처리");
+    updateCompass(0); // 초기값 북쪽 고정
   }
 }
 
-// ---------------------- 나침반 업데이트 함수 ----------------------
-function updateCompass(heading) {
-  if (needleGroup) {
-    needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+// ---------------------- GPS 기반 방향 계산 (노트북/PC) ----------------------
+function initGeolocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((pos) => {
+      const currLat = pos.coords.latitude;
+      const currLon = pos.coords.longitude;
+      positions.push([currLat, currLon]);
+
+      if (positions.length > 2) positions.shift(); // 최근 두 좌표만 유지
+
+      if (positions.length === 2) {
+        const [prevLat, prevLon] = positions[0];
+        const [newLat, newLon] = positions[1];
+
+        // 작은 변화에도 반응하도록 조건 완화
+        if (Math.abs(prevLat - newLat) > 0.000001 || Math.abs(prevLon - newLon) > 0.000001) {
+          lastHeading = calculateBearing(prevLat, prevLon, newLat, newLon);
+          updateCompass(lastHeading);
+        }
+      }
+    }, (err) => {
+      console.error("GPS 오류:", err);
+    });
+  } else {
+    console.warn("⚠️ Geolocation 지원 안 됨");
   }
-  if (rotateEnabled) {
-    const newRotation = heading * Math.PI / 180;
-    map.getView().setRotation(newRotation);
-    lastMapRotation = newRotation;
-  }
-  lastHeading = heading;
 }
 
    
