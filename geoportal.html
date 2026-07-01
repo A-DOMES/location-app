@@ -847,7 +847,9 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   let bearing = toDeg(Math.atan2(y, x));
   bearing = (bearing + 360) % 360;
-  return 360 - bearing; // ✅ 여기서 반대 방향 보정
+  return (bearing + 90) % 360; // 좌표계 기준 맞추기
+// return 360 - bearing; // ✅ 여기서 반대 방향 보정 (원래코드)
+//  return (bearing - 90 + 360) % 360;
 }
 
 
