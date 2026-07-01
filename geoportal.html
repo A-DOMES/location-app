@@ -975,7 +975,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
   rotateEnabled = radarOn;
 
   if (radarOn) {
-    // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 지도 회전, 레이더는 북쪽 고정)
+    // ✅ 사람 중심 모드 (내 위치 + 내가 바라보는 방향 기준으로 지도 회전, 레이더도 같은 방향)
     if (myCoord) {
       const angle = 90;    // 레이더 부채꼴 각도 (90도)
       const radius = 200;  // 레이더 반경 (200m)
@@ -983,21 +983,30 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
 
       // ✅ 레이더는 북쪽 기준으로 좌우 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
       for (let a = -angle/2; a <= angle/2; a += 5) { 
-        const rad = a * Math.PI / 180; // heading 대신 북쪽 기준
+        const rad = a * Math.PI / 180; 
         const dx = radius * Math.cos(rad);             
         const dy = radius * Math.sin(rad);             
         points.push([myCoord[0] + dx, myCoord[1] + dy]); 
-        
-        // ✅ 지도 회전 추가 (내가 가는 방향이 항상 위쪽에 오도록)
-        map.getView().setRotation((lastHeading - 90) * Math.PI / 180);
       }
 
       // ✅ 레이더 부채꼴을 Polygon으로 설정
       radar.setGeometry(new ol.geom.Polygon([points]));
 
+      // ✅ 나침반 바늘 회전 (좌측으로 90° 보정 → 내가 가는 방향과 일치)
+      const needleGroup = document.getElementById('needle-group');
+      if (needleGroup) {
+        needleGroup.setAttribute('transform', `rotate(${lastHeading - 90} 30 30)`);
+      }
+
       // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
+
+      // ✅ 지도 회전 (내가 가는 방향이 항상 위쪽에 오도록)
+     // map.getView().setRotation((lastHeading - 90) * Math.PI / 180);
+
+      // ✅ 지도 180도 회전
+      map.getView().setRotation(Math.PI);
     }
   } else {
     // ✅ 지도 중심 모드 (레이더 숨기고 초기 중심 좌표로 복귀)
@@ -1007,6 +1016,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", () => {
     map.getView().setRotation(0); // ✅ 회전 끄면 북쪽 위로 복귀
   }
 });
+
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
