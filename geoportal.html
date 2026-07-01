@@ -1023,7 +1023,6 @@ navigator.geolocation.watchPosition(
 );
 
 
-
 // ---------------------- GPS 위치 추적 (모바일 + PC 공통) ----------------------
 function startLocationTracking() {
   if (navigator.geolocation) {
@@ -1103,8 +1102,6 @@ function startLocationTracking() {
       (err) => {
         // ---------------------- GPS 오류 처리 ----------------------
         console.error("GPS 오류:", err);
-
-        // ✅ GPS 없을 때 PC 시뮬레이션으로 대체
         console.log('💻 GPS 없음 - 시뮬레이션 모드 시작');
         startPCSimulation();
       }
@@ -1119,33 +1116,27 @@ function startLocationTracking() {
 function startPCSimulation() {
   console.log('💻 PC 모드 - 좌표 기반 시뮬레이션 시작');
   
-  // ✅ 초기 좌표 설정 (마커 위치 = testLat, testLon)
+  // ✅ 초기 좌표 설정
   let coord = ol.proj.fromLonLat([testLon, testLat]);
   myCoord = coord;
   
-  // ✅ 마커 초기화
   marker.getGeometry().setCoordinates(coord);
   map.getView().setCenter(coord);
-  
-  // ✅ 원 중심 업데이트
   circle100.getGeometry().setCenter(myCoord);
   circle200.getGeometry().setCenter(myCoord);
   
   initialized = true;
   
-  // ✅ 현재 위치에서 목표 지점으로의 방향 계산 및 나침반 업데이트
+  // ✅ 0.5초마다 업데이트
   setInterval(() => {
     if (myCoord) {
-      // ✅ 목표 지점으로의 방위각 계산
       const heading = calculateBearing(testLat, testLon, testTargetLat, testTargetLon);
       
       if (Math.abs(heading - lastHeading) > 2) {
-        // ✅ 나침반 바늘 회전
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
         }
         
-        // ✅ 지도 회전 (토글 ON일 때만)
         if (rotateEnabled) {
           const newRotation = heading * Math.PI / 180;
           if (Math.abs(newRotation - lastMapRotation) > 0.02) {
@@ -1158,7 +1149,7 @@ function startPCSimulation() {
         console.log(`🧭 PC 방향: ${heading.toFixed(1)}°`);
       }
     }
-  }, 500); // ✅ 0.5초마다 업데이트
+  }, 500);
 }
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
@@ -1183,12 +1174,10 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   rotateEnabled = radarOn;
   
   if (radarOn && myCoord) {
-    // ✅ 레이더 부채꼴 각도 및 반경 설정
     const angle = 90;
     const radius = 200;
     const points = [myCoord];
 
-    // ✅ 레이더 부채꼴 좌표 계산 (현재 heading 기준으로 -45° ~ +45°)
     for (let a = -angle/2; a <= angle/2; a += 5) {
       const rad = (lastHeading + a) * Math.PI / 180;
       const dx = radius * Math.sin(rad);
@@ -1196,22 +1185,16 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       points.push([myCoord[0] + dx, myCoord[1] + dy]);
     }
 
-    // ✅ 레이더 부채꼴을 Polygon으로 설정
     radar.setGeometry(new ol.geom.Polygon([points]));
 
-    // ✅ 나침반 바늘은 현재 heading 방향 표시
     if (needleGroup) {
       needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
     }
 
-    // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
     map.getView().setCenter(myCoord);
     map.getView().setZoom(16);
-
-    // ✅ 지도 회전 (현재 heading 값 반영)
     map.getView().setRotation(lastHeading * Math.PI / 180);
   } else {
-    // ✅ 레이더 OFF: 초기 상태 복귀
     radar.setGeometry(null);
     map.getView().setCenter(mapCenterCoord);
     map.getView().setZoom(7);
@@ -1249,6 +1232,7 @@ function attachOrientationListener() {
     }
   });
 }
+
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
