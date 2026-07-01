@@ -574,32 +574,31 @@ compass.addEventListener("dblclick", (e) => {
 
 
 // ---------------------- 나침반 바늘 회전 + 지도 회전 (센서 이벤트) ----------------------
+// 센서 이벤트 (개선됨)
 window.addEventListener('deviceorientationabsolute', (event) => {
   if (event.alpha !== null && event.alpha !== undefined) {
-    const heading = (360 - event.alpha) % 360; // ✅ 북쪽 기준 보정
+    const heading = (360 - event.alpha) % 360;
 
-    // ✅ 2도 이상 변화가 있을 때만 업데이트 (성능 최적화)
+    // ✅ 큰 변화만 업데이트 (성능 개선)
     if (Math.abs(heading - lastHeading) > 2) {
-      // 바늘은 항상 북쪽 고정 (따로 회전하지 않음)
+      // 나침반 바늘 (항상 업데이트)
       if (needleGroup) {
-        needleGroup.setAttribute('transform', `rotate(0 30 30)`);
+        needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
       }
 
-      // ✅ 지도 회전 (토글 ON일 때만)
+      // 지도 회전 (토글 ON일 때만)
       if (rotateEnabled) {
         const newRotation = heading * Math.PI / 180;
-        if (Math.abs(newRotation - lastMapRotation) > 0.02) { // 약 1도 이상 변화만 반영
+        if (Math.abs(newRotation - lastMapRotation) > 0.02) {  // ~1도
           map.getView().setRotation(newRotation);
           lastMapRotation = newRotation;
         }
       }
 
-      // ✅ 현재 heading 값 저장
       lastHeading = heading;
     }
   }
 });
-
 
 
 // ---------------------- 페이지 로드시 저장된 위치 복원 ----------------------
