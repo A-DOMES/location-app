@@ -166,7 +166,7 @@
            typeof DeviceOrientationEvent.requestPermission === 'function';
   }
 
-  // ---------------------- 센서 리스닝 함수 ----------------------
+// ---------------------- 센서 리스닝 함수 ----------------------
 function attachOrientationListener() {
   if (typeof DeviceOrientationEvent !== 'undefined') {
     // ✅ 모바일/센서 지원 환경
@@ -177,12 +177,13 @@ function attachOrientationListener() {
       }
     });
   } else {
-    // ✅ 일반 PC 환경 (센서 없음)
-    console.warn("⚠️ 센서 없음: 기본 북쪽 고정 또는 마우스 제어 사용");
-    updateCompass(0); // 기본 북쪽 고정
-    enableMouseCompassControl(); // 마우스로 회전 제어
+    // ✅ 일반 PC 환경 (센서 없음 → 위도·경도 기반으로 처리)
+    console.warn("⚠️ 센서 없음: GPS 이동 방향으로 나침반 처리");
+    // 여기서는 watchPosition에서 calculateBearing()으로 heading을 갱신하므로
+    // 별도 이벤트는 필요 없음. 단, 초기값은 북쪽으로 고정.
+    updateCompass(0);
   }
-}  
+}
 
 // ---------------------- 나침반 업데이트 함수 ----------------------
 function updateCompass(heading) {
@@ -197,19 +198,7 @@ function updateCompass(heading) {
   lastHeading = heading;
 }
 
- // ---------------------- PC용 마우스 제어 함수 ----------------------
-function enableMouseCompassControl() {
-  const compass = document.getElementById('compass');
-  if (!compass) return;
-
-  // ✅ 마우스 휠로 회전값 조정
-  compass.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    lastHeading = (lastHeading + (e.deltaY > 0 ? 5 : -5)) % 360;
-    updateCompass(lastHeading);
-  });
-}   
-    
+   
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
