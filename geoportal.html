@@ -1063,7 +1063,7 @@ navigator.geolocation.watchPosition(
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
   // ✅ iOS 13+이고 권한이 없으면 권한 요청
-  if (isIOS() && typeof sensorInitialized === 'undefined') {
+  if (isIOS() && !sensorInitialized) {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
@@ -1071,6 +1071,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
         return;
       }
       sensorInitialized = true; // ✅ 권한 획득 표시
+      attachOrientationListener(); // 권한 획득 후 리스너 연결
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
       return;
@@ -1080,11 +1081,10 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   // ✅ 레이더 ON/OFF 토글
   radarOn = !radarOn;
   rotateEnabled = radarOn;
-  
+
   if (radarOn && myCoord) {
-    // ✅ 레이더 부채꼴 각도 및 반경 설정
-    const angle = 90;    // 레이더 각도
-    const radius = 200;  // 레이더 반경
+    const angle = 90;
+    const radius = 200;
     const points = [myCoord];
 
     // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
@@ -1095,7 +1095,6 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       points.push([myCoord[0] + dx, myCoord[1] + dy]);
     }
 
-    // ✅ 레이더 부채꼴을 Polygon으로 설정
     radar.setGeometry(new ol.geom.Polygon([points]));
 
     // ✅ 나침반 바늘은 항상 북쪽 고정
@@ -1103,25 +1102,15 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       needleGroup.setAttribute('transform', `rotate(0 30 30)`);
     }
 
-    // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
+    // ✅ 지도 중심 이동 + 확대 + 회전
     map.getView().setCenter(myCoord);
     map.getView().setZoom(16);
-
-    // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
     map.getView().setRotation(lastHeading * Math.PI / 180);
   } else {
     // ✅ 레이더 OFF: 초기 상태 복귀
-    
-    // ✅ 레이더 숨기기
     radar.setGeometry(null);
-    
-    // ✅ 지도 중심을 초기 좌표로 복귀
     map.getView().setCenter(mapCenterCoord);
-    
-    // ✅ 줌 레벨 초기화
     map.getView().setZoom(7);
-    
-    // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
   }
 });
