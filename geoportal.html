@@ -1,8 +1,3 @@
-서버코드 수정4-1, 현재 서버에있는코드 백업됨, 1차 죄종코드 + ios 3+, 사파리추가
-토글관련된 부분이 구현되어있음, 지도회전됨.
-토글을 눌렀을때 지도가 회전이 됨, 확인해야 할 건, 레이더가 내가 가는 방향을 가르키는 문제를 확인할 것
-이 버전은 북쪽으로 레이더를 고정한 코드임., 이전버전은 내가 움직임에 따라 레이더가 변동하도록 한 코드임.
-
 <!DOCTYPE html>
   <html lang="ko">
   <head>
@@ -155,21 +150,41 @@
   let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
   // ---------------------- 초기화 ----------------------
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✅ 나침반 바늘 DOM 요소 참조
-    needleGroup = document.getElementById('needle-group');
-    
-    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
-    if (!isIOS()) {
-      attachOrientationListener();
+// ✅ 센서 이벤트 리스너 추가 (DOMContentLoaded 아래에 추가)
+document.addEventListener('DOMContentLoaded', () => {
+  // ✅ 나침반 바늘 DOM 요소 참조
+  needleGroup = document.getElementById('needle-group');
+  
+  // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
+  if (!isIOS()) {
+    attachOrientationListener();
+  }
+});
+
+// ✅ 센서 리스닝 함수 추가
+function attachOrientationListener() {
+  window.addEventListener('deviceorientationabsolute', (event) => {
+    if (event.alpha !== null && event.alpha !== undefined) {
+      const heading = (360 - event.alpha) % 360;
+
+      if (Math.abs(heading - lastHeading) > 2) {
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+        }
+
+        if (rotateEnabled) {
+          const newRotation = heading * Math.PI / 180;
+          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+            map.getView().setRotation(newRotation);
+            lastMapRotation = newRotation;
+          }
+        }
+
+        lastHeading = heading;
+      }
     }
   });
-  
-  // ✅ iOS 13+ 판별 함수
-  function isIOS() {
-    return typeof DeviceOrientationEvent !== 'undefined' && 
-           typeof DeviceOrientationEvent.requestPermission === 'function';
-  }
+}
    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
@@ -938,7 +953,7 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 // ✅ 시작 시 레이더 숨김
 radar.setGeometry(null);
 
-// ---------------------- 내 위치 추적 ----------------------
+// ---------------------- 내 위치 추적 (GPS 자동 감지) ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
     // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
@@ -946,11 +961,12 @@ navigator.geolocation.watchPosition(
 
     let coord;
     if (!initialized) {
-      // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
+      // ✅ 최초 실행 시: 사용자의 현재 GPS 좌표 사용
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
       marker.getGeometry().setCoordinates(coord);
       map.getView().setCenter(coord);
+      console.log(`📍 초기 위치: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
     } else {
       // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
       coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
@@ -959,8 +975,8 @@ navigator.geolocation.watchPosition(
 
     // ✅ 내 현재 좌표 저장
     myCoord = coord;
-    circle100.getGeometry().setCenter(myCoord); // 반경 100m 원 중심 갱신
-    circle200.getGeometry().setCenter(myCoord); // 반경 200m 원 중심 갱신
+    circle100.getGeometry().setCenter(myCoord);
+    circle200.getGeometry().setCenter(myCoord);
 
     // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
     positions.push([pos.coords.latitude, pos.coords.longitude]);
@@ -973,19 +989,44 @@ navigator.geolocation.watchPosition(
       let currLat = positions[1][0];
       let currLon = positions[1][1];
 
-      // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
+      // ✅ 미세한 GPS 튀기 현상 방지
       if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
         // ✅ 이동 방향(방위각) 계산
         lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
 
-        // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
-        const needleGroup = document.getElementById('needle-group');
+        // ✅ 나침반 바늘 회전
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
       }
     }
 
+    // ✅ 레이더 표시 (토글 ON일 때만)
+    if (radarOn) {
+      const angle = 90;
+      const radius = 200;
+      const points = [myCoord];
+
+      for (let a = -angle/2; a <= angle/2; a += 1) {
+        const rad = (lastHeading + a) * Math.PI / 180;
+        const dx = radius * Math.sin(rad);
+        const dy = radius * Math.cos(rad);
+        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      }
+
+      radar.setGeometry(new ol.geom.Polygon([points]));
+      map.getView().setCenter(myCoord);
+    }
+  },
+  (err) => {
+    // ✅ GPS 오류 처리: 기본 좌표로 대체
+    console.error("위치 정보 오류:", err);
+    const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
+    marker.getGeometry().setCoordinates(defaultCoord);
+    map.getView().setCenter(defaultCoord);
+  }
+);
+    
     // ---------------------- 레이더 각도 처리 ----------------------
     if (radarOn) {
       const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
