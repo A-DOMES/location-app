@@ -174,7 +174,7 @@ function isIOS() {
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
   }
-   
+    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
@@ -1022,14 +1022,7 @@ navigator.geolocation.watchPosition(
   }
 );
 
-// ---------------------- 전역 변수 ----------------------
-let testLat = 37.5665;  // PC 시뮬레이션용 (GPS 오류 시 사용)
-let testLon = 126.9780;
-let testTargetLat = 37.5539;
-let testTargetLon = 126.9724;
 
-// ---------------------- 모바일/PC 판별 ----------------------
-const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 // ---------------------- GPS 위치 추적 (모바일 + PC 공통) ----------------------
 function startLocationTracking() {
@@ -1256,22 +1249,6 @@ function attachOrientationListener() {
     }
   });
 }
-
-// ✅ 초기화 (수정됨)
-document.addEventListener('DOMContentLoaded', () => {
-  // ✅ 나침반 바늘 DOM 요소 참조
-  needleGroup = document.getElementById('needle-group');
-  
-  console.log(isMobileDevice ? '📱 모바일 모드' : '💻 PC 모드');
-  
-  // ✅ GPS 위치 추적 시작 (모바일 + PC 공통)
-  startLocationTracking();
-  
-  // ✅ 모바일이고 iOS가 아니면 센서 리스닝 시작
-  if (isMobileDevice && !isIOS()) {
-    attachOrientationListener();
-  }
-});
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
 map.on("singleclick", function(evt) {
