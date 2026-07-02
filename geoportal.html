@@ -902,10 +902,20 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
 // ---------------------- 레이더 방향 결정 ----------------------
 let radarHeading = heading; // 기본은 센서 방향
 
-if (positions.length === 2) {
-  const prev = positions[0];
-  const curr = positions[1];
-  const gpsHeading = calculateBearing(prev[0], prev[1], curr[0], curr[1]);
+if (positions.length >= 4) {
+  // 최근 4개 좌표 가져오기
+  const p1 = positions[positions.length - 4];
+  const p2 = positions[positions.length - 3];
+  const p3 = positions[positions.length - 2];
+  const p4 = positions[positions.length - 1];
+
+  // 각각의 구간 방향 계산
+  const h1 = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+  const h2 = calculateBearing(p2[0], p2[1], p3[0], p3[1]);
+  const h3 = calculateBearing(p3[0], p3[1], p4[0], p4[1]);
+
+  // 평균 방향 (최근 3개 구간의 평균)
+  const gpsHeading = (h1 + h2 + h3) / 3;
 
   // ✅ 센서 방향과 GPS 방향 차이가 너무 크면 GPS 튐으로 간주
   const diff = Math.abs(gpsHeading - heading);
