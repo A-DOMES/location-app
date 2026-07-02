@@ -1030,33 +1030,32 @@ navigator.geolocation.watchPosition(
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
-  // ✅ iOS 13+이고 권한이 없으면 권한 요청
+  // ✅ iOS 13+ 환경에서 센서 권한 요청 (처음 실행 시)
   if (isIOS() && typeof sensorInitialized === 'undefined') {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
         alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
-        return;
+        return; // 권한 거부 시 동작 중단
       }
-      sensorInitialized = true; // ✅ 권한 획득 표시
+      sensorInitialized = true; // ✅ 권한 획득 완료 표시
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
-      return;
+      return; // 에러 발생 시 동작 중단
     }
   }
 
-  // ✅ 레이더 ON/OFF 토글
+  // ✅ 레이더 ON/OFF 상태 토글
   radarOn = !radarOn;
-  rotateEnabled = radarOn;
+  rotateEnabled = radarOn; // 지도 회전 여부도 레이더 상태에 맞춤
   
   if (radarOn && myCoord) {
     // ✅ 레이더 부채꼴 각도 및 반경 설정
-    const angle = 90;    // 레이더 각도
-    const radius = 200;  // 레이더 반경
-    const points = [myCoord];
+    const angle = 90;    // 레이더 각도 (90도)
+    const radius = 200;  // 레이더 반경 (200m)
+    const points = [myCoord]; // 시작점은 내 좌표
 
-    // ✅ 모바일(iOS/Android)은 센서 방향(lastHeading) 사용
-    // ✅ 일반 PC/노트북은 GPS 이동 방향(gpsHeading) 사용
+    // ✅ 모바일(iOS/Android)은 센서 방향(lastHeading), PC는 GPS 이동 방향(gpsHeading)
     const headingForRadar = isIOS() ? lastHeading : gpsHeading;
 
     // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
@@ -1075,9 +1074,11 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
     }
 
-    // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
-    map.getView().setCenter(myCoord);
-    map.getView().setZoom(16); // ✅ 레벨 16 확대 추가
+    // ✅ 좌표 변환 후 지도 중심 이동 + 확대
+    // OpenLayers는 EPSG:3857 좌표계를 사용하므로, GPS 위도·경도(EPSG:4326)를 변환해야 함
+    const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
+    map.getView().setCenter(center);            // 내 위치를 중심으로 이동
+    map.getView().setZoom(16);                  // 줌 레벨 16으로 확대
 
     // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
     map.getView().setRotation(headingForRadar * Math.PI / 180);
@@ -1087,11 +1088,12 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     // ✅ 레이더 숨기기
     radar.setGeometry(null);
     
-    // ✅ 지도 중심을 초기 좌표로 복귀
-    map.getView().setCenter(mapCenterCoord);
+    // ✅ 초기 좌표도 변환해서 넣어야 함
+    const center = ol.proj.fromLonLat(mapCenterCoord); // 초기 좌표 변환
+    map.getView().setCenter(center);                   // 초기 좌표로 복귀
     
-    // ✅ 줌 레벨 초기화
-    map.getView().setZoom(7); // ✅ 레벨 7 복귀 유지
+    // ✅ 줌 레벨 초기화 (레벨 7로 축소)
+    map.getView().setZoom(7);
     
     // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
@@ -1103,6 +1105,7 @@ function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
+
 
 
 // ---------------------- 마커 클릭 시 이동 ----------------------
