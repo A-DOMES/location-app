@@ -896,8 +896,40 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   let bearing = toDeg(Math.atan2(y, x));
   bearing = (bearing + 360) % 360;
-  return (bearing + 90) % 360; // ✅ 좌표계 기준 맞추기: 90도 오프셋 보정
+  return bearing; // ✅ 오프셋 제거, 순수 GPS 방향
 }
+
+// ---------------------- 레이더 방향 결정 ----------------------
+let radarHeading = heading; // 기본은 센서 방향
+
+if (positions.length === 2) {
+  const prev = positions[0];
+  const curr = positions[1];
+  const gpsHeading = calculateBearing(prev[0], prev[1], curr[0], curr[1]);
+
+  // ✅ 센서 방향과 GPS 방향 차이가 너무 크면 GPS 튐으로 간주
+  const diff = Math.abs(gpsHeading - heading);
+  if (diff < 90 || diff > 270) {
+    radarHeading = gpsHeading; // 차이가 작을 때만 GPS 방향 반영
+  }
+}
+
+// ✅ radarHeading을 기준으로 부채꼴 생성
+if (radarOn && myCoord) {
+  const angle = 90;
+  const radius = 200;
+  const points = [myCoord];
+
+  for (let a = -angle/2; a <= angle/2; a += 1) {
+    const rad = (radarHeading + a) * Math.PI / 180;
+    const dx = radius * Math.sin(rad);
+    const dy = radius * Math.cos(rad);
+    points.push([myCoord[0] + dx, myCoord[1] + dy]);
+  }
+
+  radar.setGeometry(new ol.geom.Polygon([points]));
+}
+
 
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
