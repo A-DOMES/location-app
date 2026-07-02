@@ -1072,7 +1072,8 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     radar.setGeometry(null);
     
     // ✅ 지도 중심을 초기 좌표로 복귀
-    map.getView().setCenter(mapCenterCoord);
+    const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
+    map.getView().setCenter(center);
     map.getView().setZoom(16);
     
     // ✅ 줌 레벨 초기화
