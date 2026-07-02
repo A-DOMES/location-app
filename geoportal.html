@@ -1060,7 +1060,6 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     }
 
     // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
-    const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
     map.getView().setCenter(center);
     map.getView().setZoom(16);
 
