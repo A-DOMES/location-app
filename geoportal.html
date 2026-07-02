@@ -1007,26 +1007,33 @@ navigator.geolocation.watchPosition(
   (err) => {
     // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
-
-    // ✅ 기본 좌표 (서울 시청)로 복귀
-    const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
+  
+    // ✅ 위치 정보를 가져오지 못했을 때 기본 좌표로 복귀
+    //    → 모든 사용자가 동일한 좌표로 시작하지 않도록,
+    //      실제 서비스에서는 원하는 기본 위치(예: 대한민국 중심, 특정 도시)로 변경 가능
+    const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]); // 대한민국 중심 좌표 예시
+    map.getView().setZoom(7);
+  
+    // ✅ 마커를 기본 좌표로 이동
     marker.getGeometry().setCoordinates(defaultCoord);
+  
+    // ✅ 지도 중심을 기본 좌표로 이동
     map.getView().setCenter(defaultCoord);
   }
-);
+  );
 
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
-  // ✅ iOS 13+이고 권한이 없으면 권한 요청
-  if (isIOS() && typeof sensorInitialized === 'undefined') {
+  // ✅ iOS 13+ 권한 요청
+  if (isIOS() && !sensorInitialized) {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
         alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
         return;
       }
-      sensorInitialized = true; // ✅ 권한 획득 표시
+      sensorInitialized = true;
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
       return;
@@ -1038,55 +1045,71 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   rotateEnabled = radarOn;
   
   if (radarOn && myCoord) {
-    // ✅ 레이더 부채꼴 각도 및 반경 설정
-    const angle = 90;    // 레이더 각도
-    const radius = 200;  // 레이더 반경
-    const points = [myCoord];
+    // ✅ 지도 중심을 현재 좌표로 이동 + 확대
+    map.getView().setCenter(myCoord);   // 이미 EPSG:3857 좌표
+    map.getView().setZoom(16);
 
-    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
-    for (let a = -angle/2; a <= angle/2; a += 5) {
-      const rad = a * Math.PI / 180;
-      const dx = radius * Math.cos(rad);
-      const dy = radius * Math.sin(rad);
-      points.push([myCoord[0] + dx, myCoord[1] + dy]);
-    }
-
-    // ✅ 레이더 부채꼴을 Polygon으로 설정
-    radar.setGeometry(new ol.geom.Polygon([points]));
-
-    // ✅ 나침반 바늘은 항상 북쪽 고정
+    // ✅ 나침반 바늘은 북쪽 고정 (센서 이벤트에서 회전 처리)
     if (needleGroup) {
       needleGroup.setAttribute('transform', `rotate(0 30 30)`);
     }
 
-    // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
-    map.getView().setCenter(center);
-    map.getView().setZoom(16);
-
-    // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
-    map.getView().setRotation(lastHeading * Math.PI / 180);
+    // ✅ 레이더는 센서 이벤트에서 방향 갱신 → 여기서는 켜기만 함
+    radar.setGeometry(new ol.geom.Polygon([ [myCoord] ]));
   } else {
-    // ✅ 레이더 OFF: 초기 상태 복귀
-    
-    // ✅ 레이더 숨기기
+    // ✅ 레이더 OFF
     radar.setGeometry(null);
-    
-    // ✅ 지도 중심을 초기 좌표로 복귀
     map.getView().setCenter(mapCenterCoord);
-    
-    // ✅ 줌 레벨 초기화
     map.getView().setZoom(7);
-    
-    // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
   }
 });
 
-// ✅ iOS 13+ 판별 함수
+// ---------------------- 센서 이벤트 ----------------------
+window.addEventListener('deviceorientationabsolute', (event) => {
+  if (event.alpha !== null && event.alpha !== undefined) {
+    const heading = (360 - event.alpha) % 360;
+
+    if (Math.abs(heading - lastHeading) > 2) {
+      // ✅ 나침반 바늘 회전
+      if (needleGroup) {
+        needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+      }
+
+      // ✅ 지도 회전 (줌은 건드리지 않음)
+      if (rotateEnabled) {
+        const newRotation = heading * Math.PI / 180;
+        if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+          map.getView().setRotation(newRotation);
+          lastMapRotation = newRotation;
+        }
+      }
+
+      // ✅ 레이더 방향 갱신 (ON일 때만)
+      if (radarOn && myCoord) {
+        const angle = 90;
+        const radius = 200;
+        const points = [myCoord];
+        for (let a = -angle/2; a <= angle/2; a += 1) {
+          const rad = (heading + a) * Math.PI / 180;
+          const dx = radius * Math.sin(rad);
+          const dy = radius * Math.cos(rad);
+          points.push([myCoord[0] + dx, myCoord[1] + dy]);
+        }
+        radar.setGeometry(new ol.geom.Polygon([points]));
+      }
+
+      lastHeading = heading;
+    }
+  }
+});
+
+// ---------------------- iOS 13+ 판별 함수 ----------------------
 function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
+
 
 
 
