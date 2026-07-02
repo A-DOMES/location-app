@@ -141,14 +141,24 @@
     <script src="config.js"></script>
     
   <script>   
-  // ---------------------- 전역 변수 선언 ----------------------
-  let radarOn = false;            // 시작 상태: 레이더 꺼짐
-  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
-  let lastHeading = 0;            // 마지막 방향값 저장
-  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
-  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
-  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
-  let currentHeading = 0;         // ✅ 센서에서 받은 heading을 저장하는 전역 변수
+// ---------------------- 전역 변수 선언 ----------------------
+// 레이더와 나침반 상태 관리용
+let radarOn = false;             // 레이더 ON/OFF 상태
+let rotateEnabled = false;       // 지도 회전 여부
+let lastHeading = 0;             // 최종적으로 반영되는 방향 (센서+GPS 통합)
+let lastMapRotation = 0;         // 마지막 지도 회전값
+let needleGroup = null;          // 나침반 바늘 DOM 그룹
+let sensorInitialized = false;   // iOS 센서 권한 여부
+
+// 방향 계산용
+let gpsHeading = 0;              // GPS 기반 평균 방향
+let currentHeading = 0;          // 센서 기반 heading
+
+// 위치 추적용
+let myCoord = null;              // 현재 좌표 (지도 좌표계)
+let smoothCoords = [];           // 스무딩 좌표 배열
+let initialized = false;         // 최초 실행 여부
+let positions = [];              // 최근 GPS 좌표 기록
 
   // ---------------------- 초기화 ----------------------
   document.addEventListener('DOMContentLoaded', () => {
@@ -591,15 +601,15 @@ window.addEventListener('deviceorientationabsolute', (event) => {
     // ✅ 센서값을 0~360 범위의 방향각도로 변환
     currentHeading = (360 - event.alpha) % 360;
 
-    // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 DOM 업데이트
+    // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 업데이트
     if (Math.abs(currentHeading - lastHeading) > 2) {
       
-      // ✅ 나침반 바늘 회전 (항상 센서 기반)
+      // ✅ 나침반 바늘 회전 (센서 기반)
       if (needleGroup) {
         needleGroup.setAttribute('transform', `rotate(${currentHeading} 30 30)`);
       }
 
-      // ✅ 지도 회전 (레이더 토글 ON일 때만 실행)
+      // ✅ 지도 회전 (레이더 ON일 때만)
       if (rotateEnabled) {
         const newRotation = currentHeading * Math.PI / 180;
         if (Math.abs(newRotation - lastMapRotation) > 0.02) {
@@ -610,9 +620,9 @@ window.addEventListener('deviceorientationabsolute', (event) => {
 
       // ✅ 레이더도 센서 방향 기준으로 회전
       if (radarOn && myCoord) {
-        const angle = 90;   
-        const radius = 200; 
-        const points = [myCoord]; 
+        const angle = 90;   // 레이더 부채꼴 각도
+        const radius = 200; // 레이더 반경
+        const points = [myCoord]; // 시작점: 내 현재 좌표
 
         for (let a = -angle/2; a <= angle/2; a += 1) {
           const rad = (currentHeading + a) * Math.PI / 180;
@@ -973,18 +983,19 @@ radar.setGeometry(null);
 
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
-  (pos) => {
+  (pos) => { // ← watchPosition 콜백 함수 시작
+
     // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
     if (initialized && pos.coords.accuracy > 100) return;
 
     let coord;
-    if (!initialized) {
+    if (!initialized) { // ← 최초 실행 시
       // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
       marker.getGeometry().setCoordinates(coord);
       map.getView().setCenter(coord);
-    } else {
+    } else { // ← 이후 실행 시
       // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
       coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
       marker.getGeometry().setCoordinates(coord);
@@ -1021,8 +1032,10 @@ navigator.geolocation.watchPosition(
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
       }
-    }
+    } // ← if (positions.length >= 4) 닫힘
 
+  } // ← watchPosition 콜백 함수 닫힘
+); // ← watchPosition 호출 닫힘
 
     // ---------------------- 레이더 각도 처리 ----------------------
     if (radarOn) {
