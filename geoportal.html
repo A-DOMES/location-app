@@ -1027,7 +1027,6 @@ navigator.geolocation.watchPosition(
   );
 
 
-
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
   // ✅ iOS 13+ 환경에서 센서 권한 요청 (처음 실행 시)
@@ -1055,8 +1054,16 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     const radius = 200;  // 레이더 반경 (200m)
     const points = [myCoord]; // 시작점은 내 좌표
 
-    // ✅ 모바일(iOS/Android)은 센서 방향(lastHeading), PC는 GPS 이동 방향(gpsHeading)
-    const headingForRadar = isIOS() ? lastHeading : gpsHeading;
+    // ✅ heading 값 결정 (모바일/PC 구분 + fallback 처리)
+    // iOS/모바일 → 센서 방향(lastHeading)
+    // PC/노트북 → GPS 이동 방향(gpsHeading)
+    // 값이 없으면 기본값 0도(북쪽) 사용
+    let headingForRadar = 0; 
+    if (isIOS() && typeof lastHeading !== 'undefined') {
+      headingForRadar = lastHeading;
+    } else if (!isIOS() && typeof gpsHeading !== 'undefined') {
+      headingForRadar = gpsHeading;
+    }
 
     // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
     for (let a = -angle/2; a <= angle/2; a += 5) {
@@ -1105,6 +1112,7 @@ function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
+
 
 
 
