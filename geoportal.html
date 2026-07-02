@@ -1077,7 +1077,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
 
     // ✅ 지도 중심을 내 현재 좌표로 이동 + 확대
     map.getView().setCenter(myCoord);
-    map.getView().setZoom(16);
+    map.getView().setZoom(16); // ✅ 레벨 16 확대 추가
 
     // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
     map.getView().setRotation(headingForRadar * Math.PI / 180);
@@ -1091,7 +1091,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     map.getView().setCenter(mapCenterCoord);
     
     // ✅ 줌 레벨 초기화
-    map.getView().setZoom(7);
+    map.getView().setZoom(7); // ✅ 레벨 7 복귀 유지
     
     // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
