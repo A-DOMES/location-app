@@ -1073,6 +1073,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     
     // ✅ 지도 중심을 초기 좌표로 복귀
     map.getView().setCenter(mapCenterCoord);
+    map.getView().setZoom(16);
     
     // ✅ 줌 레벨 초기화
     map.getView().setZoom(7);
