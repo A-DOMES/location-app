@@ -1083,7 +1083,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
 
     // ✅ 좌표 변환 후 지도 중심 이동 + 확대
     // OpenLayers는 EPSG:3857 좌표계를 사용하므로, GPS 위도·경도(EPSG:4326)를 변환해야 함
-    const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
+    // const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
     map.getView().setCenter(center);            // 내 위치를 중심으로 이동
     map.getView().setZoom(16);                  // 줌 레벨 16으로 확대
 
