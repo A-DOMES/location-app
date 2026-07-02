@@ -887,7 +887,11 @@ function getSmoothedCoord(lat, lng) {
   return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
-// ---------------------- 방위각 계산 함수 ----------------------
+// ============================================================
+// 📌 방위각 계산 함수 (Bearing Calculation Function)
+// 두 지점의 위도(lat), 경도(lon)를 입력받아 이동 방향(방위각)을 계산한다.
+// 좌표계 기준에 맞추기 위해 90도 오프셋을 보정한다.
+// ============================================================
 function calculateBearing(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI / 180;
   const toDeg = r => r * 180 / Math.PI;
@@ -903,6 +907,27 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (bearing + 90) % 360; // ✅ 좌표계 기준 맞추기: 90도 오프셋 보정
 }
 
+// ============================================================
+// 📌 나침반 & 레이더 업데이트 함수 (Update Compass & Radar)
+// - 이동이 있을 때만 새 bearing을 계산해 lastHeading 갱신
+// - 이동이 없으면 마지막 방향(lastHeading)을 그대로 유지
+// - 나침반 회전과 레이더 방향을 함께 반영
+// ============================================================
+function updateRadarAndCompass() {
+  if (positions.length >= 2) {
+    const prev = positions[positions.length - 2];
+    const curr = positions[positions.length - 1];
+    // bearing 계산 (lat, lon 순서 주의!)
+    lastHeading = calculateBearing(prev[1], prev[0], curr[1], curr[0]);
+  }
+
+  // 이동이 없으면 lastHeading 그대로 사용
+  map.getView().setRotation(lastHeading * Math.PI / 180);
+
+  // 레이더도 마지막 방향 유지
+  radar.setGeometry(createRadarGeometry(myCoord, lastHeading));
+}
+    
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
 marker.setId("myMarker");
