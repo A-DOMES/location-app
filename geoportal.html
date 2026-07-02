@@ -1001,29 +1001,34 @@ navigator.geolocation.watchPosition(
     circle100.getGeometry().setCenter(myCoord); // 반경 100m 원 중심 갱신
     circle200.getGeometry().setCenter(myCoord); // 반경 200m 원 중심 갱신
 
-    // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
+    // ✅ 최근 4개 좌표만 기록
     positions.push([pos.coords.latitude, pos.coords.longitude]);
-    if (positions.length > 2) positions.shift();
-
-    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
-    if (positions.length === 2) {
-      let prevLat = positions[0][0];
-      let prevLon = positions[0][1];
-      let currLat = positions[1][0];
-      let currLon = positions[1][1];
-
-      // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
-      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-        // ✅ 이동 방향(방위각) 계산
-        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
-
-        // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
+    if (positions.length > 4) positions.shift();
+    
+    // ✅ 4개 좌표가 쌓였을 때 이동 방향 계산
+    if (positions.length >= 4) {
+      const p1 = positions[positions.length - 4];
+      const p2 = positions[positions.length - 3];
+      const p3 = positions[positions.length - 2];
+      const p4 = positions[positions.length - 1];
+    
+      const h1 = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+      const h2 = calculateBearing(p2[0], p2[1], p3[0], p3[1]);
+      const h3 = calculateBearing(p3[0], p3[1], p4[0], p4[1]);
+    
+      // ✅ 미세한 GPS 튐 방지: 마지막 두 좌표(p3, p4) 비교
+      if (Math.abs(p3[0] - p4[0]) > 0.00001 || Math.abs(p3[1] - p4[1]) > 0.00001) {
+        // ✅ 이동 방향(방위각) 평균 계산
+        lastHeading = (h1 + h2 + h3) / 3;
+    
+        // ✅ 나침반 바늘 회전
         const needleGroup = document.getElementById('needle-group');
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
       }
     }
+
 
     // ---------------------- 레이더 각도 처리 ----------------------
     if (radarOn) {
