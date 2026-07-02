@@ -983,26 +983,30 @@ navigator.geolocation.watchPosition(
       }
     }
 
-    // ---------------------- 레이더 각도 처리 ----------------------
-    if (radarOn) {
-      const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
-      const radius = 200; // ✅ 레이더 반경 (200m)
-      const points = [myCoord]; // ✅ 시작점: 내 현재 좌표
-
-      // ✅ lastHeading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
-      for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
-        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
-        const dx = radius * Math.sin(rad);             // X축 방향 거리
-        const dy = radius * Math.cos(rad);             // Y축 방향 거리
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 점 추가
-      }
-
-      // ✅ 레이더 부채꼴을 Polygon으로 설정
-      radar.setGeometry(new ol.geom.Polygon([points]));
-
-      // ✅ 지도 중심을 내 현재 좌표로 이동
-      map.getView().setCenter(myCoord);
+  // ---------------------- 레이더 각도 처리 ----------------------
+  if (radarOn && myCoord) {
+    const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
+    const radius = 200; // ✅ 레이더 반경 (200m)
+    const points = [myCoord]; // ✅ 시작점: 내 현재 좌표
+  
+    // ✅ 모바일(iOS/Android)은 센서+GPS 혼합값(lastHeading) 사용
+    // ✅ 일반 PC/노트북은 센서가 없으므로 GPS 이동 방향(gpsHeading)만 사용
+    const headingForRadar = isIOS() ? lastHeading : gpsHeading;
+  
+    // ✅ headingForRadar 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+    for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
+      const rad = (headingForRadar + a) * Math.PI / 180; // 각도를 라디안으로 변환
+      const dx = radius * Math.sin(rad);                 // X축 방향 거리
+      const dy = radius * Math.cos(rad);                 // Y축 방향 거리
+      points.push([myCoord[0] + dx, myCoord[1] + dy]);   // ✅ 점 추가
     }
+  
+    // ✅ 레이더 부채꼴을 Polygon으로 설정
+    radar.setGeometry(new ol.geom.Polygon([points]));
+  
+    // ✅ 지도 중심을 내 현재 좌표로 이동
+    map.getView().setCenter(myCoord);
+  }
   },
   (err) => {
     // ---------------------- 오류 처리 ----------------------
@@ -1025,86 +1029,85 @@ navigator.geolocation.watchPosition(
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
-  // ✅ iOS 13+ 권한 요청
-  if (isIOS() && !sensorInitialized) {
+  // ✅ iOS 13+ 환경에서 센서 권한 요청 (처음 실행 시)
+  if (isIOS() && typeof sensorInitialized === 'undefined') {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
         alert('❌ 나침반을 사용하려면 센서 접근을 허용해주세요.');
-        return;
+        return; // 권한 거부 시 동작 중단
       }
-      sensorInitialized = true;
+      sensorInitialized = true; // ✅ 권한 획득 완료 표시
     } catch (error) {
       console.error('❌ 권한 요청 실패:', error);
-      return;
+      return; // 에러 발생 시 동작 중단
     }
   }
 
-  // ✅ 레이더 ON/OFF 토글
+  // ✅ 레이더 ON/OFF 상태 토글
   radarOn = !radarOn;
-  rotateEnabled = radarOn;
+  rotateEnabled = radarOn; // 지도 회전 여부도 레이더 상태에 맞춤
   
   if (radarOn && myCoord) {
-    // ✅ 지도 중심을 현재 좌표로 이동 + 확대
-    map.getView().setCenter(myCoord);   // 이미 EPSG:3857 좌표
-    map.getView().setZoom(16);
+    // ✅ 레이더 부채꼴 각도 및 반경 설정
+    const angle = 90;    // 레이더 각도 (90도)
+    const radius = 200;  // 레이더 반경 (200m)
+    const points = [myCoord]; // 시작점은 내 좌표
 
-    // ✅ 나침반 바늘은 북쪽 고정 (센서 이벤트에서 회전 처리)
-    if (needleGroup) {
-      needleGroup.setAttribute('transform', `rotate(0 30 30)`);
+    // ✅ heading 값 결정 (모바일/PC 구분 + fallback 처리)
+    // iOS/모바일 → 센서 방향(lastHeading)
+    // PC/노트북 → GPS 이동 방향(gpsHeading)
+    // 값이 없으면 기본값 0도(북쪽) 사용
+    let headingForRadar = 0; 
+    if (isIOS() && typeof lastHeading !== 'undefined') {
+      headingForRadar = lastHeading;
+    } else if (!isIOS() && typeof gpsHeading !== 'undefined') {
+      headingForRadar = gpsHeading;
     }
 
-    // ✅ 레이더는 센서 이벤트에서 방향 갱신 → 여기서는 켜기만 함
-    radar.setGeometry(new ol.geom.Polygon([ [myCoord] ]));
+    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
+    for (let a = -angle/2; a <= angle/2; a += 5) {
+      const rad = (headingForRadar + a) * Math.PI / 180; // 각도를 라디안으로 변환
+      const dx = radius * Math.sin(rad);                 // X축 방향 거리
+      const dy = radius * Math.cos(rad);                 // Y축 방향 거리
+      points.push([myCoord[0] + dx, myCoord[1] + dy]);   // ✅ 점 추가
+    }
+
+    // ✅ 레이더 부채꼴을 Polygon으로 설정
+    radar.setGeometry(new ol.geom.Polygon([points]));
+
+    // ✅ 나침반 바늘도 GPS/센서 방향으로 회전
+    if (needleGroup) {
+      needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
+    }
+
+    // ✅ 좌표 변환 후 지도 중심 이동 + 확대
+    // OpenLayers는 EPSG:3857 좌표계를 사용하므로, GPS 위도·경도(EPSG:4326)를 변환해야 함
+    const center = ol.proj.fromLonLat(myCoord); // [경도, 위도] → EPSG:3857 변환
+    map.getView().setCenter(center);            // 내 위치를 중심으로 이동
+    map.getView().setZoom(16);                  // 줌 레벨 16으로 확대
+
+    // ✅ 지도 회전 (현재 heading 값 반영 → 내가 바라보는 방향이 위쪽에 오도록)
+    map.getView().setRotation(headingForRadar * Math.PI / 180);
   } else {
-    // ✅ 레이더 OFF
+    // ✅ 레이더 OFF: 초기 상태 복귀
+    
+    // ✅ 레이더 숨기기
     radar.setGeometry(null);
-    map.getView().setCenter(mapCenterCoord);
+    
+    // ✅ 초기 좌표도 변환해서 넣어야 함
+    const center = ol.proj.fromLonLat(mapCenterCoord); // 초기 좌표 변환
+    map.getView().setCenter(center);                   // 초기 좌표로 복귀
+    
+    // ✅ 줌 레벨 초기화 (레벨 7로 축소)
     map.getView().setZoom(7);
+    
+    // ✅ 회전 초기화 (북쪽이 위쪽으로 복귀)
     map.getView().setRotation(0);
   }
 });
 
-// ---------------------- 센서 이벤트 ----------------------
-window.addEventListener('deviceorientationabsolute', (event) => {
-  if (event.alpha !== null && event.alpha !== undefined) {
-    const heading = (360 - event.alpha) % 360;
-
-    if (Math.abs(heading - lastHeading) > 2) {
-      // ✅ 나침반 바늘 회전
-      if (needleGroup) {
-        needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-      }
-
-      // ✅ 지도 회전 (줌은 건드리지 않음)
-      if (rotateEnabled) {
-        const newRotation = heading * Math.PI / 180;
-        if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-          map.getView().setRotation(newRotation);
-          lastMapRotation = newRotation;
-        }
-      }
-
-      // ✅ 레이더 방향 갱신 (ON일 때만)
-      if (radarOn && myCoord) {
-        const angle = 90;
-        const radius = 200;
-        const points = [myCoord];
-        for (let a = -angle/2; a <= angle/2; a += 1) {
-          const rad = (heading + a) * Math.PI / 180;
-          const dx = radius * Math.sin(rad);
-          const dy = radius * Math.cos(rad);
-          points.push([myCoord[0] + dx, myCoord[1] + dy]);
-        }
-        radar.setGeometry(new ol.geom.Polygon([points]));
-      }
-
-      lastHeading = heading;
-    }
-  }
-});
-
-// ---------------------- iOS 13+ 판별 함수 ----------------------
+// ✅ iOS 13+ 판별 함수
 function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
