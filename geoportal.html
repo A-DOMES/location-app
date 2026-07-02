@@ -594,7 +594,7 @@ function handleOrientation(event) {
 
     // 성능 최적화: 2도 이상 변했을 때만 업데이트
     if (Math.abs(heading - lastHeading) > 2) {
-      // ✅ 나침반 바늘 회전 (정상 동작 유지)
+      // ✅ 나침반 바늘 회전 (센서 기반)
       if (needleGroup) {
         needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
       }
@@ -606,6 +606,24 @@ function handleOrientation(event) {
           map.getView().setRotation(newRotation);
           lastMapRotation = newRotation;
         }
+      }
+
+      // ✅ 레이더도 센서 방향 기준으로 회전
+      if (radarOn && myCoord) {
+        const angle = 90;   // 레이더 부채꼴 각도
+        const radius = 200; // 레이더 반경
+        const points = [myCoord]; // 시작점: 내 현재 좌표
+
+        // heading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+        for (let a = -angle/2; a <= angle/2; a += 1) {
+          const rad = (heading + a) * Math.PI / 180; // 센서 heading + offset
+          const dx = radius * Math.sin(rad);
+          const dy = radius * Math.cos(rad);
+          points.push([myCoord[0] + dx, myCoord[1] + dy]);
+        }
+
+        // ✅ 레이더 부채꼴을 Polygon으로 설정
+        radar.setGeometry(new ol.geom.Polygon([points]));
       }
 
       // 마지막 heading 저장
@@ -656,6 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     attachOrientationListener();
   }
 });
+
 
 
 
