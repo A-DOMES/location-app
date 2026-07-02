@@ -984,22 +984,26 @@ navigator.geolocation.watchPosition(
     }
 
     // ---------------------- 레이더 각도 처리 ----------------------
-    if (radarOn) {
+    if (radarOn && myCoord) {
       const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
       const radius = 200; // ✅ 레이더 반경 (200m)
       const points = [myCoord]; // ✅ 시작점: 내 현재 좌표
-
-      // ✅ lastHeading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+    
+      // ✅ 모바일(iOS/Android)은 센서+GPS 혼합값(lastHeading) 사용
+      // ✅ 일반 PC는 센서가 없으므로 GPS 방향(gpsHeading)만 사용
+      const headingForRadar = isIOS() ? lastHeading : gpsHeading;
+    
+      // ✅ headingForRadar 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
       for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
-        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
-        const dx = radius * Math.sin(rad);             // X축 방향 거리
-        const dy = radius * Math.cos(rad);             // Y축 방향 거리
-        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 점 추가
+        const rad = (headingForRadar + a) * Math.PI / 180; // 각도를 라디안으로 변환
+        const dx = radius * Math.sin(rad);                 // X축 방향 거리
+        const dy = radius * Math.cos(rad);                 // Y축 방향 거리
+        points.push([myCoord[0] + dx, myCoord[1] + dy]);   // ✅ 점 추가
       }
-
+    
       // ✅ 레이더 부채꼴을 Polygon으로 설정
       radar.setGeometry(new ol.geom.Polygon([points]));
-
+    
       // ✅ 지도 중심을 내 현재 좌표로 이동
       map.getView().setCenter(myCoord);
     }
