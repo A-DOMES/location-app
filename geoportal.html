@@ -141,24 +141,13 @@
     <script src="config.js"></script>
     
   <script>   
-// ---------------------- 전역 변수 선언 ----------------------
-// 레이더와 나침반 상태 관리용
-let radarOn = false;             // 레이더 ON/OFF 상태
-let rotateEnabled = false;       // 지도 회전 여부
-let lastHeading = 0;             // 최종적으로 반영되는 방향 (센서+GPS 통합)
-let lastMapRotation = 0;         // 마지막 지도 회전값
-let needleGroup = null;          // 나침반 바늘 DOM 그룹
-let sensorInitialized = false;   // iOS 센서 권한 여부
-
-// 방향 계산용
-let gpsHeading = 0;              // GPS 기반 평균 방향
-let currentHeading = 0;          // 센서 기반 heading
-
-// 위치 추적용
-let myCoord = null;              // 현재 좌표 (지도 좌표계)
-let smoothCoords = [];           // 스무딩 좌표 배열
-let initialized = false;         // 최초 실행 여부
-let positions = [];              // 최근 GPS 좌표 기록
+  // ---------------------- 전역 변수 선언 ----------------------
+  let radarOn = false;            // 시작 상태: 레이더 꺼짐
+  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
+  let lastHeading = 0;            // 마지막 방향값 저장
+  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
+  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
+  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
   // ---------------------- 초기화 ----------------------
   document.addEventListener('DOMContentLoaded', () => {
@@ -596,22 +585,26 @@ compass.addEventListener("dblclick", (e) => {
 
 
 // ---------------------- 나침반 바늘 회전 + 지도 회전 (센서 이벤트) ----------------------
+// iOS 13+ 권한 요청 후 또는 Android에서 자동으로 실행되는 센서 이벤트 리스너
 window.addEventListener('deviceorientationabsolute', (event) => {
+  // ✅ 센서에서 받은 alpha 값이 유효한지 확인 (null 또는 undefined 제외)
   if (event.alpha !== null && event.alpha !== undefined) {
+    
     // ✅ 센서값을 0~360 범위의 방향각도로 변환
-    currentHeading = (360 - event.alpha) % 360;
+    // event.alpha는 시계방향, heading은 반시계방향(수학적 각도) + 북쪽 기준으로 변환
+    const heading = (360 - event.alpha) % 360;
 
-    // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 업데이트
-    if (Math.abs(currentHeading - lastHeading) > 2) {
+    // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 DOM 업데이트
+    if (Math.abs(heading - lastHeading) > 2) {
       
-      // ✅ 나침반 바늘 회전 (센서 기반)
+      // ✅ 나침반 바늘 회전 (항상 센서 기반)
       if (needleGroup) {
-        needleGroup.setAttribute('transform', `rotate(${currentHeading} 30 30)`);
+        needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
       }
 
-      // ✅ 지도 회전 (레이더 ON일 때만)
+      // ✅ 지도 회전 (레이더 토글 ON일 때만 실행)
       if (rotateEnabled) {
-        const newRotation = currentHeading * Math.PI / 180;
+        const newRotation = heading * Math.PI / 180;
         if (Math.abs(newRotation - lastMapRotation) > 0.02) {
           map.getView().setRotation(newRotation);
           lastMapRotation = newRotation;
@@ -624,21 +617,24 @@ window.addEventListener('deviceorientationabsolute', (event) => {
         const radius = 200; // 레이더 반경
         const points = [myCoord]; // 시작점: 내 현재 좌표
 
+        // heading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
         for (let a = -angle/2; a <= angle/2; a += 1) {
-          const rad = (currentHeading + a) * Math.PI / 180;
+          const rad = (heading + a) * Math.PI / 180; // 센서 heading + offset
           const dx = radius * Math.sin(rad);
           const dy = radius * Math.cos(rad);
           points.push([myCoord[0] + dx, myCoord[1] + dy]);
         }
 
+        // ✅ 레이더 부채꼴을 Polygon으로 설정
         radar.setGeometry(new ol.geom.Polygon([points]));
       }
 
-      // ✅ 현재 방향값 저장
-      lastHeading = currentHeading;
+      // ✅ 현재 방향값 저장 (다음 이벤트에서 변화량 비교용)
+      lastHeading = heading;
     }
   }
 });
+
     
 
 // ---------------------- 페이지 로드시 저장된 위치 복원 ----------------------
@@ -871,24 +867,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /// ---------------------- 내 위치 및 분석용 레이어 ----------------------
-/// 위치 관련 레이어 생성 및 지도에 추가
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
 map.addLayer(positionLayer);
 
-// ✅ 전역 변수는 이미 선언되어 있으므로 여기서는 다시 선언하지 않음
-// myCoord, positions, initialized 등은 위 전역 변수 블록에서 관리
+let myCoord = null;
+let smoothCoords = [];
+let initialized = false;
+
+// ---------------------- 위도·경도 기록 배열 ----------------------
+let positions = [];
 
 // ---------------------- 스무딩 함수 ----------------------
 function getSmoothedCoord(lat, lng) {
-  // 최근 좌표 배열에 추가
   smoothCoords.push([lat, lng]);
-  if (smoothCoords.length > 5) smoothCoords.shift(); // 오래된 좌표 제거
-
-  // 평균 좌표 계산
+  if (smoothCoords.length > 5) smoothCoords.shift();
   const avgLat = smoothCoords.reduce((sum, c) => sum + c[0], 0) / smoothCoords.length;
   const avgLng = smoothCoords.reduce((sum, c) => sum + c[1], 0) / smoothCoords.length;
-
-  // 지도 좌표계로 변환 후 반환
   return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
@@ -902,50 +896,8 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   let bearing = toDeg(Math.atan2(y, x));
   bearing = (bearing + 360) % 360;
-  return bearing; // ✅ 오프셋 제거, 순수 GPS 방향
+  return (bearing + 90) % 360; // ✅ 좌표계 기준 맞추기: 90도 오프셋 보정
 }
-
-// ---------------------- 레이더 방향 결정 ----------------------
-let radarHeading = heading; // 기본은 센서 방향
-
-if (positions.length >= 4) {
-  // 최근 4개 좌표 가져오기
-  const p1 = positions[positions.length - 4];
-  const p2 = positions[positions.length - 3];
-  const p3 = positions[positions.length - 2];
-  const p4 = positions[positions.length - 1];
-
-  // 각각의 구간 방향 계산
-  const h1 = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-  const h2 = calculateBearing(p2[0], p2[1], p3[0], p3[1]);
-  const h3 = calculateBearing(p3[0], p3[1], p4[0], p4[1]);
-
-  // 평균 방향 (최근 3개 구간의 평균)
-  const gpsHeading = (h1 + h2 + h3) / 3;
-
-  // ✅ 센서 방향과 GPS 방향 차이가 너무 크면 GPS 튐으로 간주
-  const diff = Math.abs(gpsHeading - heading);
-  if (diff < 90 || diff > 270) {
-    radarHeading = gpsHeading; // 차이가 작을 때만 GPS 방향 반영
-  }
-}
-
-// ✅ radarHeading을 기준으로 부채꼴 생성
-if (radarOn && myCoord) {
-  const angle = 90;
-  const radius = 200;
-  const points = [myCoord];
-
-  for (let a = -angle/2; a <= angle/2; a += 1) {
-    const rad = (radarHeading + a) * Math.PI / 180;
-    const dx = radius * Math.sin(rad);
-    const dy = radius * Math.cos(rad);
-    points.push([myCoord[0] + dx, myCoord[1] + dy]);
-  }
-
-  radar.setGeometry(new ol.geom.Polygon([points]));
-}
-
 
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
@@ -962,12 +914,14 @@ marker.setStyle(new ol.style.Style({
 
 const circle100 = new ol.Feature(new ol.geom.Circle([0,0], 100));
 circle100.setStyle(new ol.style.Style({
-  stroke: new ol.style.Stroke({ color: 'red', width: 2 })
+  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+ // fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.1)' })
 }));
 
 const circle200 = new ol.Feature(new ol.geom.Circle([0,0], 200));
 circle200.setStyle(new ol.style.Style({
-  stroke: new ol.style.Stroke({ color: 'red', width: 2 })
+  stroke: new ol.style.Stroke({ color: 'red', width: 2 }),
+  // fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' })
 }));
 
 const radar = new ol.Feature(new ol.geom.Polygon([]));
@@ -984,67 +938,77 @@ radar.setGeometry(null);
 // ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
-    // ✅ GPS 정확도가 너무 낮으면 무시
+    // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
     if (initialized && pos.coords.accuracy > 100) return;
 
     let coord;
     if (!initialized) {
-      // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환
+      // ✅ 최초 실행 시: 현재 좌표를 지도 좌표계로 변환해서 마커와 지도 중심 설정
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
-      marker.getGeometry().setCoordinates(coord);   // 마커 찍기
-      map.getView().setCenter(coord);               // 지도 중심 이동
+      marker.getGeometry().setCoordinates(coord);
+      map.getView().setCenter(coord);
     } else {
-      // ✅ 이후 실행 시: 스무딩 좌표 사용
+      // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림을 평균화한 좌표 사용
       coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
       marker.getGeometry().setCoordinates(coord);
     }
 
-    // ✅ 내 현재 좌표 갱신 (중복 선언 없이 값만 갱신)
+    // ✅ 내 현재 좌표 저장
     myCoord = coord;
-    circle100.getGeometry().setCenter(myCoord);
-    circle200.getGeometry().setCenter(myCoord);
+    circle100.getGeometry().setCenter(myCoord); // 반경 100m 원 중심 갱신
+    circle200.getGeometry().setCenter(myCoord); // 반경 200m 원 중심 갱신
 
-    // ✅ 최근 4개 좌표 기록
+    // ✅ 최근 두 개의 실제 좌표만 기록 (이동 방향 계산용)
     positions.push([pos.coords.latitude, pos.coords.longitude]);
-    if (positions.length > 4) positions.shift();
+    if (positions.length > 2) positions.shift();
 
-    // ✅ GPS 방향 계산
-    if (positions.length >= 4) {
-      const p1 = positions[positions.length - 4];
-      const p2 = positions[positions.length - 3];
-      const p3 = positions[positions.length - 2];
-      const p4 = positions[positions.length - 1];
+    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
+    if (positions.length === 2) {
+      let prevLat = positions[0][0];
+      let prevLon = positions[0][1];
+      let currLat = positions[1][0];
+      let currLon = positions[1][1];
 
-      const h1 = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      const h2 = calculateBearing(p2[0], p2[1], p3[0], p3[1]);
-      const h3 = calculateBearing(p3[0], p3[1], p4[0], p4[1]);
+      // ✅ 미세한 GPS 튀기 현상 방지: 좌표 차이가 아주 작으면 바늘 업데이트 안 함
+      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+        // ✅ 이동 방향(방위각) 계산
+        lastHeading = calculateBearing(prevLat, prevLon, currLat, currLon);
 
-      if (Math.abs(p3[0] - p4[0]) > 0.00001 || Math.abs(p3[1] - p4[1]) > 0.00001) {
-        gpsHeading = (h1 + h2 + h3) / 3;
-        lastHeading = gpsHeading; // ✅ 최종 heading 갱신
+        // ✅ 나침반 바늘 회전 (SVG 그룹 회전)
+        const needleGroup = document.getElementById('needle-group');
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+        }
       }
     }
 
-    // ✅ 레이더 각도 처리
-    if (radarOn && myCoord) {
-      const angle = 90;
-      const radius = 200;
-      const points = [myCoord];
+    // ---------------------- 레이더 각도 처리 ----------------------
+    if (radarOn) {
+      const angle = 90;   // ✅ 레이더 부채꼴 각도 (90도)
+      const radius = 200; // ✅ 레이더 반경 (200m)
+      const points = [myCoord]; // ✅ 시작점: 내 현재 좌표
 
-      for (let a = -angle/2; a <= angle/2; a += 1) {
-        const rad = (lastHeading + a) * Math.PI / 180;
-        const dx = radius * Math.sin(rad);
-        const dy = radius * Math.cos(rad);
-        points.push([myCoord[0] + dx, myCoord[1] + dy]);
+      // ✅ lastHeading을 기준으로 -45° ~ +45° 범위까지 점을 찍어 다각형 생성
+      for (let a = -angle/2; a <= angle/2; a += 1) { // 1도 단위로 점 찍기
+        const rad = (lastHeading + a) * Math.PI / 180; // 각도를 라디안으로 변환
+        const dx = radius * Math.sin(rad);             // X축 방향 거리
+        const dy = radius * Math.cos(rad);             // Y축 방향 거리
+        points.push([myCoord[0] + dx, myCoord[1] + dy]); // ✅ 점 추가
       }
 
+      // ✅ 레이더 부채꼴을 Polygon으로 설정
       radar.setGeometry(new ol.geom.Polygon([points]));
+
+      // ✅ 지도 중심을 내 현재 좌표로 이동
       map.getView().setCenter(myCoord);
     }
   },
   (err) => {
+    // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
+
+    // ✅ 기본 좌표 (서울 시청)로 복귀
     const defaultCoord = ol.proj.fromLonLat([126.9780, 37.5665]);
     marker.getGeometry().setCoordinates(defaultCoord);
     map.getView().setCenter(defaultCoord);
