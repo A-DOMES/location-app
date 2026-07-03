@@ -272,7 +272,7 @@ const cadLayer = new ol.layer.Tile({
     crossOrigin: 'anonymous'           // CORS 보안 정책 우회 설정
   }),
   visible: false,                      // 기본값은 꺼짐 상태
-  zIndex: 2000                         // 👈 중요: 지적도가 기본/위성지도보다 항상 '위'에 그려지도록 고정
+  zIndex: 150                         // 👈 중요: 지적도가 기본/위성지도보다 항상 '위'에 그려지도록 고정
 });
   
   const midnightLayer = createLayer('midnight'); 
