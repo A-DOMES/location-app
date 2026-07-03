@@ -140,7 +140,7 @@
     <!-- ✅ API Key 설정 -->
     <script src="config.js"></script>
     
-<script>   
+  <script>   
   // ---------------------- 전역 변수 선언 ----------------------
   let radarOn = false;            // 시작 상태: 레이더 꺼짐
   let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
@@ -151,7 +151,10 @@
 
   // ---------------------- 초기화 ----------------------
   document.addEventListener('DOMContentLoaded', () => {
+    // ✅ 나침반 바늘 DOM 요소 참조
     needleGroup = document.getElementById('needle-group');
+    
+    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
     if (!isIOS()) {
       attachOrientationListener();
     }
@@ -166,12 +169,21 @@
   // ---------------------- 센서 이벤트 등록 함수 ----------------------
   function attachOrientationListener() {
     window.addEventListener('deviceorientationabsolute', (event) => {
+      // ✅ 센서에서 받은 alpha 값이 유효한지 확인
       if (event.alpha !== null && event.alpha !== undefined) {
+        
+        // ✅ 센서값을 0~360 범위의 heading으로 변환
         const heading = (360 - event.alpha) % 360;
+
+        // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 업데이트
         if (Math.abs(heading - lastHeading) > 2) {
+          
+          // ✅ 나침반 바늘 회전
           if (needleGroup) {
             needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
           }
+
+          // ✅ 지도 회전 (레이더 ON일 때만)
           if (rotateEnabled) {
             const newRotation = heading * Math.PI / 180;
             if (Math.abs(newRotation - lastMapRotation) > 0.02) {
@@ -179,18 +191,24 @@
               lastMapRotation = newRotation;
             }
           }
+
+          // ✅ 레이더도 센서 방향 기준으로 갱신
           if (radarOn && myCoord) {
-            const angle = 90;
-            const radius = 200;
+            const angle = 90;   // 레이더 부채꼴 각도
+            const radius = 200; // 레이더 반경
             const points = [myCoord];
+
             for (let a = -angle/2; a <= angle/2; a += 1) {
               const rad = (heading + a) * Math.PI / 180;
               const dx = radius * Math.sin(rad);
               const dy = radius * Math.cos(rad);
               points.push([myCoord[0] + dx, myCoord[1] + dy]);
             }
+
             radar.setGeometry(new ol.geom.Polygon([points]));
           }
+
+          // ✅ 현재 방향값 저장
           lastHeading = heading;
         }
       }
@@ -208,7 +226,7 @@
     matrixIds[z] = z;
   }
   
-  // ✅ WMTS 레이어 생성 함수
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
   function createLayer(layerName, format='image/png') {
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
@@ -229,12 +247,12 @@
     });
   }
   
-  // ✅ 주요 레이어 정의
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
   const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);
+  baseLayer.setVisible(true);   // 기본지도 켜기
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);
+  satLayer.setVisible(true);    // 항공사진 켜기
   
   const cadLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
@@ -249,81 +267,84 @@
       serverType: 'geoserver',
       projection: projection
     }),
-    visible: false
+    visible: false               // 지적도는 기본 꺼짐
   });
   
-  const midnightLayer = createLayer('Midnight'); // ⚠️ 반드시 대문자 Midnight
-  midnightLayer.setVisible(false);
+  const midnightLayer = createLayer('Midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-  // ✅ WebView 환경 감지 함수
-  function isWebView() {
-    return /(wv|WebView)/i.test(navigator.userAgent);
-  }
-
-  // ✅ 초기 줌 레벨 분기 처리
-  const defaultZoom = isWebView() ? 10 : 7;
-
-  // ✅ 지도 초기화
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
   const map = new ol.Map({
     target: 'map',
     layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: defaultZoom   // ⚠️ 브라우저는 7, 앱(WebView)은 10
+      zoom: 7 
     })
   });
 
-  const mapCenterCoord = [127.7669, 35.9078];
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
-  // ✅ 체크박스 이벤트
+  // ✅ 체크박스 이벤트 → 레이어 on/off
   document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
   document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
   document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
   document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
   document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
   
+  // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
     document.getElementById("infoPopup").style.display = "none";
   }
   
-  // ✅ 지도 클릭 이벤트
-  map.on('click', function(evt) {
-    const view = map.getView();
-    const zoom = view.getZoom();
-    if (zoom < 19) return;
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
+map.on('click', function(evt) {
+  const view = map.getView();
+  const zoom = view.getZoom();
 
-    const coord = ol.proj.toLonLat(evt.coordinate);
-    const lon = coord[0];
-    const lat = coord[1];
+  if (zoom < 19) return; 
+  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
-    const infoPopup = document.getElementById("infoPopup");
-    infoPopup.style.display = "block";
-    infoPopup.style.transform = "none";
-    infoPopup.style.left = "calc(50% - 160px)";
+  const coord = ol.proj.toLonLat(evt.coordinate);
+  const lon = coord[0];
+  const lat = coord[1];
 
-    document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-    document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-    document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-    document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
+  const infoPopup = document.getElementById("infoPopup");
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)";
 
-    Promise.all([
-      loadLandBuilding(lon, lat),
-      loadLandUse(lon, lat),
-      loadRealEstate(lon, lat),
-      loadRealTransaction(lon, lat)
-    ]).then(([building, landUse, estate, transaction]) => {
-      const parcelData = {
-        ...building,
-        ...landUse,
-        ...estate,
-        ...transaction
-      };
-      renderPopup(parcelData);
-    });
+  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
+  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
+  Promise.all([
+    loadLandBuilding(lon, lat),   // 건물 정보
+    loadLandUse(lon, lat),        // 토지 이용
+    loadRealEstate(lon, lat),     // 공시지가
+    loadRealTransaction(lon, lat) // 실거래가
+  ]).then(([building, landUse, estate, transaction]) => {
+    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
+    const parcelData = {
+      ...building,
+      ...landUse,
+      ...estate,
+      ...transaction
+    };
+
+    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    renderPopup(parcelData);
   });
+});
 
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
