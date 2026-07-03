@@ -255,21 +255,26 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진 켜기
   
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: {
-        'LAYERS': 'LT_C_ADASRATODO',
-        'STYLES': 'LT_C_ADASRATODO',
-        'KEY': CONFIG.API_KEY,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE'
-      },
-      serverType: 'geoserver',
-      projection: projection
-    }),
-    visible: false               // 지적도는 기본 꺼짐
-  });
+const cadLayer = new ol.layer.Image({
+  source: new ol.source.ImageWMS({
+    url: 'https://api.vworld.kr/req/wms',
+    params: {
+      'SERVICE': 'WMS',
+      'VERSION': '1.3.0',
+      'REQUEST': 'GetMap',
+      'LAYERS': 'LT_C_ADASRATODO',
+      'STYLES': '',               // ✅ 빈 문자열
+      'CRS': 'EPSG:3857',         // ✅ 좌표계 맞추기
+      'key': CONFIG.API_KEY,      // ✅ 소문자 key
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE'
+    },
+    serverType: 'geoserver',
+    projection: projection
+  }),
+  visible: false
+});
+
   
   const midnightLayer = createLayer('Midnight', 'image/png', 'midnight');
   midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
