@@ -254,7 +254,7 @@
   baseLayer.setVisible(true);   // 기본지도 켜기 (초기 화면 로딩)
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(false);   // ⚠️ 렉 방지: 항공사진은 무거우므로 초기에는 꺼둡니다.
+  satLayer.setVisible(True);   // ⚠️ 렉 방지: 항공사진은 무거우므로 초기에는 꺼둡니다.
   
   // 1. 렉(무한 로딩)의 주범이었던 Image 방식을 TileWMS(분할 로딩) 방식으로 전면 수정
   const cadLayer = new ol.layer.Tile({
@@ -282,7 +282,7 @@
   midnightLayer.setVisible(false); 
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(false);  // ⚠️ 렉 방지: 하이브리드 글자 레이어도 초기에는 꺼둡니다.
+  hybridLayer.setVisible(True);  // ⚠️ 렉 방지: 하이브리드 글자 레이어도 초기에는 꺼둡니다.
 
  
   // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
