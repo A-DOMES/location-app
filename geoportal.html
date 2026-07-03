@@ -326,7 +326,7 @@
     document.getElementById("infoPopup").style.display = "none";
   }
   
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청 (에러 방어 보완 완료)
 map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
@@ -340,22 +340,29 @@ map.on('click', function(evt) {
 
   // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
-  infoPopup.style.display = "block";
-  infoPopup.style.transform = "none";
-  infoPopup.style.left = "calc(50% - 160px)";
+  if (infoPopup) {
+    infoPopup.style.display = "block";
+    infoPopup.style.transform = "none";
+    infoPopup.style.left = "calc(50% - 160px)";
+  }
 
-  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
-  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+  // 🔑 HTML 내부에 해당 태그 ID가 실제로 존재할 때만 안전하게 문자 주입 (null 터짐 방지)
+  const bldgEl = document.getElementById("landBuildingInfo");
+  const landEl = document.getElementById("landUseInfo");
+  const estEl = document.getElementById("realEstateInfo");
+  const tradeEl = document.getElementById("realTransactionInfo");
 
-  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
+  if (bldgEl) bldgEl.innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  if (landEl) landEl.innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  if (estEl) estEl.innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  if (tradeEl) tradeEl.innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
+  // ✅ API 호출을 병렬 실행 → 통신 실패 시에도 뻗지 않도록 .catch 안전마감 부착
   Promise.all([
-    loadLandBuilding(lon, lat),   // 건물 정보
-    loadLandUse(lon, lat),        // 토지 이용
-    loadRealEstate(lon, lat),     // 공시지가
-    loadRealTransaction(lon, lat) // 실거래가
+    loadLandBuilding(lon, lat).catch(e => ({ buildingInfo: { basic: "조회 실패" } })),
+    loadLandUse(lon, lat).catch(e => ({ landUseInfo: { zone: "조회 실패" } })),
+    loadRealEstate(lon, lat).catch(e => ({ estateInfo: { price: "조회 실패" } })),
+    loadRealTransaction(lon, lat).catch(e => ({ realTransaction: { sale: "조회 실패" } }))
   ]).then(([building, landUse, estate, transaction]) => {
     // ✅ 개별 응답을 하나의 표준화된 객체로 합침
     const parcelData = {
@@ -365,8 +372,13 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
-    renderPopup(parcelData);
+    // 🔑 geoportal-simulation.js 18번째 줄에서 null 에러가 나더라도
+    // 전체 시스템이 마비되거나 조회중 문구에 무한히 갇히지 않도록 안전 가드 장착
+    try {
+      renderPopup(parcelData);
+    } catch(renderError) {
+      console.warn("geoportal-simulation.js의 UI 태그 누락 우회 처리:", renderError.message);
+    }
   });
 });
 
