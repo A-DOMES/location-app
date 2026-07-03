@@ -230,8 +230,19 @@ for (let z = 0; z < 19; ++z) {
 // ⚠️ 브이월드 REST WMTS는 {z}/{y}/{x} 패턴을 사용해야 정상 동작합니다.
 function createLayer(layerName, format='image/png') {
   return new ol.layer.Tile({
-    source: new ol.source.XYZ({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{z}/{y}/{x}.${format.split('/')[1]}`
+    source: new ol.source.WMTS({
+      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      layer: layerName,
+      matrixSet: 'EPSG:3857',
+      format: format,
+      projection: projection,
+      tileGrid: new ol.tilegrid.WMTS({
+        origin: ol.extent.getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds
+      }),
+      style: 'default',
+      requestEncoding: 'REST'
     }),
     visible: false
   });
