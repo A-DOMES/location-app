@@ -226,21 +226,14 @@
     matrixIds[z] = z;
   }
   
-  // =================================================================
-  //  안전한 확장자 분기형 레이어 생성 함수 (미드나잇 split 오류 완전 해결)
-  // =================================================================
-  function createLayer(layerName, format = 'image/png') {
-    // 🔑 format 인자가 누락되거나 undefined일 때를 방지하기 위한 안전 백업 장치
-    const safeFormat = format || 'image/png';
-    const fileExt = safeFormat.includes('jpeg') ? 'jpeg' : 'png';
-    
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+  function createLayer(layerName, format='image/png') {
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
-        // ⚠️ 🔑 깨져있던 일반 도메인을 국토부 공식 api 웹 경로로 복구하고, 유실되었던 $ 기호를 완벽 매핑했습니다!
-        url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${fileExt}`,
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
         layer: layerName,
         matrixSet: 'EPSG:3857',
-        format: safeFormat,
+        format: format,
         projection: projection,
         tileGrid: new ol.tilegrid.WMTS({
           origin: ol.extent.getTopLeft(projectionExtent),
@@ -248,72 +241,52 @@
           matrixIds: matrixIds
         }),
         style: 'default',
-        requestEncoding: 'REST',
-        crossOrigin: 'anonymous'
+        requestEncoding: 'REST'
       }),
       visible: false
     });
   }
-
   
-  // =================================================================
-  //  주요 레이어 정의 (원본 형태 유지 + 정식 주소 및 지번 레이어 결합)
-  // =================================================================
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
   const baseLayer = createLayer('Base'); 
   baseLayer.setVisible(true);   // 기본지도 켜기
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진(위성) 처음부터 켜기
+  satLayer.setVisible(true);    // 항공사진 켜기
   
-  // 🔑 무겁던 ImageWMS를 바둑판식 타일 조각 분할(TileWMS) 방식으로 전면 수정 및 정식 주소 매핑
-  const cadLayer = new ol.layer.Tile({
-    source: new ol.source.TileWMS({
-      url: 'https://vworld.kr', // 👈 🔑 깨져있던 메인 주소를 국토부 정식 WMS 엔진 주소로 전면 수정!
+  const cadLayer = new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+      url: 'https://api.vworld.kr/req/wms',
       params: {
-        'SERVICE': 'WMS',
-        'VERSION': '1.1.1',
-        'REQUEST': 'GetMap',
-        // 🔑 경계선(LT_C_ADASRATODO) 뒤에 쉼표(,)를 찍고 지번 글자 레이어(LP_PA_CBND_ONAM)를 결합해야 번지수가 나타납니다!
-        'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM', 
-        'STYLES': ',', 
-        'key': CONFIG.API_KEY, // 🔑 대문자 'KEY'를 소문자 'key'로 수정하여 서버 차단 해제
+        'LAYERS': 'LT_C_ADASRATODO',
+        'STYLES': 'LT_C_ADASRATODO',
+        'KEY': CONFIG.API_KEY,
         'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE',
-        'SRS': 'EPSG:3857'
+        'TRANSPARENT': 'TRUE'
       },
       serverType: 'geoserver',
-      crossOrigin: 'anonymous'
+      projection: projection
     }),
-    visible: false,               // 지적도는 기본 꺼짐
-    zIndex: 9999                  // 위성사진 위로 무조건 필지선과 글자가 돌출되도록 최상위 고정
+    visible: false               // 지적도는 기본 꺼짐
   });
   
-  const midnightLayer = createLayer('Midnight'); // 소문자 m을 대문자 M으로 수정 완료
-  midnightLayer.setVisible(false); 
+  const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // 하이브리드(지명) 처음부터 켜기
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-  // =================================================================
-  //  지도 초기화 및 maxZoom 19 락 설정 (원본 100% 동일 결합 배열)
-  // =================================================================
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
   const map = new ol.Map({
     target: 'map',
-    layers: [
-      baseLayer, 
-      satLayer, 
-      cadLayer, 
-      midnightLayer, 
-      hybridLayer,
-      positionLayer // 👈 🔑 겹침과 크래시 없이 마커 레이어를 안전하게 결합하는 황금 열쇠!
-    ],
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7,
-      maxZoom: 19
+      zoom: 7 
     })
   });
-    
+
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
   const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
@@ -329,7 +302,7 @@
     document.getElementById("infoPopup").style.display = "none";
   }
   
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청 (에러 방어 보완 완료)
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
@@ -337,39 +310,30 @@ map.on('click', function(evt) {
   if (zoom < 19) return; 
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
-  // 🔑 맵 렌더링 마비를 일으키던 배열 주입 버그를 인덱싱([0], [1])으로 완벽 수정!
   const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0]; // 👈 정확하게 첫 번째 원소인 '경도' 추출
-  const lat = coord[1]; // 👈 정확하게 두 번째 원소인 '위도' 추출
+  const lon = coord[0];
+  const lat = coord[1];
 
   // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
-  if (infoPopup) {
-    infoPopup.style.display = "block";
-    infoPopup.style.transform = "none";
-    infoPopup.style.left = "calc(50% - 160px)";
-  }
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)";
 
-  // 🔑 HTML 내부에 선언된 실제 '글자 출력 칸(Tab Content)'의 ID를 정확히 타격
-  const bldgBasic = document.getElementById("bldg-basic");
-  const landZone = document.getElementById("land-zone");
-  const priceBasic = document.getElementById("price-basic");
-  const dealSale = document.getElementById("deal-sale");
+  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // 버튼 메뉴 디자인을 지우지 않고 내부 글자만 "조회 중..."으로 교체 (null 포인트 에러 원천 방어)
-  if (bldgBasic) bldgBasic.innerHTML = "조회 중...";
-  if (landZone) landZone.innerHTML = "조회 중...";
-  if (priceBasic) priceBasic.innerHTML = "조회 중...";
-  if (dealSale) dealSale.innerHTML = "조회 중...";
-
-  // ✅ API 호출을 병렬 실행
+  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
   Promise.all([
-    loadLandBuilding(lon, lat).catch(e => ({ buildingInfo: { basic: "조회 실패" } })),
-    loadLandUse(lon, lat).catch(e => ({ landUseInfo: { zone: "조회 실패" } })),
-    loadRealEstate(lon, lat).catch(e => ({ estateInfo: { price: "조회 실패" } })),
-    loadRealTransaction(lon, lat).catch(e => ({ realTransaction: { sale: "조회 실패" } }))
+    loadLandBuilding(lon, lat),   // 건물 정보
+    loadLandUse(lon, lat),        // 토지 이용
+    loadRealEstate(lon, lat),     // 공시지가
+    loadRealTransaction(lon, lat) // 실거래가
   ]).then(([building, landUse, estate, transaction]) => {
-    // 개별 응답을 하나의 표준화된 객체로 합침
+    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
     const parcelData = {
       ...building,
       ...landUse,
@@ -377,12 +341,8 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // 🔑 타겟 ID가 일치하고 좌표 에러가 없으므로 geoportal-simulation.js 내부에서도 에러 없이 기동됩니다.
-    try {
-      renderPopup(parcelData);
-    } catch(renderError) {
-      console.warn("팝업 UI 렌더링 매핑 예외 우회:", renderError.message);
-    }
+    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    renderPopup(parcelData);
   });
 });
 
@@ -901,13 +861,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-// /// ---------------------- 내 위치 및 분석용 레이어 (행방향 수리 완료) ----------------------
-const positionLayer = new ol.layer.Vector({ 
-  source: new ol.source.Vector() 
-});
-
-// ⚠️ 🔑 지도를 즉시 죽이던 map.addLayer(positionLayer); 독약 코드를 이곳에서 완전히 제거했습니다!
-// (이 레이어는 하단의 지도 초기화 map = new ol.Map의 layers 배열 안에 직접 안전하게 주입해 줄 것입니다.)
+/// ---------------------- 내 위치 및 분석용 레이어 ----------------------
+const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+map.addLayer(positionLayer);
 
 let myCoord = null;          // ✅ 현재 위치 좌표 (EPSG:3857)
 let smoothCoords = [];       // ✅ 최근 좌표들을 저장해 평균내는 배열
@@ -947,8 +903,8 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (bearing + 90) % 360; // ✅ 좌표계 기준 맞추기: 90도 오프셋 보정
 }
 
-// ---------------------- 마커·원형·레이더 Feature (안전 좌표계 바인딩) ----------------------
-const marker = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat([126.9780, 37.5665]))); // 서울 중심 임시 안착
+// ---------------------- 마커·원형·레이더 Feature ----------------------
+const marker = new ol.Feature(new ol.geom.Point([0,0]));
 marker.setId("myMarker");
 marker.setStyle(new ol.style.Style({
   image: new ol.style.Icon({
@@ -960,17 +916,16 @@ marker.setStyle(new ol.style.Style({
   })
 }));
 
-const circle100 = new ol.Feature(new ol.geom.Circle(ol.proj.fromLonLat([126.9780, 37.5665]), 100));
+const circle100 = new ol.Feature(new ol.geom.Circle([0,0], 100));
 circle100.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 })
 }));
 
-const circle200 = new ol.Feature(new ol.geom.Circle(ol.proj.fromLonLat([126.9780, 37.5665]), 200));
+const circle200 = new ol.Feature(new ol.geom.Circle([0,0], 200));
 circle200.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'red', width: 2 })
 }));
 
-// 초기 연산 크래시를 차단하기 위한 기본 빈 폴리곤 정의
 const radar = new ol.Feature(new ol.geom.Polygon([]));
 radar.setStyle(new ol.style.Style({
   stroke: new ol.style.Stroke({ color: 'deepskyblue', width: 2 }),
@@ -979,15 +934,10 @@ radar.setStyle(new ol.style.Style({
 
 positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 
-// ✅ 시작 시 레이더 숨김 (초기화 보존)
+// ✅ 시작 시 레이더 숨김
 radar.setGeometry(null);
 
-// ⚠️ 지도가 첫 화면을 그리다 터지는 것을 막기 위한 안전장치 전역 변수 고정 바인딩
-if (typeof mapCenterCoord === 'undefined') {
-  var mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 초기값 백업
-}
-    
-// ---------------------- 내 위치 추적 (연산 버그 완벽 치료) ----------------------
+// ---------------------- 내 위치 추적 ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
     // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
@@ -998,78 +948,73 @@ navigator.geolocation.watchPosition(
       // ✅ 최초 실행 시: 현재 좌표를 EPSG:3857로 변환 후 마커와 지도 중심 설정
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
-      if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(coord);
-      if (typeof map !== 'undefined' && map) map.getView().setCenter(coord);
+      marker.getGeometry().setCoordinates(coord);
+      map.getView().setCenter(coord);
     } else {
       // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림 평균화
-      if (typeof getSmoothedCoord === 'function') {
-        coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
-        if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(coord);
-      }
+      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+      marker.getGeometry().setCoordinates(coord);
     }
 
     // ✅ 내 현재 좌표 저장
     myCoord = coord;
-    if (typeof circle100 !== 'undefined' && circle100) circle100.getGeometry().setCenter(myCoord);
-    if (typeof circle200 !== 'undefined' && circle200) circle200.getGeometry().setCenter(myCoord);
+    circle100.getGeometry().setCenter(myCoord);
+    circle200.getGeometry().setCenter(myCoord);
 
     // ✅ 최근 두 개 좌표만 기록 (이동 방향 계산용)
-    if (typeof positions !== 'undefined') {
-      positions.push([pos.coords.latitude, pos.coords.longitude]);
-      if (positions.length > 2) positions.shift();
+    positions.push([pos.coords.latitude, pos.coords.longitude]);
+    if (positions.length > 2) positions.shift();
 
-      // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
-      if (positions.length === 2 && typeof calculateBearing === 'function') {
-        let prevLat = positions[0][0];
-        let prevLon = positions[0][1];
-        let currLat = positions[1][0];
-        let currLon = positions[1][1];
+    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
+    if (positions.length === 2) {
+      let prevLat = positions[0][0];
+      let prevLon = positions[0][1];
+      let currLat = positions[1][0];
+      let currLon = positions[1][1];
 
-        // ✅ 미세한 GPS 튀기 방지: 좌표 차이가 아주 작으면 무시
-        if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-          gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ GPS 이동 방향 저장
-          lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
+      // ✅ 미세한 GPS 튀기 방지: 좌표 차이가 아주 작으면 무시
+      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+        gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ GPS 이동 방향 저장
+        lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
 
-          // ✅ 나침반 바늘 회전
-          const needleGroup = document.getElementById('needle-group');
-          if (needleGroup) {
-            needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
-          }
+        // ✅ 나침반 바늘 회전
+        const needleGroup = document.getElementById('needle-group');
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
       }
     }
 
-    // ---------------------- 레이더 각도 처리 (🔑 배열 연산 문법 오타 완전 해결) ----------------------
-    if (radarOn && myCoord && typeof radar !== 'undefined' && radar) {
+    // ---------------------- 레이더 각도 처리 ----------------------
+    if (radarOn && myCoord) {
       const angle = 90;   // ✅ 레이더 부채꼴 각도
       const radius = 200; // ✅ 레이더 반경
       const points = [myCoord];
 
       // ✅ 모바일(iOS/Android) → 센서 방향(lastHeading)
       // ✅ PC/센서 없는 환경 → GPS 이동 방향(gpsHeading)
-      const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : (typeof gpsHeading !== 'undefined' ? gpsHeading : 0);
+      const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : gpsHeading;
 
       for (let a = -angle/2; a <= angle/2; a += 1) {
         const rad = (headingForRadar + a) * Math.PI / 180;
         const dx = radius * Math.sin(rad);
         const dy = radius * Math.cos(rad);
-        // 🔑 깨져있던 배열 연산 문법을 인덱싱, [1]로 완벽히 정정하여 지도 증발을 차단합니다!
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
 
       radar.setGeometry(new ol.geom.Polygon([points]));
-      if (typeof map !== 'undefined' && map) map.getView().setCenter(myCoord);
+      map.getView().setCenter(myCoord);
     }
   },
   (err) => {
     // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
 
-    // ✅ 위치 정보를 가져오지 못했을 때 백업 좌표로 맵 셧다운 방어
-    const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]);
-    if (typeof map !== 'undefined' && map) map.getView().setZoom(7);
-    if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(defaultCoord);
-    if (typeof map !== 'undefined' && map) map.getView().setCenter(defaultCoord);
+    // ✅ 위치 정보를 가져오지 못했을 때 기본 좌표로 복귀
+    const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]); // 대한민국 중심 예시
+    map.getView().setZoom(7);
+    marker.getGeometry().setCoordinates(defaultCoord);
+    map.getView().setCenter(defaultCoord);
   }
 );
 
@@ -1094,7 +1039,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   radarOn = !radarOn;
   rotateEnabled = radarOn; // 지도 회전 여부도 레이더 상태에 맞춤
   
-  if (radarOn && myCoord && typeof radar !== 'undefined' && radar) {
+  if (radarOn && myCoord) {
     // ✅ 레이더 부채꼴 각도 및 반경 설정
     const angle = 90;    // 레이더 각도 (90도)
     const radius = 200;  // 레이더 반경 (200m)
@@ -1125,21 +1070,17 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
     }
 
-    // ✅ 지도 중심 이동 + 확대
-    if (typeof map !== 'undefined' && map) {
-      map.getView().setCenter(myCoord);
-      map.getView().setZoom(16);
-      map.getView().setRotation(headingForRadar * Math.PI / 180);
-    }
+    // ✅ 지도 중심 이동 + 확대 (myCoord는 이미 EPSG:3857 좌표)
+    map.getView().setCenter(myCoord);
+    map.getView().setZoom(16);
+    map.getView().setRotation(headingForRadar * Math.PI / 180);
   } else {
-    // ✅ 레이더 OFF: 초기 상태 복귀 (🔑 변수 미선언 오류 차단 마감)
-    if (typeof radar !== 'undefined' && radar) radar.setGeometry(null);
+    // ✅ 레이더 OFF: 초기 상태 복귀
+    radar.setGeometry(null);
     const center = ol.proj.fromLonLat(mapCenterCoord); // 초기 좌표 변환
-    if (typeof map !== 'undefined' && map) {
-      map.getView().setCenter(center);                   // 초기 좌표로 복귀
-      map.getView().setZoom(7);                          // 줌 레벨 초기화
-      map.getView().setRotation(0);                      // 회전 초기화
-    }
+    map.getView().setCenter(center);                   // 초기 좌표로 복귀
+    map.getView().setZoom(7);                          // 줌 레벨 초기화
+    map.getView().setRotation(0);                      // 회전 초기화
   }
 });
 
@@ -1148,7 +1089,6 @@ function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
-
 
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
