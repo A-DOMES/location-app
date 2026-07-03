@@ -250,232 +250,287 @@ function createLayer(layerName, format = 'image/png') {
   });
 }
  
-  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
+  // ================================================
+  // 1. 주요 레이어 개별 인스턴스 선언 (대소문자 규격 마감)
+  // ================================================
   const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
+  baseLayer.setVisible(true);   // 기본지도 활성화
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
+  satLayer.setVisible(true);    // 항공사진 활성화
   
-const cadLayer = new ol.layer.Tile({
-  source: new ol.source.TileWMS({
-    url: 'https://vworld.kr',
-    params: {
-      'SERVICE': 'WMS',
-      'VERSION': '1.1.1',              // 👈 1.3.0 대신 1.1.1을 써야 좌표 뒤바뀜 오류가 없습니다.
-      'REQUEST': 'GetMap',
-      'LAYERS': 'LT_C_ADASRATODO',     // 연속지적도 레이어명 명시
-      'STYLES': '',                    // 👈 중요: 스타일 값은 반드시 빈 문자열('')이어야 합니다!
-      'key': CONFIG.API_KEY,           // 소문자 key 사용
-      'FORMAT': 'image/png',
-      'TRANSPARENT': 'TRUE',           // 배경을 투명하게 하여 기존 지도 위에 얹음
-      'SRS': 'EPSG:3857'               // 👈 중요: 브이월드 서버가 인식할 좌표계 명시
-    },
-    serverType: 'geoserver',
-    crossOrigin: 'anonymous'           // CORS 보안 정책 우회 설정
-  }),
-  visible: false,                      // 기본값은 꺼짐 상태
-  zIndex: 9900                         // 👈 중요: 지적도가 기본/위성지도보다 항상 '위'에 그려지도록 고정
-});
+  // ✅ 지적도 공식 맵 엔드포인트 주소(api.vworld.kr/req/wms) 매핑 완료
+  const cadLayer = new ol.layer.Tile({
+    source: new ol.source.TileWMS({
+      url: 'https://vworld.kr', // 👈 깨져있던 일반 도메인을 국토부 공식 WMS 경로로 전면 복구
+      params: {
+        'SERVICE': 'WMS',
+        'VERSION': '1.1.1',
+        'REQUEST': 'GetMap',
+        'LAYERS': 'LT_C_ADASRATODO',
+        'STYLES': '', 
+        'key': CONFIG.API_KEY, 
+        'FORMAT': 'image/png',
+        'TRANSPARENT': 'TRUE',
+        'SRS': 'EPSG:3857'
+      },
+      serverType: 'geoserver',
+      crossOrigin: 'anonymous'
+    }),
+    visible: false,
+    zIndex: 9900 // 👈 항공사진이나 기본 테마 타일 위로 선명하게 나타나도록 레이어 스택 최상단 고정
+  });
   
-  // ✅ 대소문자를 엄격하게 맞춘 미드나잇 선언식
   const midnightLayer = createLayer('Midnight'); 
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
+  hybridLayer.setVisible(true);   // 도로 명칭 및 라인 하이브리드 레이어 활성화
 
   
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  // ================================================
+  // 2. 오픈레이어스 지도 컨텍스트 초기화 (최대 줌 레벨 19 한정 옵션 유지)
+  // ================================================
   const map = new ol.Map({
     target: 'map',
     layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
       zoom: 7,
-      maxZoom: 19 // 👈 이 코드를 뷰(View) 속성에 한 줄 추가해 주세요!
+      maxZoom: 19 
     })
   });
 
-  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
-  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
+  const mapCenterCoord = [127.7669, 35.9078];
 
-  // ✅ 체크박스 이벤트 → 레이어 on/off
+
+  // ================================================
+  // 3. 체크박스 엘리먼트 UI 제어 스위치 디스패처 (기존 원본 보존)
+  // ================================================
   document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
   document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
   document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
   document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
   document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
   
-  // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
     document.getElementById("infoPopup").style.display = "none";
   }
   
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-map.on('click', function(evt) {
-  const view = map.getView();
-  const zoom = view.getZoom();
+  // ================================================
+  // 4. 지도 19레벨 타깃 피킹 클릭 이벤트 비동기 파이프라인 (무한 대기 원천 차단 패치)
+  // ================================================
+  map.on('click', function(evt) {
+    const view = map.getView();
+    const zoom = view.getZoom();
 
-  if (zoom < 19) return; 
-  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
+    if (zoom < 19) return; 
 
-  const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0];
-  const lat = coord[1];
+    const coord = ol.proj.toLonLat(evt.coordinate);
+    const lon = coord;
+    const lat = coord;
 
-  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
-  const infoPopup = document.getElementById("infoPopup");
-  infoPopup.style.display = "block";
-  infoPopup.style.transform = "none";
-  infoPopup.style.left = "calc(50% - 160px)";
+    const infoPopup = document.getElementById("infoPopup");
+    infoPopup.style.display = "block";
+    infoPopup.style.transform = "none";
+    infoPopup.style.left = "calc(50% - 160px)";
 
-  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
-  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+    document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+    document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+    document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+    document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
-  Promise.all([
-    loadLandBuilding(lon, lat),   // 건물 정보
-    loadLandUse(lon, lat),        // 토지 이용
-    loadRealEstate(lon, lat),     // 공시지가
-    loadRealTransaction(lon, lat) // 실거래가
-  ]).then(([building, landUse, estate, transaction]) => {
-    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
-    const parcelData = {
-      ...building,
-      ...landUse,
-      ...estate,
-      ...transaction
-    };
-
-    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
-    renderPopup(parcelData);
+    // ⚠️ 특정 API 함수가 뻗더라도 나머지 성공한 데이터는 정상 연동되도록 개별 예외 백업 장치 탑재
+    Promise.all([
+      loadLandBuilding(lon, lat).catch(e => ({ buildingInfo: { basic: "국토부 데이터 조회 실패" } })),
+      loadLandUse(lon, lat).catch(e => ({ landUseInfo: { zone: "국토부 데이터 조회 실패" } })),
+      loadRealEstate(lon, lat).catch(e => ({ estateInfo: { price: "국토부 데이터 조회 실패" } })),
+      loadRealTransaction(lon, lat).catch(e => ({ realTransaction: { sale: "국토부 데이터 조회 실패" } }))
+    ]).then(([building, landUse, estate, transaction]) => {
+      const parcelData = {
+        ...building,
+        ...landUse,
+        ...estate,
+        ...transaction
+      };
+      renderPopup(parcelData); // 팝업 UI 핸들러로 최종 덤프 데이터 이관
+    });
   });
-});
 
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 
-// ✅ 1. 건물 정보 조회 (features[0] 오타 수정 완료)
-function loadLandBuilding(lon, lat) {
-  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  // ✅ 1. 국토부 공식 주소(api.vworld.kr) 버그 수정 완료된 레이어 생성 함수
+  function createLayer(layerName, format = 'image/png') {
+    const fileExt = format === 'image/jpeg' ? 'jpeg' : 'png';
+    
+    return new ol.layer.Tile({
+      source: new ol.source.WMTS({
+        // ⚠️ 주소창에 깨진 도메인과 누락된 명세서 경로 규격을 행방향으로 완벽 매핑
+        url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${fileExt}`,
+        layer: layerName,
+        matrixSet: 'EPSG:3857',
+        format: format,
+        projection: projection,
+        tileGrid: new ol.tilegrid.WMTS({
+          origin: ol.extent.getTopLeft(projectionExtent),
+          resolutions: resolutions,
+          matrixIds: matrixIds
+        }),
+        style: 'default',
+        requestEncoding: 'REST',
+        crossOrigin: 'anonymous'
+      }),
+      visible: false
+    });
+  }
+ 
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료)
+  const baseLayer = createLayer('Base'); 
+  baseLayer.setVisible(true);   // 기본지도 켜기
   
-  return fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties; // 👈 0번 배열 바인딩 복구
-        return {
-          buildingInfo: {
-            basic: props.bldg_nm || "이름 없음",
-            usage: props.main_purps_cd_nm || "-",
-            area: props.tot_area || "-",
-            right: props.regstr_se_nm || "-"
-          }
-        };
-      } else {
-        return { buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" } };
-      }
-    })
-    .catch(err => ({
-      buildingInfo: { basic: "건물 조회 실패: " + err.message, usage: "-", area: "-", right: "-" }
-    }));
-}
-
-// ✅ 2. 토지 이용 조회 (features[0] 오타 수정 완료)
-function loadLandUse(lon, lat) {
-  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  const satLayer = createLayer('Satellite', 'image/jpeg');
+  satLayer.setVisible(true);    // 항공사진 켜기
   
-  return fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties; // 👈 0번 배열 바인딩 복구
-        return {
-          landUseInfo: {
-            zone: props.dgm_nm || "-",
-            district: props.jigu_nm || "-",
-            etc: props.etc_nm || "-"
-          }
-        };
-      } else {
-        return { landUseInfo: { zone: "데이터 없음", district: "-", etc: "-" } };
-      }
-    })
-    .catch(err => ({
-      landUseInfo: { zone: "토지 조회 실패: " + err.message, district: "-", etc: "-" }
-    }));
-}
-
-// ✅ 3. 공시지가 조회 (features[0] 오타 수정 완료)
-function loadRealEstate(lon, lat) {
-  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  // ✅ 2. 지적도 레이어 공식 URL 및 파라미터 행방향 보정 완료
+  const cadLayer = new ol.layer.Tile({
+    source: new ol.source.TileWMS({
+      url: 'https://vworld.kr', // 👈 공식 WMS 서버 주소 복구
+      params: {
+        'SERVICE': 'WMS',
+        'VERSION': '1.1.1',
+        'REQUEST': 'GetMap',
+        'LAYERS': 'LT_C_ADASRATODO',
+        'STYLES': '',
+        'key': CONFIG.API_KEY,
+        'FORMAT': 'image/png',
+        'TRANSPARENT': 'TRUE',
+        'SRS': 'EPSG:3857'
+      },
+      serverType: 'geoserver',
+      crossOrigin: 'anonymous'
+    }),
+    visible: false,
+    zIndex: 9900 // 👈 최상위 노출 유지
+  });
   
-  return fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.response?.result?.featureCollection?.features;
-      if (features && features.length > 0) {
-        const props = features[0].properties; // 👈 0번 배열 바인딩 복구
-        return {
-          areaSqm: props.pblntf_area || 0,
-          pricePerSqm: props.pblntf_pcl || 0,
-          estateInfo: {
-            year: props.stdr_year || "-",
-            price: props.pblntf_pcl || "-"
-          }
-        };
-      } else {
-        return { estateInfo: { year: "-", price: "데이터 없음" } };
-      }
+  // ✅ 미드나잇 선언식 복구
+  const midnightLayer = createLayer('Midnight'); 
+  
+  const hybridLayer = createLayer('Hybrid');     
+  hybridLayer.setVisible(true);   // Hybrid 켜기
+
+  // ✅ 3. 지도 초기화 (maxZoom 19 제한 유지)
+  const map = new ol.Map({
+    target: 'map',
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+      zoom: 7,
+      maxZoom: 19 
     })
-    .catch(err => ({ estateInfo: { year: "-", price: "가격 조회 실패: " + err.message } }));
-}
+  });
 
-// ✅ 4. 실거래가 조회 (국토부 최신 주소 매핑 + 이중 인코딩 방지 완벽 조치)
-function loadRealTransaction(lon, lat) {
-  return fetch(`https://vworld.kr{lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
-    .then(res => res.json())
-    .then(addrData => {
-      const parcel = addrData.response?.result?.items[0];
-      if (!parcel) {
-        return { realTransaction: { sale: "지번 정보 없음", jeonse: "-", wolse: "-" } };
-      }
+  // ✅ 초기 중심 좌표 및 체크박스 이벤트 바인딩 (기존 유지)
+  const mapCenterCoord = [127.7669, 35.9078];
+  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+  
+  function closeInfoPopup() {
+    document.getElementById("infoPopup").style.display = "none";
+  }
+  
+  // ✅ 4. 지도 클릭 이벤트 및 멈춤 방지 개별 예외처리 패치
+  map.on('click', function(evt) {
+    const view = map.getView();
+    const zoom = view.getZoom();
 
-      // 국토부 API용 5자리 법정동 코드 가공
-      const lawdCd = parcel.addrcode.substring(0, 5); 
-      const dealYmd = "202401"; // 안전한 데이터 출력을 위해 과거 기포착 월 고정
-      const key = CONFIG.MOLIT_KEY; // 이중 인코딩을 유발하는 encodeURIComponent 제거 [1]
+    if (zoom < 19) return; // ⚠️ 레벨 19 조건 충족 시에만 가동됨
 
-      // 공공데이터포털 개편에 맞춘 최신 공식 실거래가 호출 엔드포인트 [1]
-      const molitUrl = `https://data.go.kr{key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}&_type=json`;
+    const coord = ol.proj.toLonLat(evt.coordinate);
+    const lon = coord[0];
+    const lat = coord[1];
 
-      return fetch(molitUrl)
-        .then(res => res.json())
-        .then(tradeData => {
-          const items = tradeData.response?.body?.items?.item;
-          if (items) {
-            const trade = Array.isArray(items) ? items[0] : items;
-            return {
-              realTransaction: {
-                sale: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount.trim()} 만원`,
-                jeonse: "데이터 연결 완료",
-                wolse: "데이터 연결 완료"
-              }
-            };
-          } else {
-            return { realTransaction: { sale: "해당 월 실거래 기록 없음", jeonse: "-", wolse: "-" } };
-          }
-        })
-        .catch(err => ({ realTransaction: { sale: "국토부 통신 장애: " + err.message, jeonse: "-", wolse: "-" } }));
-    })
-    .catch(err => ({ realTransaction: { sale: "지번 매핑 실패: " + err.message, jeonse: "-", wolse: "-" } }));
-}
+    const infoPopup = document.getElementById("infoPopup");
+    infoPopup.style.display = "block";
+    infoPopup.style.transform = "none";
+    infoPopup.style.left = "calc(50% - 160px)";
+
+    document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+    document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+    document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+    document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
+    // ⚠️ 특정 함수가 통신 오류를 내도 전체가 뻗지 않도록 .catch로 감싸 안전마감 처리
+    Promise.all([
+      loadLandBuilding(lon, lat).catch(e => ({ buildingInfo: { basic: "조회 실패: " + e.message } })),
+      loadLandUse(lon, lat).catch(e => ({ landUseInfo: { zone: "조회 실패: " + e.message } })),
+      loadRealEstate(lon, lat).catch(e => ({ estateInfo: { price: "조회 실패" } })),
+      loadRealTransaction(lon, lat).catch(e => ({ realTransaction: { sale: "조회 실패" } }))
+    ]).then(([building, landUse, estate, transaction]) => {
+      const parcelData = {
+        ...building,
+        ...landUse,
+        ...estate,
+        ...transaction
+      };
+      renderPopup(parcelData);
+    });
+  });
+
+  // ==========================================
+  // ✅ 5. 국토부 공식 데이터셋 연동 주소 마감식 (GetFeature 규격 적용)
+  // ==========================================
+
+  // 건물 정보 조회 (VWorld GetFeature 공식 스펙)
+  function loadLandBuilding(lon, lat) {
+    const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+    
+    return fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const features = data.response?.result?.featureCollection?.features;
+        if (features && features.length > 0) {
+          const props = features[0].properties;
+          return {
+            buildingInfo: {
+              basic: props.bldg_nm || "이름 없음",
+              usage: props.main_purps_cd_nm || "-",
+              area: props.tot_area || "-",
+              right: props.regstr_se_nm || "-"
+            }
+          };
+        } else {
+          return { buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" } };
+        }
+      });
+  }
+
+  // 토지 이용 조회 (VWorld GetFeature 공식 스펙)
+  function loadLandUse(lon, lat) {
+    const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+    
+    return fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const features = data.response?.result?.featureCollection?.features;
+        if (features && features.length > 0) {
+          const props = features[0].properties;
+          return {
+            landUseInfo: {
+              zone: props.dgm_nm || "-",
+              district: props.jigu_nm || "-",
+              etc: props.etc_nm || "-"
+            }
+          };
+        } else {
+          return { landUseInfo: { zone: "데이터 없음", district: "-", etc: "-" } };
+        }
+      });
+  }
     
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
