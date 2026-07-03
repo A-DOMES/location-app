@@ -288,7 +288,8 @@ const cadLayer = new ol.layer.Tile({
     layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7 
+      zoom: 7,
+      maxZoom: 19 // 👈 이 코드를 뷰(View) 속성에 한 줄 추가해 주세요!
     })
   });
 
