@@ -215,84 +215,81 @@
     });
   }
     
-// ✅ WMTS 공통 설정
-const projection = ol.proj.get('EPSG:3857');
-const projectionExtent = projection.getExtent();
-const size = ol.extent.getWidth(projectionExtent) / 256;
-const resolutions = new Array(19);
-const matrixIds = new Array(19);
-for (let z = 0; z < 19; ++z) {
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
-}
+  // ✅ WMTS 공통 설정
+  const projection = ol.proj.get('EPSG:3857');
+  const projectionExtent = projection.getExtent();
+  const size = ol.extent.getWidth(projectionExtent) / 256;
+  const resolutions = new Array(19);
+  const matrixIds = new Array(19);
+  for (let z = 0; z < 19; ++z) {
+    resolutions[z] = size / Math.pow(2, z);
+    matrixIds[z] = z;
+  }
 
-// ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
-// ⚠️ 브이월드 REST WMTS는 {z}/{y}/{x} 패턴을 사용해야 정상 동작합니다.
-function createLayer(layerName, format='image/png') {
-  return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
+  
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+  function createLayer(layerName, format='image/png') {
+    return new ol.layer.Tile({
+      source: new ol.source.WMTS({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+        layer: layerName,
+        matrixSet: 'EPSG:3857',
+        format: format,
+        projection: projection,
+        tileGrid: new ol.tilegrid.WMTS({
+          origin: ol.extent.getTopLeft(projectionExtent),
+          resolutions: resolutions,
+          matrixIds: matrixIds
+        }),
+        style: 'default',
+        requestEncoding: 'REST'
       }),
-      style: 'default',
-      requestEncoding: 'REST'
+      visible: false
+    });
+  }
+  
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
+  const baseLayer = createLayer('Base'); 
+  baseLayer.setVisible(true);   // 기본지도 켜기
+  
+  const satLayer = createLayer('Satellite', 'image/jpeg');
+  satLayer.setVisible(true);    // 항공사진 켜기
+  
+  const cadLayer = new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+      url: 'https://api.vworld.kr/req/wms',
+      params: {
+        'LAYERS': 'LT_C_ADASRATODO',
+        'STYLES': 'LT_C_ADASRATODO',
+        'KEY': CONFIG.API_KEY,
+        'FORMAT': 'image/png',
+        'TRANSPARENT': 'TRUE'
+      },
+      serverType: 'geoserver',
+      projection: projection
     }),
-    visible: false
+    visible: false               // 지적도는 기본 꺼짐
   });
-}
+  
+  const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
+  
+  const hybridLayer = createLayer('Hybrid');     
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-// ✅ 주요 레이어 정의
-const baseLayer = createLayer('Base'); 
-baseLayer.setVisible(true);   // 기본지도 켜기
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  const map = new ol.Map({
+    target: 'map',
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+      zoom: 7 
+    })
+  });
 
-const satLayer = createLayer('Satellite', 'image/jpeg');
-satLayer.setVisible(true);    // 항공사진 켜기
-
-// ✅ 지적도 WMS → KEY → apiKey 로 수정
-const cadLayer = new ol.layer.Image({
-  source: new ol.source.ImageWMS({
-    url: 'https://api.vworld.kr/req/wms',
-    params: {
-      'LAYERS': 'lp_pa_cbnd_bonbun,lp_pa_cbnd_bubun', // ✅ 지적도 본번+부번
-      'STYLES': 'lp_pa_cbnd_bonbun_line,lp_pa_cbnd_bubun_line',
-      'KEY': CONFIG.API_KEY,                 // ✅ KEY로 수정
-      'DOMAIN': 'https://a-domes.github.io', // ✅ DOMAIN 추가
-      'FORMAT': 'image/png',
-      'TRANSPARENT': 'TRUE'
-    },
-    serverType: 'geoserver',
-    projection: projection
-  }),
-  visible: false // 지적도는 기본 꺼짐
-});
-
-
-const midnightLayer = createLayer('midnight'); 
-midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-
-const hybridLayer = createLayer('Hybrid');     
-hybridLayer.setVisible(true);   // Hybrid 켜기
-
-// ✅ 지도 초기화
-const map = new ol.Map({
-  target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-  view: new ol.View({
-    center: ol.proj.fromLonLat([126.9780, 37.5665]), // EPSG:4326 → EPSG:3857 변환
-    zoom: 7 
-  })
-});
-
-// ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장 → 데이터 API용 EPSG:4326)
-const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
-
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
   // ✅ 체크박스 이벤트 → 레이어 on/off
   document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
@@ -314,7 +311,6 @@ map.on('click', function(evt) {
   if (zoom < 19) return; 
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
-  // ✅ EPSG:3857 → EPSG:4326 변환
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
@@ -348,13 +344,6 @@ map.on('click', function(evt) {
 
     // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
     renderPopup(parcelData);
-  }).catch(err => {
-    console.error("데이터 조회 오류:", err);
-    // ⚠️ 오류 발생 시 사용자에게 안내
-    document.getElementById("landBuildingInfo").innerHTML = "건물 정보 조회 실패";
-    document.getElementById("landUseInfo").innerHTML = "토지 이용 조회 실패";
-    document.getElementById("realEstateInfo").innerHTML = "공시지가 조회 실패";
-    document.getElementById("realTransactionInfo").innerHTML = "실거래가 조회 실패";
   });
 });
 
@@ -362,9 +351,11 @@ map.on('click', function(evt) {
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 
-// ✅ 1. 건물 정보 조회 (EPSG:4326 좌표 그대로 사용)
+// ✅ 1. 건물 정보 조회 (VWorld 건물 API)
+// - 반환: { buildingInfo: { basic, usage, area, right } }
+// - 실패 시: 모든 필드에 기본 메시지 반환
 function loadLandBuilding(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_BLDG&geomFilter=POINT(${lon} ${lat})`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -379,17 +370,20 @@ function loadLandBuilding(lon, lat) {
           }
         };
       } else {
-        return { buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" } };
+        return {
+          buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" }
+        };
       }
     })
-    .catch(err => ({ buildingInfo: { basic: "건물 조회 실패: " + err.message, usage: "-", area: "-", right: "-" } }));
+    .catch(err => ({
+      buildingInfo: { basic: "건물 조회 실패: " + err.message, usage: "-", area: "-", right: "-" }
+    }));
 }
 
-
-
-// ✅ 2. 토지 이용 조회 (EPSG:4326 좌표 그대로 사용)
+// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
+// - 반환: { landUseInfo: { zone, district, etc } }
 function loadLandUse(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_UQ111&geomFilter=POINT(${lon} ${lat})`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -406,19 +400,23 @@ function loadLandUse(lon, lat) {
         return { landUseInfo: { zone: "데이터 없음", district: "-", etc: "-" } };
       }
     })
-    .catch(err => ({ landUseInfo: { zone: "토지 조회 실패: " + err.message, district: "-", etc: "-" } }));
+    .catch(err => ({
+      landUseInfo: { zone: "토지 조회 실패: " + err.message, district: "-", etc: "-" }
+    }));
 }
 
-
-// ✅ 3. 공시지가 조회 (EPSG:4326 좌표 그대로 사용)
+// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
+// - 반환: { areaSqm, pricePerSqm, estateInfo: { year, price } }
 function loadRealEstate(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_PD01&geomFilter=POINT(${lon} ${lat})`)
+  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
         return {
+          areaSqm: props.pblntf_area || 0,
+          pricePerSqm: props.pblntf_pcl || 0,
           estateInfo: {
             year: props.stdr_year || "-",
             price: props.pblntf_pcl || "-"
@@ -431,10 +429,8 @@ function loadRealEstate(lon, lat) {
     .catch(err => ({ estateInfo: { year: "-", price: "가격 조회 실패: " + err.message } }));
 }
 
-
 // ✅ 4. 실거래가 조회 (국토부 API)
-// - EPSG:4326 좌표(lon, lat)를 그대로 전달
-// ✅ 실거래가 조회 (EPSG:4326 좌표 그대로 사용)
+// - 반환: { realTransaction: { sale, jeonse, wolse } }
 function loadRealTransaction(lon, lat) {
   return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
@@ -444,9 +440,8 @@ function loadRealTransaction(lon, lat) {
         return { realTransaction: { sale: "지번 정보 없음", jeonse: "-", wolse: "-" } };
       }
 
-      // ⚠️ 국토부 실거래가 API는 별도 인증키 필요 (CONFIG.MOLIT_KEY)
       const lawdCd = parcel.addrcode;
-      const dealYmd = "202605"; // 예시
+      const dealYmd = "202605";
       const key = encodeURIComponent(CONFIG.MOLIT_KEY);
 
       return fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
@@ -470,7 +465,6 @@ function loadRealTransaction(lon, lat) {
     })
     .catch(err => ({ realTransaction: { sale: "지번 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
 }
-
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
@@ -894,11 +888,7 @@ function getSmoothedCoord(lat, lng) {
   return ol.proj.fromLonLat([avgLng, avgLat]);
 }
 
-// ============================================================
-// 📌 방위각 계산 함수 (Bearing Calculation Function)
-// 두 지점의 위도(lat), 경도(lon)를 입력받아 이동 방향(방위각)을 계산한다.
-// 좌표계 기준에 맞추기 위해 90도 오프셋을 보정한다.
-// ============================================================
+// ---------------------- 방위각 계산 함수 ----------------------
 function calculateBearing(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI / 180;
   const toDeg = r => r * 180 / Math.PI;
@@ -914,30 +904,6 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
   return (bearing + 90) % 360; // ✅ 좌표계 기준 맞추기: 90도 오프셋 보정
 }
 
-// ============================================================
-// 📌 나침반 & 레이더 업데이트 함수 (Update Compass & Radar)
-// - 이동이 있을 때만 새 bearing을 계산해 lastHeading 갱신 (EPSG:4326 기준)
-// - 이동이 없으면 마지막 방향(lastHeading)을 그대로 유지
-// - 나침반 회전과 레이더 방향을 EPSG:3857 좌표계 기준으로 반영
-// ============================================================
-function updateRadarAndCompass() {
-  if (positions.length >= 2) {
-    const prev = positions[positions.length - 2]; // [lat, lon] EPSG:4326
-    const curr = positions[positions.length - 1]; // [lat, lon] EPSG:4326
-    // ✅ bearing 계산은 EPSG:4326 좌표로 수행
-    lastHeading = calculateBearing(prev[0], prev[1], curr[0], curr[1]);
-  }
-
-  // ✅ 지도 회전은 EPSG:3857 좌표계 기준으로 반영
-  map.getView().setRotation(lastHeading * Math.PI / 180);
-
-  // ✅ 레이더도 EPSG:3857 좌표계 기준으로 반영
-  if (radarOn && myCoord) {
-    radar.setGeometry(createRadarGeometry(myCoord, lastHeading));
-  }
-}
-
-    
 // ---------------------- 마커·원형·레이더 Feature ----------------------
 const marker = new ol.Feature(new ol.geom.Point([0,0]));
 marker.setId("myMarker");
@@ -978,42 +944,38 @@ navigator.geolocation.watchPosition(
     // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
     if (initialized && pos.coords.accuracy > 100) return;
 
-    // ✅ 원본 좌표 (EPSG:4326 → 위도, 경도 그대로)
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    let coord3857;
+    let coord;
     if (!initialized) {
-      // ✅ 최초 실행 시: EPSG:4326 → EPSG:3857 변환 후 지도 표시
-      coord3857 = ol.proj.fromLonLat([lon, lat]);
+      // ✅ 최초 실행 시: 현재 좌표를 EPSG:3857로 변환 후 마커와 지도 중심 설정
+      coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
-      marker.getGeometry().setCoordinates(coord3857);
-      map.getView().setCenter(coord3857);
+      marker.getGeometry().setCoordinates(coord);
+      map.getView().setCenter(coord);
     } else {
-      // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림 평균화 (EPSG:4326 입력 → EPSG:3857 반환)
-      coord3857 = getSmoothedCoord(lat, lon);
-      marker.getGeometry().setCoordinates(coord3857);
+      // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림 평균화
+      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+      marker.getGeometry().setCoordinates(coord);
     }
 
-    // ✅ EPSG:3857 좌표 저장 (지도/레이더 표시용)
-    myCoord = coord3857;
+    // ✅ 내 현재 좌표 저장
+    myCoord = coord;
     circle100.getGeometry().setCenter(myCoord);
     circle200.getGeometry().setCenter(myCoord);
 
-    // ✅ 최근 두 개 좌표만 기록 (EPSG:4326 → bearing 계산용)
-    positions.push([lat, lon]);
+    // ✅ 최근 두 개 좌표만 기록 (이동 방향 계산용)
+    positions.push([pos.coords.latitude, pos.coords.longitude]);
     if (positions.length > 2) positions.shift();
 
     // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
     if (positions.length === 2) {
-      const prevLat = positions[0][0];
-      const prevLon = positions[0][1];
-      const currLat = positions[1][0];
-      const currLon = positions[1][1];
+      let prevLat = positions[0][0];
+      let prevLon = positions[0][1];
+      let currLat = positions[1][0];
+      let currLon = positions[1][1];
 
       // ✅ 미세한 GPS 튀기 방지: 좌표 차이가 아주 작으면 무시
       if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-        gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ EPSG:4326 기준 bearing
+        gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ GPS 이동 방향 저장
         lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
 
         // ✅ 나침반 바늘 회전
@@ -1028,9 +990,10 @@ navigator.geolocation.watchPosition(
     if (radarOn && myCoord) {
       const angle = 90;   // ✅ 레이더 부채꼴 각도
       const radius = 200; // ✅ 레이더 반경
-      const points = [myCoord]; // ✅ EPSG:3857 좌표 기준
+      const points = [myCoord];
 
-      // ✅ heading 값 결정 (센서 있으면 lastHeading, 없으면 gpsHeading)
+      // ✅ 모바일(iOS/Android) → 센서 방향(lastHeading)
+      // ✅ PC/센서 없는 환경 → GPS 이동 방향(gpsHeading)
       const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : gpsHeading;
 
       for (let a = -angle/2; a <= angle/2; a += 1) {
@@ -1048,14 +1011,13 @@ navigator.geolocation.watchPosition(
     // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
 
-    // ✅ 위치 정보를 가져오지 못했을 때 기본 좌표로 복귀 (EPSG:3857 변환)
+    // ✅ 위치 정보를 가져오지 못했을 때 기본 좌표로 복귀
     const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]); // 대한민국 중심 예시
     map.getView().setZoom(7);
     marker.getGeometry().setCoordinates(defaultCoord);
     map.getView().setCenter(defaultCoord);
   }
 );
-
 
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
@@ -1082,9 +1044,9 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     // ✅ 레이더 부채꼴 각도 및 반경 설정
     const angle = 90;    // 레이더 각도 (90도)
     const radius = 200;  // 레이더 반경 (200m)
-    const points = [myCoord]; // ✅ EPSG:3857 좌표 기준
+    const points = [myCoord]; // 시작점은 내 좌표 (EPSG:3857)
 
-    // ✅ heading 값 결정 (센서 있으면 lastHeading, 없으면 gpsHeading → EPSG:4326에서 계산된 값)
+    // ✅ heading 값 결정 (센서 있으면 lastHeading, 없으면 gpsHeading)
     let headingForRadar = 0; 
     if (isIOS() && typeof lastHeading !== 'undefined') {
       headingForRadar = lastHeading; // iOS/Android → 센서 방향
@@ -1092,7 +1054,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       headingForRadar = gpsHeading;  // PC → GPS 이동 방향
     }
 
-    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위, EPSG:3857 기준)
+    // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
     for (let a = -angle/2; a <= angle/2; a += 5) {
       const rad = (headingForRadar + a) * Math.PI / 180;
       const dx = radius * Math.sin(rad);
@@ -1109,20 +1071,19 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
     }
 
-    // ✅ 지도 중심 이동 + 확대 (EPSG:3857 좌표)
+    // ✅ 지도 중심 이동 + 확대 (myCoord는 이미 EPSG:3857 좌표)
     map.getView().setCenter(myCoord);
     map.getView().setZoom(16);
     map.getView().setRotation(headingForRadar * Math.PI / 180);
   } else {
     // ✅ 레이더 OFF: 초기 상태 복귀
     radar.setGeometry(null);
-    const center = ol.proj.fromLonLat(mapCenterCoord); // EPSG:4326 → EPSG:3857 변환
+    const center = ol.proj.fromLonLat(mapCenterCoord); // 초기 좌표 변환
     map.getView().setCenter(center);                   // 초기 좌표로 복귀
     map.getView().setZoom(7);                          // 줌 레벨 초기화
     map.getView().setRotation(0);                      // 회전 초기화
   }
 });
-
 
 // ---------------------- iOS 13+ 판별 함수 ----------------------
 function isIOS() {
@@ -1135,7 +1096,6 @@ function isIOS() {
 map.on("singleclick", function(evt) {
   map.forEachFeatureAtPixel(evt.pixel, function(feature) {
     if (feature.getId() === "myMarker" && myCoord) {
-      // ✅ EPSG:3857 좌표 기준으로 지도 이동
       map.getView().setCenter(myCoord);
       map.getView().setZoom(16);
     }
@@ -1145,12 +1105,9 @@ map.on("singleclick", function(evt) {
 // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
 map.getViewport().addEventListener("contextmenu", function(evt) {
   evt.preventDefault();
-  // ✅ EPSG:4326 → EPSG:3857 변환 후 지도 복귀
-  const center = ol.proj.fromLonLat([126.9780, 37.5665]); // 서울 좌표 예시
-  map.getView().setCenter(center);
+  map.getView().setCenter(ol.proj.fromLonLat([126.9780, 37.5665]));
   map.getView().setZoom(7);
 });
-
 </script>
 </body>
 </html>
