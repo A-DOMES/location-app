@@ -301,6 +301,7 @@ map.on('click', function(evt) {
   if (zoom < 19) return; 
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
+  // ✅ EPSG:3857 → EPSG:4326 변환
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
@@ -334,6 +335,13 @@ map.on('click', function(evt) {
 
     // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
     renderPopup(parcelData);
+  }).catch(err => {
+    console.error("데이터 조회 오류:", err);
+    // ⚠️ 오류 발생 시 사용자에게 안내
+    document.getElementById("landBuildingInfo").innerHTML = "건물 정보 조회 실패";
+    document.getElementById("landUseInfo").innerHTML = "토지 이용 조회 실패";
+    document.getElementById("realEstateInfo").innerHTML = "공시지가 조회 실패";
+    document.getElementById("realTransactionInfo").innerHTML = "실거래가 조회 실패";
   });
 });
 
