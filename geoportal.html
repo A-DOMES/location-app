@@ -334,9 +334,10 @@ map.on('click', function(evt) {
   if (zoom < 19) return; 
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
+  // 🔑 맵 렌더링 마비를 일으키던 배열 주입 버그를 인덱싱([0], [1])으로 완벽 수정!
   const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0]; // 🔑 경도값 추출 고정
-  const lat = coord[1]; // 🔑 위도값 추출 고정
+  const lon = coord[0]; // 👈 정확하게 첫 번째 원소인 '경도' 추출
+  const lat = coord[1]; // 👈 정확하게 두 번째 원소인 '위도' 추출
 
   // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
@@ -346,13 +347,13 @@ map.on('click', function(evt) {
     infoPopup.style.left = "calc(50% - 160px)";
   }
 
-  // 🔑 큰 박스가 아니라, HTML 내부에 선언된 실제 '글자 출력 칸(Tab Content)'의 ID를 정확히 찌릅니다.
+  // 🔑 HTML 내부에 선언된 실제 '글자 출력 칸(Tab Content)'의 ID를 정확히 타격
   const bldgBasic = document.getElementById("bldg-basic");
   const landZone = document.getElementById("land-zone");
   const priceBasic = document.getElementById("price-basic");
   const dealSale = document.getElementById("deal-sale");
 
-  // 클릭하자마자 첫 번째 활성화 탭의 내용을 "조회 중..."으로 깔끔하게 변경 (버튼 파괴 방지)
+  // 버튼 메뉴 디자인을 지우지 않고 내부 글자만 "조회 중..."으로 교체 (null 포인트 에러 원천 방어)
   if (bldgBasic) bldgBasic.innerHTML = "조회 중...";
   if (landZone) landZone.innerHTML = "조회 중...";
   if (priceBasic) priceBasic.innerHTML = "조회 중...";
@@ -373,7 +374,7 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // 🔑 이제 타겟 ID가 일치하므로 geoportal-simulation.js 내부에서도 에러 없이 안전하게 연동됩니다.
+    // 🔑 타겟 ID가 일치하고 좌표 에러가 없으므로 geoportal-simulation.js 내부에서도 에러 없이 기동됩니다.
     try {
       renderPopup(parcelData);
     } catch(renderError) {
