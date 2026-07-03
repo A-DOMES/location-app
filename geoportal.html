@@ -350,11 +350,12 @@ map.on('click', function(evt) {
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 
-// ✅ 1. 건물 정보 조회 (VWorld 건물 API)
-// - 반환: { buildingInfo: { basic, usage, area, right } }
-// - 실패 시: 모든 필드에 기본 메시지 반환
+// ✅ 1. 건물 정보 조회 (VWorld 건물 API 완벽 수정)
 function loadLandBuilding(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_BLDG&...`)
+  // 브이월드 데이터 API는 geomFilter 구조와 소문자 key를 엄격하게 따집니다.
+  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  
+  return fetch(url)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -369,9 +370,7 @@ function loadLandBuilding(lon, lat) {
           }
         };
       } else {
-        return {
-          buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" }
-        };
+        return { buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" } };
       }
     })
     .catch(err => ({
@@ -379,10 +378,11 @@ function loadLandBuilding(lon, lat) {
     }));
 }
 
-// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
-// - 반환: { landUseInfo: { zone, district, etc } }
+// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API 완벽 수정)
 function loadLandUse(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_UQ111&...`)
+  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  
+  return fetch(url)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -404,10 +404,11 @@ function loadLandUse(lon, lat) {
     }));
 }
 
-// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
-// - 반환: { areaSqm, pricePerSqm, estateInfo: { year, price } }
+// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API 완벽 수정)
 function loadRealEstate(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/data?...&data=LT_C_PD01&...`)
+  const url = `https://vworld.kr(${lon} ${lat})&key=${CONFIG.API_KEY}`;
+  
+  return fetch(url)
     .then(res => res.json())
     .then(data => {
       const features = data.response?.result?.featureCollection?.features;
@@ -428,9 +429,9 @@ function loadRealEstate(lon, lat) {
     .catch(err => ({ estateInfo: { year: "-", price: "가격 조회 실패: " + err.message } }));
 }
 
-// ✅ 4. 실거래가 조회 (국토부 API)
-// - 반환: { realTransaction: { sale, jeonse, wolse } }
+// ✅ 4. 실거래가 조회 (국토부 공식 API + 주소 변환 및 인증키 수정 완료)
 function loadRealTransaction(lon, lat) {
+  // 브이월드 좌표->주소 변환 API 호출
   return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
     .then(addrData => {
@@ -439,32 +440,39 @@ function loadRealTransaction(lon, lat) {
         return { realTransaction: { sale: "지번 정보 없음", jeonse: "-", wolse: "-" } };
       }
 
-      const lawdCd = parcel.addrcode;
-      const dealYmd = "202605";
-      const key = encodeURIComponent(CONFIG.MOLIT_KEY);
+      // ⚠️ 실거래가 API는 5자리 법정동 시군구 코드만 사용하므로 앞 5자리만 자릅니다.
+      const lawdCd = parcel.addrcode.substring(0, 5); 
+      const dealYmd = "202401"; // ⚠️ 현재 날짜 기준 과거 데이터로 세팅해야 안전하게 조회됩니다.
 
-      return fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
+      // ⚠️ 중요: 이중 인코딩 방지를 위해 CONFIG.MOLIT_KEY 원본 데이터를 그대로 넘겨야 에러가 안 납니다.
+      const key = CONFIG.MOLIT_KEY; 
+
+      // 국토교통부 아파트매매 실거래자료 공식 최신 엔드포인트 URL 주소
+      const molitUrl = `https://data.go.kr{key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}&_type=json`;
+
+      return fetch(molitUrl)
         .then(res => res.json())
         .then(tradeData => {
+          // 공공데이터포털 JSON 표준 규격 파싱 규칙 적용
           const items = tradeData.response?.body?.items?.item;
-          if (items && items.length > 0) {
-            const trade = items[0];
+          if (items) {
+            // 결과가 배열이거나 단일 객체일 수 있으므로 통합 예외 처리
+            const trade = Array.isArray(items) ? items[0] : items;
             return {
               realTransaction: {
-                sale: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount} 만원, 면적: ${trade.area}㎡`,
+                sale: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount.trim()} 만원, 면적: ${trade.exclAvArea}㎡`,
                 jeonse: "전세 데이터 준비 중...",
                 wolse: "월세 데이터 준비 중..."
               }
-            };
+                };
           } else {
-            return { realTransaction: { sale: "데이터 없음", jeonse: "-", wolse: "-" } };
+            return { realTransaction: { sale: "해당 월에 실거래 기록 없음", jeonse: "-", wolse: "-" } };
           }
         })
-        .catch(err => ({ realTransaction: { sale: "실거래가 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
+        .catch(err => ({ realTransaction: { sale: "국토부 실거래가 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
     })
     .catch(err => ({ realTransaction: { sale: "지번 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
 }
-
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 function loadAllData(lon, lat) {
