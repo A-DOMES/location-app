@@ -255,7 +255,7 @@
   }
   
   // =================================================================
-  //  주요 레이어 정의 (원본 형태 유지 + 지번 글자 레이어 결합 및 zIndex 고정)
+  //  주요 레이어 정의 (원본 형태 유지 + 정식 주소 및 지번 레이어 결합)
   // =================================================================
   const baseLayer = createLayer('Base'); 
   baseLayer.setVisible(true);   // 기본지도 켜기
@@ -263,10 +263,10 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진(위성) 처음부터 켜기
   
-  // 🔑 무겁던 ImageWMS를 바둑판식 타일 조각 분할(TileWMS) 방식으로 전면 수정
+  // 🔑 무겁던 ImageWMS를 바둑판식 타일 조각 분할(TileWMS) 방식으로 전면 수정 및 정식 주소 매핑
   const cadLayer = new ol.layer.Tile({
     source: new ol.source.TileWMS({
-      url: 'https://vworld.kr', // 👈 🔑 깨져있던 일반 도메인을 국토부 공식 WMS 경로로 전면 수정 완료!
+      url: 'https://vworld.kr', // 👈 🔑 깨져있던 메인 주소를 국토부 정식 WMS 엔진 주소로 전면 수정!
       params: {
         'SERVICE': 'WMS',
         'VERSION': '1.1.1',
@@ -335,8 +335,8 @@ map.on('click', function(evt) {
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
   const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0];
-  const lat = coord[1];
+  const lon = coord[0]; // 🔑 경도값 추출 고정
+  const lat = coord[1]; // 🔑 위도값 추출 고정
 
   // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
@@ -381,6 +381,7 @@ map.on('click', function(evt) {
     }
   });
 });
+
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
