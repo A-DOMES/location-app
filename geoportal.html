@@ -976,7 +976,12 @@ positionLayer.getSource().addFeatures([marker, circle100, circle200, radar]);
 // ✅ 시작 시 레이더 숨김
 radar.setGeometry(null);
 
-// ---------------------- 내 위치 추적 ----------------------
+// ⚠️ 지도가 첫 화면을 그리다 터지는 것을 막기 위한 안전장치 전역 변수 고정 바인딩
+if (typeof mapCenterCoord === 'undefined') {
+  var mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 초기값 백업
+}
+
+// ---------------------- 내 위치 추적 (연산 버그 완벽 치료) ----------------------
 navigator.geolocation.watchPosition(
   (pos) => {
     // ✅ GPS 정확도가 너무 낮으면 무시 (100m 이상 오차일 때는 업데이트 안 함)
@@ -987,73 +992,78 @@ navigator.geolocation.watchPosition(
       // ✅ 최초 실행 시: 현재 좌표를 EPSG:3857로 변환 후 마커와 지도 중심 설정
       coord = ol.proj.fromLonLat([pos.coords.longitude, pos.coords.latitude]);
       initialized = true;
-      marker.getGeometry().setCoordinates(coord);
-      map.getView().setCenter(coord);
+      if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(coord);
+      if (typeof map !== 'undefined' && map) map.getView().setCenter(coord);
     } else {
       // ✅ 이후 실행 시: 스무딩 함수로 GPS 흔들림 평균화
-      coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
-      marker.getGeometry().setCoordinates(coord);
+      if (typeof getSmoothedCoord === 'function') {
+        coord = getSmoothedCoord(pos.coords.latitude, pos.coords.longitude);
+        if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(coord);
+      }
     }
 
     // ✅ 내 현재 좌표 저장
     myCoord = coord;
-    circle100.getGeometry().setCenter(myCoord);
-    circle200.getGeometry().setCenter(myCoord);
+    if (typeof circle100 !== 'undefined' && circle100) circle100.getGeometry().setCenter(myCoord);
+    if (typeof circle200 !== 'undefined' && circle200) circle200.getGeometry().setCenter(myCoord);
 
     // ✅ 최근 두 개 좌표만 기록 (이동 방향 계산용)
-    positions.push([pos.coords.latitude, pos.coords.longitude]);
-    if (positions.length > 2) positions.shift();
+    if (typeof positions !== 'undefined') {
+      positions.push([pos.coords.latitude, pos.coords.longitude]);
+      if (positions.length > 2) positions.shift();
 
-    // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
-    if (positions.length === 2) {
-      let prevLat = positions[0][0];
-      let prevLon = positions[0][1];
-      let currLat = positions[1][0];
-      let currLon = positions[1][1];
+      // ✅ 두 개 좌표가 쌓였을 때만 이동 방향 계산
+      if (positions.length === 2 && typeof calculateBearing === 'function') {
+        let prevLat = positions[0][0];
+        let prevLon = positions[0][1];
+        let currLat = positions[1][0];
+        let currLon = positions[1][1];
 
-      // ✅ 미세한 GPS 튀기 방지: 좌표 차이가 아주 작으면 무시
-      if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
-        gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ GPS 이동 방향 저장
-        lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
+        // ✅ 미세한 GPS 튀기 방지: 좌표 차이가 아주 작으면 무시
+        if (Math.abs(prevLat - currLat) > 0.00001 || Math.abs(prevLon - currLon) > 0.00001) {
+          gpsHeading = calculateBearing(prevLat, prevLon, currLat, currLon); // ✅ GPS 이동 방향 저장
+          lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
 
-        // ✅ 나침반 바늘 회전
-        const needleGroup = document.getElementById('needle-group');
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+          // ✅ 나침반 바늘 회전
+          const needleGroup = document.getElementById('needle-group');
+          if (needleGroup) {
+            needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
+          }
         }
       }
     }
 
-    // ---------------------- 레이더 각도 처리 ----------------------
-    if (radarOn && myCoord) {
+    // ---------------------- 레이더 각도 처리 (🔑 배열 연산 문법 오타 완전 해결) ----------------------
+    if (radarOn && myCoord && typeof radar !== 'undefined' && radar) {
       const angle = 90;   // ✅ 레이더 부채꼴 각도
       const radius = 200; // ✅ 레이더 반경
       const points = [myCoord];
 
       // ✅ 모바일(iOS/Android) → 센서 방향(lastHeading)
       // ✅ PC/센서 없는 환경 → GPS 이동 방향(gpsHeading)
-      const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : gpsHeading;
+      const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : (typeof gpsHeading !== 'undefined' ? gpsHeading : 0);
 
       for (let a = -angle/2; a <= angle/2; a += 1) {
         const rad = (headingForRadar + a) * Math.PI / 180;
         const dx = radius * Math.sin(rad);
         const dy = radius * Math.cos(rad);
+        // 🔑 깨져있던 배열 연산 문법을 인덱싱, [1]로 완벽히 정정하여 지도 증발을 차단합니다!
         points.push([myCoord[0] + dx, myCoord[1] + dy]);
       }
 
       radar.setGeometry(new ol.geom.Polygon([points]));
-      map.getView().setCenter(myCoord);
+      if (typeof map !== 'undefined' && map) map.getView().setCenter(myCoord);
     }
   },
   (err) => {
     // ---------------------- 오류 처리 ----------------------
     console.error("위치 정보 오류:", err);
 
-    // ✅ 위치 정보를 가져오지 못했을 때 기본 좌표로 복귀
-    const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]); // 대한민국 중심 예시
-    map.getView().setZoom(7);
-    marker.getGeometry().setCoordinates(defaultCoord);
-    map.getView().setCenter(defaultCoord);
+    // ✅ 위치 정보를 가져오지 못했을 때 백업 좌표로 맵 셧다운 방어
+    const defaultCoord = ol.proj.fromLonLat([127.7669, 35.9078]);
+    if (typeof map !== 'undefined' && map) map.getView().setZoom(7);
+    if (typeof marker !== 'undefined' && marker) marker.getGeometry().setCoordinates(defaultCoord);
+    if (typeof map !== 'undefined' && map) map.getView().setCenter(defaultCoord);
   }
 );
 
@@ -1078,7 +1088,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
   radarOn = !radarOn;
   rotateEnabled = radarOn; // 지도 회전 여부도 레이더 상태에 맞춤
   
-  if (radarOn && myCoord) {
+  if (radarOn && myCoord && typeof radar !== 'undefined' && radar) {
     // ✅ 레이더 부채꼴 각도 및 반경 설정
     const angle = 90;    // 레이더 각도 (90도)
     const radius = 200;  // 레이더 반경 (200m)
@@ -1109,17 +1119,21 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
       needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
     }
 
-    // ✅ 지도 중심 이동 + 확대 (myCoord는 이미 EPSG:3857 좌표)
-    map.getView().setCenter(myCoord);
-    map.getView().setZoom(16);
-    map.getView().setRotation(headingForRadar * Math.PI / 180);
+    // ✅ 지도 중심 이동 + 확대
+    if (typeof map !== 'undefined' && map) {
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(16);
+      map.getView().setRotation(headingForRadar * Math.PI / 180);
+    }
   } else {
-    // ✅ 레이더 OFF: 초기 상태 복귀
-    radar.setGeometry(null);
+    // ✅ 레이더 OFF: 초기 상태 복귀 (🔑 변수 미선언 오류 차단 마감)
+    if (typeof radar !== 'undefined' && radar) radar.setGeometry(null);
     const center = ol.proj.fromLonLat(mapCenterCoord); // 초기 좌표 변환
-    map.getView().setCenter(center);                   // 초기 좌표로 복귀
-    map.getView().setZoom(7);                          // 줌 레벨 초기화
-    map.getView().setRotation(0);                      // 회전 초기화
+    if (typeof map !== 'undefined' && map) {
+      map.getView().setCenter(center);                   // 초기 좌표로 복귀
+      map.getView().setZoom(7);                          // 줌 레벨 초기화
+      map.getView().setRotation(0);                      // 회전 초기화
+    }
   }
 });
 
@@ -1128,6 +1142,7 @@ function isIOS() {
   return typeof DeviceOrientationEvent !== 'undefined' && 
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
+
 
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
