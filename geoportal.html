@@ -276,14 +276,22 @@
   const hybridLayer = createLayer('Hybrid');     
   hybridLayer.setVisible(true);   // Hybrid 켜기
 
-  
+    
+  // ✅ WebView 환경 감지 함수
+  function isWebView() {
+    return /(wv|WebView)/i.test(navigator.userAgent);
+  }
+
+  // ✅ 초기 줌 레벨 분기 처리
+  const defaultZoom = isWebView() ? 10 : 7;
+    
   // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
   const map = new ol.Map({
     target: 'map',
     layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7 
+      zoom: defaultZoom   // ⚠️ 브라우저는 7, 앱(WebView)은 10
     })
   });
 
