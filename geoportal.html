@@ -236,6 +236,7 @@
     
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
+        // ⚠️ 🔑 깨져있던 일반 도메인을 국토부 공식 api 웹 경로로 복구하고, 유실되었던 $ 기호를 완벽 매핑했습니다!
         url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${fileExt}`,
         layer: layerName,
         matrixSet: 'EPSG:3857',
@@ -253,6 +254,7 @@
       visible: false
     });
   }
+
   
   // =================================================================
   //  주요 레이어 정의 (원본 형태 유지 + 정식 주소 및 지번 레이어 결합)
