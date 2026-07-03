@@ -264,7 +264,7 @@ const cadLayer = new ol.layer.Image({
       'REQUEST': 'GetMap',
       'LAYERS': 'LT_C_ADASRATODO',
       'STYLES': '',               // ✅ 빈 문자열
-      'CRS': 'EPSG:3857',         // ✅ 좌표계 맞추기
+      'SRS': 'EPSG:3857',         // ✅ 좌표계 맞추기
       'KEY': CONFIG.API_KEY,      // ✅ 대문자 key
       'FORMAT': 'image/png',
       'TRANSPARENT': 'TRUE'
@@ -276,7 +276,7 @@ const cadLayer = new ol.layer.Image({
 });
 
   
-  const midnightLayer = createLayer('Midnight', 'image/png', 'midnight');
+  const midnightLayer = createLayer('Midnight', 'image/png', 'MIDNIGHT');
   midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
 
   const hybridLayer = createLayer('Hybrid');     
