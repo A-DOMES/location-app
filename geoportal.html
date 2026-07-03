@@ -250,7 +250,7 @@ const cadLayer = new ol.layer.Image({
     url: 'https://api.vworld.kr/req/wms',
     params: {
       'LAYERS': 'LT_C_ADASRATODO',
-      'STYLES': 'LT_C_ADASRATODO',
+      'STYLES': '',
       'apiKey': CONFIG.API_KEY,   // ✅ KEY → apiKey
       'FORMAT': 'image/png',
       'TRANSPARENT': 'TRUE'
@@ -341,8 +341,7 @@ map.on('click', function(evt) {
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
 
-// ✅ 1. 건물 정보 조회 (VWorld 건물 API)
-// - EPSG:4326 좌표(lon, lat)를 그대로 전달
+// ✅ 1. 건물 정보 조회 (EPSG:4326 좌표 그대로 사용)
 function loadLandBuilding(lon, lat) {
   return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_BLDG&geomFilter=POINT(${lon} ${lat})`)
     .then(res => res.json())
@@ -359,17 +358,15 @@ function loadLandBuilding(lon, lat) {
           }
         };
       } else {
-        return {
-          buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" }
-        };
+        return { buildingInfo: { basic: "해당 위치에 건물 없음", usage: "-", area: "-", right: "-" } };
       }
     })
-    .catch(err => ({
-      buildingInfo: { basic: "건물 조회 실패: " + err.message, usage: "-", area: "-", right: "-" }
-    }));
+    .catch(err => ({ buildingInfo: { basic: "건물 조회 실패: " + err.message, usage: "-", area: "-", right: "-" } }));
 }
 
-// ✅ 2. 토지 이용 조회 (VWorld 용도지역 API)
+
+
+// ✅ 2. 토지 이용 조회 (EPSG:4326 좌표 그대로 사용)
 function loadLandUse(lon, lat) {
   return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_UQ111&geomFilter=POINT(${lon} ${lat})`)
     .then(res => res.json())
@@ -388,12 +385,11 @@ function loadLandUse(lon, lat) {
         return { landUseInfo: { zone: "데이터 없음", district: "-", etc: "-" } };
       }
     })
-    .catch(err => ({
-      landUseInfo: { zone: "토지 조회 실패: " + err.message, district: "-", etc: "-" }
-    }));
+    .catch(err => ({ landUseInfo: { zone: "토지 조회 실패: " + err.message, district: "-", etc: "-" } }));
 }
 
-// ✅ 3. 공시지가 조회 (VWorld 개별공시지가 API)
+
+// ✅ 3. 공시지가 조회 (EPSG:4326 좌표 그대로 사용)
 function loadRealEstate(lon, lat) {
   return fetch(`https://api.vworld.kr/req/data?service=data&version=2.0&request=getfeature&key=${CONFIG.API_KEY}&data=LT_C_PD01&geomFilter=POINT(${lon} ${lat})`)
     .then(res => res.json())
@@ -402,8 +398,6 @@ function loadRealEstate(lon, lat) {
       if (features && features.length > 0) {
         const props = features[0].properties;
         return {
-          areaSqm: props.pblntf_area || 0,
-          pricePerSqm: props.pblntf_pcl || 0,
           estateInfo: {
             year: props.stdr_year || "-",
             price: props.pblntf_pcl || "-"
@@ -416,8 +410,10 @@ function loadRealEstate(lon, lat) {
     .catch(err => ({ estateInfo: { year: "-", price: "가격 조회 실패: " + err.message } }));
 }
 
+
 // ✅ 4. 실거래가 조회 (국토부 API)
 // - EPSG:4326 좌표(lon, lat)를 그대로 전달
+// ✅ 실거래가 조회 (EPSG:4326 좌표 그대로 사용)
 function loadRealTransaction(lon, lat) {
   return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
     .then(res => res.json())
@@ -427,6 +423,7 @@ function loadRealTransaction(lon, lat) {
         return { realTransaction: { sale: "지번 정보 없음", jeonse: "-", wolse: "-" } };
       }
 
+      // ⚠️ 국토부 실거래가 API는 별도 인증키 필요 (CONFIG.MOLIT_KEY)
       const lawdCd = parcel.addrcode;
       const dealYmd = "202605"; // 예시
       const key = encodeURIComponent(CONFIG.MOLIT_KEY);
