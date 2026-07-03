@@ -226,27 +226,31 @@
     matrixIds[z] = z;
   }
   
-  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
-  function createLayer(layerName, format='image/png') {
-    return new ol.layer.Tile({
-      source: new ol.source.WMTS({
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-        layer: layerName,
-        matrixSet: 'EPSG:3857',
-        format: format,
-        projection: projection,
-        tileGrid: new ol.tilegrid.WMTS({
-          origin: ol.extent.getTopLeft(projectionExtent),
-          resolutions: resolutions,
-          matrixIds: matrixIds
-        }),
-        style: 'default',
-        requestEncoding: 'REST'
-      }),
-      visible: false
-    });
-  }
+// ✅ URL 타일 확장자 바인딩 버그를 해결한 레이어 생성 함수
+function createLayer(layerName, format = 'image/png') {
+  const fileExt = format === 'image/jpeg' ? 'jpeg' : 'png'; // 안전한 확장자 분기 처리
   
+  return new ol.layer.Tile({
+    source: new ol.source.WMTS({
+      url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${fileExt}`,
+      layer: layerName,
+      matrixSet: 'EPSG:3857',
+      format: format,
+      projection: projection,
+      tileGrid: new ol.tilegrid.WMTS({
+        origin: ol.extent.getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds
+      }),
+      style: 'default',
+      requestEncoding: 'REST',
+      crossOrigin: 'anonymous'
+    }),
+    visible: false,
+    zIndex: 10 // 배경지도 계층 고정
+  });
+}
+ 
   // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
   const baseLayer = createLayer('Base'); 
   baseLayer.setVisible(true);   // 기본지도 켜기
@@ -275,8 +279,8 @@ const cadLayer = new ol.layer.Tile({
   zIndex: 9900                         // 👈 중요: 지적도가 기본/위성지도보다 항상 '위'에 그려지도록 고정
 });
   
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
+  // ✅ 대소문자를 엄격하게 맞춘 미드나잇 선언식
+  const midnightLayer = createLayer('Midnight'); 
   
   const hybridLayer = createLayer('Hybrid');     
   hybridLayer.setVisible(true);   // Hybrid 켜기
