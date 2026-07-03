@@ -248,15 +248,15 @@
   }
   
   // =================================================================
-  //  주요 레이어 정의 (초기 로딩 용량 다이어트 및 타일 분할 방식으로 렉 제거)
+  //  주요 레이어 정의 (위성/하이브리드 활성화 유지 + 지적도 타일 분할 방식으로 렉 제거)
   // =================================================================
   const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기 (초기 화면 로딩)
+  baseLayer.setVisible(true);   // 기본지도 켜기
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(True);   // ⚠️ 렉 방지: 항공사진은 무거우므로 초기에는 꺼둡니다.
+  satLayer.setVisible(true);    // 🔑 원래대로 항공사진(위성) 처음부터 켜기
   
-  // 1. 렉(무한 로딩)의 주범이었던 Image 방식을 TileWMS(분할 로딩) 방식으로 전면 수정
+  // 🔑 렉(무한 로딩)의 주범이었던 Image 방식을 TileWMS(분할 로딩) 방식으로 전면 수정
   const cadLayer = new ol.layer.Tile({
     source: new ol.source.TileWMS({
       url: 'https://vworld.kr',
@@ -266,7 +266,7 @@
         'REQUEST': 'GetMap',
         'LAYERS': 'LT_C_ADASRATODO',
         'STYLES': '', 
-        'key': CONFIG.API_KEY, 
+        'key': CONFIG.API_KEY, // 대문자 KEY를 소문자 key로 변경하여 차단 해제
         'FORMAT': 'image/png',
         'TRANSPARENT': 'TRUE',
         'SRS': 'EPSG:3857'
@@ -275,24 +275,32 @@
       crossOrigin: 'anonymous'
     }),
     visible: false,               // 지적도는 기본 꺼짐
-    zIndex: 150                   // ⚠️ 렉 유발 방지: OpenLayers 내부 계층 표준화 숫자(150)로 조정
+    zIndex: 150                   // 🔑 위성지도(10)보다는 위, 토글/버튼 UI(999)보다는 아래인 황금 위치
   });
   
   const midnightLayer = createLayer('Midnight'); // 대소문자 Midnight 수정 완료
   midnightLayer.setVisible(false); 
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(True);  // ⚠️ 렉 방지: 하이브리드 글자 레이어도 초기에는 꺼둡니다.
+  hybridLayer.setVisible(true);   // 🔑 원래대로 하이브리드(지명·도로라인) 처음부터 켜기
 
- 
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  
+  // =================================================================
+  //  지도 초기화 (최대 줌 레벨 19 고정 및 렉 제거 세팅 완료)
+  // =================================================================
   const map = new ol.Map({
+    layers: [
+      baseLayer, 
+      satLayer, 
+      cadLayer, 
+      midnightLayer, 
+      hybridLayer
+    ],
     target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
       zoom: 7,
-      maxZoom: 19 // ⚠️ 지도가 브이월드 제한 범위를 넘어가서 지적도가 증발하는 현상을 방지합니다.
+      maxZoom: 19 // 브이월드 한계 해상도에 맞춰 지적도가 증발하는 버그 예방
     })
   });
     
