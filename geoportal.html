@@ -254,7 +254,7 @@ baseLayer.setVisible(true);   // 기본지도 켜기
 
 // 항공사진(Satellite) - 처음엔 꺼두기
 const satLayer = createLayer('Satellite', 'image/jpeg');
-satLayer.setVisible(false);   // 필요할 때만 켜기
+satLayer.setVisible(true);   // 필요할 때만 켜기
 
 // 지적도(WMS) - KEY는 URL에 붙이고, STYLES는 빈 문자열
 const cadLayer = new ol.layer.Image({
@@ -278,7 +278,7 @@ midnightLayer.setVisible(false); // 기본 꺼짐
 
 // Hybrid 레이어 - Base와 함께 켜야 정상 동작
 const hybridLayer = createLayer('Hybrid');     
-hybridLayer.setVisible(false);   // 처음엔 꺼두기
+hybridLayer.setVisible(true);   // 처음엔 꺼두기
 
 // ✅ 지도 초기화 (zoom: 7 유지)
 const map = new ol.Map({
