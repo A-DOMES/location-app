@@ -226,6 +226,10 @@
     matrixIds[z] = z;
   }
   
+// ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+// 반드시 map 초기화 전에 선언해야 view.center에서 사용할 수 있음
+const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
+
 // ✅ WMTS 레이어 생성 함수 (Base, Satellite 등 기본 배경지도용)
 function createLayer(layerName, format='image/png') {
   return new ol.layer.Tile({
@@ -252,7 +256,7 @@ const baseLayer = createLayer('Base');
 baseLayer.setVisible(true);   // 기본지도 켜기
 
 const satLayer = createLayer('Satellite', 'image/jpeg');
-satLayer.setVisible(true);    // 항공사진 켜기
+satLayer.setVisible(false);   // 항공사진 기본은 꺼두기
 
 // ✅ 지적도 (TileWMS 방식) - LX맵
 const cadLayer = new ol.layer.Tile({
@@ -278,17 +282,14 @@ const cadLayer = new ol.layer.Tile({
   zIndex: 9999
 });
 
-// ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
-const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
-
 // ✅ 지도 초기화 (cadLayer 포함)
 const map = new ol.Map({
   target: 'map', // HTML 내 지도 div id
   layers: [baseLayer, satLayer, cadLayer], // cadLayer 반드시 포함
   view: new ol.View({
-    center: ol.proj.fromLonLat(mapCenterCoord),
+    center: ol.proj.fromLonLat(mapCenterCoord), // 초기 중심 좌표 적용
     zoom: 17,                 // LX맵은 줌 레벨 17 이상에서만 표시됨
-    projection: 'EPSG:3857'   // ✅ 모든 레이어와 projection 일치
+    projection: 'EPSG:3857'   // 모든 레이어와 projection 일치
   })
 });
 
@@ -298,6 +299,7 @@ document.getElementById('satLayer').addEventListener('change', e => satLayer.set
 document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+
 
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
