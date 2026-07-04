@@ -645,7 +645,13 @@ window.addEventListener("load", () => {
     compass.style.left = "10px";
     compass.style.top = "10px";
   }
+
+  // ✅ 지도 크기 갱신 추가
+  setTimeout(() => {
+    map.updateSize();
+  }, 300);
 });
+
 
 // ✅ 조회결과 팝업 드래그 이동 (PC + 모바일)
 const infoPopup = document.getElementById("infoPopup");
