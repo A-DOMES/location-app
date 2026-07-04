@@ -226,20 +226,14 @@
     matrixIds[z] = z;
   }
   
-  // =================================================================
-  //  안전한 확장자 분기형 레이어 생성 함수 (미드나잇 split 오류 완전 해결)
-  // =================================================================
-  function createLayer(layerName, format = 'image/png') {
-    // 🔑 format 인자가 누락되거나 undefined일 때를 방지하기 위한 안전 백업 장치
-    const safeFormat = format || 'image/png';
-    const fileExt = safeFormat.includes('jpeg') ? 'jpeg' : 'png';
-    
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+  function createLayer(layerName, format='image/png') {
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
-        url: `https://vworld.kr{CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${fileExt}`,
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
         layer: layerName,
         matrixSet: 'EPSG:3857',
-        format: safeFormat,
+        format: format,
         projection: projection,
         tileGrid: new ol.tilegrid.WMTS({
           origin: ol.extent.getTopLeft(projectionExtent),
@@ -247,70 +241,52 @@
           matrixIds: matrixIds
         }),
         style: 'default',
-        requestEncoding: 'REST',
-        crossOrigin: 'anonymous'
+        requestEncoding: 'REST'
       }),
       visible: false
     });
   }
   
-  // =================================================================
-  //  주요 레이어 정의 (원본 형태 유지 + 정식 주소 및 지번 레이어 결합)
-  // =================================================================
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
   const baseLayer = createLayer('Base'); 
   baseLayer.setVisible(true);   // 기본지도 켜기
   
   const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진(위성) 처음부터 켜기
+  satLayer.setVisible(true);    // 항공사진 켜기
   
-  // 🔑 무겁던 ImageWMS를 바둑판식 타일 조각 분할(TileWMS) 방식으로 전면 수정 및 정식 주소 매핑
-  const cadLayer = new ol.layer.Tile({
-    source: new ol.source.TileWMS({
-      url: 'https://vworld.kr', // 👈 🔑 깨져있던 메인 주소를 국토부 정식 WMS 엔진 주소로 전면 수정!
+  const cadLayer = new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+      url: 'https://api.vworld.kr/req/wms',
       params: {
-        'SERVICE': 'WMS',
-        'VERSION': '1.1.1',
-        'REQUEST': 'GetMap',
-        // 🔑 경계선(LT_C_ADASRATODO) 뒤에 쉼표(,)를 찍고 지번 글자 레이어(LP_PA_CBND_ONAM)를 결합해야 번지수가 나타납니다!
-        'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM', 
-        'STYLES': ',', 
-        'key': CONFIG.API_KEY, // 🔑 대문자 'KEY'를 소문자 'key'로 수정하여 서버 차단 해제
+        'LAYERS': 'LT_C_ADASRATODO',
+        'STYLES': 'LT_C_ADASRATODO',
+        'KEY': CONFIG.API_KEY,
         'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE',
-        'SRS': 'EPSG:3857'
+        'TRANSPARENT': 'TRUE'
       },
       serverType: 'geoserver',
-      crossOrigin: 'anonymous'
+      projection: projection
     }),
-    visible: false,               // 지적도는 기본 꺼짐
-    zIndex: 9999                  // 위성사진 위로 무조건 필지선과 글자가 돌출되도록 최상위 고정
+    visible: false               // 지적도는 기본 꺼짐
   });
   
-  const midnightLayer = createLayer('Midnight'); // 소문자 m을 대문자 M으로 수정 완료
-  midnightLayer.setVisible(false); 
+  const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
   
   const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // 하이브리드(지명) 처음부터 켜기
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-  // =================================================================
-  //  지도 초기화 및 maxZoom 19 락 설정 (원본 100% 동일 결합 배열)
-  // =================================================================
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
   const map = new ol.Map({
     target: 'map',
-    layers: [
-      baseLayer, 
-      satLayer, 
-      cadLayer, 
-      midnightLayer, 
-      hybridLayer
-    ],
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
     view: new ol.View({
       center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7,
-      maxZoom: 19 // 🔑 지도가 국토부 허용 레벨 한계선을 벗어나 지적도가 증발하는 버그 차단
+      zoom: 7 
     })
   });
-    
+
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
   const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
@@ -326,7 +302,7 @@
     document.getElementById("infoPopup").style.display = "none";
   }
   
-// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청 (에러 방어 보완 완료)
+// ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
@@ -334,39 +310,30 @@ map.on('click', function(evt) {
   if (zoom < 19) return; 
   // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
-  // 🔑 맵 렌더링 마비를 일으키던 배열 주입 버그를 인덱싱([0], [1])으로 완벽 수정!
   const coord = ol.proj.toLonLat(evt.coordinate);
-  const lon = coord[0]; // 👈 정확하게 첫 번째 원소인 '경도' 추출
-  const lat = coord[1]; // 👈 정확하게 두 번째 원소인 '위도' 추출
+  const lon = coord[0];
+  const lat = coord[1];
 
   // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
-  if (infoPopup) {
-    infoPopup.style.display = "block";
-    infoPopup.style.transform = "none";
-    infoPopup.style.left = "calc(50% - 160px)";
-  }
+  infoPopup.style.display = "block";
+  infoPopup.style.transform = "none";
+  infoPopup.style.left = "calc(50% - 160px)";
 
-  // 🔑 HTML 내부에 선언된 실제 '글자 출력 칸(Tab Content)'의 ID를 정확히 타격
-  const bldgBasic = document.getElementById("bldg-basic");
-  const landZone = document.getElementById("land-zone");
-  const priceBasic = document.getElementById("price-basic");
-  const dealSale = document.getElementById("deal-sale");
+  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
+  document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+  document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+  document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+  document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // 버튼 메뉴 디자인을 지우지 않고 내부 글자만 "조회 중..."으로 교체 (null 포인트 에러 원천 방어)
-  if (bldgBasic) bldgBasic.innerHTML = "조회 중...";
-  if (landZone) landZone.innerHTML = "조회 중...";
-  if (priceBasic) priceBasic.innerHTML = "조회 중...";
-  if (dealSale) dealSale.innerHTML = "조회 중...";
-
-  // ✅ API 호출을 병렬 실행
+  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
   Promise.all([
-    loadLandBuilding(lon, lat).catch(e => ({ buildingInfo: { basic: "조회 실패" } })),
-    loadLandUse(lon, lat).catch(e => ({ landUseInfo: { zone: "조회 실패" } })),
-    loadRealEstate(lon, lat).catch(e => ({ estateInfo: { price: "조회 실패" } })),
-    loadRealTransaction(lon, lat).catch(e => ({ realTransaction: { sale: "조회 실패" } }))
+    loadLandBuilding(lon, lat),   // 건물 정보
+    loadLandUse(lon, lat),        // 토지 이용
+    loadRealEstate(lon, lat),     // 공시지가
+    loadRealTransaction(lon, lat) // 실거래가
   ]).then(([building, landUse, estate, transaction]) => {
-    // 개별 응답을 하나의 표준화된 객체로 합침
+    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
     const parcelData = {
       ...building,
       ...landUse,
@@ -374,12 +341,8 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // 🔑 타겟 ID가 일치하고 좌표 에러가 없으므로 geoportal-simulation.js 내부에서도 에러 없이 기동됩니다.
-    try {
-      renderPopup(parcelData);
-    } catch(renderError) {
-      console.warn("팝업 UI 렌더링 매핑 예외 우회:", renderError.message);
-    }
+    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    renderPopup(parcelData);
   });
 });
 
