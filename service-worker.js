@@ -1,4 +1,4 @@
-const CACHE_NAME = "adomes-user-cache-v2";
+const CACHE_NAME = "adomes-user-cache-v1";
 const urlsToCache = [
   "/location-app/index.html",
   "/location-app/manifest.json",
