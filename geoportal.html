@@ -254,29 +254,29 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진 켜기
   
-// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
+// ✅ 지적도 (TileWMS 방식) - LX맵
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
-    url: `https://map.vworld.kr/js/wms.do`,   // ✅ 엔드포인트 변경
+    // 브이월드 WMS 엔드포인트 (지적도는 반드시 map.vworld.kr/js/wms.do 사용)
+    url: `https://map.vworld.kr/js/wms.do`,
     params: {
-      SERVICE: 'WMS',
-      VERSION: '1.3.0',                       // ✅ 버전은 1.3.0
-      REQUEST: 'GetMap',
-      LAYERS: 'lp_pa_cbnd_bonbun,lp_pa_cbnd_bubun', // ✅ 최신 레이어명
-      STYLES: 'lp_pa_cbnd_bonbun_line,lp_pa_cbnd_bubun_line',
-      FORMAT: 'image/png',
-      TRANSPARENT: 'TRUE',
-      CRS: 'EPSG:900913',                     // ✅ 좌표계는 900913 권장
-      APIKEY: CONFIG.API_KEY,                 // ✅ 인증키
-      DOMAIN: 'https://a-domes.github.io/'                 // ✅ 반드시 도메인 추가
+      SERVICE: 'WMS',              // WMS 서비스 호출
+      VERSION: '1.3.0',            // WMS 버전 (브이월드 권장: 1.3.0)
+      REQUEST: 'GetMap',           // 지도 이미지 요청
+      LAYERS: 'lt_c_landinfobasemap', // ✅ 최신 지적도 레이어명 (LX맵)
+      STYLES: 'lt_c_landinfobasemap', // ✅ 스타일명도 동일하게 지정
+      FORMAT: 'image/png',         // 출력 포맷 (투명 배경 지원)
+      TRANSPARENT: 'TRUE',         // 배경 투명 처리
+      CRS: 'EPSG:900913',          // 좌표계 (EPSG:900913 권장)
+      APIKEY: CONFIG.API_KEY,      // 발급받은 브이월드 API 키
+      DOMAIN: 'https://a-domes.github.io/' // ✅ 브이월드에 등록한 도메인
     },
-    serverType: 'geoserver',
-    crossOrigin: 'anonymous'
+    serverType: 'geoserver',       // 서버 타입 (브이월드 WMS는 geoserver 기반)
+    crossOrigin: 'anonymous'       // 크로스 도메인 허용
   }),
-  visible: false,
-  zIndex: 9999
+  visible: true,                   // 기본적으로 표시 여부 (true면 바로 보임)
+  zIndex: 9999                     // 지도 위에서 가장 위에 표시되도록 zIndex 설정
 });
-
 
   
   const midnightLayer = createLayer('midnight'); 
