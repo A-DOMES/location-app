@@ -247,53 +247,40 @@
     });
   }
   
-  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
-  
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
-  
-// ✅ 지적도 (TileWMS 방식) - LX맵
+// ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 제거)
+const baseLayer = createLayer('Base'); 
+baseLayer.setVisible(true);   // 기본지도 켜기
+
+const satLayer = createLayer('Satellite', 'image/jpeg');
+satLayer.setVisible(true);    // 항공사진 켜기
+
+// ✅ 지적도 (WMTS 방식) - LX맵
 const cadLayer = new ol.layer.Tile({
-  source: new ol.source.TileWMS({
-    // ✅ API Key와 Domain을 URL에 직접 붙여서 인증
-    url: `https://map.vworld.kr/js/wms.do?apiKey=${CONFIG.API_KEY}&domain=https://a-domes.github.io/`,
-    params: {
-      SERVICE: 'WMS',              // WMS 서비스 호출
-      VERSION: '1.3.0',            // WMS 버전
-      REQUEST: 'GetMap',           // 지도 이미지 요청
-      LAYERS: 'lt_c_landinfobasemap', // ✅ 최신 지적도 레이어명
-      STYLES: 'lt_c_landinfobasemap', // ✅ 스타일명
-      FORMAT: 'image/png',         // 출력 포맷
-      TRANSPARENT: 'TRUE',         // 배경 투명 처리
-      CRS: 'EPSG:900913'           // 좌표계
-    },
-    serverType: 'geoserver',
+  source: new ol.source.XYZ({
+    // WMTS 엔드포인트 (API Key 포함)
+    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/lt_c_landinfobasemap/{z}/{y}/{x}.png`,
     crossOrigin: 'anonymous'
   }),
-  visible: true,
-  zIndex: 9999
+  visible: true,   // 지적도 기본 켜기
+  zIndex: 9999     // 가장 위에 표시
 });
 
-  
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-  
-  const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
+const midnightLayer = createLayer('midnight'); 
+midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
 
-  
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
-  const map = new ol.Map({
-    target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-    view: new ol.View({
-      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7,          // 초기 줌
-      maxZoom: 19       // 최대 줌 제한 (여기서 제한!)
-    })
-  });
+const hybridLayer = createLayer('Hybrid');     
+hybridLayer.setVisible(true);   // Hybrid 켜기
+
+// ✅ 지도 초기화 (grayLayer, terrainLayer 완전히 제거)
+const map = new ol.Map({
+  target: 'map',
+  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), // 서울 중심 좌표
+    zoom: 7,          // 초기 줌
+    maxZoom: 19       // 최대 줌 제한
+  })
+});
 
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
   const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
