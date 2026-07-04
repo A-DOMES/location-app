@@ -254,21 +254,29 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진 켜기
   
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: {
-        'LAYERS': 'LT_C_ADASRATODO',
-        'STYLES': 'LT_C_ADASRATODO',
-        'KEY': CONFIG.API_KEY,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE'
-      },
-      serverType: 'geoserver',
-      projection: projection
-    }),
-    visible: false               // 지적도는 기본 꺼짐
-  });
+// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
+const cadLayer = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: 'https://api.vworld.kr/req/wms', // 국토부 VWorld WMS 엔진
+    params: {
+      'SERVICE': 'WMS',
+      'VERSION': '1.1.1',
+      'REQUEST': 'GetMap',
+      // 필지선(LT_C_ADASRATODO) + 지번(LP_PA_CBND_ONAM) 결합
+      'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
+      'STYLES': ',',                 // 두 레이어 결합 시 쉼표 필요
+      'key': CONFIG.API_KEY,         // API Key는 params 안에 소문자 key로 전달
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE',
+      'SRS': 'EPSG:3857'             // Web Mercator 좌표계
+    },
+    serverType: 'geoserver',
+    crossOrigin: 'anonymous'
+  }),
+  visible: false,   // 지적도 기본은 꺼두기
+  zIndex: 9999      // 다른 레이어 위에 표시되도록 최상위 고정
+});
+
   
   const midnightLayer = createLayer('midnight'); 
   midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
