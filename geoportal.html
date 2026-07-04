@@ -248,54 +248,61 @@
   }
   
   // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
-  
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
-  
-  const cadLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-      url: 'https://api.vworld.kr/req/wms',
-      params: {
-        'LAYERS': 'LT_C_ADASRATODO',
-        'STYLES': 'LT_C_ADASRATODO',
-        'KEY': CONFIG.API_KEY,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': 'TRUE'
-      },
-      serverType: 'geoserver',
-      projection: projection
-    }),
-    visible: false               // 지적도는 기본 꺼짐
-  });
-  
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-  
-  const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
+// 기본 지도(Base)
+const baseLayer = createLayer('Base'); 
+baseLayer.setVisible(true);   // 기본지도 켜기
 
-  
-  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
-  const map = new ol.Map({
-    target: 'map',
-    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-    view: new ol.View({
-      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
-      zoom: 7 
-    })
-  });
+// 항공사진(Satellite) - 처음엔 꺼두기
+const satLayer = createLayer('Satellite', 'image/jpeg');
+satLayer.setVisible(false);   // 필요할 때만 켜기
 
-  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
-  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
+// 지적도(WMS) - KEY는 URL에 붙이고, STYLES는 빈 문자열
+const cadLayer = new ol.layer.Image({
+  source: new ol.source.ImageWMS({
+    url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
+    params: {
+      'LAYERS': 'LT_C_ADASRATODO',
+      'STYLES': '',                // 기본 스타일이면 빈 문자열
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE'
+    },
+    serverType: 'geoserver',
+    projection: projection
+  }),
+  visible: false   // 기본은 꺼두기
+});
 
-  // ✅ 체크박스 이벤트 → 레이어 on/off
-  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+// Midnight 레이어 (대소문자 수정)
+const midnightLayer = createLayer('Midnight'); 
+midnightLayer.setVisible(false); // 기본 꺼짐
+
+// Hybrid 레이어 - Base와 함께 켜야 정상 동작
+const hybridLayer = createLayer('Hybrid');     
+hybridLayer.setVisible(false);   // 처음엔 꺼두기
+
+// ✅ 지도 초기화 (zoom: 7 유지)
+const map = new ol.Map({
+  target: 'map',
+  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+    zoom: 7 
+  })
+});
+
+// ✅ 페이지 로드 시 지도 크기 갱신
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    map.updateSize();
+  }, 300);
+});
+    
+// ✅ 체크박스 이벤트 → 레이어 on/off
+document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
   
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
