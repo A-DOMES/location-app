@@ -12,7 +12,7 @@ const CONFIG = {
 
   // ✅ 브이월드 API 키
   API_KEY: "D8191829-FB49-32C9-800E-83F0C3ECD43C",
-
+            
   // ✅ 국토부 실거래가 API 키 (data.go.kr에서 발급받은 서비스키)
   MOLIT_KEY: "c2f4f12f4f248e4805222b988738c8e645bbcb2be5f80573a2a9b0815881ddd5",
 
