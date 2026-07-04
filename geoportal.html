@@ -290,12 +290,17 @@ const map = new ol.Map({
   })
 });
 
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시    
+
 // ✅ 페이지 로드 시 지도 크기 갱신
 window.addEventListener("load", () => {
   setTimeout(() => {
     map.updateSize();
   }, 300);
 });
+
+
     
 // ✅ 체크박스 이벤트 → 레이어 on/off
 document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
