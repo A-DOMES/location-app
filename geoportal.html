@@ -266,7 +266,7 @@ const cadLayer = new ol.layer.Tile({
       STYLES: "",                       // 스타일은 비워둠
       FORMAT: "image/png",
       TRANSPARENT: true,
-      SRS: "EPSG:3857",                 // 좌표계 (SRS로 지정)
+      SRS: "EPSG:3857",                 // ✅ CRS 대신 SRS로 지정
       APIKEY: CONFIG.API_KEY,           // ✅ 반드시 APIKEY 사용
       DOMAIN: "https://a-domes.github.io/"
     },
@@ -276,6 +276,7 @@ const cadLayer = new ol.layer.Tile({
   visible: true,
   zIndex: 9999
 });
+
 
 
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
