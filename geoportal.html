@@ -261,19 +261,18 @@ satLayer.setVisible(false);   // 항공사진 기본은 꺼두기
 // ✅ 지적도 (TileWMS 방식) - LX맵
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
-    // LX맵 지적도는 반드시 map.vworld.kr/js/wms.do 엔드포인트 사용
-    url: "https://map.vworld.kr/js/wms.do",
+    url: "https://map.vworld.kr/js/wms.do",   // LX맵 전용 엔드포인트
     params: {
       SERVICE: "WMS",
       VERSION: "1.3.0",
       REQUEST: "GetMap",
-      LAYERS: "lt_c_landinfobasemap",   // LX맵 지적도 레이어명
-      STYLES: "lt_c_landinfobasemap",   // 스타일 동일하게 지정
+      LAYERS: "lt_c_landinfobasemap",         // LX맵 지적도 레이어명
+      STYLES: "lt_c_landinfobasemap",         // 스타일 동일하게 지정
       FORMAT: "image/png",
-      TRANSPARENT: "TRUE",              // 문자열 "TRUE"로 지정해야 정상 동작
-      CRS: "EPSG:3857",                 // ✅ EPSG:3857로 맞춰서 Base/Satellite와 일치
-      APIKEY: CONFIG.API_KEY,           // 발급받은 브이월드 API 키
-      DOMAIN: "https://a-domes.github.io/" // 등록된 도메인
+      TRANSPARENT: "TRUE",                    // 문자열 "TRUE"로 지정
+      CRS: "EPSG:3857",                       // ✅ Base/Satellite와 projection 일치
+      APIKEY: CONFIG.API_KEY,
+      DOMAIN: "https://a-domes.github.io/"
     },
     serverType: "geoserver",
     crossOrigin: "anonymous"
