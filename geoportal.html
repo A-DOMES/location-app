@@ -257,18 +257,18 @@ satLayer.setVisible(true);    // 항공사진 켜기
 // ✅ 지적도 (TileWMS 방식) - LX맵
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
-    url: "https://api.vworld.kr/req/wms?",   // ✅ 최신 WMS 엔드포인트
+    url: "https://api.vworld.kr/req/wms?",
     params: {
       SERVICE: "WMS",
       VERSION: "1.3.0",
       REQUEST: "GetMap",
-      LAYERS: "lt_c_landinfobasemap",        // ✅ LX맵 지적도 레이어명
-      STYLES: "",
+      LAYERS: "lt_c_landinfobasemap",   // LX맵 지적도 레이어명
+      STYLES: "",                       // 스타일은 비워둠
       FORMAT: "image/png",
       TRANSPARENT: true,
-      CRS: "EPSG:3857",                      // ✅ Web Mercator 좌표계
-      KEY: CONFIG.API_KEY,                   // ✅ config.js에서 불러온 API Key
-      DOMAIN: "https://a-domes.github.io/"   // ✅ 등록된 도메인
+      SRS: "EPSG:3857",                 // 좌표계 (SRS로 지정)
+      APIKEY: CONFIG.API_KEY,           // ✅ 반드시 APIKEY 사용
+      DOMAIN: "https://a-domes.github.io/"
     },
     serverType: "geoserver",
     crossOrigin: "anonymous"
@@ -276,6 +276,7 @@ const cadLayer = new ol.layer.Tile({
   visible: true,
   zIndex: 9999
 });
+
 
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
   const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
