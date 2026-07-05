@@ -214,7 +214,7 @@
       }
     });
   }
-
+    
   // ✅ WMTS 공통 설정
   const projection = ol.proj.get('EPSG:3857');
   const projectionExtent = projection.getExtent();
@@ -306,7 +306,6 @@ const cadLayer = new ol.layer.Tile({
   document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
   document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
   document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-
   
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
