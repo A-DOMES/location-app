@@ -201,7 +201,17 @@ function attachOrientationListener() {
 
 // ✅ Capabilities 불러오기
 fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.xml`)
-  .then(response => response.text())
+  .then(response => {
+    console.log("===== Capabilities 요청 =====");
+    console.log("HTTP 상태 :", response.status);
+    console.log("응답 OK :", response.ok);
+    console.log("URL :", response.url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.text();
+  })
   .then(text => {
     const parser = new ol.format.WMTSCapabilities();
     const result = parser.read(text);
@@ -250,11 +260,16 @@ fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.x
       })
     });
 
+    console.log("★★★★★ map 생성 완료 ★★★★★");
+
     // ✅ 내 위치 및 분석용 레이어 추가
     const positionLayer = new ol.layer.Vector({
       source: new ol.source.Vector()
     });
     map.addLayer(positionLayer);
+
+    // ✅ 앱 시작 시 초기 중심 좌표
+    const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
     // ✅ 체크박스 이벤트 → 레이어 on/off + 초기 상태 반영
     const layerMap = { baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer };
@@ -316,78 +331,6 @@ fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.x
     console.error(err);
   });
 
-    
-// ---------------------- 내 위치 및 분석용 레이어 ----------------------
-positionLayer = new ol.layer.Vector({
-    source: new ol.source.Vector()
-});
-
-map.addLayer(positionLayer);
-    
-    // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
-    const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
-
-    // ✅ 체크박스 이벤트 → 레이어 on/off + 초기 상태 반영
-    const layerMap = { baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer };
-    Object.keys(layerMap).forEach(id => {
-      const chk = document.getElementById(id);
-      if (!chk) return;
-      layerMap[id].setVisible(chk.checked); // 로딩 시 반영
-      chk.addEventListener('change', e => layerMap[id].setVisible(e.target.checked));
-    });
-
-    // ✅ 팝업 닫기 함수
-    function closeInfoPopup() {
-      document.getElementById("infoPopup").style.display = "none";
-    }
-
-    // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
-    map.on('click', function(evt) {
-      const view = map.getView();
-      const zoom = view.getZoom();
-
-      if (zoom < 19) return; // 줌 레벨 낮으면 API 호출 안 함
-
-      const coord = ol.proj.toLonLat(evt.coordinate);
-      const lon = coord[0];
-      const lat = coord[1];
-
-      const infoPopup = document.getElementById("infoPopup");
-      infoPopup.style.display = "block";
-      infoPopup.style.transform = "none";
-      infoPopup.style.left = "calc(50% - 160px)";
-
-      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
-      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
-      document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
-      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
-
-      Promise.all([
-        loadLandBuilding(lon, lat),
-        loadLandUse(lon, lat),
-        loadRealEstate(lon, lat),
-        loadRealTransaction(lon, lat)
-      ]).then(([building, landUse, estate, transaction]) => {
-        const parcelData = {
-          ...building,
-          ...landUse,
-          ...estate,
-          ...transaction
-        };
-        renderPopup(parcelData);
-      });
-    });
- 
-
-// ---------------------- 마커 클릭 시 이동 ----------------------
-map.on("singleclick", function(evt) {
-  map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-    if (feature.getId() === "myMarker" && myCoord) {
-      map.getView().setCenter(myCoord);
-      map.getView().setZoom(16);
-    }
-  });
-});
   
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
