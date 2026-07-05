@@ -199,132 +199,122 @@ function attachOrientationListener() {
   });
 }
 
-// ✅ Capabilities 불러오기 (디버깅 강화)
+// ✅ Capabilities 불러오기
 fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.xml`)
-  .then(response => {
-
-    console.log("===== Capabilities 요청 =====");
-    console.log("HTTP 상태 :", response.status);
-    console.log("응답 OK :", response.ok);
-    console.log("URL :", response.url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return response.text();
-  })
-
+  .then(response => response.text())
   .then(text => {
-
-    console.log("===== Capabilities 다운로드 성공 =====");
-    console.log(text.substring(0, 500));
-
     const parser = new ol.format.WMTSCapabilities();
     const result = parser.read(text);
 
+    // ===== Capabilities 분석 =====
     console.log("===== WMTS Capabilities =====");
-
     console.log("Layer 목록");
-    console.table(
-      result.Contents.Layer.map(layer => ({
-        Identifier: layer.Identifier,
-        Title: layer.Title
-      }))
-    );
-
+    console.table(result.Contents.Layer.map(layer => ({
+      Identifier: layer.Identifier,
+      Title: layer.Title
+    })));
     console.log("TileMatrixSet 목록");
-    console.table(
-      result.Contents.TileMatrixSet.map(set => ({
-        Identifier: set.Identifier
-      }))
-    );
+    console.table(result.Contents.TileMatrixSet.map(set => ({
+      Identifier: set.Identifier
+    })));
 
-    // ===========================
-    // 레이어 생성
-    // ===========================
-
-    const baseOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: "Base",
-      matrixSet: "EPSG:3857"
-    });
-
+    // ✅ 주요 레이어 정의
     const baseLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(baseOptions),
+      source: new ol.source.WMTS(ol.source.WMTS.optionsFromCapabilities(result, { layer: "Base", matrixSet: "EPSG:3857" })),
       visible: true
     });
-
-    const satOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: "Satellite",
-      matrixSet: "EPSG:3857"
-    });
-
     const satLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(satOptions),
-      visible: false
+      source: new ol.source.WMTS(ol.source.WMTS.optionsFromCapabilities(result, { layer: "Satellite", matrixSet: "EPSG:3857" })),
+      visible: true
     });
-
-    const hybridOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: "Hybrid",
-      matrixSet: "EPSG:3857"
-    });
-
     const hybridLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(hybridOptions),
-      visible: false
+      source: new ol.source.WMTS(ol.source.WMTS.optionsFromCapabilities(result, { layer: "Hybrid", matrixSet: "EPSG:3857" })),
+      visible: true
     });
-
-    const midnightOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: "midnight",
-      matrixSet: "EPSG:3857"
-    });
-
     const midnightLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(midnightOptions),
+      source: new ol.source.WMTS(ol.source.WMTS.optionsFromCapabilities(result, { layer: "midnight", matrixSet: "EPSG:3857" })),
       visible: false
     });
-
-    const cadOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: "Cadastre",
-      matrixSet: "EPSG:3857"
-    });
-
-    console.log("Cadastre Options :", cadOptions);
-
     const cadLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(cadOptions),
+      source: new ol.source.WMTS(ol.source.WMTS.optionsFromCapabilities(result, { layer: "Cadastre", matrixSet: "EPSG:3857" })),
       visible: false
     });
 
-    // ===========================
-    // 지도 생성
-    // ===========================
-
-    map = new ol.Map({
+    // ✅ 지도 초기화
+    const map = new ol.Map({
       target: "map",
-      layers: [
-        baseLayer,
-        satLayer,
-        hybridLayer,
-        midnightLayer,
-        cadLayer
-      ],
+      layers: [baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer],
       view: new ol.View({
         center: ol.proj.fromLonLat([126.9780, 37.5665]),
         zoom: 7
       })
     });
 
-    console.log("★★★★★ map 생성 완료 ★★★★★");
-    console.log(map);
+    // ✅ 내 위치 및 분석용 레이어 추가
+    const positionLayer = new ol.layer.Vector({
+      source: new ol.source.Vector()
+    });
+    map.addLayer(positionLayer);
 
+    // ✅ 체크박스 이벤트 → 레이어 on/off + 초기 상태 반영
+    const layerMap = { baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer };
+    Object.keys(layerMap).forEach(id => {
+      const chk = document.getElementById(id);
+      if (!chk) return;
+      layerMap[id].setVisible(chk.checked);
+      chk.addEventListener("change", e => layerMap[id].setVisible(e.target.checked));
+    });
+
+    // ✅ 팝업 닫기 함수
+    function closeInfoPopup() {
+      document.getElementById("infoPopup").style.display = "none";
+    }
+
+    // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
+    map.on("click", function(evt) {
+      const view = map.getView();
+      const zoom = view.getZoom();
+      if (zoom < 19) return;
+
+      const coord = ol.proj.toLonLat(evt.coordinate);
+      const lon = coord[0];
+      const lat = coord[1];
+
+      const infoPopup = document.getElementById("infoPopup");
+      infoPopup.style.display = "block";
+      infoPopup.style.transform = "none";
+      infoPopup.style.left = "calc(50% - 160px)";
+
+      document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
+      document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
+      document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
+      document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+
+      Promise.all([
+        loadLandBuilding(lon, lat),
+        loadLandUse(lon, lat),
+        loadRealEstate(lon, lat),
+        loadRealTransaction(lon, lat)
+      ]).then(([building, landUse, estate, transaction]) => {
+        const parcelData = { ...building, ...landUse, ...estate, ...transaction };
+        renderPopup(parcelData);
+      });
+    });
+
+    // ---------------------- 마커 클릭 시 이동 ----------------------
+    map.on("singleclick", function(evt) {
+      map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        if (feature.getId() === "myMarker" && myCoord) {
+          map.getView().setCenter(myCoord);
+          map.getView().setZoom(16);
+        }
+      });
+    });
   })
-
   .catch(err => {
     console.error("★★★★★ WMTS 오류 ★★★★★");
     console.error(err);
   });
-
 
     
 // ---------------------- 내 위치 및 분석용 레이어 ----------------------
