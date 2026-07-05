@@ -230,6 +230,7 @@
   function createLayer(layerName, format='image/png') {
     return new ol.layer.Tile({
       source: new ol.source.WMTS({
+        // ✅ 프록시 서버 경로로 변경
         url: `https://location-app-phi.vercel.app/api/vworld/req/wmts`,
         layer: layerName,
         matrixSet: 'EPSG:3857',
@@ -259,6 +260,7 @@
   // 지적도 (TileWMS 방식) - 필지선 + 지번 표시
   const cadLayer = new ol.layer.Tile({
     source: new ol.source.TileWMS({
+      // ✅ 프록시 서버 경로로 변경
       url: `https://location-app-phi.vercel.app/api/vworld/req/wms`,
       params: {
         'SERVICE': 'WMS',
