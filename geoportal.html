@@ -141,145 +141,171 @@
     <script src="config.js"></script>
     
   <script>   
-// ---------------------- 전역 변수 선언 ----------------------
-let radarOn = false;
-let rotateEnabled = false;
-let lastHeading = 0;
-let lastMapRotation = 0;
-let needleGroup = null;
-let sensorInitialized = false;
-let map; // 지도 객체를 전역으로 선언
-let myCoord = null; // 내 위치 좌표 (예시)
-let radar = null;   // 레이더 피처 (예시)
+  // ---------------------- 전역 변수 선언 ----------------------
+  let radarOn = false;            // 시작 상태: 레이더 꺼짐
+  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
+  let lastHeading = 0;            // 마지막 방향값 저장
+  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
+  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
+  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
 
-// ---------------------- 초기화 ----------------------
-document.addEventListener('DOMContentLoaded', () => {
-  needleGroup = document.getElementById('needle-group');
-  if (!isIOS()) {
-    attachOrientationListener();
-  }
-});
-
-// ✅ iOS 13+ 판별 함수
-function isIOS() {
-  return typeof DeviceOrientationEvent !== 'undefined' &&
-         typeof DeviceOrientationEvent.requestPermission === 'function';
-}
-
-// ---------------------- 센서 이벤트 등록 함수 ----------------------
-function attachOrientationListener() {
-  window.addEventListener('deviceorientationabsolute', (event) => {
-    if (event.alpha !== null && event.alpha !== undefined) {
-      const heading = (360 - event.alpha) % 360;
-
-      if (Math.abs(heading - lastHeading) > 2) {
-        if (needleGroup) {
-          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-        }
-
-        if (rotateEnabled && map) {
-          const newRotation = heading * Math.PI / 180;
-          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-            map.getView().setRotation(newRotation);
-            lastMapRotation = newRotation;
-          }
-        }
-
-        if (radarOn && myCoord && radar) {
-          const angle = 90;
-          const radius = 200;
-          const points = [myCoord];
-
-          for (let a = -angle/2; a <= angle/2; a += 1) {
-            const rad = (heading + a) * Math.PI / 180;
-            const dx = radius * Math.sin(rad);
-            const dy = radius * Math.cos(rad);
-            points.push([myCoord[0] + dx, myCoord[1] + dy]);
-          }
-
-          radar.setGeometry(new ol.geom.Polygon([points]));
-        }
-
-        lastHeading = heading;
-      }
+  // ---------------------- 초기화 ----------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ 나침반 바늘 DOM 요소 참조
+    needleGroup = document.getElementById('needle-group');
+    
+    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
+    if (!isIOS()) {
+      attachOrientationListener();
     }
   });
-}
+  
+  // ✅ iOS 13+ 판별 함수
+  function isIOS() {
+    return typeof DeviceOrientationEvent !== 'undefined' && 
+           typeof DeviceOrientationEvent.requestPermission === 'function';
+  }
 
-// ---------------------- WMTS Capabilities 불러오기 ----------------------
-fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.xml`)
-  .then(response => response.text())
-  .then(text => {
-    const parser = new ol.format.WMTSCapabilities();
-    const result = parser.read(text);
+  // ---------------------- 센서 이벤트 등록 함수 ----------------------
+  function attachOrientationListener() {
+    window.addEventListener('deviceorientationabsolute', (event) => {
+      // ✅ 센서에서 받은 alpha 값이 유효한지 확인
+      if (event.alpha !== null && event.alpha !== undefined) {
+        
+        // ✅ 센서값을 0~360 범위의 heading으로 변환
+        const heading = (360 - event.alpha) % 360;
 
-    const baseOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: 'Base',
-      matrixSet: 'EPSG:3857',
-      style: 'default'
+        // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 업데이트
+        if (Math.abs(heading - lastHeading) > 2) {
+          
+          // ✅ 나침반 바늘 회전
+          if (needleGroup) {
+            needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+          }
+
+          // ✅ 지도 회전 (레이더 ON일 때만)
+          if (rotateEnabled) {
+            const newRotation = heading * Math.PI / 180;
+            if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+              map.getView().setRotation(newRotation);
+              lastMapRotation = newRotation;
+            }
+          }
+
+          // ✅ 레이더도 센서 방향 기준으로 갱신
+          if (radarOn && myCoord) {
+            const angle = 90;   // 레이더 부채꼴 각도
+            const radius = 200; // 레이더 반경
+            const points = [myCoord];
+
+            for (let a = -angle/2; a <= angle/2; a += 1) {
+              const rad = (heading + a) * Math.PI / 180;
+              const dx = radius * Math.sin(rad);
+              const dy = radius * Math.cos(rad);
+              points.push([myCoord[0] + dx, myCoord[1] + dy]);
+            }
+
+            radar.setGeometry(new ol.geom.Polygon([points]));
+          }
+
+          // ✅ 현재 방향값 저장
+          lastHeading = heading;
+        }
+      }
     });
-    const baseLayer = new ol.layer.Tile({ source: new ol.source.WMTS(baseOptions), visible: true });
+  }
 
-    const satOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: 'Satellite',
-      matrixSet: 'EPSG:3857',
-      style: 'default'
-    });
-    const satLayer = new ol.layer.Tile({ source: new ol.source.WMTS(satOptions), visible: false });
-
-    const hybridOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: 'Hybrid',
-      matrixSet: 'EPSG:3857',
-      style: 'default'
-    });
-    const hybridLayer = new ol.layer.Tile({ source: new ol.source.WMTS(hybridOptions), visible: false });
-
-    const midnightOptions = ol.source.WMTS.optionsFromCapabilities(result, {
-      layer: 'midnight',
-      matrixSet: 'EPSG:3857',
-      style: 'default'
-    });
-    const midnightLayer = new ol.layer.Tile({ source: new ol.source.WMTS(midnightOptions), visible: false });
-
-    // ✅ 지적도 (WMS)
-    const cadLayer = new ol.layer.Tile({
-      source: new ol.source.TileWMS({
-        url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
-        params: {
-          SERVICE: 'WMS',
-          VERSION: '1.1.1',
-          REQUEST: 'GetMap',
-          LAYERS: 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
-          STYLES: '',
-          FORMAT: 'image/png',
-          TRANSPARENT: 'TRUE',
-          SRS: 'EPSG:3857'
-        },
-        serverType: 'geoserver',
-        crossOrigin: 'anonymous'
+  // ✅ WMTS 공통 설정
+  const projection = ol.proj.get('EPSG:3857');
+  const projectionExtent = projection.getExtent();
+  const size = ol.extent.getWidth(projectionExtent) / 256;
+  const resolutions = new Array(19);
+  const matrixIds = new Array(19);
+  for (let z = 0; z < 19; ++z) {
+    resolutions[z] = size / Math.pow(2, z);
+    matrixIds[z] = z;
+  }
+  
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+  function createLayer(layerName, format='image/png') {
+    return new ol.layer.Tile({
+      source: new ol.source.WMTS({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+        layer: layerName,
+        matrixSet: 'EPSG:3857',
+        format: format,
+        projection: projection,
+        tileGrid: new ol.tilegrid.WMTS({
+          origin: ol.extent.getTopLeft(projectionExtent),
+          resolutions: resolutions,
+          matrixIds: matrixIds
+        }),
+        style: 'default',
+        requestEncoding: 'REST'
       }),
-      visible: false,
-      zIndex: 9999
+      visible: false
     });
+  }
+  
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
+  const baseLayer = createLayer('Base'); 
+  baseLayer.setVisible(true);   // 기본지도 켜기
+  
+  const satLayer = createLayer('Satellite', 'image/jpeg');
+  satLayer.setVisible(true);    // 항공사진 켜기
+  
+// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
+const cadLayer = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    // 국토부 VWorld WMS 엔진 주소
+    // 🔑 API Key는 URL에 붙여야 정상 인증됨
+    url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`, 
+    
+    params: {
+      'SERVICE': 'WMS',             // 서비스 타입
+      'VERSION': '1.1.1',           // WMS 버전
+      'REQUEST': 'GetMap',          // 지도 요청
+      // 🔑 필지선(LT_C_ADASRATODO) + 지번(LP_PA_CBND_ONAM) 결합해야 번지수까지 표시됨
+      'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
+      'STYLES': '',                 // 기본 스타일이면 빈 문자열 (쉼표 대신 빈 문자열 사용)
+      'FORMAT': 'image/png',        // 출력 포맷
+      'TRANSPARENT': 'TRUE',        // 배경 투명 처리
+      'SRS': 'EPSG:3857'            // Web Mercator 좌표계 (대부분 지도와 호환)
+    },
+    serverType: 'geoserver',
+    crossOrigin: 'anonymous'        // 크로스 도메인 허용
+  }),
+  visible: false,                   // 기본은 꺼두기
+  zIndex: 9999                      // 다른 레이어 위에 표시되도록 최상위 고정
+});
 
-    // ✅ 지도 초기화 (Capabilities 로딩 완료 후 실행)
-    map = new ol.Map({
-      target: 'map',
-      layers: [baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([126.9780, 37.5665]),
-        zoom: 7,
-        maxZoom: 20
-      })
-    });
+  
+  const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
+  
+  const hybridLayer = createLayer('Hybrid');     
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-    // ✅ 체크박스 이벤트
-    document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-    document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-    document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-    document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-    document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  const map = new ol.Map({
+    target: 'map',
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+      zoom: 7 
+    })
   });
+
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
+
+  // ✅ 체크박스 이벤트 → 레이어 on/off
+  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
 
   
   // ✅ 팝업 닫기 함수
