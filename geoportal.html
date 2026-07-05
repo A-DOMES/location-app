@@ -215,50 +215,38 @@
     });
   }
     
-// ✅ WMTS 공통 설정
-const projection = ol.proj.get('EPSG:3857');
-const projectionExtent = projection.getExtent();
-const size = ol.extent.getWidth(projectionExtent) / 256;
-const resolutions = new Array(19);
-const matrixIds = new Array(19);
-for (let z = 0; z < 19; ++z) {
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
-}
+// ✅ 배경지도 (XYZ 방식)
+const baseLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: `http://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Base/{z}/{y}/{x}.png`,
+    crossOrigin: "anonymous"
+  }),
+  visible: true
+});
 
-// ✅ WMTS 레이어 생성 함수 (URL 구조 수정 완료)
-function createLayer(layerName, format='image/png') {
-  return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/default/EPSG:3857/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
-      }),
-      style: 'default',
-      requestEncoding: 'REST'
-    }),
-    visible: false
-  });
-}
+const satLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: `http://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Satellite/{z}/{y}/{x}.jpeg`,
+    crossOrigin: "anonymous"
+  }),
+  visible: false
+});
 
-// ✅ 주요 배경 레이어 정의
-const baseLayer = createLayer('Base'); 
-baseLayer.setVisible(true);
+const midnightLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: `http://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/midnight/{z}/{y}/{x}.png`,
+    crossOrigin: "anonymous"
+  }),
+  visible: false
+});
 
-const satLayer = createLayer('Satellite', 'image/jpeg');
-satLayer.setVisible(false);
-
-const midnightLayer = createLayer('midnight'); 
-midnightLayer.setVisible(false);
-
-const hybridLayer = createLayer('Hybrid');     
-hybridLayer.setVisible(false);
+const hybridLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: `http://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Hybrid/{z}/{y}/{x}.png`,
+    crossOrigin: "anonymous"
+  }),
+  visible: false
+});
 
 // ✅ 지적도 (WMS 방식) - 필지선 + 지번 표시
 const cadLayer = new ol.layer.Tile({
