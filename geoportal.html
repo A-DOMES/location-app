@@ -199,14 +199,30 @@ function attachOrientationListener() {
   });
 }
 
-// ✅ Capabilities 불러오기
+// ✅ Capabilities 불러오기 (디버깅 강화)
 fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.xml`)
-  .then(response => response.text())
+  .then(response => {
+
+    console.log("===== Capabilities 요청 =====");
+    console.log("HTTP 상태 :", response.status);
+    console.log("응답 OK :", response.ok);
+    console.log("URL :", response.url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    return response.text();
+  })
+
   .then(text => {
+
+    console.log("===== Capabilities 다운로드 성공 =====");
+    console.log(text.substring(0, 500));
+
     const parser = new ol.format.WMTSCapabilities();
     const result = parser.read(text);
 
-    // ===== Capabilities 분석 =====
     console.log("===== WMTS Capabilities =====");
 
     console.log("Layer 목록");
@@ -224,31 +240,92 @@ fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.x
       }))
     );
 
-    // ✅ 주요 레이어 정의 (Capabilities 기반)
-    const baseOptions = ol.source.WMTS.optionsFromCapabilities(result, { layer: 'Base', matrixSet: 'EPSG:3857' });
-    const baseLayer = new ol.layer.Tile({ source: new ol.source.WMTS(baseOptions), visible: true });
+    // ===========================
+    // 레이어 생성
+    // ===========================
 
-    const satOptions = ol.source.WMTS.optionsFromCapabilities(result, { layer: 'Satellite', matrixSet: 'EPSG:3857' });
-    const satLayer = new ol.layer.Tile({ source: new ol.source.WMTS(satOptions), visible: true });
+    const baseOptions = ol.source.WMTS.optionsFromCapabilities(result, {
+      layer: "Base",
+      matrixSet: "EPSG:3857"
+    });
 
-    const hybridOptions = ol.source.WMTS.optionsFromCapabilities(result, { layer: 'Hybrid', matrixSet: 'EPSG:3857' });
-    const hybridLayer = new ol.layer.Tile({ source: new ol.source.WMTS(hybridOptions), visible: true });
+    const baseLayer = new ol.layer.Tile({
+      source: new ol.source.WMTS(baseOptions),
+      visible: true
+    });
 
-    const midnightOptions = ol.source.WMTS.optionsFromCapabilities(result, { layer: 'midnight', matrixSet: 'EPSG:3857' });
-    const midnightLayer = new ol.layer.Tile({ source: new ol.source.WMTS(midnightOptions), visible: false });
+    const satOptions = ol.source.WMTS.optionsFromCapabilities(result, {
+      layer: "Satellite",
+      matrixSet: "EPSG:3857"
+    });
 
-    const cadOptions = ol.source.WMTS.optionsFromCapabilities(result, { layer: 'Cadastre', matrixSet: 'EPSG:3857' });
-    const cadLayer = new ol.layer.Tile({ source: new ol.source.WMTS(cadOptions), visible: false });
+    const satLayer = new ol.layer.Tile({
+      source: new ol.source.WMTS(satOptions),
+      visible: false
+    });
 
-    // ✅ 지도 초기화
+    const hybridOptions = ol.source.WMTS.optionsFromCapabilities(result, {
+      layer: "Hybrid",
+      matrixSet: "EPSG:3857"
+    });
+
+    const hybridLayer = new ol.layer.Tile({
+      source: new ol.source.WMTS(hybridOptions),
+      visible: false
+    });
+
+    const midnightOptions = ol.source.WMTS.optionsFromCapabilities(result, {
+      layer: "midnight",
+      matrixSet: "EPSG:3857"
+    });
+
+    const midnightLayer = new ol.layer.Tile({
+      source: new ol.source.WMTS(midnightOptions),
+      visible: false
+    });
+
+    const cadOptions = ol.source.WMTS.optionsFromCapabilities(result, {
+      layer: "Cadastre",
+      matrixSet: "EPSG:3857"
+    });
+
+    console.log("Cadastre Options :", cadOptions);
+
+    const cadLayer = new ol.layer.Tile({
+      source: new ol.source.WMTS(cadOptions),
+      visible: false
+    });
+
+    // ===========================
+    // 지도 생성
+    // ===========================
+
     map = new ol.Map({
-      target: 'map',
-      layers: [baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer],
+      target: "map",
+      layers: [
+        baseLayer,
+        satLayer,
+        hybridLayer,
+        midnightLayer,
+        cadLayer
+      ],
       view: new ol.View({
         center: ol.proj.fromLonLat([126.9780, 37.5665]),
         zoom: 7
       })
     });
+
+    console.log("★★★★★ map 생성 완료 ★★★★★");
+    console.log(map);
+
+  })
+
+  .catch(err => {
+    console.error("★★★★★ WMTS 오류 ★★★★★");
+    console.error(err);
+  });
+
+
     
 // ---------------------- 내 위치 및 분석용 레이어 ----------------------
 positionLayer = new ol.layer.Vector({
@@ -310,9 +387,18 @@ map.addLayer(positionLayer);
         renderPopup(parcelData);
       });
     });
+ 
+
+// ---------------------- 마커 클릭 시 이동 ----------------------
+map.on("singleclick", function(evt) {
+  map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+    if (feature.getId() === "myMarker" && myCoord) {
+      map.getView().setCenter(myCoord);
+      map.getView().setZoom(16);
+    }
   });
-
-
+});
+});    
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
@@ -1031,15 +1117,7 @@ function isIOS() {
 }
 
     
-// ---------------------- 마커 클릭 시 이동 ----------------------
-map.on("singleclick", function(evt) {
-  map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-    if (feature.getId() === "myMarker" && myCoord) {
-      map.getView().setCenter(myCoord);
-      map.getView().setZoom(16);
-    }
-  });
-});
+
 
 // ---------------------- 우클릭 시 레벨7 복귀 ----------------------
 map.getViewport().addEventListener("contextmenu", function(evt) {
