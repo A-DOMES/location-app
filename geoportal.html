@@ -260,8 +260,7 @@ hybridLayer.setVisible(true);
 const midnightLayer = createLayer('midnight');
 midnightLayer.setVisible(false);
 
-
- // 지적도 (HYBRIDE 방식) - 필지선 + 지번 표시   
+// ✅ 지번 표시용 WMS 레이어
 const jibunLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
     url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
@@ -282,11 +281,10 @@ const jibunLayer = new ol.layer.Tile({
   zIndex: 10000
 });
 
-
 // ✅ 지도 초기화
 const map = new ol.Map({
   target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+  layers: [baseLayer, satLayer, jibunLayer, midnightLayer, hybridLayer],
   view: new ol.View({
     center: ol.proj.fromLonLat([126.9780, 37.5665]),
     zoom: 7
@@ -299,7 +297,7 @@ const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 // ✅ 체크박스 이벤트 → 레이어 on/off
 document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
 document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+document.getElementById('cadLayer').addEventListener('change', e => jibunLayer.setVisible(e.target.checked)); // ✅ cadLayer → jibunLayer
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
 
