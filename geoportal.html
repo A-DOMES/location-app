@@ -215,75 +215,71 @@
     });
   }
     
-  // ✅ WMTS 공통 설정
-  const projection = ol.proj.get('EPSG:3857');
-  const projectionExtent = projection.getExtent();
-  const size = ol.extent.getWidth(projectionExtent) / 256;
-  const resolutions = new Array(19);
-  const matrixIds = new Array(19);
-  for (let z = 0; z < 19; ++z) {
-    resolutions[z] = size / Math.pow(2, z);
-    matrixIds[z] = z;
-  }
-  
-  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
-  function createLayer(layerName, format='image/png') {
-    return new ol.layer.Tile({
-      source: new ol.source.WMTS({
-        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-        layer: layerName,
-        matrixSet: 'EPSG:3857',
-        format: format,
-        projection: projection,
-        tileGrid: new ol.tilegrid.WMTS({
-          origin: ol.extent.getTopLeft(projectionExtent),
-          resolutions: resolutions,
-          matrixIds: matrixIds
-        }),
-        style: 'default',
-        requestEncoding: 'REST'
+// ✅ WMTS 공통 설정
+const projection = ol.proj.get('EPSG:3857');
+const projectionExtent = projection.getExtent();
+const size = ol.extent.getWidth(projectionExtent) / 256;
+const resolutions = new Array(19);
+const matrixIds = new Array(19);
+for (let z = 0; z < 19; ++z) {
+  resolutions[z] = size / Math.pow(2, z);
+  matrixIds[z] = z;
+}
+
+// ✅ WMTS 레이어 생성 함수 (URL 구조 수정 완료)
+function createLayer(layerName, format='image/png') {
+  return new ol.layer.Tile({
+    source: new ol.source.WMTS({
+      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/default/EPSG:3857/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      layer: layerName,
+      matrixSet: 'EPSG:3857',
+      format: format,
+      projection: projection,
+      tileGrid: new ol.tilegrid.WMTS({
+        origin: ol.extent.getTopLeft(projectionExtent),
+        resolutions: resolutions,
+        matrixIds: matrixIds
       }),
-      visible: false
-    });
-  }
-  
-  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
-  const baseLayer = createLayer('Base'); 
-  baseLayer.setVisible(true);   // 기본지도 켜기
-  
-  const satLayer = createLayer('Satellite', 'image/jpeg');
-  satLayer.setVisible(true);    // 항공사진 켜기
-  
-// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
+      style: 'default',
+      requestEncoding: 'REST'
+    }),
+    visible: false
+  });
+}
+
+// ✅ 주요 배경 레이어 정의
+const baseLayer = createLayer('Base'); 
+baseLayer.setVisible(true);
+
+const satLayer = createLayer('Satellite', 'image/jpeg');
+satLayer.setVisible(false);
+
+const midnightLayer = createLayer('midnight'); 
+midnightLayer.setVisible(false);
+
+const hybridLayer = createLayer('Hybrid');     
+hybridLayer.setVisible(false);
+
+// ✅ 지적도 (WMS 방식) - 필지선 + 지번 표시
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
-    // 국토부 VWorld WMS 엔진 주소
-    // 🔑 API Key는 URL에 붙여야 정상 인증됨
     url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`, 
-    
     params: {
-      'SERVICE': 'WMS',             // 서비스 타입
-      'VERSION': '1.1.1',           // WMS 버전
-      'REQUEST': 'GetMap',          // 지도 요청
-      // 🔑 필지선(LT_C_ADASRATODO) + 지번(LP_PA_CBND_ONAM) 결합해야 번지수까지 표시됨
-      'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
-      'STYLES': '',                 // 기본 스타일이면 빈 문자열 (쉼표 대신 빈 문자열 사용)
-      'FORMAT': 'image/png',        // 출력 포맷
-      'TRANSPARENT': 'TRUE',        // 배경 투명 처리
-      'SRS': 'EPSG:3857'            // Web Mercator 좌표계 (대부분 지도와 호환)
+      SERVICE: 'WMS',
+      VERSION: '1.1.1',
+      REQUEST: 'GetMap',
+      LAYERS: 'LT_C_ADASRATODO,LP_PA_CBND_ONAM', // 필지선 + 지번
+      STYLES: '',
+      FORMAT: 'image/png',
+      TRANSPARENT: 'TRUE',
+      SRS: 'EPSG:3857'
     },
     serverType: 'geoserver',
-    crossOrigin: 'anonymous'        // 크로스 도메인 허용
+    crossOrigin: 'anonymous'
   }),
-  visible: false,                   // 기본은 꺼두기
-  zIndex: 9999                      // 다른 레이어 위에 표시되도록 최상위 고정
+  visible: false,
+  zIndex: 9999
 });
-  
-  const midnightLayer = createLayer('midnight'); 
-  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
-  
-  const hybridLayer = createLayer('Hybrid');     
-  hybridLayer.setVisible(true);   // Hybrid 켜기
 
   
   // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
