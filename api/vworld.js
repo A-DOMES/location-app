@@ -1,38 +1,38 @@
 import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import config from './config.js';   // ✅ config.js에서 APIKEY 가져오기
+import config from './config.js';
 
 const app = express();
 
 // ✅ WMS 프록시
 app.use('/api/vworld/req/wms', createProxyMiddleware({
-  target: 'https://api.vworld.kr/req/wms',
+  target: 'https://api.vworld.kr',
   changeOrigin: true,
-  pathRewrite: { '^/api/vworld/req/wms': '' },
+  pathRewrite: { '^/api/vworld/req/wms': '/req/wms' },
   onProxyReq(proxyReq) {
-    // 인증키 자동 추가
-    if (!proxyReq.path.includes('APIKEY')) {
-      proxyReq.path += `&APIKEY=${config.API_KEY}`;
+    // APIKEY 자동 추가
+    const url = proxyReq.path;
+    if (!url.includes('APIKEY')) {
+      if (url.includes('?')) {
+        proxyReq.path += `&APIKEY=${config.API_KEY}`;
+      } else {
+        proxyReq.path += `?APIKEY=${config.API_KEY}`;
+      }
     }
   },
   onProxyRes(proxyRes) {
-    // 응답 헤더 보정 (타일이 HTML로 내려올 경우 방지)
+    // 응답 헤더 보정
     if (proxyRes.headers['content-type']?.includes('text/html')) {
       proxyRes.headers['content-type'] = 'image/png';
     }
   }
 }));
 
-// ✅ WMTS 프록시
+// ✅ WMTS 프록시 (필요 없다면 제거 가능)
 app.use('/api/vworld/req/wmts', createProxyMiddleware({
-  target: 'https://api.vworld.kr/req/wmts',
+  target: 'https://api.vworld.kr',
   changeOrigin: true,
-  pathRewrite: { '^/api/vworld/req/wmts': '' },
-  onProxyReq(proxyReq) {
-    if (!proxyReq.path.includes('APIKEY')) {
-      proxyReq.path += `/${config.API_KEY}`;
-    }
-  }
+  pathRewrite: { '^/api/vworld/req/wmts': '/req/wmts' },
 }));
 
 export default app;
