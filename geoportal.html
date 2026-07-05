@@ -148,7 +148,8 @@ let lastHeading = 0;            // 마지막 방향값 저장
 let lastMapRotation = 0;        // 마지막 지도 회전값 저장
 let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
 let sensorInitialized = false;  // iOS 센서 권한 획득 여부
-
+let map;
+    
 // ---------------------- 초기화 ----------------------
 document.addEventListener('DOMContentLoaded', () => {
   needleGroup = document.getElementById('needle-group');
@@ -239,7 +240,7 @@ fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.x
     const cadLayer = new ol.layer.Tile({ source: new ol.source.WMTS(cadOptions), visible: false });
 
     // ✅ 지도 초기화
-    const map = new ol.Map({
+    map = new ol.Map({
       target: 'map',
       layers: [baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer],
       view: new ol.View({
