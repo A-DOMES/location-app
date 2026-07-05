@@ -227,28 +227,25 @@
   }
   
   // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
-function createLayer(layerName, format='image/png') {
-  return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://location-app-phi.vercel.app/api/vworld/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
-      }),
-      style: 'default',
-      requestEncoding: 'REST',
-      crossOrigin: 'anonymous'
-    }),
-    visible: false
-  });
-}
-
-
+  function createLayer(layerName, format='image/png') {
+      return new ol.layer.Tile({
+        source: new ol.source.WMTS({
+          url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+          layer: layerName,
+          matrixSet: 'EPSG:3857',
+          format: format,
+          projection: projection,
+          tileGrid: new ol.tilegrid.WMTS({
+            origin: ol.extent.getTopLeft(projectionExtent),
+            resolutions: resolutions,
+            matrixIds: matrixIds
+          }),
+          style: 'default',
+          requestEncoding: 'REST'
+        }),
+        visible: false
+      });
+    }
   
   // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
   const baseLayer = createLayer('Base'); 
