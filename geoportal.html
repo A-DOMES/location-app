@@ -260,7 +260,7 @@ hybridLayer.setVisible(true);
 const midnightLayer = createLayer('midnight');
 midnightLayer.setVisible(false);
 
-// ✅ 지적도 (WMTS 방식으로 교체)
+// ✅ 지적도 (WMTS Cadastre)
 const cadLayer = createLayer('Cadastre');
 cadLayer.setVisible(false);
 
@@ -284,43 +284,41 @@ document.getElementById('cadLayer').addEventListener('change', e => cadLayer.set
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
 
-  // ✅ 팝업 닫기 함수
-  function closeInfoPopup() {
-    document.getElementById("infoPopup").style.display = "none";
-  }
-  
+// ✅ 팝업 닫기 함수
+function closeInfoPopup() {
+  document.getElementById("infoPopup").style.display = "none";
+}
+
 // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
 
-  if (zoom < 19) return; 
-  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
+  if (zoom < 19) return; // 줌 레벨 낮으면 API 호출 안 함
 
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
 
-  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
+  // ✅ 팝업 초기화
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
   infoPopup.style.transform = "none";
   infoPopup.style.left = "calc(50% - 160px)";
 
-  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
+  // ✅ 진행 상태 안내
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
   document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
+  // ✅ API 호출 병렬 실행
   Promise.all([
-    loadLandBuilding(lon, lat),   // 건물 정보
-    loadLandUse(lon, lat),        // 토지 이용
-    loadRealEstate(lon, lat),     // 공시지가
-    loadRealTransaction(lon, lat) // 실거래가
+    loadLandBuilding(lon, lat),
+    loadLandUse(lon, lat),
+    loadRealEstate(lon, lat),
+    loadRealTransaction(lon, lat)
   ]).then(([building, landUse, estate, transaction]) => {
-    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
     const parcelData = {
       ...building,
       ...landUse,
@@ -328,8 +326,10 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
-    renderPopup(parcelData);
+    // ✅ 데이터가 있을 때만 팝업 렌더링
+    if (Object.keys(parcelData).length > 0) {
+      renderPopup(parcelData);
+    }
   });
 });
 
