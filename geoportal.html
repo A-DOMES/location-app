@@ -284,7 +284,7 @@ const jibunLayer = new ol.layer.Tile({
 // ✅ 지도 초기화
 const map = new ol.Map({
   target: 'map',
-  layers: [baseLayer, satLayer, jibunLayer, midnightLayer, hybridLayer],
+  layers: [baseLayer, satLayer, jibunLayer, midnightLayer, hybridLayer], // jibunLayer 포함
   view: new ol.View({
     center: ol.proj.fromLonLat([126.9780, 37.5665]),
     zoom: 7
@@ -297,7 +297,7 @@ const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 // ✅ 체크박스 이벤트 → 레이어 on/off
 document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
 document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => jibunLayer.setVisible(e.target.checked)); // ✅ cadLayer → jibunLayer
+document.getElementById('cadLayer').addEventListener('change', e => jibunLayer.setVisible(e.target.checked)); // cadLayer 체크박스 → jibunLayer 연결
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
 
