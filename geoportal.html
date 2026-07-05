@@ -223,7 +223,7 @@ const resolutions = new Array(19);
 const matrixIds = new Array(19);
 for (let z = 0; z < 19; ++z) {
   resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
+  matrixIds[z] = z.toString(); // ✅ 문자열로 변환
 }
 
 // ✅ WMTS 레이어 생성 함수 (프록시 주소 적용)
