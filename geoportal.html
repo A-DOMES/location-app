@@ -227,12 +227,13 @@ for (let z = 0; z < 19; ++z) {
 }
 
 // ✅ WMTS 레이어 생성 함수 (프록시 주소 적용)
-function createLayer(layerName, format='image/png') {
+function createLayer(layerName, format = 'image/png') {
+  const extension = format === 'image/jpeg' ? 'jpeg' : 'png'; // 확장자 처리
+
   return new ol.layer.Tile({
     source: new ol.source.WMTS({
-      // ⚠️ 기존: https://api.vworld.kr/req/wmts/...
-      // ✅ 변경: Vercel 프록시 주소 (/api/vworld)
-      url: `https://location-app-phi.vercel.app/api/vworld/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+      // ✅ Vercel 프록시 주소 (/api/vworld)
+      url: `https://location-app-phi.vercel.app/api/vworld/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${extension}`,
       layer: layerName,
       matrixSet: 'EPSG:3857',
       format: format,
@@ -259,8 +260,6 @@ satLayer.setVisible(true);    // 항공사진 켜기
 // ✅ 지적도 (TileWMS 방식) - 프록시 주소 적용
 const cadLayer = new ol.layer.Tile({
   source: new ol.source.TileWMS({
-    // ⚠️ 기존: https://api.vworld.kr/req/wms?key=...
-    // ✅ 변경: Vercel 프록시 주소 (/api/vworld)
     url: `https://location-app-phi.vercel.app/api/vworld/req/wms?key=${CONFIG.API_KEY}`,
     params: {
       'SERVICE': 'WMS',
@@ -278,6 +277,7 @@ const cadLayer = new ol.layer.Tile({
   visible: false,
   zIndex: 9999
 });
+
 
 const midnightLayer = createLayer('midnight'); 
 midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
