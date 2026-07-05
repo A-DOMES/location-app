@@ -254,27 +254,10 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진 켜기
   
-// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
-const cadLayer = new ol.layer.Tile({
-  source: new ol.source.TileWMS({
-    url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
-    params: {
-      'SERVICE': 'WMS',
-      'VERSION': '1.3.0',           // ✅ 1.3.0으로 변경
-      'REQUEST': 'GetMap',
-      'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
-      'STYLES': '',
-      'FORMAT': 'image/png',
-      'TRANSPARENT': 'TRUE',
-      'CRS': 'EPSG:3857'            // ✅ CRS로 변경
-    },
-    serverType: 'geoserver',
-    crossOrigin: 'anonymous'
-  }),
-  visible: false,
-  zIndex: 9999
-});
-  
+  // 지적도 WMTS 레이어 (필지선 + 지번 표시)
+  const cadLayer = createLayer('Cadastre'); 
+  cadLayer.setVisible(true); // 기본 켜기
+
   const midnightLayer = createLayer('midnight'); 
   midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
   
