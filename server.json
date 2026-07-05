@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/vworld/req/wms",
+      "destination": "https://api.vworld.kr/req/wms"
+    },
+    {
+      "source": "/api/vworld/req/wmts/:path*",
+      "destination": "https://api.vworld.kr/req/wmts/:path*"
+    }
+  ]
+}
