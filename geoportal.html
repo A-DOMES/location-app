@@ -215,112 +215,134 @@
     });
   }
     
-// ✅ WMTS 공통 설정
-const projection = ol.proj.get('EPSG:3857');
-const projectionExtent = projection.getExtent();
-const size = ol.extent.getWidth(projectionExtent) / 256;
-const resolutions = new Array(19);
-const matrixIds = new Array(19);
-for (let z = 0; z < 19; ++z) {
-  resolutions[z] = size / Math.pow(2, z);
-  matrixIds[z] = z;
-}
-
-// ✅ WMTS 레이어 생성 함수
-function createLayer(layerName, format='image/png') {
-  return new ol.layer.Tile({
-    source: new ol.source.WMTS({
-      url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
-      layer: layerName,
-      matrixSet: 'EPSG:3857',
-      format: format,
-      projection: projection,
-      tileGrid: new ol.tilegrid.WMTS({
-        origin: ol.extent.getTopLeft(projectionExtent),
-        resolutions: resolutions,
-        matrixIds: matrixIds
+  // ✅ WMTS 공통 설정
+  const projection = ol.proj.get('EPSG:3857');
+  const projectionExtent = projection.getExtent();
+  const size = ol.extent.getWidth(projectionExtent) / 256;
+  const resolutions = new Array(19);
+  const matrixIds = new Array(19);
+  for (let z = 0; z < 19; ++z) {
+    resolutions[z] = size / Math.pow(2, z);
+    matrixIds[z] = z;
+  }
+  
+  // ✅ WMTS 레이어 생성 함수 (대소문자 규격 엄격 적용)
+  function createLayer(layerName, format='image/png') {
+    return new ol.layer.Tile({
+      source: new ol.source.WMTS({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/${layerName}/{TileMatrix}/{TileRow}/{TileCol}.${format.split('/')[1]}`,
+        layer: layerName,
+        matrixSet: 'EPSG:3857',
+        format: format,
+        projection: projection,
+        tileGrid: new ol.tilegrid.WMTS({
+          origin: ol.extent.getTopLeft(projectionExtent),
+          resolutions: resolutions,
+          matrixIds: matrixIds
+        }),
+        style: 'default',
+        requestEncoding: 'REST'
       }),
-      style: 'default',
-      requestEncoding: 'REST',
-      crossOrigin: 'anonymous'   // ✅ 반드시 추가
-    }),
-    visible: false
-  });
-}
-
-// ✅ 주요 레이어 정의
-const baseLayer = createLayer('Base');
-baseLayer.setVisible(true);
-
-const satLayer = createLayer('Satellite', 'image/jpeg');
-satLayer.setVisible(true);
-
-const hybridLayer = createLayer('Hybrid');
-hybridLayer.setVisible(true);
-
-const midnightLayer = createLayer('midnight');
-midnightLayer.setVisible(false);
-
-// ✅ Cadastre 레이어 (지적도)
-const cadLayer = createLayer('Cadastre');
-cadLayer.setVisible(false);
-
-// ✅ 지도 초기화
-const map = new ol.Map({
-  target: 'map',
-  layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
-  view: new ol.View({
-    center: ol.proj.fromLonLat([126.9780, 37.5665]),
-    zoom: 7
-  })
+      visible: false
+    });
+  }
+  
+  // ✅ 주요 레이어 정의 (대소문자 수정 완료 및 불필요 레이어 완전히 제거)
+  const baseLayer = createLayer('Base'); 
+  baseLayer.setVisible(true);   // 기본지도 켜기
+  
+  const satLayer = createLayer('Satellite', 'image/jpeg');
+  satLayer.setVisible(true);    // 항공사진 켜기
+  
+// 지적도 (TileWMS 방식) - 필지선 + 지번 표시
+const cadLayer = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: `https://location-app-phi.vercel.app/api/vworld/req/wms`,
+    params: {
+      'APIKEY': CONFIG.API_KEY,   // ✅ 여기로 이동
+      'SERVICE': 'WMS',
+      'VERSION': '1.3.0',
+      'REQUEST': 'GetMap',
+      'LAYERS': 'LT_C_ADASRATODO,LP_PA_CBND_ONAM',
+      'STYLES': '',
+      'FORMAT': 'image/png',
+      'TRANSPARENT': 'TRUE',
+      'CRS': 'EPSG:3857'
+    },
+    serverType: 'geoserver',
+    crossOrigin: 'anonymous'
+  }),
+  visible: false,
+  zIndex: 9999
 });
 
 
-// ✅ 앱 시작 시 초기 중심 좌표
-const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
-// ✅ 체크박스 이벤트 → 레이어 on/off
-document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
-document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+  
+  const midnightLayer = createLayer('midnight'); 
+  midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
+  
+  const hybridLayer = createLayer('Hybrid');     
+  hybridLayer.setVisible(true);   // Hybrid 켜기
 
-// ✅ 팝업 닫기 함수
-function closeInfoPopup() {
-  document.getElementById("infoPopup").style.display = "none";
-}
+  
+  // ✅ 지도 초기화 (⚠️ layers 배열에서 grayLayer와 terrainLayer를 깔끔하게 지웠습니다!)
+  const map = new ol.Map({
+    target: 'map',
+    layers: [baseLayer, satLayer, cadLayer, midnightLayer, hybridLayer],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([126.9780, 37.5665]), 
+      zoom: 7 
+    })
+  });
 
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
+
+  // ✅ 체크박스 이벤트 → 레이어 on/off
+  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
+  
+  // ✅ 팝업 닫기 함수
+  function closeInfoPopup() {
+    document.getElementById("infoPopup").style.display = "none";
+  }
+  
 // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
 
-  if (zoom < 19) return; // 줌 레벨 낮으면 API 호출 안 함
+  if (zoom < 19) return; 
+  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
 
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
 
-  // ✅ 팝업 초기화
+  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
   infoPopup.style.transform = "none";
   infoPopup.style.left = "calc(50% - 160px)";
 
-  // ✅ 진행 상태 안내
+  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
   document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
 
-  // ✅ API 호출 병렬 실행
+  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
   Promise.all([
-    loadLandBuilding(lon, lat),
-    loadLandUse(lon, lat),
-    loadRealEstate(lon, lat),
-    loadRealTransaction(lon, lat)
+    loadLandBuilding(lon, lat),   // 건물 정보
+    loadLandUse(lon, lat),        // 토지 이용
+    loadRealEstate(lon, lat),     // 공시지가
+    loadRealTransaction(lon, lat) // 실거래가
   ]).then(([building, landUse, estate, transaction]) => {
+    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
     const parcelData = {
       ...building,
       ...landUse,
@@ -328,12 +350,11 @@ map.on('click', function(evt) {
       ...transaction
     };
 
-    // ✅ 데이터가 있을 때만 팝업 렌더링
-    if (Object.keys(parcelData).length > 0) {
-      renderPopup(parcelData);
-    }
+    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    renderPopup(parcelData);
   });
 });
+
 
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
