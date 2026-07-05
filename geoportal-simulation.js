@@ -1,29 +1,52 @@
-// geoportal-simulation.js
-// ✅ 이 파일은 팝업 UI와 투자 시뮬레이션 계산 로직을 담당합니다.
-// ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
-
-function renderPopup(parcelData) {
-
-  // ===== 요소 확인 =====
-  const popup = document.getElementById("infoPopup");
-
-  if (!popup) {
-    console.error("infoPopup을 찾을 수 없습니다.");
-    return;
-  }
-
-  popup.style.display = "block";
-
-  // ===== 안전하게 HTML 넣기 =====
-  function setHtml(id, value) {
-    const el = document.getElementById(id);
-
-    if (!el) {
-      console.warn(`${id} 요소를 찾을 수 없습니다.`);
-      return;
-    }
-
-    el.innerHTML = value;
+  // geoportal-simulation.js
+  // ✅ 이 파일은 팝업 UI와 투자 시뮬레이션 계산 로직을 담당합니다.
+  // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
+  
+  function renderPopup(parcelData) {
+    const popup = document.getElementById("infoPopup");
+    popup.style.display = "block";
+  
+    const areaSqm = parcelData.areaSqm || 0;
+    const areaPy = (areaSqm / 3.3058).toFixed(2);
+  
+    const pricePerSqm = parcelData.pricePerSqm || 0;
+    const tradePrice = parcelData.tradePrice || 0;
+    const estateTotal = (pricePerSqm * areaSqm).toLocaleString();
+    const tradeTotal = (tradePrice * 10000).toLocaleString();
+  
+    // ✅ 건물 정보
+    document.getElementById("bldg-basic").innerHTML =
+      parcelData.buildingInfo?.basic || "조회 실패";
+    document.getElementById("bldg-usage").innerHTML =
+      parcelData.buildingInfo?.usage || "조회 실패";
+    document.getElementById("bldg-area").innerHTML =
+      parcelData.buildingInfo?.area || "조회 실패";
+    document.getElementById("bldg-right").innerHTML =
+      parcelData.buildingInfo?.right || "조회 실패";
+  
+    // ✅ 토지 이용
+    document.getElementById("land-zone").innerHTML =
+      parcelData.landUseInfo?.zone || "조회 실패";
+    document.getElementById("land-district").innerHTML =
+      parcelData.landUseInfo?.district || "조회 실패";
+    document.getElementById("land-etc").innerHTML =
+      parcelData.landUseInfo?.etc || "조회 실패";
+  
+    // ✅ 공시지가
+    document.getElementById("price-basic").innerHTML =
+      pricePerSqm ? pricePerSqm.toLocaleString() + " 원/㎡" : "조회 실패";
+    document.getElementById("price-trend").innerHTML = "추세분석 데이터 준비 중...";
+    document.getElementById("price-parcel").innerHTML =
+      ${areaSqm}㎡ (${areaPy}평), 총액: ${pricePerSqm ? estateTotal + " 원" : "데이터 없음"};
+  
+    // ✅ 실거래가
+    document.getElementById("deal-sale").innerHTML =
+      tradePrice ? tradePrice.toLocaleString() + " 만원" : "조회 실패";
+    document.getElementById("deal-jeonse").innerHTML = "전세 데이터 준비 중...";
+    document.getElementById("deal-wolse").innerHTML = "월세 데이터 준비 중...";
+  
+    // ✅ 투자 시뮬레이션 입력창 추가
+    renderInputs(parcelData);
   }
 
   // ===== 계산 =====
