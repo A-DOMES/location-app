@@ -255,13 +255,15 @@ const map = new ol.Map({
   })
 });
 
-// ✅ 체크박스 이벤트 → 레이어 on/off
-document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
-document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
-document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
-document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
+  const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
+  // ✅ 체크박스 이벤트 → 레이어 on/off
+  document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
+  document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
+  document.getElementById('cadLayer').addEventListener('change', e => cadLayer.setVisible(e.target.checked));
+  document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
+  document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
   
   // ✅ 팝업 닫기 함수
   function closeInfoPopup() {
