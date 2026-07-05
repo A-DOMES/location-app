@@ -1,15 +1,12 @@
-const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const app = express();
 
-app.use('/vworld', createProxyMiddleware({
+app.use('/api/vworld', createProxyMiddleware({
   target: 'https://api.vworld.kr',
   changeOrigin: true,
-  pathRewrite: { '^/vworld': '' }
+  pathRewrite: { '^/api/vworld': '' },
 }));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PORT}`);
-});
+export default app;
