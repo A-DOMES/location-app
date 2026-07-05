@@ -141,136 +141,107 @@
     <script src="config.js"></script>
     
   <script>   
-  // ---------------------- 전역 변수 선언 ----------------------
-  let radarOn = false;            // 시작 상태: 레이더 꺼짐
-  let rotateEnabled = false;      // 지도 회전 여부 (처음엔 false)
-  let lastHeading = 0;            // 마지막 방향값 저장
-  let lastMapRotation = 0;        // 마지막 지도 회전값 저장
-  let needleGroup = null;         // 나침반 바늘 그룹 (DOM)
-  let sensorInitialized = false;  // iOS 센서 권한 획득 여부
+// ---------------------- 전역 변수 선언 ----------------------
+let radarOn = false;
+let rotateEnabled = false;
+let lastHeading = 0;
+let lastMapRotation = 0;
+let needleGroup = null;
+let sensorInitialized = false;
+let map; // 지도 객체를 전역으로 선언
+let myCoord = null; // 내 위치 좌표 (예시)
+let radar = null;   // 레이더 피처 (예시)
 
-  // ---------------------- 초기화 ----------------------
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✅ 나침반 바늘 DOM 요소 참조
-    needleGroup = document.getElementById('needle-group');
-    
-    // ✅ iOS가 아니면 센서 초기화 (Android는 권한 필요 없음)
-    if (!isIOS()) {
-      attachOrientationListener();
+// ---------------------- 초기화 ----------------------
+document.addEventListener('DOMContentLoaded', () => {
+  needleGroup = document.getElementById('needle-group');
+  if (!isIOS()) {
+    attachOrientationListener();
+  }
+});
+
+// ✅ iOS 13+ 판별 함수
+function isIOS() {
+  return typeof DeviceOrientationEvent !== 'undefined' &&
+         typeof DeviceOrientationEvent.requestPermission === 'function';
+}
+
+// ---------------------- 센서 이벤트 등록 함수 ----------------------
+function attachOrientationListener() {
+  window.addEventListener('deviceorientationabsolute', (event) => {
+    if (event.alpha !== null && event.alpha !== undefined) {
+      const heading = (360 - event.alpha) % 360;
+
+      if (Math.abs(heading - lastHeading) > 2) {
+        if (needleGroup) {
+          needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
+        }
+
+        if (rotateEnabled && map) {
+          const newRotation = heading * Math.PI / 180;
+          if (Math.abs(newRotation - lastMapRotation) > 0.02) {
+            map.getView().setRotation(newRotation);
+            lastMapRotation = newRotation;
+          }
+        }
+
+        if (radarOn && myCoord && radar) {
+          const angle = 90;
+          const radius = 200;
+          const points = [myCoord];
+
+          for (let a = -angle/2; a <= angle/2; a += 1) {
+            const rad = (heading + a) * Math.PI / 180;
+            const dx = radius * Math.sin(rad);
+            const dy = radius * Math.cos(rad);
+            points.push([myCoord[0] + dx, myCoord[1] + dy]);
+          }
+
+          radar.setGeometry(new ol.geom.Polygon([points]));
+        }
+
+        lastHeading = heading;
+      }
     }
   });
-  
-  // ✅ iOS 13+ 판별 함수
-  function isIOS() {
-    return typeof DeviceOrientationEvent !== 'undefined' && 
-           typeof DeviceOrientationEvent.requestPermission === 'function';
-  }
+}
 
-  // ---------------------- 센서 이벤트 등록 함수 ----------------------
-  function attachOrientationListener() {
-    window.addEventListener('deviceorientationabsolute', (event) => {
-      // ✅ 센서에서 받은 alpha 값이 유효한지 확인
-      if (event.alpha !== null && event.alpha !== undefined) {
-        
-        // ✅ 센서값을 0~360 범위의 heading으로 변환
-        const heading = (360 - event.alpha) % 360;
-
-        // ✅ 성능 최적화: 방향이 2도 이상 변했을 때만 업데이트
-        if (Math.abs(heading - lastHeading) > 2) {
-          
-          // ✅ 나침반 바늘 회전
-          if (needleGroup) {
-            needleGroup.setAttribute('transform', `rotate(${heading} 30 30)`);
-          }
-
-          // ✅ 지도 회전 (레이더 ON일 때만)
-          if (rotateEnabled) {
-            const newRotation = heading * Math.PI / 180;
-            if (Math.abs(newRotation - lastMapRotation) > 0.02) {
-              map.getView().setRotation(newRotation);
-              lastMapRotation = newRotation;
-            }
-          }
-
-          // ✅ 레이더도 센서 방향 기준으로 갱신
-          if (radarOn && myCoord) {
-            const angle = 90;   // 레이더 부채꼴 각도
-            const radius = 200; // 레이더 반경
-            const points = [myCoord];
-
-            for (let a = -angle/2; a <= angle/2; a += 1) {
-              const rad = (heading + a) * Math.PI / 180;
-              const dx = radius * Math.sin(rad);
-              const dy = radius * Math.cos(rad);
-              points.push([myCoord[0] + dx, myCoord[1] + dy]);
-            }
-
-            radar.setGeometry(new ol.geom.Polygon([points]));
-          }
-
-          // ✅ 현재 방향값 저장
-          lastHeading = heading;
-        }
-      }
-    });
-  }
-    
-// WMTS Capabilities 불러오기
+// ---------------------- WMTS Capabilities 불러오기 ----------------------
 fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.xml`)
   .then(response => response.text())
   .then(text => {
     const parser = new ol.format.WMTSCapabilities();
     const result = parser.read(text);
 
-    // Base 레이어 옵션 생성
     const baseOptions = ol.source.WMTS.optionsFromCapabilities(result, {
       layer: 'Base',
       matrixSet: 'EPSG:3857',
       style: 'default'
     });
+    const baseLayer = new ol.layer.Tile({ source: new ol.source.WMTS(baseOptions), visible: true });
 
-    const baseLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(baseOptions),
-      visible: true
-    });
-
-    // Satellite 레이어 옵션 생성
     const satOptions = ol.source.WMTS.optionsFromCapabilities(result, {
       layer: 'Satellite',
       matrixSet: 'EPSG:3857',
       style: 'default'
     });
+    const satLayer = new ol.layer.Tile({ source: new ol.source.WMTS(satOptions), visible: false });
 
-    const satLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(satOptions),
-      visible: false
-    });
-
-    // Hybrid 레이어 옵션 생성
     const hybridOptions = ol.source.WMTS.optionsFromCapabilities(result, {
       layer: 'Hybrid',
       matrixSet: 'EPSG:3857',
       style: 'default'
     });
+    const hybridLayer = new ol.layer.Tile({ source: new ol.source.WMTS(hybridOptions), visible: false });
 
-    const hybridLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(hybridOptions),
-      visible: false
-    });
-
-    // Midnight 레이어 옵션 생성
     const midnightOptions = ol.source.WMTS.optionsFromCapabilities(result, {
       layer: 'midnight',
       matrixSet: 'EPSG:3857',
       style: 'default'
     });
+    const midnightLayer = new ol.layer.Tile({ source: new ol.source.WMTS(midnightOptions), visible: false });
 
-    const midnightLayer = new ol.layer.Tile({
-      source: new ol.source.WMTS(midnightOptions),
-      visible: false
-    });
-
-    // ✅ 지적도 (WMS 방식)
+    // ✅ 지적도 (WMS)
     const cadLayer = new ol.layer.Tile({
       source: new ol.source.TileWMS({
         url: `https://api.vworld.kr/req/wms?key=${CONFIG.API_KEY}`,
@@ -291,18 +262,18 @@ fetch(`https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/WMTSCapabilities.x
       zIndex: 9999
     });
 
-    // ✅ 지도 초기화
-    const map = new ol.Map({
+    // ✅ 지도 초기화 (Capabilities 로딩 완료 후 실행)
+    map = new ol.Map({
       target: 'map',
       layers: [baseLayer, satLayer, hybridLayer, midnightLayer, cadLayer],
       view: new ol.View({
-        center: ol.proj.fromLonLat([126.9780, 37.5665]), // 서울
+        center: ol.proj.fromLonLat([126.9780, 37.5665]),
         zoom: 7,
         maxZoom: 20
       })
     });
 
-    // ✅ 체크박스 이벤트 → 레이어 on/off
+    // ✅ 체크박스 이벤트
     document.getElementById('baseLayer').addEventListener('change', e => baseLayer.setVisible(e.target.checked));
     document.getElementById('satLayer').addEventListener('change', e => satLayer.setVisible(e.target.checked));
     document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
