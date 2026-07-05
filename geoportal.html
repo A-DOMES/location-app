@@ -241,7 +241,8 @@ function createLayer(layerName, format='image/png') {
         matrixIds: matrixIds
       }),
       style: 'default',
-      requestEncoding: 'REST'
+      requestEncoding: 'REST',
+      crossOrigin: 'anonymous'   // ✅ 반드시 추가
     }),
     visible: false
   });
@@ -260,7 +261,7 @@ hybridLayer.setVisible(true);
 const midnightLayer = createLayer('midnight');
 midnightLayer.setVisible(false);
 
-// ✅ 지적도 (WMTS Cadastre)
+// ✅ Cadastre 레이어 (지적도)
 const cadLayer = createLayer('Cadastre');
 cadLayer.setVisible(false);
 
@@ -273,6 +274,7 @@ const map = new ol.Map({
     zoom: 7
   })
 });
+
 
 // ✅ 앱 시작 시 초기 중심 좌표
 const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
