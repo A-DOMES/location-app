@@ -254,9 +254,26 @@
   const satLayer = createLayer('Satellite', 'image/jpeg');
   satLayer.setVisible(true);    // 항공사진 켜기
   
-  // 지적도 WMTS 레이어 (필지선 + 지번 표시)
-  const cadLayer = createLayer('Cadastre'); 
-  cadLayer.setVisible(true); // 기본 켜기
+
+// 지적도 WMTS 레이어 (필지선 + 지번 숫자 포함)
+const cadLayer = new ol.layer.Tile({
+  source: new ol.source.WMTS({
+    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/Cadastre/{TileMatrix}/{TileRow}/{TileCol}.png`,
+    layer: 'Cadastre',
+    matrixSet: 'EPSG:3857',
+    format: 'image/png',
+    projection: projection,
+    tileGrid: new ol.tilegrid.WMTS({
+      origin: ol.extent.getTopLeft(projectionExtent),
+      resolutions: resolutions,
+      matrixIds: matrixIds
+    }),
+    style: 'default',
+    requestEncoding: 'REST'
+  }),
+    visible: false,
+    zIndex: 9999
+  });
 
   const midnightLayer = createLayer('midnight'); 
   midnightLayer.setVisible(false); // Midnight은 기본 꺼짐
@@ -295,41 +312,44 @@ map.on('click', function(evt) {
   const view = map.getView();
   const zoom = view.getZoom();
 
-  if (zoom < 19) return; 
-  // ⚠️ 줌 레벨이 낮으면 API 호출을 하지 않음 (불필요한 요청 방지)
+  if (zoom < 19) return;
 
   const coord = ol.proj.toLonLat(evt.coordinate);
   const lon = coord[0];
   const lat = coord[1];
 
-  // ✅ 팝업 초기화 (위치와 표시 상태 설정)
+  // ✅ 팝업 초기화
   const infoPopup = document.getElementById("infoPopup");
   infoPopup.style.display = "block";
   infoPopup.style.transform = "none";
   infoPopup.style.left = "calc(50% - 160px)";
 
-  // ✅ 사용자에게 진행 상태 안내 (조회 중 메시지)
+  // ✅ 진행 상태 안내
   document.getElementById("landBuildingInfo").innerHTML = "<b>🏢 건물 정보:</b> 조회 중...";
   document.getElementById("landUseInfo").innerHTML = "<b>📜 토지 이용:</b> 조회 중...";
   document.getElementById("realEstateInfo").innerHTML = "<b>💰 공시지가:</b> 조회 중...";
   document.getElementById("realTransactionInfo").innerHTML = "<b>📊 실거래가:</b> 조회 중...";
+  document.getElementById("parcelInfo").innerHTML = "<b>🏠 지번:</b> 조회 중...";
 
-  // ✅ API 호출을 병렬 실행 → 응답을 parcelData 객체로 합침
+  // ✅ API 호출 병렬 실행
   Promise.all([
-    loadLandBuilding(lon, lat),   // 건물 정보
-    loadLandUse(lon, lat),        // 토지 이용
-    loadRealEstate(lon, lat),     // 공시지가
-    loadRealTransaction(lon, lat) // 실거래가
-  ]).then(([building, landUse, estate, transaction]) => {
-    // ✅ 개별 응답을 하나의 표준화된 객체로 합침
+    loadLandBuilding(lon, lat),
+    loadLandUse(lon, lat),
+    loadRealEstate(lon, lat),
+    loadRealTransaction(lon, lat),
+    fetch(`https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=EPSG:4326&x=${lon}&y=${lat}&type=PARCEL&format=json&key=${CONFIG.API_KEY}`)
+      .then(res => res.json())
+      .then(data => ({ parcel: data.response.result[0].text }))
+  ]).then(([building, landUse, estate, transaction, parcel]) => {
     const parcelData = {
       ...building,
       ...landUse,
       ...estate,
-      ...transaction
+      ...transaction,
+      ...parcel
     };
 
-    // ✅ 팝업 모듈 호출 (geoportal-simulation.js에서 UI 처리)
+    // ✅ 팝업 모듈 호출
     renderPopup(parcelData);
   });
 });
