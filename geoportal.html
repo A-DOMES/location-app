@@ -274,7 +274,8 @@ const cadLayerBubun = new ol.layer.Tile({
       matrixIds: matrixIds
     }),
     style: 'default',
-    requestEncoding: 'REST'
+    requestEncoding: 'REST',
+    crossOrigin: 'anonymous'   // ✅ 추가
   }),
   visible: false,
   zIndex: 9999
@@ -293,15 +294,16 @@ const cadLayerOnam = new ol.layer.Tile({
       matrixIds: matrixIds
     }),
     style: 'default',
-    requestEncoding: 'REST'
+    requestEncoding: 'REST',
+    crossOrigin: 'anonymous'   // ✅ 추가
   }),
   visible: false,
   zIndex: 10000
 });
 
-// ✅ minZoom 설정
+// ✅ minZoom 설정 (지번은 확대했을 때만 표시)
 cadLayerOnam.setMinZoom(15);
-    
+
 // ✅ 지도 초기화
 const map = new ol.Map({
   target: 'map',
@@ -312,6 +314,7 @@ const map = new ol.Map({
     maxZoom: 20
   })
 });
+
 
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
   const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
