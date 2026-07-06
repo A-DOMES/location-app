@@ -262,23 +262,46 @@ hybridLayer.setVisible(true);
 
 // ✅ 지적도 (필지 경계선 + 지번 표시)
 const cadLayerBubun = new ol.layer.Tile({
-  source: new ol.source.XYZ({
-    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_BUBUN/{z}/{y}/{x}.png`,
-    crossOrigin: 'anonymous'
+  source: new ol.source.WMTS({
+    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_BUBUN/{TileMatrix}/{TileRow}/{TileCol}.png`,
+    layer: 'LP_PA_CBND_BUBUN',
+    matrixSet: 'EPSG:3857',
+    format: 'image/png',
+    projection: projection,
+    tileGrid: new ol.tilegrid.WMTS({
+      origin: ol.extent.getTopLeft(projectionExtent),
+      resolutions: resolutions,
+      matrixIds: matrixIds
+    }),
+    style: 'default',
+    requestEncoding: 'REST'
   }),
   visible: false,
   zIndex: 9999
 });
 
 const cadLayerOnam = new ol.layer.Tile({
-  source: new ol.source.XYZ({
-    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_ONAM/{z}/{y}/{x}.png`,
-    crossOrigin: 'anonymous'
+  source: new ol.source.WMTS({
+    url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_ONAM/{TileMatrix}/{TileRow}/{TileCol}.png`,
+    layer: 'LP_PA_CBND_ONAM',
+    matrixSet: 'EPSG:3857',
+    format: 'image/png',
+    projection: projection,
+    tileGrid: new ol.tilegrid.WMTS({
+      origin: ol.extent.getTopLeft(projectionExtent),
+      resolutions: resolutions,
+      matrixIds: matrixIds
+    }),
+    style: 'default',
+    requestEncoding: 'REST'
   }),
   visible: false,
   zIndex: 10000
 });
 
+// ✅ minZoom 설정
+cadLayerOnam.setMinZoom(15);
+    
 // ✅ 지도 초기화
 const map = new ol.Map({
   target: 'map',
