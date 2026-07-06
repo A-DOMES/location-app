@@ -260,7 +260,7 @@ midnightLayer.setVisible(false);
 const hybridLayer = createLayer('Hybrid');     
 hybridLayer.setVisible(true);
 
-// ✅ 지적도 (필지 경계선 + 지번 표시)
+// ✅ 지적도 (필지 경계선)
 const cadLayerBubun = new ol.layer.Tile({
   source: new ol.source.WMTS({
     url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_BUBUN/{TileMatrix}/{TileRow}/{TileCol}.png`,
@@ -281,11 +281,15 @@ const cadLayerBubun = new ol.layer.Tile({
   zIndex: 9999
 });
 
-// ✅ Bubun 타일 에러 로그
+// ✅ Bubun 타일 에러 로그 + 1회 재시도
 cadLayerBubun.getSource().on('tileloaderror', function(evt) {
   console.warn('Bubun tile load error:', evt.tile.getKey());
+  setTimeout(() => {
+    evt.tile.load(); // 1초 후 재시도
+  }, 1000);
 });
 
+// ✅ 지적도 (지번 표시)
 const cadLayerOnam = new ol.layer.Tile({
   source: new ol.source.WMTS({
     url: `https://api.vworld.kr/req/wmts/1.0.0/${CONFIG.API_KEY}/LP_PA_CBND_ONAM/{TileMatrix}/{TileRow}/{TileCol}.png`,
@@ -306,14 +310,13 @@ const cadLayerOnam = new ol.layer.Tile({
   zIndex: 10000
 });
 
-// ✅ Onam 타일 에러 로그
+// ✅ Onam 타일 에러 로그 (재시도 없음)
 cadLayerOnam.getSource().on('tileloaderror', function(evt) {
   console.warn('Onam tile load error:', evt.tile.getKey());
 });
 
-// ✅ minZoom 설정
+// ✅ 지번은 확대했을 때만 표시
 cadLayerOnam.setMinZoom(15);
-
 
 // ✅ 지도 초기화
 const map = new ol.Map({
@@ -325,6 +328,7 @@ const map = new ol.Map({
     maxZoom: 20
   })
 });
+
 
 
   // ✅ 앱 시작 시 초기 중심 좌표 (lon, lat 그대로 저장)
