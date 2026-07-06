@@ -331,7 +331,7 @@ document.getElementById('cadLayer').addEventListener('change', e => {
     // ✅ WFS 요청으로 필지 데이터 가져오기 (현재 지도 범위 bbox 사용)
     const extent = map.getView().calculateExtent(map.getSize());
     const extent4326 = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
-    const wfsUrl = `https://api.vworld.kr/req/wfs?service=WFS&version=1.1.0&request=GetFeature&typename=LP_PA_CBND_BUBUN&outputFormat=application/json&key=${CONFIG.API_KEY}&srsName=EPSG:3857&bbox=${extent4326.join(',')}`;
+    const wfsUrl = `https://api.vworld.kr/req/wfs?service=WFS&version=1.1.0&request=GetFeature&typename=LP_PA_CBND_BUBUN&outputFormat=application/json&key=${CONFIG.API_KEY}&srsName=EPSG:4326&bbox=${extent4326.join(',')}`;
 
     fetch(wfsUrl)
       .then(res => res.json())
