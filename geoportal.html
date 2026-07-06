@@ -275,10 +275,15 @@ const cadLayerBubun = new ol.layer.Tile({
     }),
     style: 'default',
     requestEncoding: 'REST',
-    crossOrigin: 'anonymous'   // ✅ 추가
+    crossOrigin: 'anonymous'
   }),
   visible: false,
   zIndex: 9999
+});
+
+// ✅ Bubun 타일 에러 로그
+cadLayerBubun.getSource().on('tileloaderror', function(evt) {
+  console.warn('Bubun tile load error:', evt.tile.getKey());
 });
 
 const cadLayerOnam = new ol.layer.Tile({
@@ -295,14 +300,20 @@ const cadLayerOnam = new ol.layer.Tile({
     }),
     style: 'default',
     requestEncoding: 'REST',
-    crossOrigin: 'anonymous'   // ✅ 추가
+    crossOrigin: 'anonymous'
   }),
   visible: false,
   zIndex: 10000
 });
 
-// ✅ minZoom 설정 (지번은 확대했을 때만 표시)
+// ✅ Onam 타일 에러 로그
+cadLayerOnam.getSource().on('tileloaderror', function(evt) {
+  console.warn('Onam tile load error:', evt.tile.getKey());
+});
+
+// ✅ minZoom 설정
 cadLayerOnam.setMinZoom(15);
+
 
 // ✅ 지도 초기화
 const map = new ol.Map({
