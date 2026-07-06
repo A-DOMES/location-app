@@ -569,26 +569,27 @@ function handleAutoUpdate(result) {
 function handleVworldResponse(data) {
   console.log("브이월드 API 최종 응답 데이터:", data);
 
-  // 사용이 끝난 임시 JSONP 스크립트 태그 삭제 (페이지 메모리 정리)
+  // ✅ 사용이 끝난 임시 JSONP 스크립트 태그 삭제 (메모리 누수 방지)
   const oldScript = document.getElementById("vworld-jsonp-script");
   if (oldScript) oldScript.remove();
 
-  // 브이월드 응답 데이터 구조 유효성 확인
+  // ✅ 브이월드 응답 데이터 구조 유효성 확인
   if (data.response && data.response.status === "OK" && data.response.result && data.response.result.length > 0) {
     
-    // ✅ 브이월드 응답의 result 배열 첫 번째 요소에서 pnu 코드를 안전하게 파싱합니다.
+    // ✅ 응답의 result 배열 첫 번째 요소에서 PNU 코드 추출
     const resultObj = data.response.result[0];
     const pnu = resultObj.structure && resultObj.structure.pnu ? resultObj.structure.pnu : resultObj.id;
 
+    // ✅ PNU는 19자리 코드여야 정상
     if (pnu && pnu.length === 19) {
-      // ✅ [오타 수정] 토지이음 시스템의 실제 상세조회 URL 전체 경로로 완벽하게 복구했습니다.
-      const url = `https://eum.go.kr{pnu}`;
-      location.href = url;
+      // ✅ 토지이음 상세조회 URL (정식 경로)
+      const url = `https://www.eum.go.kr/web/ar/arcviewer.jsp?pnu=${pnu}`;
+      location.href = url; // 해당 필지 상세 페이지로 이동
     } else {
       alert("올바른 PNU 코드(19자리)를 추출할 수 없습니다. 취득된 값: " + pnu);
     }
   } else {
-    // API 인증 실패(INVALID_KEY 등)나 필지 부재 시 사유 추출
+    // ✅ API 인증 실패(INVALID_KEY 등)나 필지 부재 시 에러 메시지 출력
     const errorText = data.response && data.response.error ? data.response.error.text : "현재 위치의 필지 정보를 찾을 수 없습니다.";
     alert("브이월드 실패\n사유: " + errorText);
   }
@@ -599,41 +600,45 @@ function openSmartMap() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+        const lat = pos.coords.latitude; // 현재 위치 위도
+        const lon = pos.coords.longitude; // 현재 위치 경도
         
-        // ⚠️ [운영키 심사 통과 핵심] 
-        // 브이월드 센터에 새로 입력하신 주소와 글자 토씨 하나 틀리지 않게 완벽하게 일치시켰습니다.
-        const registeredDomain = "https://github.io";
+        // ✅ 브이월드 Parcel API 호출 URL (JSONP 방식)
+        // - service=address : 주소 서비스
+        // - request=getAddress : 주소 요청
+        // - type=parcel : 지번(필지) 조회
+        // - point=lon,lat : 좌표 입력
+        // - key : 브이월드 발급 API Key
+        // - callback : JSONP 콜백 함수 지정
+        const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=EPSG:4326&point=${lon},${lat}&format=json&type=parcel&key=${CONFIG.API_KEY}&callback=handleVworldResponse`;
 
-        // ✅ [오타 수정] 유실되었던 브이월드 공식 주소 전체 경로와 백틱($) 기호를 정상 결합했습니다.
-        const apiUrl = `https://vworld.kr{lon},${lat}&format=json&type=parcel&zipcode=true&simple=false&key=${CONFIG.API_KEY}&domain=${encodeURIComponent(registeredDomain)}&callback=handleVworldResponse`;
-
-        // 혹시나 중복 생성되어 있을 임시 스크립트 제거
+        // ✅ 혹시 중복 생성된 JSONP 스크립트 제거
         const oldScript = document.getElementById("vworld-jsonp-script");
         if (oldScript) oldScript.remove();
 
-        // 🛠️ 구글 토큰 시스템과 동일한 안전한 동적 스크립트 주입(JSONP) 방식으로 통신 작동
+        // ✅ JSONP 스크립트 태그 생성 및 삽입
         const script = document.createElement("script");
         script.id = "vworld-jsonp-script";
         script.src = apiUrl;
         
-        // 통신 자체가 완전히 거절당하거나 주소가 유실되었을 때 예외 처리
+        // ✅ 네트워크 오류나 API Key 문제 발생 시 예외 처리
         script.onerror = function() {
-          alert("브이월드 서버 네트워크 통신에 실패했습니다.\n인터넷 연결 상태나 config.js의 API Key 등록 상태를 점검해주세요.");
+          alert("브이월드 서버 통신 실패.\n인터넷 연결 상태나 config.js의 API Key 등록 상태를 확인하세요.");
         };
 
         document.body.appendChild(script);
       },
       (err) => {
+        // ✅ 위치 권한 거부 또는 브라우저 오류 처리
         console.error("Geolocation 에러:", err);
-        alert("현재 위치를 가져올 수 없습니다. 브라우저의 위치 권한을 허용해주세요.");
+        alert("현재 위치를 가져올 수 없습니다. 브라우저 위치 권한을 허용해주세요.");
       }
     );
   } else {
     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
   }
 }
+
 </script>
 
 </body>
