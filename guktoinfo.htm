@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>국토정보 조회</title>
+  <style>
+    .map-btn {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- 국토정보 버튼 -->
+  <div style="display:flex; flex-direction:column; align-items:center; margin-top:25px;">
+    <a href="javascript:void(0);" onclick="openSmartMap()" id="guktoBtn">
+      <img src="gukto-logo.png" alt="국토정보 조회 버튼" class="map-btn">
+    </a>
+    <span style="margin-top:5px; font-size:18px; color:#1565c0; font-weight:bold; text-align:center;">
+      국토정보
+    </span>
+  </div>
+
+  <!-- ✅ 스크립트 코드 직접 포함 -->
+  <script>
+    function handleVworldResponse(data) {
+      console.log("브이월드 응답:", data);
+
+      const oldScript = document.getElementById("vworld-jsonp-script");
+      if (oldScript) oldScript.remove();
+
+      if (data.response && data.response.status === "OK" && data.response.result.length > 0) {
+        const resultObj = data.response.result[0];
+        const pnu = resultObj.structure && resultObj.structure.pnu ? resultObj.structure.pnu : null;
+
+        if (pnu && pnu.length === 19) {
+          const url = `https://www.eum.go.kr/web/ar/arcviewer.jsp?pnu=${pnu}`;
+          window.location.href = url;
+        } else {
+          alert("PNU 코드가 올바르지 않습니다.");
+        }
+      } else {
+        const errorText = data.response && data.response.error ? data.response.error.text : "필지 정보를 찾을 수 없습니다.";
+        alert("브이월드 실패\n사유: " + errorText);
+      }
+    }
+
+    function openSmartMap() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=EPSG:4326&point=${lon},${lat}&format=json&type=parcel&key=${CONFIG.API_KEY}&callback=handleVworldResponse`;
+
+            const oldScript = document.getElementById("vworld-jsonp-script");
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement("script");
+            script.id = "vworld-jsonp-script";
+            script.src = apiUrl;
+            script.onerror = function() {
+              alert("브이월드 서버 통신 실패. API Key와 도메인 등록 상태를 확인하세요.");
+            };
+            document.body.appendChild(script);
+          },
+          (err) => {
+            console.error("Geolocation 에러:", err);
+            alert("현재 위치를 가져올 수 없습니다. 브라우저 위치 권한을 허용해주세요.");
+          }
+        );
+      } else {
+        alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+      }
+    }
+  </script>
+</body>
+</html>
