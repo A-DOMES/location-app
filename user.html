@@ -583,7 +583,9 @@ function handleVworldResponse(data) {
     // ✅ PNU는 19자리 코드여야 정상
     if (pnu && pnu.length === 19) {
       // ✅ 토지이음 상세조회 URL (정식 경로)
-      const url = `https://www.eum.go.kr/web/ar/arcviewer.jsp?pnu=${pnu}`;
+      // 올바른 방식
+      const apiUrl = `https://api.vworld.kr/req/address?service=address&request=getAddress&version=2.0&crs=EPSG:4326&point=${lon},${lat}&format=json&type=parcel&key=${CONFIG.API_KEY}&callback=handleVworldResponse`;
+
       location.href = url; // 해당 필지 상세 페이지로 이동
     } else {
       alert("올바른 PNU 코드(19자리)를 추출할 수 없습니다. 취득된 값: " + pnu);
