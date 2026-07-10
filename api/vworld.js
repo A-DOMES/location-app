@@ -39,8 +39,6 @@ app.use('/api/vworld/req/wmts', createProxyMiddleware({
 
 /**
  * ✅ WFS 프록시 설정
- * - 브라우저에서 직접 호출 시 CORS 문제 해결
- * - 반드시 key 파라미터 필요
  */
 app.use('/api/vworld/req/wfs', createProxyMiddleware({
   target: 'https://api.vworld.kr/req/wfs',
