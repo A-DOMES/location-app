@@ -315,6 +315,7 @@ const map = new ol.Map({
   })
 });
 
+
 // ✅ 앱 시작 시 초기 중심 좌표
 const mapCenterCoord = [127.7669, 35.9078]; // 대한민국 중심 예시
 
@@ -341,7 +342,7 @@ document.getElementById('cadLayer').addEventListener('change', e => {
 
         const vectorSource = new ol.source.Vector({
           features: new ol.format.GeoJSON().readFeatures(json, {
-            dataProjection: 'EPSG:3857',
+            dataProjection: 'EPSG:3857',   // ✅ 원본 좌표계 그대로
             featureProjection: 'EPSG:3857'
           })
         });
@@ -349,10 +350,11 @@ document.getElementById('cadLayer').addEventListener('change', e => {
         window.cadVectorLayer = new ol.layer.Vector({
           source: vectorSource,
           style: feature => new ol.style.Style({
-            stroke: new ol.style.Stroke({ color: 'red', width: 1 }),
+            stroke: new ol.style.Stroke({ color: 'red', width: 1 }),   // ✅ 경계선
             fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' }),
             text: new ol.style.Text({
-              text: feature.get('PNU') || '', // ✅ 지번(PNU) 속성 표시
+              text: feature.get('PNU') || '',                         // ✅ 지번(PNU) 표시
+              font: '12px Calibri,sans-serif',
               fill: new ol.style.Fill({ color: 'red' }),
               stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
             })
@@ -372,12 +374,12 @@ document.getElementById('cadLayer').addEventListener('change', e => {
 
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
 document.getElementById('hybridLayer').addEventListener('change', e => hybridLayer.setVisible(e.target.checked));
-
-// ✅ 팝업 닫기 함수
-function closeInfoPopup() {
-  document.getElementById("infoPopup").style.display = "none";
-}
-
+  
+  // ✅ 팝업 닫기 함수
+  function closeInfoPopup() {
+    document.getElementById("infoPopup").style.display = "none";
+  }
+  
 // ✅ 지도 클릭 이벤트 → 팝업 표시 및 데이터 요청
 map.on('click', function(evt) {
   const view = map.getView();
@@ -422,23 +424,6 @@ map.on('click', function(evt) {
   });
 });
 
-// ✅ 레이어 제어 UI 토글 기능
-const closeBtn = document.getElementById('closeLayerBtn');   // 항목선택창 닫기 버튼
-const mapToggleBtn = document.getElementById('mapToggleBtn'); // 지도항목 버튼
-const layerSwitcher = document.querySelector('.layer-switcher'); // 항목선택 모달창
-
-// 닫기 버튼 클릭 시 → 항목선택창 숨기고 지도항목 버튼 표시
-closeBtn.addEventListener('click', () => {
-  layerSwitcher.style.display = 'none';
-  mapToggleBtn.classList.add('show');
-});
-
-// 지도항목 버튼 클릭 시 → 항목선택창 다시 표시하고 버튼 숨김
-mapToggleBtn.addEventListener('click', () => {
-  layerSwitcher.style.display = 'block';
-  mapToggleBtn.classList.remove('show');
-});
-    
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
 // ✅ geoportal.html에서 API 응답을 parcelData 객체로 전달받아 처리합니다.
