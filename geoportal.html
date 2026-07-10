@@ -334,44 +334,60 @@ document.getElementById('cadLayer').addEventListener('change', e => {
     // ✅ 프록시 서버를 통해 요청
     const wfsUrl = `/proxy?url=https://api.vworld.kr/req/wfs?service=WFS&version=1.1.0&request=GetFeature&typename=LP_PA_CBND_BUBUN&outputFormat=application/json&key=${CONFIG.API_KEY}&srsName=EPSG:4326&bbox=${extent4326.join(',')}`;
 
-    fetch(wfsUrl)
-      .then(res => res.json())
-      .then(json => {
-        if (window.cadVectorLayer) {
-          map.removeLayer(window.cadVectorLayer);
-        }
-
-        const vectorSource = new ol.source.Vector({
-          features: new ol.format.GeoJSON().readFeatures(json, {
-            dataProjection: 'EPSG:3857',   // ✅ 원본 좌표계 그대로
-            featureProjection: 'EPSG:3857'
-          })
-        });
-
-        window.cadVectorLayer = new ol.layer.Vector({
-          source: vectorSource,
-          style: feature => new ol.style.Style({
-            stroke: new ol.style.Stroke({ color: 'red', width: 1 }),   // ✅ 경계선
-            fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' }),
-            text: new ol.style.Text({
-              text: feature.get('PNU') || '',                         // ✅ 지번(PNU) 표시
-              font: '12px Calibri,sans-serif',
-              fill: new ol.style.Fill({ color: 'red' }),
-              stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-            })
-          }),
-          zIndex: 20000
-        });
-
-        map.addLayer(window.cadVectorLayer);
+fetch(wfsUrl)
+  .then(res => {
+    if (!res.ok) {
+      throw new Error("서버 응답 오류: " + res.status);
+    }
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      // JSON이 아닌 경우 응답 내용을 확인
+      return res.text().then(t => {
+        throw new Error("JSON이 아닌 응답: " + t.slice(0, 200));
       });
-  } else {
+    }
+    return res.json();
+  })
+  .then(json => {
     if (window.cadVectorLayer) {
       map.removeLayer(window.cadVectorLayer);
-      window.cadVectorLayer = null;
     }
+
+    const vectorSource = new ol.source.Vector({
+      features: new ol.format.GeoJSON().readFeatures(json, {
+        dataProjection: 'EPSG:3857',   // ✅ 원본 좌표계 그대로
+        featureProjection: 'EPSG:3857'
+      })
+    });
+
+    window.cadVectorLayer = new ol.layer.Vector({
+      source: vectorSource,
+      style: feature => new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: 'red', width: 1 }),   // ✅ 경계선
+        fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' }),
+        text: new ol.style.Text({
+          text: feature.get('PNU') || '',                         // ✅ 지번(PNU) 표시
+          font: '12px Calibri,sans-serif',
+          fill: new ol.style.Fill({ color: 'red' }),
+          stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+        })
+      }),
+      zIndex: 20000
+    });
+
+    map.addLayer(window.cadVectorLayer);
+  })
+  .catch(err => {
+    console.error("WFS 요청 실패:", err);
+  });
+} else {
+  if (window.cadVectorLayer) {
+    map.removeLayer(window.cadVectorLayer);
+    window.cadVectorLayer = null;
   }
+}
 });
+
 
 
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
