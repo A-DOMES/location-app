@@ -331,8 +331,11 @@ document.getElementById('cadLayer').addEventListener('change', e => {
     const extent = map.getView().calculateExtent(map.getSize());
     const extent4326 = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
     
-    // ✅ 프록시 서버를 통해 요청
-    const wfsUrl = `/proxy?url=https://api.vworld.kr/req/wfs?service=WFS&version=1.1.0&request=GetFeature&typename=LP_PA_CBND_BUBUN&outputFormat=application/json&key=${CONFIG.API_KEY}&srsName=EPSG:4326&bbox=${extent4326.join(',')}`;
+// ✅ 프록시 서버를 통해 요청 (경로 수정)
+const extent = map.getView().calculateExtent(map.getSize());
+const extent4326 = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+
+const wfsUrl = `/api/vworld/req/wfs?service=WFS&version=1.1.0&request=GetFeature&typename=LP_PA_CBND_BUBUN&outputFormat=application/json&srsName=EPSG:4326&bbox=${extent4326.join(',')}`;
 
 fetch(wfsUrl)
   .then(res => {
@@ -341,9 +344,8 @@ fetch(wfsUrl)
     }
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      // JSON이 아닌 경우 응답 내용을 확인
       return res.text().then(t => {
-        console.error("JSON이 아닌 응답:", t.slice(0, 200)); // 응답 앞부분 출력
+        console.error("JSON이 아닌 응답:", t.slice(0, 200));
         throw new Error("JSON이 아닌 응답을 받음");
       });
     }
@@ -356,18 +358,18 @@ fetch(wfsUrl)
 
     const vectorSource = new ol.source.Vector({
       features: new ol.format.GeoJSON().readFeatures(json, {
-        dataProjection: 'EPSG:3857',   // ✅ 원본 좌표계 그대로
-        featureProjection: 'EPSG:3857'
+        dataProjection: 'EPSG:4326',   // ✅ 원본 좌표계
+        featureProjection: 'EPSG:3857' // ✅ 지도 좌표계
       })
     });
 
     window.cadVectorLayer = new ol.layer.Vector({
       source: vectorSource,
       style: feature => new ol.style.Style({
-        stroke: new ol.style.Stroke({ color: 'red', width: 1 }),   // ✅ 경계선
+        stroke: new ol.style.Stroke({ color: 'red', width: 1 }),
         fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.05)' }),
         text: new ol.style.Text({
-          text: feature.get('PNU') || '',                         // ✅ 지번(PNU) 표시
+          text: feature.get('PNU') || '',
           font: '12px Calibri,sans-serif',
           fill: new ol.style.Fill({ color: 'red' }),
           stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
