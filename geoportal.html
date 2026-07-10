@@ -343,7 +343,8 @@ fetch(wfsUrl)
     if (!contentType || !contentType.includes("application/json")) {
       // JSON이 아닌 경우 응답 내용을 확인
       return res.text().then(t => {
-        throw new Error("JSON이 아닌 응답: " + t.slice(0, 200));
+        console.error("JSON이 아닌 응답:", t.slice(0, 200)); // 응답 앞부분 출력
+        throw new Error("JSON이 아닌 응답을 받음");
       });
     }
     return res.json();
@@ -387,7 +388,6 @@ fetch(wfsUrl)
   }
 }
 });
-
 
 
 document.getElementById('midnightLayer').addEventListener('change', e => midnightLayer.setVisible(e.target.checked));
