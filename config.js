@@ -17,7 +17,7 @@ const CONFIG = {
   MOLIT_KEY: "c2f4f12f4f248e4805222b988738c8e645bbcb2be5f80573a2a9b0815881ddd5",
 
   // ✅ 구글 API_KEY
-  GOOGLE_API_KEY: "AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY",
+  GOOGLE_API_KEY: "AIzaSyAPE3jQB_meh3sA5NvDU3ISMg6VTLNT4kc",
   
   // ✅ 구글 지도 Map ID (환경별)
   mapIds: {
