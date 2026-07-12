@@ -957,7 +957,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-/// ---------------------- 내 위치 및 분석용 레이어 ----------------------
+// ---------------------- 내 위치 및 분석용 레이어 ----------------------
 const positionLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
 map.addLayer(positionLayer);
 
@@ -1074,7 +1074,7 @@ navigator.geolocation.watchPosition(
         lastHeading = gpsHeading; // ✅ 센서 없는 환경에서는 GPS 방향을 그대로 사용
 
         // ✅ 나침반 바늘 회전
-        const needleGroup = document.getElementById('needle-group');
+        needleGroup = document.getElementById('needle-group');
         if (needleGroup) {
           needleGroup.setAttribute('transform', `rotate(${lastHeading} 30 30)`);
         }
@@ -1089,7 +1089,8 @@ navigator.geolocation.watchPosition(
 
       // ✅ 모바일(iOS/Android) → 센서 방향(lastHeading)
       // ✅ PC/센서 없는 환경 → GPS 이동 방향(gpsHeading)
-      const headingForRadar = (isIOS() && typeof lastHeading !== 'undefined') ? lastHeading : gpsHeading;
+      // ✅ 정지 상태일 때는 lastHeading 유지
+      const headingForRadar = (positions.length < 2) ? lastHeading : gpsHeading;
 
       for (let a = -angle/2; a <= angle/2; a += 1) {
         const rad = (headingForRadar + a) * Math.PI / 180;
@@ -1117,7 +1118,7 @@ navigator.geolocation.watchPosition(
 // ---------------------- 토글 버튼 이벤트 ----------------------
 document.getElementById("toggleFeaturesBtn").addEventListener("click", async () => {
   // ✅ iOS 13+ 환경에서 센서 권한 요청 (처음 실행 시)
-  if (isIOS() && typeof sensorInitialized === 'undefined') {
+  if (isIOS() && !sensorInitialized) {
     try {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== 'granted') {
@@ -1142,12 +1143,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     const points = [myCoord]; // 시작점은 내 좌표 (EPSG:3857)
 
     // ✅ heading 값 결정 (센서 있으면 lastHeading, 없으면 gpsHeading)
-    let headingForRadar = 0; 
-    if (isIOS() && typeof lastHeading !== 'undefined') {
-      headingForRadar = lastHeading; // iOS/Android → 센서 방향
-    } else if (!isIOS() && typeof gpsHeading !== 'undefined') {
-      headingForRadar = gpsHeading;  // PC → GPS 이동 방향
-    }
+    let headingForRadar = lastHeading; // ✅ 항상 마지막 방향 유지
 
     // ✅ 레이더 부채꼴 좌표 계산 (-45° ~ +45° 범위)
     for (let a = -angle/2; a <= angle/2; a += 5) {
@@ -1161,7 +1157,7 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     radar.setGeometry(new ol.geom.Polygon([points]));
 
     // ✅ 나침반 바늘도 GPS/센서 방향으로 회전
-    const needleGroup = document.getElementById('needle-group');
+    needleGroup = document.getElementById('needle-group');
     if (needleGroup) {
       needleGroup.setAttribute('transform', `rotate(${headingForRadar} 30 30)`);
     }
@@ -1179,12 +1175,6 @@ document.getElementById("toggleFeaturesBtn").addEventListener("click", async () 
     map.getView().setRotation(0);                      // 회전 초기화
   }
 });
-
-// ---------------------- iOS 13+ 판별 함수 ----------------------
-function isIOS() {
-  return typeof DeviceOrientationEvent !== 'undefined' && 
-         typeof DeviceOrientationEvent.requestPermission === 'function';
-}
 
     
 // ---------------------- 마커 클릭 시 이동 ----------------------
