@@ -5,7 +5,7 @@
   <title>내 위치 지도</title>
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_KEY_REQUIRED&libraries=geometry,places,routes"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTy1MyyNAzjnCkIpUMznXXG8ZgtaqTgLs&libraries=geometry,places,routes"></script>
 
 
 <style>
@@ -592,40 +592,32 @@ function sendMyLocationToServer(pos) {
 }
 
   
-/* ---------------------- 구글 Places API 실시간 검색 ---------------------- */
-function searchGooglePlacesLive(query) {
-  // ✅ Promise로 감싸서 async/await 사용 가능하게 처리
-  return new Promise((resolve, reject) => {
-    // ✅ 구글 PlacesService 객체 생성 (지도 객체 map 기반)
-    const service = new google.maps.places.PlacesService(map);
-
-    // ✅ 텍스트 검색 실행
+/* ---------------------- 구글 Places API (New) 실시간 검색 ---------------------- */
+async function searchGooglePlacesLive(query) {
+  try {
+    // ✅ 텍스트 검색 실행 (현재 위치 반경 5000m 를 우선해서 찾음)
     //    query: 사용자가 입력한 검색 키워드
-    //    location: 현재 위치 좌표 (currentLat, currentLng)
-    //    radius: 반경 5000m 내 검색 (구글 API 제한 있음)
-    service.textSearch(
-      { query, location: { lat: currentLat, lng: currentLng }, radius: 5000 },
-      (results, status) => {
-        // ✅ 검색 성공 시 결과 처리
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          const liveResults = results.map(r => ({
-            name: r.name,                          // 장소 이름
-            lat: r.geometry.location.lat(),        // 위도
-            lng: r.geometry.location.lng(),        // 경도
-            address: r.formatted_address,          // 주소
-            placeId: r.place_id,                   // 구글 고유 ID
-            source: "구글(실시간)"                 // 데이터 출처 표시
-          }));
+    const { places } = await google.maps.places.Place.searchByText({
+      textQuery: query,
+      fields: ["displayName", "location", "formattedAddress", "id"],
+      locationBias: { center: { lat: currentLat, lng: currentLng }, radius: 5000 },
+      language: "ko"
+    });
 
-          // ✅ 결과 반환
-          resolve(liveResults);
-        } else {
-          // ⚠️ 검색 실패 시 빈 배열 반환
-          resolve([]);
-        }
-      }
-    );
-  });
+    // ✅ 검색 결과를 화면에서 쓰는 형태로 변환
+    return (places || []).map(r => ({
+      name: r.displayName,                   // 장소 이름
+      lat: r.location.lat(),                 // 위도
+      lng: r.location.lng(),                 // 경도
+      address: r.formattedAddress,           // 주소
+      placeId: r.id,                         // 구글 고유 ID
+      source: "구글(실시간)"                 // 데이터 출처 표시
+    }));
+  } catch (err) {
+    // ⚠️ 검색 실패 시 빈 배열 반환
+    console.error("구글 장소 검색 실패:", err);
+    return [];
+  }
 }
 
   
