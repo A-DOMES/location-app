@@ -5,7 +5,7 @@
   <title>내 위치 지도</title>
 
 <!-- ✅ 구글 지도 API (geometry + places + routes 라이브러리 포함) -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY&libraries=geometry,places,routes"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_KEY_REQUIRED&libraries=geometry,places,routes"></script>
 
 
 <style>
@@ -582,8 +582,8 @@ function sendMyLocationToServer(pos) {
       phone: pos.phone,   // ✅ 닉네임(고유값) 전달
       lat: pos.lat,
       lng: pos.lng,
-      status: "정상"
-      // token은 생략 가능
+      status: "정상",
+      token: sessionStorage.getItem("token") || localStorage.getItem("token") || ""
     })
   })
   .then(res => res.json())
@@ -1971,7 +1971,7 @@ function makeDraggableModal(element) {
 async function loadAdminLocations() {
   try {
     // ✅ 서버 호출 (관리자 위치 데이터 가져오기)
-    const res = await fetch(CONFIG.USER_URL + "?mode=getLocations");
+    const res = await fetch(CONFIG.ADMIN_URL + "?mode=getLocations&token=" + encodeURIComponent(sessionStorage.getItem("token") || localStorage.getItem("token") || ""));
     adminLocations = await res.json(); // 결과를 배열/객체로 저장
   } catch (err) {
     // ⚠️ 오류 처리

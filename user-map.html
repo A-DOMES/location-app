@@ -47,7 +47,8 @@
       color: #333;
     }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOmWcR48yf1sp2RABZFQ52qnDCoWc8AJY"></script>
+  <script src="config.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_KEY_REQUIRED"></script>
 </head>
 <body>
   <header>
@@ -69,7 +70,7 @@
         return;
       }
 
-      fetch("https://script.google.com/macros/s/AKfycbwDuL2cpxeN-4nH980-Y8TDkF-MV3H53Pqe1mru75J5-cOmLtcpC2RcWO52vQga44_Aag/exec")
+      fetch(CONFIG.ADMIN_URL + "?token=" + encodeURIComponent(sessionStorage.getItem("token") || localStorage.getItem("token") || ""))
         .then(res => res.json())
         .then(data => {
           record = data.find(item => item.phone === phone);

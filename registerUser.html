@@ -312,7 +312,7 @@ label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-ali
     // 대기 모달 표시
     document.getElementById("loadingModal").style.display = "block";
   
-    // 서버 요청 (GET 방식)
+    // 서버 요청 (POST 방식: 비밀번호가 주소창에 남지 않도록)
     const params = new URLSearchParams({
       mode: "registerUser",
       id,
@@ -325,7 +325,7 @@ label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-ali
       email
     });
   
-    fetch(`${CONFIG.USER_URL}?${params.toString()}`)
+    fetch(CONFIG.USER_URL, { method: "POST", body: params })
       .then(res => res.json())
       .then(result => {
         document.getElementById("loadingModal").style.display = "none";
@@ -355,48 +355,6 @@ label { display:block; margin-top:15px; font-weight:500; color:#2c3e50; text-ali
       })
       .catch(err => {
         document.getElementById("loadingModal").style.display = "none";
-        msg.style.color = "red";
-        msg.innerText = "❌ 서버 오류: " + err.message;
-      });
-  }
-
-  /* ============================
-     📌 로그인 처리
-     ============================ */
-  function login() {
-    var id = document.getElementById("id").value.trim();
-    var pw = document.getElementById("pw").value.trim();
-    var msg = document.getElementById("loginMessage");
-
-    if (!id || !pw) {
-      msg.style.color = "red";
-      msg.innerText = "⚠️ 아이디와 비밀번호를 입력하세요.";
-      return;
-    }
-
-    fetch(`${CONFIG.USER_URL}?mode=login&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`)
-      .then(res => res.json())
-      .then(result => {
-        console.log("로그인 응답:", result);
-
-        if (result.result === "success") {
-          if (result.email_verified === "true") {
-            localStorage.setItem("nickname", result.name);
-            localStorage.setItem("token", result.token);
-            window.location.href = "main.html";
-          } else {
-            msg.style.color = "red";
-            msg.innerText = "⚠️ 이메일 인증을 완료해야 로그인할 수 있습니다.";
-          }
-        } else if (result.result === "invalid") {
-          msg.style.color = "red";
-          msg.innerText = "❌ 아이디 또는 비밀번호가 잘못되었습니다.";
-        } else {
-          msg.style.color = "red";
-          msg.innerText = "❌ 로그인 실패. 다시 시도하세요.";
-        }
-      })
-      .catch(err => {
         msg.style.color = "red";
         msg.innerText = "❌ 서버 오류: " + err.message;
       });

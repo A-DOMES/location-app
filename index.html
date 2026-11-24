@@ -140,15 +140,12 @@ body { display:flex; justify-content:center; align-items:center;
     modal.querySelector("h2").innerText = "🔑 서버에 로그인 중입니다...";
     modal.querySelector("p").innerText = "잠시만 기다려주세요.";
 
-    const callbackName = "handleLoginResponse";
-    window[callbackName] = function(result) {
+    const handleLoginResponse = function(result) {
       if (result.result === "success") {
         // ✅ 추가로 사용자 목록 조회
-        const verifyCallback = "handleUserListResponse";
-        window[verifyCallback] = function(users) {
-          const user = users.find(u => u.id === id);
-          const emailVerified = user && user.email_verified 
-            ? user.email_verified.toString().toLowerCase() 
+        const handleVerifyResponse = function(verify) {
+          const emailVerified = verify && verify.email_verified 
+            ? verify.email_verified.toString().toLowerCase() 
             : "false";
     
           if (emailVerified === "true") {
@@ -159,6 +156,7 @@ body { display:flex; justify-content:center; align-items:center;
             sessionStorage.setItem("role", result.role);
             sessionStorage.setItem("userId", id);
             sessionStorage.setItem("token", result.token);
+            localStorage.setItem("token", result.token); // 지도 화면(새 탭)에서도 쓰기 위해
             localStorage.setItem("nickname", result.nickname);
     
             const roleRedirects = {
@@ -185,10 +183,11 @@ body { display:flex; justify-content:center; align-items:center;
           }
         };
     
-        // ✅ 사용자 목록 요청
-        const script2 = document.createElement("script");
-        script2.src = `${USER_API_URL}?mode=getAllUsers&callback=${verifyCallback}`;
-        document.body.appendChild(script2);
+        // ✅ 이메일 인증 여부 확인 (본인 토큰으로 조회)
+        fetch(`${USER_API_URL}?mode=checkEmailVerified&id=${encodeURIComponent(id)}&token=${encodeURIComponent(result.token)}`)
+          .then(res => res.json())
+          .then(handleVerifyResponse)
+          .catch(() => handleVerifyResponse({}));
     
       } else {
         modal.querySelector("h2").innerText = "❌ 로그인 실패";
@@ -197,10 +196,18 @@ body { display:flex; justify-content:center; align-items:center;
       }
     };
 
-    // ✅ JSONP 요청
-    const script = document.createElement("script");
-    script.src = `${USER_API_URL}?mode=checkPassword&id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}&callback=${callbackName}`;
-    document.body.appendChild(script);
+    // ✅ 로그인 요청 (POST: 비밀번호가 주소창에 남지 않도록)
+    fetch(USER_API_URL, {
+      method: "POST",
+      body: new URLSearchParams({ mode: "checkPassword", id: id, pw: pw })
+    })
+      .then(res => res.json())
+      .then(handleLoginResponse)
+      .catch(() => {
+        modal.querySelector("h2").innerText = "❌ 로그인 실패";
+        modal.querySelector("p").innerText = "서버에 연결하지 못했습니다.";
+        setTimeout(() => { modal.style.display = "none"; }, 3000);
+      });
   }
 
   function goRegister() {

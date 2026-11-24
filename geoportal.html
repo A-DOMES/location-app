@@ -528,41 +528,11 @@ function loadRealEstate(lon, lat) {
     .catch(err => ({ estateInfo: { year: "-", price: "가격 조회 실패: " + err.message } }));
 }
 
-// ✅ 4. 실거래가 조회 (국토부 API)
+// ✅ 4. 실거래가 조회 — 준비 중
 // - 반환: { realTransaction: { sale, jeonse, wolse } }
+// - 공공데이터 키는 화면 코드에 둘 수 없어, 서버(Apps Script)에서 조회하도록 만들 때까지 비워 둠
 function loadRealTransaction(lon, lat) {
-  return fetch(`https://api.vworld.kr/req/address?service=address&version=2.0&request=getaddress&point=${lon},${lat}&type=PARCEL&key=${CONFIG.API_KEY}`)
-    .then(res => res.json())
-    .then(addrData => {
-      const parcel = addrData.response?.result?.items[0];
-      if (!parcel) {
-        return { realTransaction: { sale: "지번 정보 없음", jeonse: "-", wolse: "-" } };
-      }
-
-      const lawdCd = parcel.addrcode;
-      const dealYmd = "202605";
-      const key = encodeURIComponent(CONFIG.MOLIT_KEY);
-
-      return fetch(`https://api.odcloud.kr/api/RealEstateTradingService/v1/getRTMSDataSvcAptTrade?serviceKey=${key}&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}`)
-        .then(res => res.json())
-        .then(tradeData => {
-          const items = tradeData.response?.body?.items?.item;
-          if (items && items.length > 0) {
-            const trade = items[0];
-            return {
-              realTransaction: {
-                sale: `거래일: ${trade.dealYear}.${trade.dealMonth}.${trade.dealDay}, 금액: ${trade.dealAmount} 만원, 면적: ${trade.area}㎡`,
-                jeonse: "전세 데이터 준비 중...",
-                wolse: "월세 데이터 준비 중..."
-              }
-            };
-          } else {
-            return { realTransaction: { sale: "데이터 없음", jeonse: "-", wolse: "-" } };
-          }
-        })
-        .catch(err => ({ realTransaction: { sale: "실거래가 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
-    })
-    .catch(err => ({ realTransaction: { sale: "지번 조회 실패: " + err.message, jeonse: "-", wolse: "-" } }));
+  return Promise.resolve({ realTransaction: { sale: "준비 중", jeonse: "-", wolse: "-" } });
 }
 
 // ✅ 이 파일은 팝업 UI와 데이터 조회 로직을 담당합니다.
