@@ -12,6 +12,9 @@
 /* ---------------------- 기본 페이지 스타일 ---------------------- */
 body { margin:0; font-family:'Segoe UI', Arial, sans-serif; background:#f0f4f8; }
 header { position: fixed; top: 0; left: 0; width: 100%; padding: 15px; text-align: center; background: #1976d2; color: white; font-size: 26px; font-weight: bold; z-index: 1000; }
+.logout-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); padding:6px 12px; font-size:14px; font-weight:normal; color:#fff; cursor:pointer; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.6); border-radius:6px; }
+.logout-btn:hover { background:rgba(255,255,255,0.32); }
+@media (max-width:480px) { header { font-size:18px; padding:15px 76px; } }
 
 /* ---------------------- 좌표창 박스 ---------------------- */
 #locationBox {
@@ -349,7 +352,7 @@ button:hover{background-color:#1565c0;}
   
 </head>
 <body>
-  <header>📍 A-DOMES | 위치정보시스템</header>
+  <header>📍 A-DOMES | 위치정보시스템<button type="button" class="logout-btn" onclick="logout()">로그아웃</button></header>
 
   <!-- 좌표 창 -->
   <div id="locationBox">
@@ -592,6 +595,28 @@ function sendMyLocationToServer(pos) {
 }
 
   
+/* ---------------------- 로그아웃 (위치 전송 중단) ---------------------- */
+function logout() {
+  // 서버에 위치 해제를 요청하고 (화면이 닫혀도 전송되도록 keepalive)
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token") || "";
+  if (token && currentUserPhone) {
+    fetch(CONFIG.ADMIN_URL, {
+      method: "POST",
+      keepalive: true,
+      body: new URLSearchParams({ mode: "stop", phone: currentUserPhone, status: "해제", token: token })
+    }).catch(() => {});
+  }
+  // 위치 추적 중단 후 저장된 로그인 정보를 지우고 로그인 화면으로
+  try { if (watchId) navigator.geolocation.clearWatch(watchId); } catch (e) {}
+  try { sessionStorage.clear(); } catch (e) {}
+  try { localStorage.removeItem("token"); localStorage.removeItem("nickname"); } catch (e) {}
+  window.location.href = "index.html";
+}
+// 다른 화면(탭)에서 로그아웃하면 이 화면도 함께 로그아웃
+window.addEventListener("storage", function(e) {
+  if (e.key === "token" && !e.newValue) logout();
+});
+
 /* ---------------------- 구글 Places API (New) 실시간 검색 ---------------------- */
 async function searchGooglePlacesLive(query) {
   try {
