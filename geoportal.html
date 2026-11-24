@@ -28,7 +28,16 @@
         </button>
       </div>
       <div class="header-title">국토부 지도</div>
+      <button type="button" class="logout-btn" onclick="logout()">로그아웃</button>
     </header>
+    <script>
+      // ✅ 로그아웃: 저장된 로그인 정보를 지우고 로그인 화면으로
+      function logout() {
+        try { sessionStorage.clear(); } catch (e) {}
+        try { localStorage.removeItem("token"); localStorage.removeItem("nickname"); } catch (e) {}
+        window.location.href = "index.html";
+      }
+    </script>
   
     <!-- ✅ 지도 영역 -->
     <div id="map"></div>
